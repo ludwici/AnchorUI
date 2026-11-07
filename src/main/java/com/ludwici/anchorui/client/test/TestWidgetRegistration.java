@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public final class TestWidgetRegistration {
     public static final ResourceLocation COUNTER = ResourceLocation.fromNamespaceAndPath("anchorui_test", "counter");
+    public static final ResourceLocation BROKEN = ResourceLocation.fromNamespaceAndPath("anchorui_test", "broken");
 
     private TestWidgetRegistration() {
     }
@@ -20,6 +21,9 @@ public final class TestWidgetRegistration {
             int step = GsonHelper.getAsInt(element.settings, "step", 1);
             AtomicInteger clicks = new AtomicInteger(initial);
             return Button.builder(Component.literal("Counter: " + initial), button -> button.setMessage(Component.literal("Counter: " + clicks.addAndGet(step)))).bounds(0, 0, 120, 20).build();
+        });
+        AnchorWidgetRegistry.register(BROKEN, (context, element, style) -> {
+            throw new IllegalArgumentException("Intentional error from scene12 factory");
         });
     }
 }

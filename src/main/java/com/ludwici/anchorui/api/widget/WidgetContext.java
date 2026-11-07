@@ -8,7 +8,11 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
-public record WidgetContext(Minecraft minecraft, Screen screen, ItemStack item, LoreEntity entity) {
+public record WidgetContext(Minecraft minecraft, Screen screen, ItemStack item, LoreEntity entity, WidgetInstanceRegistry widgets) {
+    public WidgetContext(Minecraft minecraft, Screen screen, ItemStack item, LoreEntity entity) {
+        this(minecraft, screen, item, entity, new WidgetInstanceRegistry());
+    }
+
     public Font font() {
         return minecraft.font;
     }

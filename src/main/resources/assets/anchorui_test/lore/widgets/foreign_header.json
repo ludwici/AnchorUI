@@ -1,0 +1,26 @@
+{
+  "type": "anchorui:text",
+  "text": "Виджет из другого неймспейса",
+  "position": {
+    "point": "CENTER",
+    "anchor": "CENTER",
+    "relativeTo": "screen",
+    "x": 0,
+    "y": -65
+  },
+  "size": {
+    "width": 268,
+    "height": 28
+  },
+  "align": "center",
+  "padding": {
+    "left": 5,
+    "right": 5,
+    "top": 5,
+    "bottom": 5
+  },
+  "background": {
+    "color": "CC395E82"
+  },
+  "color": "#FFFFFF"
+}

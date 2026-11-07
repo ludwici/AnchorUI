@@ -38,7 +38,7 @@ public class TestSceneScreen extends ItemLoreScreen {
                     continue;
                 }
                 var bounds = entry.getValue();
-                boolean hiddenAnchor = scene == TestScene.SCENE6 && entry.getKey().equals("invisible");
+                boolean hiddenAnchor = scene == TestScene.SCENE6 && entry.getKey().equals("anchorui:invisible");
                 int color = hiddenAnchor ? 0xFFFF8098 : 0xFF52D9E5;
                 String label = hiddenAnchor ? "invisible (hidden)" : entry.getKey();
                 outline(graphics, bounds.x(), bounds.y(), bounds.width(), bounds.height(), color);

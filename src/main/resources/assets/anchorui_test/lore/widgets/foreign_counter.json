@@ -1,0 +1,19 @@
+{
+  "type": "anchorui_test:counter",
+  "initial": 7,
+  "step": 2,
+  "position": {
+    "point": "TOP",
+    "anchor": "BOTTOM",
+    "relativeTo": "anchorui_test:foreign_header",
+    "x": 0,
+    "y": 14
+  },
+  "size": {
+    "width": 136,
+    "height": 26
+  },
+  "background": {
+    "color": "BB415F49"
+  }
+}

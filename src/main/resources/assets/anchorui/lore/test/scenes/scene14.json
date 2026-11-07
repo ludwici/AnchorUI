@@ -1,0 +1,77 @@
+{
+  "item": "minecraft:amethyst_shard",
+  "style": "anchorui:style/default",
+  "imports": [
+    "anchorui_test:foreign_header"
+  ],
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:explanation",
+      "text": "Этот элемент привязан к anchorui_test:foreign_header",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "anchorui_test:foreign_header",
+        "x": 0,
+        "y": 11
+      },
+      "size": {
+        "width": 286,
+        "height": 34
+      },
+      "align": "center",
+      "wrap": true,
+      "padding": {
+        "left": 7,
+        "right": 7,
+        "top": 6,
+        "bottom": 6
+      },
+      "background": {
+        "color": "CC635645"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "ref": "anchorui_test:foreign_counter",
+      "id": "anchorui:local_counter",
+      "initial": 12,
+      "step": 3,
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "anchorui:explanation",
+        "x": 0,
+        "y": 13
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:footer",
+      "text": "Импортированная кнопка + локальные настройки",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "anchorui:local_counter",
+        "x": 0,
+        "y": 10
+      },
+      "size": {
+        "width": 286,
+        "height": 29
+      },
+      "align": "center",
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 5,
+        "bottom": 5
+      },
+      "background": {
+        "color": "CC4E4C67"
+      },
+      "color": "#FFFFFF"
+    }
+  ]
+}

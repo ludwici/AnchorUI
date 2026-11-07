@@ -37,7 +37,7 @@
         "anchor": "BOTTOM",
         "relativeTo": "screen",
         "x": 0,
-        "y": -44
+        "y": -34
       },
       "size": {
         "width": 184,
@@ -141,7 +141,7 @@
         "anchor": "BOTTOM",
         "relativeTo": "root",
         "x": 0,
-        "y": 7
+        "y": 3
       },
       "size": {
         "width": 124,

@@ -7,10 +7,10 @@
       "id": "primary",
       "text": "160 x 54, 12px padding",
       "position": {
-        "point": "RIGHT",
+        "point": "CENTER",
         "anchor": "CENTER",
         "relativeTo": "screen",
-        "x": -6,
+        "x": -50,
         "y": 0
       },
       "size": {

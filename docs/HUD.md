@@ -173,7 +173,9 @@ The full replacement anchor triple is stored only if the editor changes an ancho
 
 The manager recalculates widget positions while dragging, but does not reconstruct widget instances for each mouse movement. Positions are calculated in GUI pixels and automatically reflow when GUI Scale or window dimensions change.
 
-Point, anchor and parent changes recalculate the layout with the existing JSON offsets and saved manual deltas; the editor does not attempt to preserve the previous on-screen position when changing these attachments.\n\nThe editor modifies client layout preferences only. It does not write into another mod's resource files or the shared template registry, and no server-side installation is required for saved layout offsets.
+Point, anchor and parent changes recalculate the layout with the existing JSON offsets and saved manual deltas; the editor does not attempt to preserve the previous on-screen position when changing these attachments.
+
+The editor modifies client layout preferences only. It does not write into another mod's resource files or the shared template registry, and no server-side installation is required for saved layout offsets.
 
 **Important:** HUD widgets remain passive in ordinary gameplay. For example, a third-party `Button` may visually render as part of the HUD but does not receive gameplay mouse clicks. During editing, the editor captures clicks for selection and dragging, while still avoiding the widget's own click handler.
 

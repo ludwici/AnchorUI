@@ -140,3 +140,9 @@ Test HUDs render directly on top of the Minecraft world and do not open a `Scree
 The preview is assembled from `assets/anchorui/lore/hud/hud1.json`, `assets/anchorui_test/lore/hud/hud1_extra.json`, and the exported `anchorui_test:hud_header` template at `assets/anchorui_test/lore/widgets/hud_header.json`.
 
 JUnit checks cross-namespace layout, template overrides and bottom-right anchor positioning at different screen resolutions. A successful build verifies compilation and these data/layout tests; the in-game rendering still needs a manual visual check.
+
+## HUD editor regression
+
+With `/anchorui test hud1 on` active, enter `/anchorui hud edit` or press **F8**. Select the header and move it to verify that `anchorui:hud_body`, `anchorui:hud_item`, `anchorui_test:hud_extra` and the copied template retain their relative anchors. Use the arrow keys, Shift + arrows, **Reset widget** and **Reset all**. **Cancel / Esc** must roll back changes; **Save & close** must persist them.
+
+Saved offsets are written to `config/anchorui/hud-layout.json`. Open the editor a second time and restart the client to verify persistence. When the chat screen is open, the HUD must remain visible; when the inventory is open or F1 hides the GUI, it must disappear. Normal HUD buttons must remain non-interactive. Automated `HudLayoutOffsetsTest` covers JSON persistence, zero-offset removal, invalid input, and parent/child movement across namespaces.

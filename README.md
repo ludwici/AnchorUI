@@ -103,3 +103,11 @@ The HUD is rendered without an open `Screen`. A HUD factory receives `WidgetCont
 Run `/anchorui test hud1` to toggle a built-in HUD preview (or use `/anchorui test hud1 on` / `off`). It combines `anchorui:text`, `anchorui:model` and widgets defined in `anchorui_test`, including cross-file anchors and a `ref` override. The preview resource files have `"testOnly": true` and are disabled by default.
 
 See [HUD Documentation](docs/HUD.md) for complete JSON examples and current limitations.
+
+## Player HUD editor
+
+Use **F8** or `/anchorui hud edit` in a world to open the HUD layout editor. Select and drag a widget to reposition it, nudge with arrow keys (Shift for 10-pixel increments), reset an individual widget or all widgets, and choose **Save & close**. **Esc / Cancel** discards the preview. The optional demo HUD can be toggled from the editor.
+
+The editor persists client-specific offsets by namespaced widget ID in `config/anchorui/hud-layout.json`. Offsets are applied **in addition to the original JSON anchor settings**, allowing widgets from different mods to stay linked after moving. The normal HUD remains display-only; HUD elements continue rendering while the chat screen is open and still hide for F1 and inventory/menu screens.
+
+See [HUD editor and persistence](docs/HUD.md#hud-editor).

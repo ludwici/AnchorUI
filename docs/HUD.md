@@ -137,9 +137,9 @@ To edit widget placement:
 4. Select a widget, then press **Change parent**. Click another highlighted widget to choose it as the new parent, or click an empty part of the world to use **screen** as the parent. The parent changes **only after the click**. Circular relationships and attempts to parent a widget to itself are rejected. Press **Esc** or **Cancel parent** to leave selection mode without changing anything.
 5. Use **Hide / Show** to control whether a selected widget is displayed in gameplay. Hidden widgets still occupy their layout bounds, so other widgets can remain attached.
 6. Press **R** or **Reset** to restore the selected widget's default position, anchors and visibility. **Reset all** restores all HUD widget settings in the preview.
-7. The controls are grouped in a compact panel **at the top center** of the editor, leaving the bottom-right corner unobstructed by editor buttons. Use **Tab** to hide this panel when a widget overlaps it, then press Tab again to show the controls.
+7. Controls now appear in a **narrow, vertical panel at the right edge**. Drag the panel by its title bar to move it anywhere on-screen. Its default placement leaves the bottom-right HUD widget uncovered. Press **Tab** to hide the panel temporarily, then press Tab again to restore it.
 8. **Show demo / Hide demo** toggles the bundled HUD test resources for easier testing.
-9. Choose **Save & close** (or Ctrl+S) to persist the current settings, or **Cancel / Esc** to discard all unsaved changes.
+9. Choose **Save** (or Ctrl+S) to persist the current settings and close, or **Cancel / Esc** to discard all unsaved changes.
 
 The editor saves the player's client-side layout overrides at:
 
@@ -179,6 +179,22 @@ The editor modifies client layout preferences only. It does not write into anoth
 
 **Important:** HUD widgets remain passive in ordinary gameplay. For example, a third-party `Button` may visually render as part of the HUD but does not receive gameplay mouse clicks. During editing, the editor captures clicks for selection and dragging, while still avoiding the widget's own click handler.
 
+
+
+### Movable, scrollable property inspector
+
+The editor's right-side panel has a narrow width (218 GUI pixels where space permits) and a smaller font for inspector text (83% scale). Drag the **panel's title bar** to reposition it. The panel's default height leaves the bottom-right corner of the game available for HUD selection. Panel position is a temporary UI state; widget layout changes are saved separately.
+
+Select any widget to see its computed layout properties and original JSON configuration. The scrollable inspector displays the widget's full namespaced ID, actual bounds, current parent, point, anchor, saved offset and visibility, followed by **all fields from the original JSON**, including custom nested objects and arrays supplied by other mods. Long values wrap to additional lines. Use the **mouse wheel** over the inspector or drag its scrollbar to see the remaining fields.
+
+The editor draws ID labels for the currently selected or hovered widget, avoiding overlapping labels from nearby widgets. Ordinary HUD widgets still do not receive clicks outside the editor.
+
+### Demo HUD spacing
+
+The built-in HUD preview now has **zero gap** between its connected elements: the header/body, body/diamond, diamond/extra label and extra label/copied header use `x: 0` or `y: 0` wherever their edges are attached. The bottom-right corner widget keeps its intentional `x: -16, y: -16` screen padding.
+
+User overrides in `config/anchorui/hud-layout.json` are applied in addition to resource-defined offsets. If you previously dragged a demo element, click **Reset** on that widget or **Reset all** in the editor to restore edge-to-edge placement; changing the demo JSON does not automatically erase existing saved user preferences.
+
 ## Regression checklist
 
 - Enter a world and enable the preview via `/anchorui test hud1 on`.
@@ -186,7 +202,7 @@ The editor modifies client layout preferences only. It does not write into anoth
 - Press **F1**: the HUD should disappear and reappear along with the vanilla UI.
 - Open `/anchorui hud edit` or **F8**, drag the `anchorui_test:hud_header` widget and verify its children move with it.
 - Change the **Point** and **Anchor** of `anchorui_test:hud_extra`: it must move immediately to the corresponding attachment position while retaining its manual offsets. Press **Change parent** and click another widget; the parent changes only after your click. Try to select itself or create a cycle, which must be rejected. Click empty space to choose `screen`, or press Esc to cancel parent selection.
-- The bottom-right `anchorui_test:hud_corner` must be directly clickable and draggable with the editor panel open. Use Tab only if a widget overlaps the top-center panel. Test **Hide / Show**, then **Cancel** to restore the previous layout.
+- The bottom-right `anchorui_test:hud_corner` must be directly clickable and draggable with the right-side inspector open. Drag the panel by its title bar, scroll the widget's raw JSON, and confirm that nested properties are visible. Press Tab if the panel overlaps a widget. Test **Hide / Show**, then **Cancel** to restore the previous layout.
 - Reopen, drag a widget, choose **Save & close**, and verify the same position persists after reopening and restarting the game.
 - Try **Reset**, **Reset all** and **Ctrl+S**; the saved file should contain only modified widget positions, anchors and visibility flags.
 - Resize the game or change GUI Scale while HUD is visible to check anchor reflow.

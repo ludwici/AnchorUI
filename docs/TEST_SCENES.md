@@ -152,3 +152,7 @@ The editor also supports **Point**, **Anchor** and **Change target** to adjust a
 ### Parent and anchor selection behavior
 
 With HUD Editor open, press **Point** or **Anchor** on a selected widget: its actual on-screen position should move to match the new attachment point. The editor must not compensate the movement by changing manual offsets. Press **Change parent** and then click another HUD widget; the parent should change on that click. Click the same widget, or try to create a parent-child cycle: no change should be accepted. Click blank background to attach to `screen`; **Esc** exits parent-selection mode without closing the editor. The bottom-right `anchorui_test:hud_corner` should be clickable with the top-center control panel visible.
+
+### Compact right-side HUD inspector
+
+Test `/anchorui test hud1 on` after removing saved overrides or using **Reset all**. Header/body, body/diamond, diamond/extra and extra/copied header should touch with no gaps. Open `/anchorui hud edit`: a narrow draggable panel should appear on the right, away from the bottom-right corner widget. Drag its title, select different widgets, then scroll their inspector values with the mouse wheel and scrollbar. Verify namespaced IDs, current position and size, parent and anchor points, visibility, source `position`, `size`, `padding` and custom JSON values. Only the selected or hovered widget's ID label should be drawn in the game area.

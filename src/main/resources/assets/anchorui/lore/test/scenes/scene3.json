@@ -5,13 +5,13 @@
     {
       "type": "text",
       "id": "primary",
-      "text": "160 x 54, 12px padding",
+      "text": "160x54 / padding 12",
       "position": {
         "point": "CENTER",
         "anchor": "CENTER",
         "relativeTo": "screen",
         "x": -50,
-        "y": 0
+        "y": -10
       },
       "size": {
         "width": 160,
@@ -57,7 +57,7 @@
     {
       "type": "text",
       "id": "automatic",
-      "text": "Auto width, auto height",
+      "text": "Auto size",
       "position": {
         "point": "TOP",
         "anchor": "BOTTOM",
@@ -83,7 +83,7 @@
     {
       "type": "text",
       "id": "offset",
-      "text": "Offset X=0 Y=-14",
+      "text": "Y=-14 от primary",
       "position": {
         "point": "BOTTOM",
         "anchor": "TOP",
@@ -103,6 +103,84 @@
       },
       "background": {
         "color": "CC5C7147"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "alpha27",
+      "text": "Alpha 27%",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "BOTTOMLEFT",
+        "relativeTo": "automatic",
+        "x": 0,
+        "y": 9
+      },
+      "size": {
+        "width": 66,
+        "height": 19
+      },
+      "padding": {
+        "left": 4,
+        "right": 4,
+        "top": 5,
+        "bottom": 2
+      },
+      "background": {
+        "color": "4439C8AF"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "alpha53",
+      "text": "Alpha 53%",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "TOPRIGHT",
+        "relativeTo": "alpha27",
+        "x": 7,
+        "y": 0
+      },
+      "size": {
+        "width": 66,
+        "height": 19
+      },
+      "padding": {
+        "left": 4,
+        "right": 4,
+        "top": 5,
+        "bottom": 2
+      },
+      "background": {
+        "color": "8839C8AF"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "alpha100",
+      "text": "Alpha 100%",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "TOPRIGHT",
+        "relativeTo": "alpha53",
+        "x": 7,
+        "y": 0
+      },
+      "size": {
+        "width": 66,
+        "height": 19
+      },
+      "padding": {
+        "left": 4,
+        "right": 4,
+        "top": 5,
+        "bottom": 2
+      },
+      "background": {
+        "color": "FF39C8AF"
       },
       "color": "#FFFFFF"
     }

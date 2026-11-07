@@ -1,30 +1,62 @@
-# Anchor UI — interactive test scenes
+# Тестовые сцены Anchor UI
 
-The built-in scenes exercise the same JSON → `LoreEntity` → `ItemLoreScreen` → `AnchorLayout` rendering path used by normal item-lore screens.
+Тестовая среда работает на клиенте NeoForge 1.21.1 и использует основной путь от JSON до интерфейса: `LoreEntity → ItemLoreScreen → AnchorLayout`.
 
-## Starting
+## Запуск
 
-1. Run the NeoForge 1.21.1 client with Anchor UI installed (`./gradlew runClient`).
-2. Enter a single-player world or connect to a server. The command is client-side and needs no operator permission or server-side Anchor UI installation.
-3. Run `/anchorui test list` to see the available scenes, or `/anchorui test scene1` to open one.
-4. Use the `<` and `>` buttons to navigate; use **G** for element outlines, IDs and center guidelines; **Esc** to close.
-5. Change the window size or Minecraft GUI Scale while testing to trigger layout recalculation.
+1. Запусти Minecraft с модом Anchor UI. Для разработки можно выполнить `./gradlew runClient`.
+2. Войди в одиночный мир или подключись к серверу. Для команды не требуются права оператора или установка Anchor UI на сервер.
+3. В чате введи `/anchorui test list` для списка сцен либо `/anchorui test scene1` для запуска нужной сцены.
+4. Кнопки со стрелками переключают сцены. **G** включает и отключает контуры, ID элементов и центральные направляющие. **Esc** закрывает экран.
+5. В `scene5` измени размер окна или значение «Масштаб интерфейса» в настройках Minecraft.
 
-All scene descriptions are stored in `src/main/resources/assets/anchorui/lore/test/scenes/` and can be edited as JSON. Resource reload (F3+T) applies changes.
+JSON-файлы находятся в `src/main/resources/assets/anchorui/lore/test/scenes/`. После изменений ресурсов используй **F3+T**.
 
-## Expected behaviour
+## Проверки
 
-| Command | Scenario | Pass condition |
+| Сцена | Возможность | Ожидаемый результат |
 | --- | --- | --- |
-| `/anchorui test scene1` | Nine anchor points | Nine labelled blocks appear at the corresponding corners/edges/center with consistent margins. |
-| `/anchorui test scene2` | Parent/child links | Blocks surround `PARENT`; `3. Child of RIGHT` follows `RIGHT` even though it appears before `RIGHT` in JSON. |
-| `/anchorui test scene3` | Dimensions, padding, colors | Fixed-size boxes and an auto-sized text element display differing padding, text colors and alpha backgrounds. |
-| `/anchorui test scene4` | Model and rich text | Item renders; dragging rotates it. List wraps text; bold, italic, underline and hover tooltip work; a hidden lore entry renders as question marks. |
-| `/anchorui test scene5` | Responsive layout | Top and bottom frames follow screen edges, satellites follow center when window dimensions or GUI Scale change. |
-| `/anchorui test scene6` | Invisible anchor | Red hidden frame does not render, but the visible child and its dependent frame remain correctly positioned. Toggle G to inspect layout bounds. |
-| `/anchorui test scene7` | Missing target | Diagnostic says `Unknown relativeTo frame: missing_target` in a red panel. No client crash. |
-| `/anchorui test scene8` | Cyclic references | Diagnostic says `Circular frame anchors` in a red panel. No client crash. |
+| `scene1` | Девять точек привязки | Девять прямоугольников находятся у соответствующих углов, краёв и в центре экрана |
+| `scene2` | Относительное позиционирование и цепочки зависимостей | Дочерние элементы располагаются вокруг `panel`, а `grandchild` следует за `right`, несмотря на более раннее объявление в JSON |
+| `scene3` | Размеры, отступы, смещения, цвет и прозрачность | У элементов различаются размеры и отступы. Три образца одного цвета должны различаться прозрачностью: 27%, 53% и 100% |
+| `scene4` | Модель предмета и форматированный текст | Предмет отображается статично и по центру своей области. Текст переносится; жирность, курсив, подчёркивание и подсказки работают |
+| `scene5` | Пересчёт позиции после изменения размеров экрана | Элементы у краёв следуют за краями экрана, связанные с центром — за центральным элементом |
+| `scene6` | Скрытый элемент как якорь | Скрытая красная рамка не отображается в обычном режиме, но видимые зависимые элементы располагаются относительно неё |
+| `scene7` | Ссылка на отсутствующий элемент | Появляется сообщение `Unknown relativeTo frame: missing_target`; вылета нет |
+| `scene8` | Циклическая привязка | Появляется сообщение `Circular frame anchors`; вылета нет |
 
-The scene definitions are **visual test fixtures**. Automated JUnit tests additionally check that their JSON resources exist, positive scenes resolve at two window sizes, and invalid scenes produce expected errors.
+### `scene2`: что проверяет grandchild
 
-A successful CI build cannot prove that a rendered GUI looks correct; perform the in-game checks above to verify visibility, input and interaction.
+`grandchild` ссылается на `right`, который, в свою очередь, привязан к `panel`. Его **верхний левый угол** (`point: TOPLEFT`) привязан к **нижнему левому углу** `right` (`anchor: BOTTOMLEFT`) со смещением `x: 0, y: 7`.
+
+Таким образом, `grandchild` расположен строго под `right`, с зазором **7 GUI-пикселей**. В файле `grandchild` записан раньше `right`; порядок описания не должен влиять на результат.
+
+### `scene3`: как работает offset и прозрачность
+
+`offset` использует `relativeTo: "primary"`. Его нижняя точка `BOTTOM` привязана к верхней точке `TOP` элемента `primary`, а `y: -14` сдвигает его ещё на 14 пикселей вверх. `x: 0` означает совпадение горизонтальных центров.
+
+`alpha27`, `alpha53`, `alpha100` имеют **одинаковые RGB-компоненты** `39C8AF`, но разные альфа-каналы (`44`, `88`, `FF` в шестнадцатеричной записи). Под ними должен просвечивать фон с разной интенсивностью. Изменение цвета текста проверяется отдельно.
+
+### `scene4`: модель предмета
+
+Предмет отображается в центре собственного прямоугольника и не вращается при перемещении или перетаскивании мыши. Масштаб ограничивается размерами виджета; если предмет выходит за его границы, это ошибка.
+
+### `scene6`: как проверить скрытый якорь
+
+Без контуров (`G` выключен) видны только `note`, `dependent` и `chain`. Красный прямоугольник `invisible` с текстом `YOU MUST NOT SEE THIS` не должен отображаться.
+
+С включёнными контурами (`G`) видна **только диагностическая рамка** `invisible (hidden)` в центре экрана. При этом `note` остаётся выше неё, `dependent` — ниже, а `chain` — ниже `dependent`. Скрытие элемента не удаляет его из расчёта координат.
+
+### `scene7`: неизвестная ссылка
+
+В `scene7` единственный элемент `broken` имеет `relativeTo: "missing_target"`. Элемента с ID `missing_target` в сцене нет, поэтому компоновщик сообщает `Unknown relativeTo frame: missing_target` и не размещает элементы. Это ожидаемая ошибка конфигурации.
+
+### `scene8`: циклическая зависимость
+
+В `scene8` элемент `first` привязан к `second`, а `second` — к `first`. Чтобы вычислить координаты любого из них, сначала нужны координаты другого. Компоновщик определяет цикл `first → second → first` и сообщает об ошибке, вместо бесконечной рекурсии.
+
+## Автоматическая проверка
+
+GitHub Actions запускает `gradle build`, включая JUnit-тесты. Проверяется наличие восьми JSON-сцен, разрешение корректных привязок при разных размерах экрана, обработка неизвестных ссылок и циклов. Внешний вид и интерактивность всё равно необходимо проверять в Minecraft.
+
+Собранный JAR должен называться `anchorui-neoforge-1.21.1+<версия_мода>.jar`.

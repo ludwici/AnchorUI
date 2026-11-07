@@ -29,19 +29,20 @@ public class TestSceneScreen extends ItemLoreScreen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         graphics.fill(0, 0, width, height, 0xDE101722);
+        super.render(graphics, mouseX, mouseY, partialTick);
         if (guides) {
             graphics.fill(width / 2, 0, width / 2 + 1, height, 0x6666DDEE);
             graphics.fill(0, height / 2, width, height / 2 + 1, 0x6666DDEE);
-        }
-        super.render(graphics, mouseX, mouseY, partialTick);
-        if (guides) {
             for (var entry : getLayoutBounds().entrySet()) {
                 if (entry.getKey().equals("screen")) {
                     continue;
                 }
                 var bounds = entry.getValue();
-                outline(graphics, bounds.x(), bounds.y(), bounds.width(), bounds.height(), 0xFF52D9E5);
-                graphics.drawString(font, entry.getKey(), bounds.x(), bounds.y() - 9, 0xFF52D9E5, false);
+                boolean hiddenAnchor = scene == TestScene.SCENE6 && entry.getKey().equals("invisible");
+                int color = hiddenAnchor ? 0xFFFF8098 : 0xFF52D9E5;
+                String label = hiddenAnchor ? "invisible (hidden)" : entry.getKey();
+                outline(graphics, bounds.x(), bounds.y(), bounds.width(), bounds.height(), color);
+                graphics.drawString(font, label, bounds.x(), bounds.y() - 9, color, false);
             }
         }
         graphics.fill(0, 0, width, 33, 0xEC0C1019);
@@ -51,7 +52,7 @@ public class TestSceneScreen extends ItemLoreScreen {
         if (error != null) {
             int y = Math.max(40, height / 2 - 15);
             graphics.fill(8, y - 7, width - 8, y + 30, 0xCC5C1722);
-            graphics.drawString(font, "Layout error (expected in scene7/scene8):", 16, y, 0xFFFFC0C0, false);
+            graphics.drawString(font, "Ошибка привязки (ожидается в scene7 и scene8):", 16, y, 0xFFFFC0C0, false);
             graphics.drawString(font, error, 16, y + 13, 0xFFFFFFFF, false);
         }
         graphics.fill(0, height - 32, width, height, 0xEC0C1019);

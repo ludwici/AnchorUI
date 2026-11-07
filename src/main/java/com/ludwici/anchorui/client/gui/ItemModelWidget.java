@@ -1,7 +1,6 @@
 package com.ludwici.anchorui.client.gui;
 
 import com.ludwici.anchorui.api.style.LoreStyle;
-import com.mojang.math.Axis;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.world.item.ItemStack;
@@ -9,8 +8,6 @@ import net.minecraft.world.item.ItemStack;
 public class ItemModelWidget extends AnchoredWidget {
     private final ItemStack stack;
     private final float scale;
-    private float rotationX;
-    private float rotationY = 45;
 
     public ItemModelWidget(ItemStack stack, float scale, LoreStyle.Element style) {
         super(style.size.width > 0 ? style.size.width : 128, style.size.height > 0 ? style.size.height : 128, style);
@@ -24,20 +21,19 @@ public class ItemModelWidget extends AnchoredWidget {
         if (stack.isEmpty()) {
             return;
         }
+
+        float availableWidth = Math.max(16, getWidth() - style.padding.left - style.padding.right);
+        float availableHeight = Math.max(16, getHeight() - style.padding.top - style.padding.bottom);
+        float renderScale = Math.max(0.1F, Math.min(scale, Math.min(availableWidth, availableHeight) / 16.0F));
+        float centerX = getX() + style.padding.left + availableWidth / 2.0F;
+        float centerY = getY() + style.padding.top + availableHeight / 2.0F;
+
         var pose = guiGraphics.pose();
         pose.pushPose();
-        pose.translate(getX() + getWidth() / 2.0F, getY() + getHeight() / 2.0F, 150);
-        pose.mulPose(Axis.XP.rotationDegrees(rotationX));
-        pose.mulPose(Axis.YP.rotationDegrees(rotationY));
-        pose.scale(scale, scale, scale);
+        pose.translate(centerX, centerY, 150);
+        pose.scale(renderScale, renderScale, 1.0F);
         guiGraphics.renderItem(stack, -8, -8);
         pose.popPose();
-    }
-
-    @Override
-    protected void onDrag(double mouseX, double mouseY, double dragX, double dragY) {
-        rotationX = (rotationX - (float) dragY * 2.5F) % 360.0F;
-        rotationY = (rotationY + (float) dragX * 2.5F) % 360.0F;
     }
 
     @Override

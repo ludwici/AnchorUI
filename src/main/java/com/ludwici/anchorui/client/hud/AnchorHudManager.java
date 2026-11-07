@@ -127,7 +127,7 @@ public final class AnchorHudManager {
         return changePreviewAnchor(id, new HudLayoutOffsets.AnchorOverride(handle.relativeTo(), next, handle.anchor()));
     }
 
-    public boolean cyclePreviewTargetPoint(String id) {
+    public boolean cyclePreviewAnchor(String id) {
         HudHandle handle = handle(id);
         if (handle == null) {
             return false;
@@ -137,22 +137,15 @@ public final class AnchorHudManager {
         return changePreviewAnchor(id, new HudLayoutOffsets.AnchorOverride(handle.relativeTo(), handle.point(), next));
     }
 
-    public boolean cyclePreviewTarget(String id) {
+    public boolean setPreviewParent(String id, String parent) {
         HudHandle handle = handle(id);
-        if (handle == null) {
+        if (handle == null || id.equals(parent)) {
             return false;
         }
-        List<String> candidates = new ArrayList<>();
-        candidates.add("screen");
-        getHandles().stream().map(HudHandle::id).filter(candidate -> !candidate.equals(id)).sorted().forEach(candidates::add);
-        int current = candidates.indexOf(handle.relativeTo());
-        for (int n = 1; n <= candidates.size(); n++) {
-            String candidate = candidates.get((current + n + candidates.size()) % candidates.size());
-            if (changePreviewAnchor(id, new HudLayoutOffsets.AnchorOverride(candidate, handle.point(), handle.anchor()))) {
-                return true;
-            }
+        if (!"screen".equals(parent) && !layoutBounds.containsKey(parent)) {
+            return false;
         }
-        return false;
+        return changePreviewAnchor(id, new HudLayoutOffsets.AnchorOverride(parent, handle.point(), handle.anchor()));
     }
 
     private HudHandle handle(String id) {
@@ -171,16 +164,12 @@ public final class AnchorHudManager {
         if (editingOffsets == null) {
             return false;
         }
-        AnchorLayout.Bounds before = layoutBounds.get(id);
-        if (before == null) {
+        if (!layoutBounds.containsKey(id)) {
             return false;
         }
         HudLayoutOffsets candidate = editingOffsets.copy();
         candidate.setAnchor(id, override);
         try {
-            AnchorLayout.Bounds changed = resolveBounds(candidate).get(id);
-            HudLayoutOffsets.Offset original = candidate.get(id);
-            candidate.set(id, original.x() + before.x() - changed.x(), original.y() + before.y() - changed.y());
             resolveBounds(candidate);
         } catch (IllegalArgumentException exception) {
             return false;

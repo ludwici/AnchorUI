@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.style.PositionElement;
+import com.ludwici.anchorui.api.style.ElementAnchor;
 import com.ludwici.anchorui.api.widget.WidgetDocumentResolver;
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +47,13 @@ public class HudCompositionTest {
             for (var raw : document.getAsJsonArray("entities")) {
                 JsonObject widget = raw.getAsJsonObject();
                 JsonObject size = widget.getAsJsonObject("size");
-                frames.add(new AnchorLayout.Frame(widget.get("id").getAsString(), new PositionElement(widget.getAsJsonObject("position")), size.get("width").getAsInt(), size.get("height").getAsInt()));
+                JsonObject position = widget.getAsJsonObject("position");
+                var point = ElementAnchor.fromString(position.get("point").getAsString());
+                var anchor = ElementAnchor.fromString(position.get("anchor").getAsString());
+                String relativeTo = position.get("relativeTo").getAsString();
+                int x = position.get("x").getAsInt();
+                int y = position.get("y").getAsInt();
+                frames.add(new AnchorLayout.Frame(widget.get("id").getAsString(), new PositionElement(point, anchor, relativeTo, x, y), size.get("width").getAsInt(), size.get("height").getAsInt()));
             }
         }
         return frames;

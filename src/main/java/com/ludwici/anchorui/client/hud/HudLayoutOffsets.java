@@ -54,6 +54,10 @@ public final class HudLayoutOffsets {
         anchors.put(WidgetIds.id(id, "anchorui"), anchor);
     }
 
+    public void clearAnchor(String id) {
+        anchors.remove(WidgetIds.id(id, "anchorui"));
+    }
+
     public void setHidden(String id, boolean value) {
         String qualified = WidgetIds.id(id, "anchorui");
         if (value) {

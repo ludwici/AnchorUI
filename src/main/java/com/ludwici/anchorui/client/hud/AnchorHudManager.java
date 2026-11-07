@@ -183,7 +183,17 @@ public final class AnchorHudManager {
             return false;
         }
         HudLayoutOffsets candidate = editingOffsets.copy();
-        candidate.setAnchor(id, override);
+        for (PlacedWidget placed : widgets) {
+            if (placed.id().equals(id) && placed.position().relativeTo.equals(override.relativeTo())
+                    && placed.position().point == override.point() && placed.position().anchor == override.anchor()) {
+                candidate.clearAnchor(id);
+                break;
+            }
+            if (placed.id().equals(id)) {
+                candidate.setAnchor(id, override);
+                break;
+            }
+        }
         try {
             resolveBounds(candidate);
         } catch (IllegalArgumentException exception) {

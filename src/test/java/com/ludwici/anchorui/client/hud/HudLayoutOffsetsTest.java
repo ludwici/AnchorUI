@@ -112,6 +112,13 @@ public class HudLayoutOffsetsTest {
         overrides.setHidden(id, false);
         assertFalse(overrides.isHidden(id));
         assertEquals("othermod:frame", overrides.anchor(id).relativeTo());
+
+        overrides.set(id, 8, 9);
+        overrides.setHidden(id, true);
+        overrides.clearAnchor(id);
+        assertEquals(null, overrides.anchor(id));
+        assertEquals(new HudLayoutOffsets.Offset(8, 9), overrides.get(id));
+        assertTrue(overrides.isHidden(id));
     }
 
     @Test

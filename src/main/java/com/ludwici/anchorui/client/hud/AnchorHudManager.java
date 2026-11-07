@@ -16,10 +16,14 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.fml.loading.FMLPaths;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -30,18 +34,28 @@ import java.util.Set;
 public final class AnchorHudManager {
     public static final AnchorHudManager INSTANCE = new AnchorHudManager();
 
+    public record HudHandle(String id, AnchorLayout.Bounds bounds, String relativeTo, HudLayoutOffsets.Offset offset, boolean visible) {
+    }
+
     private record Description(String id, LoreEntity entity, LoreEntity.UiElement element) {
     }
 
     private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position) {
-        private AnchorLayout.Frame frame() {
-            return new AnchorLayout.Frame(id, position, widget.getWidth(), widget.getHeight());
+        private AnchorLayout.Frame frame(HudLayoutOffsets offsets) {
+            HudLayoutOffsets.Offset delta = offsets.get(id);
+            PositionElement applied = new PositionElement(position.point, position.anchor, position.relativeTo, position.x + delta.x(), position.y + delta.y());
+            return new AnchorLayout.Frame(id, applied, widget.getWidth(), widget.getHeight());
         }
     }
 
     private WidgetInstanceRegistry registry = new WidgetInstanceRegistry();
     private List<PlacedWidget> widgets = List.of();
+    private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
     private final Set<String> renderFailures = new HashSet<>();
+    private HudLayoutOffsets savedOffsets = new HudLayoutOffsets();
+    private HudLayoutOffsets editingOffsets;
+    private boolean storageLoaded;
+    private String lastSaveError;
     private long builtRevision = -1;
     private int builtWidth = -1;
     private int builtHeight = -1;
@@ -57,8 +71,92 @@ public final class AnchorHudManager {
     }
 
     public void setTestEnabled(boolean enabled) {
-        testEnabled = enabled;
-        builtRevision = -1;
+        if (testEnabled != enabled) {
+            testEnabled = enabled;
+            builtRevision = -1;
+        }
+    }
+
+    public boolean isEditing() {
+        return editingOffsets != null;
+    }
+
+    public void beginEditing() {
+        ensureStorageLoaded();
+        if (editingOffsets == null) {
+            editingOffsets = savedOffsets.copy();
+            relayout(null);
+        }
+    }
+
+    public HudLayoutOffsets.Offset getOffset(String id) {
+        return currentOffsets().get(id);
+    }
+
+    public void setPreviewOffset(String id, int x, int y) {
+        if (editingOffsets == null || !layoutBounds.containsKey(id)) {
+            return;
+        }
+        editingOffsets.set(id, x, y);
+        relayout(null);
+    }
+
+    public void resetPreviewOffset(String id) {
+        if (editingOffsets != null) {
+            editingOffsets.reset(id);
+            relayout(null);
+        }
+    }
+
+    public void resetAllPreviewOffsets() {
+        if (editingOffsets != null) {
+            editingOffsets.resetAll();
+            relayout(null);
+        }
+    }
+
+    public boolean hasUnsavedChanges() {
+        return editingOffsets != null && !editingOffsets.sameAs(savedOffsets);
+    }
+
+    public boolean saveEditing() {
+        if (editingOffsets == null) {
+            return true;
+        }
+        try {
+            HudLayoutStorage.save(configPath(), editingOffsets);
+            savedOffsets = editingOffsets.copy();
+            editingOffsets = null;
+            lastSaveError = null;
+            return true;
+        } catch (IOException | RuntimeException exception) {
+            lastSaveError = exception.getMessage();
+            AnchorUI.LOGGER.error("Failed to save Anchor UI HUD positions", exception);
+            return false;
+        }
+    }
+
+    public String getLastSaveError() {
+        return lastSaveError;
+    }
+
+    public void cancelEditing() {
+        if (editingOffsets != null) {
+            editingOffsets = null;
+            relayout(null);
+        }
+    }
+
+    public List<HudHandle> getHandles() {
+        List<HudHandle> result = new ArrayList<>();
+        HudLayoutOffsets offsets = currentOffsets();
+        for (PlacedWidget placed : widgets) {
+            AnchorLayout.Bounds bounds = layoutBounds.get(placed.id());
+            if (bounds != null && !renderFailures.contains(placed.id())) {
+                result.add(new HudHandle(placed.id(), bounds, placed.position().relativeTo, offsets.get(placed.id()), placed.widget().visible));
+            }
+        }
+        return List.copyOf(result);
     }
 
     public void render(GuiGraphics graphics, DeltaTracker delta) {
@@ -67,17 +165,53 @@ public final class AnchorHudManager {
             clear();
             return;
         }
-        if (minecraft.options.hideGui || minecraft.screen != null) {
+        if (minecraft.options.hideGui || (minecraft.screen != null && !(minecraft.screen instanceof ChatScreen))) {
             return;
         }
+        prepare(minecraft, graphics.guiWidth(), graphics.guiHeight());
+        renderWidgets(graphics, delta.getGameTimeDeltaPartialTick(false));
+    }
 
-        int width = graphics.guiWidth();
-        int height = graphics.guiHeight();
+    public void renderEditorPreview(GuiGraphics graphics, float partialTick) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.player == null || minecraft.level == null || editingOffsets == null) {
+            return;
+        }
+        prepare(minecraft, graphics.guiWidth(), graphics.guiHeight());
+        renderWidgets(graphics, partialTick);
+    }
+
+    private void prepare(Minecraft minecraft, int width, int height) {
+        ensureStorageLoaded();
         long revision = LoreLoader.INSTANCE.getRevision();
         if (builtRevision != revision || builtWidth != width || builtHeight != height || builtLevel != minecraft.level || builtTestEnabled != testEnabled) {
             rebuild(minecraft, width, height, revision);
         }
-        float partialTick = delta.getGameTimeDeltaPartialTick(false);
+    }
+
+    private HudLayoutOffsets currentOffsets() {
+        ensureStorageLoaded();
+        return editingOffsets == null ? savedOffsets : editingOffsets;
+    }
+
+    private void ensureStorageLoaded() {
+        if (storageLoaded) {
+            return;
+        }
+        storageLoaded = true;
+        try {
+            savedOffsets = HudLayoutStorage.load(configPath());
+        } catch (IOException | RuntimeException exception) {
+            AnchorUI.LOGGER.warn("Could not read Anchor UI HUD layout; using default positions", exception);
+            savedOffsets = new HudLayoutOffsets();
+        }
+    }
+
+    private static Path configPath() {
+        return FMLPaths.CONFIGDIR.get().resolve("anchorui").resolve("hud-layout.json");
+    }
+
+    private void renderWidgets(GuiGraphics graphics, float partialTick) {
         for (PlacedWidget placed : widgets) {
             if (renderFailures.contains(placed.id())) {
                 continue;
@@ -86,8 +220,8 @@ public final class AnchorHudManager {
             if (!widget.visible) {
                 continue;
             }
+            graphics.pose().pushPose();
             try {
-                graphics.pose().pushPose();
                 int color = placed.style().background.color;
                 if (!(widget instanceof AnchoredWidget) && (color >>> 24) != 0) {
                     graphics.fill(widget.getX(), widget.getY(), widget.getRight(), widget.getBottom(), color);
@@ -110,6 +244,7 @@ public final class AnchorHudManager {
         builtTestEnabled = testEnabled;
         registry = new WidgetInstanceRegistry();
         widgets = List.of();
+        layoutBounds = Map.of();
         renderFailures.clear();
 
         List<Description> declared = new ArrayList<>();
@@ -124,9 +259,8 @@ public final class AnchorHudManager {
             int index = 0;
             for (LoreEntity.UiElement element : hud.entity().entities) {
                 String defaultId = element.type.getPath().replace('/', '_') + "_" + index;
-                String id;
                 try {
-                    id = WidgetIds.id(element.id.isBlank() ? defaultId : element.id, hud.entity().namespace);
+                    String id = WidgetIds.id(element.id.isBlank() ? defaultId : element.id, hud.entity().namespace);
                     registry.declare(id, element);
                     declared.add(new Description(id, hud.entity(), element));
                 } catch (IllegalArgumentException exception) {
@@ -174,27 +308,46 @@ public final class AnchorHudManager {
             }
         }
 
+        widgets = List.copyOf(created);
+        relayout(warnings);
+        for (String warning : warnings) {
+            AnchorUI.LOGGER.warn("Anchor UI HUD: {}", warning);
+        }
+    }
+
+    private void relayout(List<String> warnings) {
+        if (builtWidth <= 0 || builtHeight <= 0) {
+            return;
+        }
+        List<AnchorLayout.Frame> frames = widgets.stream().map(placed -> placed.frame(currentOffsets())).toList();
         try {
-            List<AnchorLayout.Frame> frames = created.stream().map(PlacedWidget::frame).toList();
-            Map<String, AnchorLayout.Bounds> bounds = AnchorLayout.resolve(width, height, frames, warnings::add);
-            for (PlacedWidget placed : created) {
+            Map<String, AnchorLayout.Bounds> bounds = AnchorLayout.resolve(builtWidth, builtHeight, frames, warning -> {
+                if (warnings != null) {
+                    warnings.add(warning);
+                }
+            });
+            for (PlacedWidget placed : widgets) {
                 AnchorLayout.Bounds frame = bounds.get(placed.id());
                 placed.widget().setPosition(frame.x(), frame.y());
             }
-            widgets = List.copyOf(created);
+            layoutBounds = bounds;
         } catch (IllegalArgumentException exception) {
-            AnchorUI.LOGGER.error("Anchor UI HUD layout rejected ({}x{}, {} widgets): {}", width, height, created.size(), exception.getMessage());
-            warnings.add("HUD layout rejected: " + exception.getMessage());
-        }
-        for (String warning : warnings) {
-            AnchorUI.LOGGER.warn("Anchor UI HUD: {}", warning);
+            AnchorUI.LOGGER.error("Anchor UI HUD layout rejected ({}x{}, {} widgets): {}", builtWidth, builtHeight, widgets.size(), exception.getMessage());
+            layoutBounds = Map.of();
+            widgets = List.of();
+            if (warnings != null) {
+                warnings.add("HUD layout rejected: " + exception.getMessage());
+            }
         }
     }
 
     private void clear() {
         builtRevision = -1;
         builtLevel = null;
+        builtWidth = -1;
+        builtHeight = -1;
         widgets = List.of();
+        layoutBounds = Map.of();
         registry = new WidgetInstanceRegistry();
         renderFailures.clear();
     }

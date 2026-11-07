@@ -5,6 +5,10 @@ import com.ludwici.anchorui.api.widget.AnchorWidgetRegistry;
 import com.ludwici.anchorui.client.gui.AnchoredTextWidget;
 import com.ludwici.anchorui.client.gui.ItemLoreListWidget;
 import com.ludwici.anchorui.client.gui.ItemModelWidget;
+import com.ludwici.anchorui.client.hud.AnchorHudManager;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import com.ludwici.anchorui.client.test.TestWidgetRegistration;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 
@@ -25,6 +29,11 @@ public class Events {
             AnchorWidgetRegistry.register(WidgetTypeIds.LIST, (context, element, style) -> new ItemLoreListWidget(element.lore.isEmpty() ? context.entity().components : element.lore, context.font(), style));
             TestWidgetRegistration.register();
         });
+    }
+
+    @SubscribeEvent
+    public static void onRegisterGuiLayers(RegisterGuiLayersEvent event) {
+        event.registerAbove(VanillaGuiLayers.CHAT, ResourceLocation.fromNamespaceAndPath(MODID, "hud"), AnchorHudManager.INSTANCE::render);
     }
 
     @SubscribeEvent

@@ -3,6 +3,7 @@ package com.ludwici.anchorui.client.test;
 import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.api.LoreEntity;
 import com.ludwici.anchorui.client.LoreLoader;
+import com.ludwici.anchorui.client.hud.AnchorHudManager;
 import com.mojang.brigadier.Command;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.Commands;
@@ -26,11 +27,25 @@ public final class AnchorUITestCommands {
                 .executes(context -> listScenes())
                 .then(Commands.literal("list").executes(context -> listScenes()));
 
+        test.then(Commands.literal("hud1")
+                .executes(context -> setHud(!AnchorHudManager.INSTANCE.isTestEnabled()))
+                .then(Commands.literal("on").executes(context -> setHud(true)))
+                .then(Commands.literal("off").executes(context -> setHud(false))));
+
         for (TestScene scene : TestScene.values()) {
             test.then(Commands.literal(scene.id()).executes(context -> queueScene(scene)));
         }
 
         event.getDispatcher().register(Commands.literal("anchorui").then(test));
+    }
+
+    private static int setHud(boolean enabled) {
+        AnchorHudManager.INSTANCE.setTestEnabled(enabled);
+        var player = Minecraft.getInstance().player;
+        if (player != null) {
+            player.displayClientMessage(Component.literal("Anchor UI HUD test: " + (enabled ? "enabled" : "disabled")), false);
+        }
+        return Command.SINGLE_SUCCESS;
     }
 
     private static int queueScene(TestScene scene) {
@@ -41,7 +56,7 @@ public final class AnchorUITestCommands {
     private static int listScenes() {
         var player = Minecraft.getInstance().player;
         if (player != null) {
-            player.displayClientMessage(Component.literal("Anchor UI — /anchorui test <scene1..scene14>"), false);
+            player.displayClientMessage(Component.literal("Anchor UI — /anchorui test <scene1..scene14> or hud1"), false);
             for (TestScene scene : TestScene.values()) {
                 player.displayClientMessage(Component.literal("/anchorui test " + scene.id() + " — " + scene.title()), false);
             }

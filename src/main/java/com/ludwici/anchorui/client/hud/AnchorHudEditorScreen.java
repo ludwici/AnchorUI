@@ -1,9 +1,11 @@
 package com.ludwici.anchorui.client.hud;
 
+import com.google.gson.JsonObject;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -14,25 +16,43 @@ public final class AnchorHudEditorScreen extends Screen {
     private static final int NORMAL_COLOR = 0xFF69D7D9;
     private static final int HIDDEN_COLOR = 0xFF9E9E9E;
     private static final int PARENT_COLOR = 0xFF8DF4AA;
-    private static final int PANEL_TOP = 4;
-    private static final int PANEL_HEIGHT = 134;
+    private static final int PANEL_WIDTH = 218;
+    private static final int BUTTON_HEIGHT = 17;
+    private static final int BUTTON_STEP = 20;
+    private static final int FOOTER_HEIGHT = 85;
+    private static final int HEADER_HEIGHT = 34;
+    private static final int INSPECTOR_LINE_HEIGHT = 11;
+    private static final float INSPECTOR_SCALE = 0.83F;
+
+    private record InspectorLine(FormattedCharSequence text, int color) {
+    }
 
     private final AnchorHudManager manager = AnchorHudManager.INSTANCE;
     private final List<Button> controls = new ArrayList<>();
     private boolean editorStarted;
     private boolean compact;
     private boolean choosingParent;
-    private int panelLeft;
+    private boolean draggingWidget;
+    private boolean draggingPanel;
+    private boolean draggingScroll;
+    private int panelX;
+    private int panelY;
     private int panelWidth;
+    private int panelHeight;
+    private int maxInspectorScroll;
+    private int inspectorScroll;
     private String selected;
+    private String inspectedId;
+    private List<String> sourceProperties = List.of();
     private String status = "";
-    private boolean dragging;
     private double dragStartX;
     private double dragStartY;
     private int startOffsetX;
     private int startOffsetY;
-    private Button resetSelectedButton;
-    private Button visibilityButton;
+    private int dragPanelX;
+    private int dragPanelY;
+    private Button resetButton;
+    private Button hideButton;
     private Button pointButton;
     private Button anchorButton;
     private Button parentButton;
@@ -44,73 +64,125 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     protected void init() {
-        dragging = false;
+        draggingWidget = false;
+        draggingPanel = false;
+        draggingScroll = false;
         controls.clear();
         if (!editorStarted) {
             manager.beginEditing();
             editorStarted = true;
+            panelWidth = Math.min(PANEL_WIDTH, width - 12);
+            panelHeight = Math.min(350, Math.max(128, height - 80));
+            panelX = width - panelWidth - 8;
+            panelY = 8;
+        } else {
+            panelWidth = Math.min(PANEL_WIDTH, width - 12);
+            panelHeight = Math.min(350, Math.max(128, height - 80));
+            clampPanel();
         }
+        int left = panelX + 6;
+        int innerWidth = panelWidth - 12;
+        int halfWidth = (innerWidth - 4) / 2;
+        int right = left + halfWidth + 4;
+        int actionsY = actionsTop();
 
-        panelWidth = Math.min(390, Math.max(1, width - 8));
-        panelLeft = (width - panelWidth) / 2;
-        int gap = 5;
-        int width3 = Math.min(112, Math.max(65, (width - 26) / 3));
-        int row3Width = width3 * 3 + gap * 2;
-        int row3X = (width - row3Width) / 2;
+        demoButton = addControl(Button.builder(Component.literal("Demo"), button -> {
+            manager.setTestEnabled(!manager.isTestEnabled());
+            selectWidget(null);
+            choosingParent = false;
+            status = manager.isTestEnabled() ? "Demo HUD enabled" : "Demo HUD disabled";
+        }).bounds(panelX + panelWidth - 46, panelY + 3, 40, 16).build());
 
-        pointButton = addControl(Button.builder(Component.literal("Point"), button -> {
+        pointButton = addControl(Button.builder(Component.literal("Point >"), button -> {
             if (selected != null && manager.cyclePreviewPoint(selected)) {
-                status = "Widget point changed; position recalculated";
+                status = "Widget point changed";
             }
-        }).bounds(row3X, PANEL_TOP + 56, width3, 20).build());
-        anchorButton = addControl(Button.builder(Component.literal("Anchor"), button -> {
+        }).bounds(left, actionsY, halfWidth, BUTTON_HEIGHT).build());
+        anchorButton = addControl(Button.builder(Component.literal("Anchor >"), button -> {
             if (selected != null && manager.cyclePreviewAnchor(selected)) {
-                status = "Parent anchor changed; position recalculated";
+                status = "Parent anchor changed";
             }
-        }).bounds(row3X + width3 + gap, PANEL_TOP + 56, width3, 20).build());
-        parentButton = addControl(Button.builder(Component.literal("Change parent"), button -> {
+        }).bounds(right, actionsY, halfWidth, BUTTON_HEIGHT).build());
+        parentButton = addControl(Button.builder(Component.literal("Pick parent"), button -> {
             if (selected != null) {
                 choosingParent = !choosingParent;
-                dragging = false;
-                status = choosingParent ? "Click another widget, or empty space for screen" : "Parent selection cancelled";
+                draggingWidget = false;
+                status = choosingParent ? "Click a widget or empty space (screen)" : "Parent selection cancelled";
             }
-        }).bounds(row3X + (width3 + gap) * 2, PANEL_TOP + 56, width3, 20).build());
-
-        int width4 = Math.min(90, Math.max(55, (width - 30) / 4));
-        int row4Width = width4 * 4 + gap * 3;
-        int row4X = (width - row4Width) / 2;
-        resetSelectedButton = addControl(Button.builder(Component.literal("Reset"), button -> {
-            if (selected != null) {
-                manager.resetPreviewOffset(selected);
-                status = "Restored widget defaults for " + selected;
-            }
-        }).bounds(row4X, PANEL_TOP + 80, width4, 20).build());
-        visibilityButton = addControl(Button.builder(Component.literal("Hide"), button -> {
+        }).bounds(left, actionsY + BUTTON_STEP, halfWidth, BUTTON_HEIGHT).build());
+        hideButton = addControl(Button.builder(Component.literal("Hide"), button -> {
             if (selected != null) {
                 manager.togglePreviewHidden(selected);
-                status = "Changed visibility for " + selected;
+                status = "Visibility changed";
             }
-        }).bounds(row4X + width4 + gap, PANEL_TOP + 80, width4, 20).build());
+        }).bounds(right, actionsY + BUTTON_STEP, halfWidth, BUTTON_HEIGHT).build());
+        resetButton = addControl(Button.builder(Component.literal("Reset"), button -> {
+            if (selected != null) {
+                manager.resetPreviewOffset(selected);
+                status = "Restored widget defaults";
+            }
+        }).bounds(left, actionsY + BUTTON_STEP * 2, halfWidth, BUTTON_HEIGHT).build());
         addControl(Button.builder(Component.literal("Reset all"), button -> {
             manager.resetAllPreviewOffsets();
             status = "Restored all HUD defaults";
-        }).bounds(row4X + (width4 + gap) * 2, PANEL_TOP + 80, width4, 20).build());
-        demoButton = addControl(Button.builder(Component.literal("Demo HUD"), button -> {
-            manager.setTestEnabled(!manager.isTestEnabled());
-            selected = null;
-            choosingParent = false;
-            status = manager.isTestEnabled() ? "Demo HUD enabled" : "Demo HUD disabled";
-        }).bounds(row4X + (width4 + gap) * 3, PANEL_TOP + 80, width4, 20).build());
-
-        int actionWidth = Math.min(115, Math.max(80, (width - 20) / 2 - 5));
-        int actionsLeft = (width - actionWidth * 2 - 6) / 2;
-        addControl(Button.builder(Component.literal("Save & close"), button -> saveAndClose()).bounds(actionsLeft, PANEL_TOP + 106, actionWidth, 20).build());
-        addControl(Button.builder(Component.literal("Cancel"), button -> onClose()).bounds(actionsLeft + actionWidth + 6, PANEL_TOP + 106, actionWidth, 20).build());
+        }).bounds(right, actionsY + BUTTON_STEP * 2, halfWidth, BUTTON_HEIGHT).build());
+        addControl(Button.builder(Component.literal("Save"), button -> saveAndClose()).bounds(left, actionsY + BUTTON_STEP * 3, halfWidth, BUTTON_HEIGHT).build());
+        addControl(Button.builder(Component.literal("Cancel"), button -> onClose()).bounds(right, actionsY + BUTTON_STEP * 3, halfWidth, BUTTON_HEIGHT).build());
     }
 
     private Button addControl(Button button) {
         controls.add(button);
         return addRenderableWidget(button);
+    }
+
+    private int actionsTop() {
+        return panelY + panelHeight - FOOTER_HEIGHT;
+    }
+
+    private int inspectorTop() {
+        return panelY + HEADER_HEIGHT;
+    }
+
+    private int inspectorBottom() {
+        return actionsTop() - 4;
+    }
+
+    private boolean insidePanel(double x, double y) {
+        return x >= panelX && x < panelX + panelWidth && y >= panelY && y < panelY + panelHeight;
+    }
+
+    private boolean insideInspector(double x, double y) {
+        return insidePanel(x, y) && y >= inspectorTop() && y < inspectorBottom();
+    }
+
+    private void clampPanel() {
+        panelX = Math.max(0, Math.min(width - panelWidth, panelX));
+        panelY = Math.max(0, Math.min(height - panelHeight, panelY));
+    }
+
+    private void positionControls() {
+        int left = panelX + 6;
+        int half = (panelWidth - 16) / 2;
+        int right = left + half + 4;
+        int top = actionsTop();
+        demoButton.setPosition(panelX + panelWidth - 46, panelY + 3);
+        pointButton.setPosition(left, top);
+        anchorButton.setPosition(right, top);
+        parentButton.setPosition(left, top + BUTTON_STEP);
+        hideButton.setPosition(right, top + BUTTON_STEP);
+        resetButton.setPosition(left, top + BUTTON_STEP * 2);
+        controls.get(6).setPosition(right, top + BUTTON_STEP * 2);
+        controls.get(7).setPosition(left, top + BUTTON_STEP * 3);
+        controls.get(8).setPosition(right, top + BUTTON_STEP * 3);
+    }
+
+    private void selectWidget(String id) {
+        if (id == null || !id.equals(selected)) {
+            selected = id;
+            inspectedId = null;
+            sourceProperties = List.of();
+            inspectorScroll = 0;
+        }
     }
 
     private void saveAndClose() {
@@ -133,13 +205,11 @@ public final class AnchorHudEditorScreen extends Screen {
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         manager.renderEditorPreview(graphics, partialTick);
         List<AnchorHudManager.HudHandle> handles = manager.getHandles();
-        if (selected != null && handles.stream().noneMatch(handle -> handle.id().equals(selected))) {
-            selected = null;
-            choosingParent = false;
-            dragging = false;
-        }
-
+        AnchorHudManager.HudHandle active = null;
         for (AnchorHudManager.HudHandle handle : handles) {
+            if (handle.id().equals(selected)) {
+                active = handle;
+            }
             var bounds = handle.bounds();
             if (bounds.width() <= 0 || bounds.height() <= 0) {
                 continue;
@@ -151,67 +221,135 @@ public final class AnchorHudEditorScreen extends Screen {
                 graphics.fill(bounds.x(), bounds.y(), bounds.x() + bounds.width(), bounds.y() + bounds.height(), 0x28FFC45B);
             }
             String label = handle.id() + (handle.visible() ? "" : " (hidden)");
-            int textWidth = Math.min(font.width(label) + 8, width - 12);
-            int labelX = Math.max(2, Math.min(bounds.x(), width - textWidth - 2));
+            int labelX = Math.max(2, Math.min(bounds.x(), width - Math.min(font.width(label) + 8, width - 12) - 2));
             if (compact || !insidePanel(labelX, bounds.y() - 12)) {
-                graphics.fill(labelX, bounds.y() - 12, labelX + textWidth, bounds.y(), 0xD0101720);
-                graphics.drawString(font, font.plainSubstrByWidth(label, textWidth - 6), labelX + 3, bounds.y() - 11, color, false);
+                int labelWidth = Math.min(font.width(label) + 8, width - 12);
+                graphics.fill(labelX, bounds.y() - 12, labelX + labelWidth, bounds.y(), 0xD0101720);
+                graphics.drawString(font, font.plainSubstrByWidth(label, labelWidth - 6), labelX + 3, bounds.y() - 11, color, false);
             }
+        }
+
+        if (selected != null && active == null) {
+            selectWidget(null);
+            choosingParent = false;
+            draggingWidget = false;
         }
 
         if (!compact) {
-            graphics.fill(panelLeft, PANEL_TOP, panelLeft + panelWidth, PANEL_TOP + PANEL_HEIGHT, 0xE7121C29);
-            drawPanelLine(graphics, "Anchor UI HUD Editor", PANEL_TOP + 5, 0xFFE6EDF5);
-            drawPanelLine(graphics, choosingParent ? "Choose parent: click widget / empty world = screen / Esc = cancel"
-                    : "Drag | Arrows: 1/10 px | Tab: hide controls | R: reset", PANEL_TOP + 17, 0xFFB3C9D9);
-            String info = selected == null ? "Click a highlighted widget to select it" : details(selected, handles);
-            drawPanelLine(graphics, info, PANEL_TOP + 29, 0xFFFFD37C);
-            String summary = status.isEmpty() ? (manager.hasUnsavedChanges() ? "Unsaved changes - Save & close to keep them" : "Changes saved only with Save & close") : status;
-            drawPanelLine(graphics, summary, PANEL_TOP + 41, manager.hasUnsavedChanges() ? 0xFFFFD37C : 0xFFD4E0EC);
+            graphics.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight, 0xE9121C29);
+            graphics.fill(panelX, panelY, panelX + panelWidth, panelY + 20, 0xEE254057);
+            graphics.drawString(font, "Anchor UI - HUD", panelX + 6, panelY + 6, 0xFFE5EEF5, false);
+            String hint = choosingParent ? "Select parent (empty = screen)" : "Drag header | Wheel: scroll | Tab: hide";
+            drawScaled(graphics, hint, panelX + 6, panelY + 22, 0xFFAAC1D4);
+            renderInspector(graphics, active);
+            graphics.fill(panelX + 3, actionsTop() - 3, panelX + panelWidth - 3, actionsTop() - 2, 0x88698DAB);
         }
 
-        if (handles.isEmpty()) {
-            graphics.drawCenteredString(font, "No HUD widgets loaded. Enable Demo HUD above.", width / 2, height / 2, 0xFFFFD37C);
-        }
-
-        AnchorHudManager.HudHandle highlighted = null;
-        for (AnchorHudManager.HudHandle handle : handles) {
-            if (handle.id().equals(selected)) {
-                highlighted = handle;
-                break;
-            }
-        }
-        resetSelectedButton.active = selected != null && !choosingParent;
-        visibilityButton.active = selected != null && !choosingParent;
+        resetButton.active = selected != null && !choosingParent;
+        hideButton.active = selected != null && !choosingParent;
         pointButton.active = selected != null && !choosingParent;
         anchorButton.active = selected != null && !choosingParent;
         parentButton.active = selected != null;
-        visibilityButton.setMessage(Component.literal(highlighted != null && highlighted.hiddenByUser() ? "Show" : "Hide"));
-        pointButton.setMessage(Component.literal(highlighted == null ? "Point" : "Point: " + highlighted.point()));
-        anchorButton.setMessage(Component.literal(highlighted == null ? "Anchor" : "Anchor: " + highlighted.anchor()));
-        parentButton.setMessage(Component.literal(choosingParent ? "Cancel parent" : "Change parent"));
-        demoButton.setMessage(Component.literal(manager.isTestEnabled() ? "Hide demo" : "Show demo"));
+        hideButton.setMessage(Component.literal(active != null && active.hiddenByUser() ? "Show" : "Hide"));
+        parentButton.setMessage(Component.literal(choosingParent ? "Cancel parent" : "Pick parent"));
+        demoButton.setMessage(Component.literal(manager.isTestEnabled() ? "Demo ON" : "Demo"));
         for (Button control : controls) {
             control.visible = !compact;
         }
         super.render(graphics, mouseX, mouseY, partialTick);
+
+        if (handles.isEmpty()) {
+            graphics.drawCenteredString(font, "No HUD widgets. Enable Demo in the panel.", width / 2, height / 2, 0xFFFFD37C);
+        }
     }
 
-    private void drawPanelLine(GuiGraphics graphics, String value, int y, int color) {
-        graphics.drawString(font, font.plainSubstrByWidth(value, panelWidth - 16), panelLeft + 8, y, color, false);
+    private void renderInspector(GuiGraphics graphics, AnchorHudManager.HudHandle active) {
+        int top = inspectorTop();
+        int bottom = inspectorBottom();
+        int visibleHeight = Math.max(1, bottom - top);
+        List<InspectorLine> lines = inspectorLines(active);
+        maxInspectorScroll = Math.max(0, lines.size() * INSPECTOR_LINE_HEIGHT - visibleHeight);
+        inspectorScroll = Math.max(0, Math.min(maxInspectorScroll, inspectorScroll));
+        if (bottom <= top) {
+            return;
+        }
+        graphics.enableScissor(panelX + 4, top, panelX + panelWidth - 4, bottom);
+        int y = top - inspectorScroll;
+        for (InspectorLine line : lines) {
+            if (y + INSPECTOR_LINE_HEIGHT > top && y < bottom) {
+                graphics.pose().pushPose();
+                graphics.pose().translate(panelX + 7, y + 1, 0);
+                graphics.pose().scale(INSPECTOR_SCALE, INSPECTOR_SCALE, 1.0F);
+                graphics.drawString(font, line.text(), 0, 0, line.color(), false);
+                graphics.pose().popPose();
+            }
+            y += INSPECTOR_LINE_HEIGHT;
+        }
+        graphics.disableScissor();
+        if (maxInspectorScroll > 0) {
+            int trackX = panelX + panelWidth - 5;
+            int trackHeight = bottom - top;
+            int thumbHeight = Math.max(9, trackHeight * trackHeight / (trackHeight + maxInspectorScroll));
+            int thumbTop = top + inspectorScroll * (trackHeight - thumbHeight) / maxInspectorScroll;
+            graphics.fill(trackX, top, trackX + 2, bottom, 0x66465C6F);
+            graphics.fill(trackX, thumbTop, trackX + 2, thumbTop + thumbHeight, 0xFFD5DDEB);
+        }
     }
 
-    private String details(String id, List<AnchorHudManager.HudHandle> handles) {
-        for (AnchorHudManager.HudHandle handle : handles) {
-            if (handle.id().equals(id)) {
-                return id + " | parent: " + handle.relativeTo() + " | point: " + handle.point() + " -> " + handle.anchor() + " | shift: " + handle.offset().x() + ", " + handle.offset().y();
+    private List<InspectorLine> inspectorLines(AnchorHudManager.HudHandle active) {
+        List<InspectorLine> lines = new ArrayList<>();
+        if (choosingParent) {
+            appendLine(lines, "CHOOSE PARENT", 0xFF8DF4AA);
+            appendLine(lines, "Click another widget", 0xFFE5EEF5);
+            appendLine(lines, "Click empty world: screen", 0xFFE5EEF5);
+            appendLine(lines, "Esc: cancel selection", 0xFFE5EEF5);
+        }
+        if (!status.isEmpty()) {
+            appendLine(lines, status, 0xFFFFCF64);
+        }
+        if (active == null) {
+            appendLine(lines, "SELECT A WIDGET", 0xFFFFCF64);
+            appendLine(lines, "Click any widget outline.", 0xFFE5EEF5);
+            appendLine(lines, "Drag widgets to move.", 0xFFE5EEF5);
+            appendLine(lines, "Arrows: 1 px / Shift: 10 px", 0xFFE5EEF5);
+            appendLine(lines, "Ctrl+S: save / Esc: cancel", 0xFFE5EEF5);
+        } else {
+            appendLine(lines, "CURRENT WIDGET", 0xFFFFCF64);
+            appendLine(lines, "id: " + active.id(), 0xFFE5EEF5);
+            appendLine(lines, "parent: " + active.relativeTo(), 0xFFE5EEF5);
+            appendLine(lines, "point: " + active.point(), 0xFFE5EEF5);
+            appendLine(lines, "anchor: " + active.anchor(), 0xFFE5EEF5);
+            var bounds = active.bounds();
+            appendLine(lines, "screen: " + bounds.x() + ", " + bounds.y(), 0xFFE5EEF5);
+            appendLine(lines, "size: " + bounds.width() + " x " + bounds.height(), 0xFFE5EEF5);
+            appendLine(lines, "user offset: " + active.offset().x() + ", " + active.offset().y(), 0xFFE5EEF5);
+            appendLine(lines, "visible: " + active.visible(), 0xFFE5EEF5);
+            if (!active.id().equals(inspectedId)) {
+                JsonObject settings = manager.getWidgetSettings(active.id());
+                sourceProperties = HudInspectorProperties.flatten(settings);
+                inspectedId = active.id();
+            }
+            appendLine(lines, "SOURCE JSON", 0xFFFFCF64);
+            for (String property : sourceProperties) {
+                appendLine(lines, property, 0xFFB7CEDF);
             }
         }
-        return id;
+        return lines;
     }
 
-    private boolean insidePanel(double x, double y) {
-        return x >= panelLeft && x < panelLeft + panelWidth && y >= PANEL_TOP && y < PANEL_TOP + PANEL_HEIGHT;
+    private void appendLine(List<InspectorLine> lines, String value, int color) {
+        int availableWidth = Math.max(20, (int) ((panelWidth - 20) / INSPECTOR_SCALE));
+        for (FormattedCharSequence part : font.split(Component.literal(value), availableWidth)) {
+            lines.add(new InspectorLine(part, color));
+        }
+    }
+
+    private void drawScaled(GuiGraphics graphics, String value, int x, int y, int color) {
+        graphics.pose().pushPose();
+        graphics.pose().translate(x, y, 0);
+        graphics.pose().scale(INSPECTOR_SCALE, INSPECTOR_SCALE, 1.0F);
+        graphics.drawString(font, font.plainSubstrByWidth(value, (int) ((panelWidth - 12) / INSPECTOR_SCALE)), 0, 0, color, false);
+        graphics.pose().popPose();
     }
 
     private static void outline(GuiGraphics graphics, int x, int y, int width, int height, int color, int thickness) {
@@ -234,6 +372,14 @@ public final class AnchorHudEditorScreen extends Screen {
         return null;
     }
 
+    private void scrollTo(double mouseY) {
+        int top = inspectorTop();
+        int available = Math.max(1, inspectorBottom() - top);
+        int thumbHeight = Math.max(9, available * available / Math.max(1, available + maxInspectorScroll));
+        int travel = Math.max(1, available - thumbHeight);
+        inspectorScroll = Math.max(0, Math.min(maxInspectorScroll, (int) Math.round((mouseY - top - thumbHeight / 2.0) * maxInspectorScroll / travel)));
+    }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (super.mouseClicked(mouseX, mouseY, button)) {
@@ -243,44 +389,64 @@ public final class AnchorHudEditorScreen extends Screen {
             return false;
         }
         if (!compact && insidePanel(mouseX, mouseY)) {
-            return false;
+            if (mouseY < panelY + 20) {
+                draggingPanel = true;
+                dragStartX = mouseX;
+                dragStartY = mouseY;
+                dragPanelX = panelX;
+                dragPanelY = panelY;
+            } else if (insideInspector(mouseX, mouseY) && mouseX >= panelX + panelWidth - 10) {
+                draggingScroll = true;
+                scrollTo(mouseY);
+            }
+            return true;
         }
 
         AnchorHudManager.HudHandle clicked = clickedHandle(mouseX, mouseY);
         if (choosingParent && selected != null) {
             String parent = clicked == null ? "screen" : clicked.id();
             if (selected.equals(parent)) {
-                status = "Choose a different parent or click empty world for screen";
+                status = "Choose another widget or empty world";
                 return true;
             }
             if (manager.setPreviewParent(selected, parent)) {
                 choosingParent = false;
-                status = "Parent set to " + parent + "; anchor position recalculated";
+                status = "Parent set to " + parent;
             } else {
-                status = "Cannot use " + parent + " as parent (invalid or circular anchor)";
+                status = "Invalid or circular parent: " + parent;
             }
+            inspectorScroll = 0;
             return true;
         }
         if (clicked != null) {
-            selected = clicked.id();
+            selectWidget(clicked.id());
             dragStartX = mouseX;
             dragStartY = mouseY;
             startOffsetX = clicked.offset().x();
             startOffsetY = clicked.offset().y();
-            dragging = true;
+            draggingWidget = true;
             status = "";
             return true;
         }
-        selected = null;
+        selectWidget(null);
         return false;
     }
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && dragging && selected != null && !choosingParent) {
-            int x = startOffsetX + (int) Math.round(mouseX - dragStartX);
-            int y = startOffsetY + (int) Math.round(mouseY - dragStartY);
-            manager.setPreviewOffset(selected, x, y);
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && draggingPanel) {
+            panelX = dragPanelX + (int) Math.round(mouseX - dragStartX);
+            panelY = dragPanelY + (int) Math.round(mouseY - dragStartY);
+            clampPanel();
+            positionControls();
+            return true;
+        }
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && draggingScroll) {
+            scrollTo(mouseY);
+            return true;
+        }
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && draggingWidget && selected != null && !choosingParent) {
+            manager.setPreviewOffset(selected, startOffsetX + (int) Math.round(mouseX - dragStartX), startOffsetY + (int) Math.round(mouseY - dragStartY));
             return true;
         }
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
@@ -288,11 +454,22 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && dragging) {
-            dragging = false;
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && (draggingWidget || draggingPanel || draggingScroll)) {
+            draggingWidget = false;
+            draggingPanel = false;
+            draggingScroll = false;
             return true;
         }
         return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (!compact && insideInspector(mouseX, mouseY)) {
+            inspectorScroll = Math.max(0, Math.min(maxInspectorScroll, inspectorScroll - (int) Math.round(scrollY * 23)));
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     @Override
@@ -304,6 +481,8 @@ public final class AnchorHudEditorScreen extends Screen {
         }
         if (keyCode == GLFW.GLFW_KEY_TAB) {
             compact = !compact;
+            draggingPanel = false;
+            draggingScroll = false;
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_S && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {

@@ -56,6 +56,26 @@
       "background": {
         "color": "B0435568"
       }
+    },
+    {
+      "ref": "anchorui_test:hud_header",
+      "id": "anchorui_test:hud_copy",
+      "text": "Template ref on HUD",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "BOTTOMLEFT",
+        "relativeTo": "anchorui_test:hud_extra",
+        "x": 0,
+        "y": 8
+      },
+      "size": {
+        "width": 202,
+        "height": 25
+      },
+      "align": "center",
+      "background": {
+        "color": "B0444C74"
+      }
     }
   ]
 }

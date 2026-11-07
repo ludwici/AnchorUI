@@ -106,8 +106,8 @@ See [HUD Documentation](docs/HUD.md) for complete JSON examples and current limi
 
 ## Player HUD editor
 
-Use **F8** or `/anchorui hud edit` in a world to open the HUD layout editor. Select and drag a widget to reposition it, nudge with arrow keys (Shift for 10-pixel increments), cycle anchor points and targets, hide/show widgets, reset individual or all overrides, and choose **Save & close**. **Tab** hides the editor toolbars so you can reach widgets near the screen edges. **Esc / Cancel** discards the preview. The optional demo HUD can be toggled from the editor.
+Use **F8** or `/anchorui hud edit` in a world to open the HUD layout editor. Select and drag a widget to reposition it, nudge with arrow keys (Shift for 10-pixel increments), cycle attachment points (which immediately update positions), pick a new parent by clicking another widget, hide/show widgets, reset individual or all overrides, and choose **Save & close**. The compact control panel sits at the top center, leaving bottom-corner widgets directly accessible. **Tab** hides this panel when needed. **Esc / Cancel** discards the preview. The optional demo HUD can be toggled from the editor.
 
-The editor persists client-specific position, anchor and visibility overrides by namespaced widget ID in `config/anchorui/hud-layout.json`. Position offsets are applied **in addition to the original JSON anchor settings**; changing anchor targets preserves the on-screen position and rejects cycles. The normal HUD remains display-only; HUD elements continue rendering while the chat screen is open and still hide for F1 and inventory/menu screens.
+The editor persists client-specific position, anchor and visibility overrides by namespaced widget ID in `config/anchorui/hud-layout.json`. Position offsets are applied **in addition to the original JSON anchor settings**; changing anchors moves widgets according to the new geometry, while click-to-select parent changes reject cycles. The normal HUD remains display-only; HUD elements continue rendering while the chat screen is open and still hide for F1 and inventory/menu screens.
 
 See [HUD editor and persistence](docs/HUD.md#hud-editor).

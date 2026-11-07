@@ -95,7 +95,7 @@ A `ref` entry instantiates the exported definition and deep-merges an overlay of
 
 Fields absent in the override come from `moda:header`. This enables reusable component presets with independently configured positions, texts, and custom fields. If `id` is omitted, the imported definition retains its original ID; adding the same ID twice to one screen is an error.
 
-Templates may themselves reference another template using `"ref": "othermod:template"`. Circular template inheritance and missing definitions are reported as errors.
+Templates may themselves reference another template using `"ref": "othermod:template"`. Circular template inheritance is reported as an error. Missing definitions raise a warning during resource loading; unavailable imports or references are skipped while the other widgets remain available. An anchor to the absent widget falls back to `screen` with its own warning.
 
 ## Two registries and lifecycle
 

@@ -13,6 +13,9 @@ public final class WidgetIds {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("Widget id must not be empty");
         }
+        if (value.equals("screen")) {
+            throw new IllegalArgumentException("screen is a reserved widget id");
+        }
         String namespace = defaultNamespace;
         String path = value;
         int separator = value.indexOf(':');
@@ -23,11 +26,7 @@ public final class WidgetIds {
         if (namespace == null || !NAMESPACE.matcher(namespace).matches() || !PATH.matcher(path).matches()) {
             throw new IllegalArgumentException("Invalid widget id: " + value);
         }
-        String result = namespace + ":" + path;
-        if (result.equals("screen")) {
-            throw new IllegalArgumentException("screen is a reserved widget id");
-        }
-        return result;
+        return namespace + ":" + path;
     }
 
     public static String reference(String value, String defaultNamespace) {

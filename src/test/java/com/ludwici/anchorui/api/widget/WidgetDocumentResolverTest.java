@@ -2,6 +2,9 @@ package com.ludwici.anchorui.api.widget;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.ludwici.anchorui.api.layout.AnchorLayout;
+import com.ludwici.anchorui.api.style.ElementAnchor;
+import com.ludwici.anchorui.api.style.PositionElement;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStreamReader;
@@ -9,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -94,6 +98,37 @@ public class WidgetDocumentResolverTest {
     }
 
     @Test
+    public void importedWidgetsCanAnchorAcrossNamespacesAndIgnoreJsonOrder() {
+        Map<String, JsonObject> templates = Map.of(
+                "anchorui_test:foreign_header", resource("assets/anchorui_test/lore/widgets/foreign_header.json"),
+                "anchorui_test:foreign_counter", resource("assets/anchorui_test/lore/widgets/foreign_counter.json")
+        );
+        JsonObject expanded = WidgetDocumentResolver.resolve(resource("assets/anchorui/lore/test/scenes/scene14.json"), "anchorui", templates);
+        List<AnchorLayout.Frame> frames = new ArrayList<>();
+        for (var entry : expanded.getAsJsonArray("entities")) {
+            JsonObject widget = entry.getAsJsonObject();
+            JsonObject position = widget.getAsJsonObject("position");
+            JsonObject size = widget.getAsJsonObject("size");
+            var point = ElementAnchor.fromString(position.get("point").getAsString());
+            var anchor = ElementAnchor.fromString(position.get("anchor").getAsString());
+            String relativeTo = position.get("relativeTo").getAsString();
+            int x = position.get("x").getAsInt();
+            int y = position.get("y").getAsInt();
+            frames.add(new AnchorLayout.Frame(widget.get("id").getAsString(), new PositionElement(point, anchor, relativeTo, x, y),
+                    size.get("width").getAsInt(), size.get("height").getAsInt()));
+        }
+        Collections.reverse(frames);
+        Map<String, AnchorLayout.Bounds> layout = AnchorLayout.resolve(854, 480, frames);
+        var header = layout.get("anchorui_test:foreign_header");
+        var explanation = layout.get("anchorui:explanation");
+        var counter = layout.get("anchorui:local_counter");
+        var footer = layout.get("anchorui:footer");
+        assertEquals(header.y() + header.height() + 11, explanation.y());
+        assertEquals(explanation.y() + explanation.height() + 13, counter.y());
+        assertEquals(counter.y() + counter.height() + 10, footer.y());
+    }
+
+    @Test
     public void duplicateQualifiedIdentifiersAreRejected() {
         JsonObject doc = json("""
                 {"imports":["othermod:header"],"entities":[{"type":"anchorui:text","id":"othermod:header"}]}
@@ -141,6 +176,7 @@ public class WidgetDocumentResolverTest {
         assertEquals("othermod:title", WidgetIds.id("othermod:title", "anchorui"));
         assertEquals("screen", WidgetIds.reference("screen", "anchorui"));
         assertEquals("othermod:header", WidgetIds.reference("othermod:header", "anchorui"));
+        assertThrows(IllegalArgumentException.class, () -> WidgetIds.id("screen", "anchorui"));
         assertThrows(IllegalArgumentException.class, () -> WidgetIds.id("Bad Name", "anchorui"));
         assertThrows(IllegalArgumentException.class, () -> WidgetIds.id(":missing_namespace", "anchorui"));
         assertThrows(IllegalArgumentException.class, () -> WidgetIds.id("invalid:", "anchorui"));

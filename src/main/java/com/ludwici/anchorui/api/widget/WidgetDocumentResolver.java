@@ -72,7 +72,9 @@ public final class WidgetDocumentResolver {
         for (JsonObject element : elements.values()) {
             array.add(element);
         }
-        resolved.add("entities", array);
+        if (document.has("entities") || document.has("imports")) {
+            resolved.add("entities", array);
+        }
         resolved.remove("imports");
         return resolved;
     }

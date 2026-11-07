@@ -163,11 +163,27 @@ public class WidgetDocumentResolverTest {
                 """);
         List<String> warnings = new ArrayList<>();
         JsonObject result = WidgetDocumentResolver.resolve(document, "consumer", Map.of(), warnings::add);
+        assertTrue(result.has("entities"));
         assertEquals(1, result.getAsJsonArray("entities").size());
         assertEquals("consumer:survives", result.getAsJsonArray("entities").get(0).getAsJsonObject().get("id").getAsString());
         assertEquals(2, warnings.size());
         assertTrue(warnings.get(0).contains("missingmod:header"));
         assertTrue(warnings.get(1).contains("missingmod:button"));
+    }
+
+    @Test
+    public void legacyDocumentsKeepTheirOriginalFormat() {
+        JsonObject legacy = json("""
+                {"title":"Legacy title","lore":[{"desc":"Legacy lore"}]}
+                """);
+        JsonObject result = WidgetDocumentResolver.resolve(legacy, "anchorui", Map.of());
+        assertFalse(result.has("entities"));
+        JsonObject emptyImports = json("""
+                {"imports":["missingmod:widget"]}
+                """);
+        JsonObject expanded = WidgetDocumentResolver.resolve(emptyImports, "anchorui", Map.of(), warning -> {});
+        assertTrue(expanded.has("entities"));
+        assertEquals(0, expanded.getAsJsonArray("entities").size());
     }
 
     @Test

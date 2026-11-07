@@ -62,7 +62,7 @@ public class ItemLoreScreen extends Screen {
         LoreStyle theme = LoreLoader.INSTANCE.getStyle(loreEntity.style);
         List<DeclaredWidget> definitions = new ArrayList<>();
         try {
-            if (loreEntity.entities.isEmpty()) {
+            if (!loreEntity.hasExplicitWidgets) {
                 declare(definitions, legacy(WidgetTypeIds.TEXT, "title", loreEntity.title, 1.0F), "title");
                 declare(definitions, legacy(WidgetTypeIds.MODEL, "model", "", loreEntity.scale), "model");
                 declare(definitions, legacy(WidgetTypeIds.LIST, "lore", "", 1.0F), "lore");

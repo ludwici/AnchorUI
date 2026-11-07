@@ -16,7 +16,7 @@
       "point": "CENTER",
       "anchor": "CENTER",
       "relativeTo": "screen",
-      "x": -75,
+      "x": -90,
       "y": 0
     },
     "size": {
@@ -29,11 +29,11 @@
       "point": "TOPLEFT",
       "anchor": "TOPRIGHT",
       "relativeTo": "model",
-      "x": 16,
+      "x": 12,
       "y": 0
     },
     "size": {
-      "width": 175,
+      "width": 168,
       "height": 140
     },
     "padding": {

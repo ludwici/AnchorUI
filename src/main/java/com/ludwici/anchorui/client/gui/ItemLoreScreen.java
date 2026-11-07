@@ -38,7 +38,8 @@ public class ItemLoreScreen extends Screen {
         } else {
             int index = 0;
             for (LoreEntity.UiElement element : loreEntity.entities) {
-                LoreStyle.Element settings = theme.get(element.type, element.settings);
+                LoreStyle widgetTheme = element.settings.has("style") ? LoreLoader.INSTANCE.getStyle(element.settings.get("style").getAsString()) : theme;
+                LoreStyle.Element settings = widgetTheme.get(element.type, element.settings);
                 String id = element.id.isBlank() ? element.type + "_" + index : element.id;
                 switch (element.type) {
                     case "text" -> add(id, new AnchoredTextWidget(element.text, minecraft.font, settings), settings, frames, widgets);

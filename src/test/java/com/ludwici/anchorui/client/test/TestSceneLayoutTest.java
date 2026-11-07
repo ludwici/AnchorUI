@@ -70,13 +70,23 @@ public class TestSceneLayoutTest {
     }
 
     @Test
+    public void bundledWidgetTypesUseAnchorUiNamespace() {
+        for (int i = 1; i <= 10; i++) {
+            for (var entry : resource(i).getAsJsonArray("entities")) {
+                String type = entry.getAsJsonObject().get("type").getAsString();
+                assertTrue(List.of("anchorui:text", "anchorui:model", "anchorui:list").contains(type), "Unexpected widget type in scene" + i + ": " + type);
+            }
+        }
+    }
+
+    @Test
     public void textSceneCoversAlignmentsAndEllipsis() {
         JsonObject scene = resource(9);
         var elements = scene.getAsJsonArray("entities");
         List<String> alignments = new ArrayList<>();
         for (var json : elements) {
             JsonObject element = json.getAsJsonObject();
-            assertEquals("text", element.get("type").getAsString());
+            assertEquals("anchorui:text", element.get("type").getAsString());
             alignments.add(element.get("align").getAsString());
         }
         assertTrue(alignments.containsAll(List.of("left", "center", "right")));

@@ -10,7 +10,7 @@ Each UI frame may declare a unique `id` and a `position`. `point` is the attachm
 
 ```json
 {
-  "type": "text",
+  "type": "anchorui:text",
   "id": "description",
   "text": "Relative to another frame",
   "position": {
@@ -32,7 +32,7 @@ The bundled demo uses `assets/anchorui/lore/test/block.json` and `assets/anchoru
 Two input formats are supported:
 
 - The 1.21.1 format defines `title`, `item`, `scale`, `lore` and optional `style`. Built-in `title`, `model`, and `lore` frames use that style, and can refer to one another by id.
-- The 1.20.1 format defines `item` and `entities`, an array of elements with `type` (`text`, `model`, `list`), optional `id`, and layout/style properties. A `list` can contain its own `lore` entries. Both formats can use the 1.21.1 rich-text parser for lore text.
+- The 1.20.1 format defines `item` and `entities`, an array of elements with `type` (`anchorui:text`, `anchorui:model`, `anchorui:list`), optional `id`, and layout/style properties. A `list` can contain its own `lore` entries. Both formats can use the 1.21.1 rich-text parser for lore text.
 
 `size.width`/`height` of zero means auto-sizing for text and lore; models default to 128 by 128. JSON dimensions and offsets are scaled GUI pixels. A background color accepts `AARRGGBB`, `RRGGBB`, or an RGBA object. An image field is parsed for future texture rendering but is not yet drawn.
 
@@ -60,3 +60,12 @@ See [docs/TEST_SCENES.md](docs/TEST_SCENES.md) for each command and expected res
 Text elements accept the same lore tags: `<b>`, `<i>`, `<u>` and `<t id="tooltip text">`. The existing lore parser converts these tags to styled Minecraft Components.
 Single-line text continues using vanilla `StringWidget`. Set `"wrap": true`, or include `\n` in text, for multiline wrapping through `Font.split`, preserving formatting and hover tooltips.
 Multiline text respects `align`, `padding`, `size`, and uses auto-height when `"size": {"height": 0}`. Run `/anchorui test scene10` to check both modes.
+## Namespaced widget types
+
+Every built-in type is now namespaced: `anchorui:text`, `anchorui:model`, and `anchorui:list`. JSON elements should declare fully-qualified identifiers, for example `"type": "anchorui:text"`.
+
+For compatibility, unqualified names like `"text"` are interpreted as `anchorui:text` (never `minecraft:text`). Explicit namespaces are preserved: `othermod:text` is a distinct type, **not** an alias for `anchorui:text`.
+
+In Java, `LoreEntity.UiElement.type` is a Minecraft `ResourceLocation`. Use `WidgetTypeIds.TEXT`, `WidgetTypeIds.MODEL`, and `WidgetTypeIds.LIST` for built-in identifiers. Type-specific style sections may use namespaced keys (such as `"anchorui:text"`). For built-in types only, legacy short keys (such as `"text"`) remain supported; a fully qualified style key takes precedence. A custom namespace never inherits styling intended for `anchorui:text`.
+
+Unknown namespaced types are currently logged and skipped. A public widget-factory registration API is a separate, future step; namespaces alone do not yet make external widgets render.

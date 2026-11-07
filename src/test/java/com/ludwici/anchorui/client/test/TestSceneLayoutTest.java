@@ -49,7 +49,7 @@ public class TestSceneLayoutTest {
 
     @Test
     public void eachScenarioIsIncludedInResources() {
-        for (int i = 1; i <= 10; i++) {
+        for (int i = 1; i <= 12; i++) {
             assertTrue(resource(i).getAsJsonArray("entities").size() > 0);
         }
     }
@@ -67,6 +67,30 @@ public class TestSceneLayoutTest {
         List<AnchorLayout.Frame> richTextDefinitions = frames(10);
         assertEquals(richTextDefinitions.size() + 1, AnchorLayout.resolve(320, 240, richTextDefinitions).size());
         assertEquals(richTextDefinitions.size() + 1, AnchorLayout.resolve(854, 480, richTextDefinitions).size());
+        List<AnchorLayout.Frame> customDefinitions = frames(11);
+        assertEquals(customDefinitions.size() + 1, AnchorLayout.resolve(320, 240, customDefinitions).size());
+        assertEquals(customDefinitions.size() + 1, AnchorLayout.resolve(854, 480, customDefinitions).size());
+    }
+
+    @Test
+    public void customWidgetSceneUsesNamespacedTypesAndProperties() {
+        var entries = resource(11).getAsJsonArray("entities");
+        JsonObject counterA = entries.get(1).getAsJsonObject();
+        JsonObject counterB = entries.get(2).getAsJsonObject();
+        assertEquals("anchorui_test:counter", counterA.get("type").getAsString());
+        assertEquals("anchorui_test:counter", counterB.get("type").getAsString());
+        assertEquals(1, counterA.get("step").getAsInt());
+        assertEquals(5, counterB.get("step").getAsInt());
+        assertEquals("counter_a", counterB.getAsJsonObject("position").get("relativeTo").getAsString());
+    }
+
+    @Test
+    public void unknownAndBrokenFactoriesAreIsolatedFromValidElements() {
+        var entries = resource(12).getAsJsonArray("entities");
+        assertEquals("unregistered:missing_widget", entries.get(0).getAsJsonObject().get("type").getAsString());
+        assertEquals("anchorui_test:broken", entries.get(1).getAsJsonObject().get("type").getAsString());
+        assertEquals("anchorui:text", entries.get(2).getAsJsonObject().get("type").getAsString());
+        assertEquals("anchorui:text", entries.get(3).getAsJsonObject().get("type").getAsString());
     }
 
     @Test

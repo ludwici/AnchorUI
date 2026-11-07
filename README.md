@@ -47,7 +47,7 @@ Java 21 and NeoForge 21.1 are required. Run `./gradlew build`; GitHub Actions ch
 
 ## Interactive test scenes
 
-Use `/anchorui test list` or `/anchorui test scene1` in-game to open the built-in client-only test harness. Thirteen scenes exercise anchors, relative chains, dimensions, styling, rich text, item model input, resizing, hidden frames, invalid references, and vanilla StringWidget text alignment and ellipsis. Navigate with the on-screen arrows; press **G** to toggle anchor outlines and **Esc** to close.
+Use `/anchorui test list` or `/anchorui test scene1` in-game to open the built-in client-only test harness. Fourteen scenes exercise anchors, relative chains, dimensions, styling, rich text, item model input, resizing, hidden frames, invalid references, and vanilla StringWidget text alignment and ellipsis. Navigate with the on-screen arrows; press **G** to toggle anchor outlines and **Esc** to close.
 
 See [docs/TEST_SCENES.md](docs/TEST_SCENES.md) for each command and expected result. The scenes are JSON resources under `assets/anchorui/lore/test/scenes`, so they use the same rendering path as ordinary lore screens.
 
@@ -83,3 +83,13 @@ See **[Custom Widgets API](docs/CUSTOM_WIDGETS.md)** for complete Java and JSON 
 A third-party mod can declare its custom fields as a Java `record` with a Mojang `Codec<T>` (typically built with `RecordCodecBuilder`) and register it using `AnchorWidgetRegistry.register(type, codec, (context, element, style, config) -> widget)`. Anchor UI parses the full JSON element using `JsonOps.INSTANCE`, ignores unrelated layout fields, and supplies a validated, typed configuration object. Defaults can be declared with `optionalFieldOf` and invariants with `Codec.validate`.
 
 Bad configuration is reported as a `WARN` with the widget type and ID; the problematic widget is skipped without affecting its neighbors. The existing three-parameter `WidgetFactory` overload and raw `element.settings` remain available. The test counter now uses `CounterConfig` and `scene13` demonstrates defaults and validation failures. See [docs/CUSTOM_WIDGETS.md](docs/CUSTOM_WIDGETS.md).
+
+## Namespaced widget IDs and cross-mod references
+
+Widget `id` and `position.relativeTo` now accept `namespace:path`. Unqualified IDs are scoped to the **namespace of the screen resource** (for example, `"id": "header"` inside `assets/my_mod/lore/...` resolves to `my_mod:header`). `"relativeTo": "screen"` remains a special built-in target.
+
+Anchor UI loads reusable widget definitions from **`assets/<namespace>/lore/widgets/<name>.json`** into a reload-safe catalog before it expands screen documents. The definition file's path determines its ID: `assets/librarymod/lore/widgets/header.json` exports `librarymod:header`. Other mods may opt into this definition using a screen's `"imports": ["librarymod:header"]` or `{"ref": "librarymod:header", "id": "consumer:copied_header"}` inside `entities`. `ref` supports deep-merging local JSON overrides.
+
+Within a screen, Anchor UI first declares all widget IDs in a per-screen `WidgetInstanceRegistry`, then creates them using the registered factories, applies styles and dimensions, and finally resolves all anchor relationships. Factories can inspect `context.widgets().definition(qualifiedId)`, and completed instances are exposed by `context.widgets().widget(qualifiedId)`. The registry is scoped to the currently open screen; importing is explicit, so unrelated widgets from other screens are not instantiated automatically.
+
+See [Widget Namespaces and Imports](docs/WIDGET_REFERENCES.md) and test `/anchorui test scene14` for a working cross-namespace demonstration.

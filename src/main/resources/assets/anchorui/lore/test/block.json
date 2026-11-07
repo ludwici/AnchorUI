@@ -1,0 +1,135 @@
+{
+  "item": "minecraft:crafting_table",
+  "entities": [
+    {
+      "type": "text",
+      "id": "first",
+      "text": "TOPLEFT x:10 y:5",
+      "color": "FFFFFF",
+      "position": {
+        "point": "TOPLEFT",
+        "x": 10,
+        "y": 5
+      },
+      "padding": {
+        "left": 10
+      }
+    },
+    {
+      "type": "text",
+      "id": "second",
+      "text": "TOP to BOTTOM y:5",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "first",
+        "y": 5
+      }
+    },
+    {
+      "type": "text",
+      "text": "TOPLEFT to BOTTOMRIGHT",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "BOTTOMRIGHT",
+        "relativeTo": "second"
+      }
+    },
+    {
+      "type": "text",
+      "text": "TOP x: 10 y:5",
+      "position": {
+        "point": "TOP",
+        "anchor": "TOP",
+        "x": 10,
+        "y": 5
+      }
+    },
+    {
+      "type": "text",
+      "text": "TOPRIGHT x:10 y:5",
+      "position": {
+        "point": "TOPRIGHT",
+        "anchor": "TOPRIGHT",
+        "x": 10,
+        "y": 5
+      }
+    },
+    {
+      "type": "text",
+      "text": "LEFT",
+      "position": {
+        "point": "LEFT",
+        "anchor": "LEFT"
+      }
+    },
+    {
+      "type": "text",
+      "text": "CENTER",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER"
+      }
+    },
+    {
+      "type": "text",
+      "text": "RIGHT",
+      "position": {
+        "point": "RIGHT",
+        "anchor": "RIGHT"
+      }
+    },
+    {
+      "type": "text",
+      "text": "BOTTOMLEFT",
+      "position": {
+        "point": "BOTTOMLEFT",
+        "anchor": "BOTTOMLEFT"
+      }
+    },
+    {
+      "type": "text",
+      "text": "BOTTOM",
+      "position": {
+        "point": "BOTTOM",
+        "anchor": "BOTTOM"
+      }
+    },
+    {
+      "type": "text",
+      "text": "BOTTOMRIGHT y: 10",
+      "position": {
+        "point": "BOTTOMRIGHT",
+        "anchor": "BOTTOMRIGHT",
+        "y": 10
+      }
+    },
+    {
+      "type": "model",
+      "path": "minecraft:crafting_table",
+      "position": {
+        "anchor": "CENTER",
+        "x": 0,
+        "y": 10
+      },
+      "scale": 4.0
+    },
+    {
+      "type": "list",
+      "lore": [
+        {
+          "desc": "Делается из шариков <u>слизи</u>"
+        },
+        {
+          "desc": "Можно найти <i>в пещерах</i> и под <b>водой</b>",
+          "trigger": "mymod:adv1"
+        },
+        {
+          "desc": "Используется в <t id=\"Фул в описании\"><u>зельеварении</u></t>",
+          "trigger": "mymod:adv2"
+        }
+      ],
+      "style": "anchorui:default/list"
+    }
+  ]
+}

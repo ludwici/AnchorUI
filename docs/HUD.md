@@ -189,6 +189,16 @@ Select any widget to see its computed layout properties and original JSON config
 
 The editor draws ID labels for the currently selected or hovered widget, avoiding overlapping labels from nearby widgets. Ordinary HUD widgets still do not receive clicks outside the editor.
 
+### Reset individual properties
+
+The scrollable property inspector displays a small **R** button on the right of each editable field: `parent`, `point`, `anchor`, `user offset` and `visible`. When a field differs from its original JSON configuration, its reset button is enabled. Click it to reset **only that field**, leaving unrelated user changes in place.
+
+- Resetting **user offset** sets both X and Y deltas to `0, 0`. The source JSON's own `position.x` and `position.y` remain unchanged.
+- Resetting **parent**, **point** or **anchor** restores the respective value from the source JSON while preserving the other two attachment settings. A reset that would create a cyclic layout is rejected.
+- Resetting **visible** removes the user's hidden override and returns to the widget's original visibility.
+
+The inspector buttons follow their lines when scrolling. A grey reset button means the field is already at its default. The regular **Reset** button still restores every editable field of the selected widget, while **Reset all** clears all HUD overrides. Saving remains an explicit action.
+
 ### Demo HUD spacing
 
 The built-in HUD preview now has **zero gap** between its connected elements: the header/body, body/diamond, diamond/extra label and extra label/copied header use `x: 0` or `y: 0` wherever their edges are attached. The bottom-right corner widget keeps its intentional `x: -16, y: -16` screen padding.
@@ -206,3 +216,5 @@ User overrides in `config/anchorui/hud-layout.json` are applied in addition to r
 - Reopen, drag a widget, choose **Save & close**, and verify the same position persists after reopening and restarting the game.
 - Try **Reset**, **Reset all** and **Ctrl+S**; the saved file should contain only modified widget positions, anchors and visibility flags.
 - Resize the game or change GUI Scale while HUD is visible to check anchor reflow.
+
+- In the editor, move a widget vertically to create `user offset: 0, 63`, scroll to that row and press its right-hand **R**. Verify the offset becomes `0, 0` without resetting its parent, attachment points or visibility. Reset parent, point, anchor and visibility individually and verify the other user overrides remain intact.

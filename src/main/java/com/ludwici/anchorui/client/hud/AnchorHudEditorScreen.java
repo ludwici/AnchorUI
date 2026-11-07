@@ -338,6 +338,7 @@ public final class AnchorHudEditorScreen extends Screen {
             appendLine(lines, "Ctrl+S: save / Esc: cancel", 0xFFE5EEF5);
         } else {
             appendLine(lines, "CURRENT WIDGET", 0xFFFFCF64);
+            appendLine(lines, "R at right: reset this field", 0xFF96AEBE);
             appendLine(lines, "id: " + active.id(), 0xFFE5EEF5);
             appendEditableLine(lines, "parent: " + active.relativeTo(), AnchorHudManager.EditableProperty.PARENT, active);
             appendEditableLine(lines, "point: " + active.point(), AnchorHudManager.EditableProperty.POINT, active);

@@ -88,6 +88,33 @@ public class HudLayoutOffsetsTest {
     }
 
     @Test
+    public void offsetResetDoesNotDiscardOtherWidgetOverrides() {
+        String id = "moda:health";
+        HudLayoutOffsets overrides = new HudLayoutOffsets();
+        overrides.set(id, 0, 63);
+        overrides.setAnchor(id, new HudLayoutOffsets.AnchorOverride("othermod:frame", ElementAnchor.BOTTOMRIGHT, ElementAnchor.TOPLEFT));
+        overrides.setHidden(id, true);
+
+        overrides.set(id, 0, 0);
+
+        assertEquals(HudLayoutOffsets.Offset.ZERO, overrides.get(id));
+        assertFalse(overrides.entries().containsKey(id));
+        assertEquals("othermod:frame", overrides.anchor(id).relativeTo());
+        assertEquals(ElementAnchor.BOTTOMRIGHT, overrides.anchor(id).point());
+        assertTrue(overrides.isHidden(id));
+
+        var restoredPoint = new HudLayoutOffsets.AnchorOverride(overrides.anchor(id).relativeTo(), ElementAnchor.TOPLEFT, overrides.anchor(id).anchor());
+        overrides.setAnchor(id, restoredPoint);
+        assertEquals("othermod:frame", overrides.anchor(id).relativeTo());
+        assertEquals(ElementAnchor.TOPLEFT, overrides.anchor(id).point());
+        assertTrue(overrides.isHidden(id));
+
+        overrides.setHidden(id, false);
+        assertFalse(overrides.isHidden(id));
+        assertEquals("othermod:frame", overrides.anchor(id).relativeTo());
+    }
+
+    @Test
     public void editorOffsetsKeepAnchoredChildrenAttached() {
         PositionElement root = new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, "screen", 15, 30);
         PositionElement child = new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.BOTTOMLEFT, "moda:health", 0, 6);

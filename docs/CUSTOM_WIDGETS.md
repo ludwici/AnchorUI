@@ -125,3 +125,13 @@ Anchor UI загружает все описания и регистрирует
 Каталог ресурсов доступен через `LoreLoader.INSTANCE.getDefinitions()`; `find(ResourceLocation)` возвращает копию JSON-описания. Все определения перечитываются при перезагрузке ресурсов, а экземпляры привязаны к конкретному открытому экрану.
 
 Пример структуры каталогов и правила импортов приведены в [WIDGET_REFERENCES.md](WIDGET_REFERENCES.md). Игровая проверка — `/anchorui test scene14`.
+
+## 8. HUD widget factories
+
+Anchor UI's single NeoForge HUD layer invokes the **same** `WidgetFactory` and `ConfiguredWidgetFactory<T>` registrations used by `ItemLoreScreen`. HUD JSON lives under `assets/<namespace>/lore/hud/<name>.json` and can use `imports`, `ref`, namespaced `id` and `position.relativeTo`. All HUD documents contributed by mods are composed into one layout.
+
+When called from a HUD, `WidgetContext.screen()` returns `null` because no normal `Screen` is open. Factories should rely on `context.minecraft()`, `context.font()`, `context.widgets()`, etc., and handle the nullable screen properly. The HUD supplies an empty `ItemStack` as the default item; an `anchorui:model` widget can specify `path` to display a particular item.
+
+HUD widgets are currently visual only: the manager renders `AbstractWidget` with off-screen mouse coordinates, leaving click/hover/keyboard routing to the future HUD editor. Vanilla buttons can render but cannot be clicked on the ordinary game HUD.
+
+See [HUD.md](HUD.md).

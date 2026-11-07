@@ -93,3 +93,13 @@ Anchor UI loads reusable widget definitions from **`assets/<namespace>/lore/widg
 Within a screen, Anchor UI first declares all widget IDs in a per-screen `WidgetInstanceRegistry`, then creates them using the registered factories, applies styles and dimensions, and finally resolves all anchor relationships. Factories can inspect `context.widgets().definition(qualifiedId)`, and completed instances are exposed by `context.widgets().widget(qualifiedId)`. The registry is scoped to the currently open screen; importing is explicit, so unrelated widgets from other screens are not instantiated automatically.
 
 See [Widget Namespaces and Imports](docs/WIDGET_REFERENCES.md) and test `/anchorui test scene14` for a working cross-namespace demonstration.
+
+## In-game HUD support (NeoForge 1.21.1)
+
+Anchor UI also renders **in-game HUD documents** via a single NeoForge `RegisterGuiLayersEvent` layer ordered above vanilla chat. Add JSON files to `assets/<namespace>/lore/hud/<name>.json`. All non-test HUD documents are collected from loaded resource packs and mods, and their widgets are positioned in one shared `AnchorLayout`—including cross-mod `relativeTo` references, `imports` and `ref` templates. Widgets use the same registered factories and styles as regular screens.
+
+The HUD is rendered without an open `Screen`. A HUD factory receives `WidgetContext.screen() == null` and should not depend on screen-only functions. HUD widgets are currently **display-only**: mouse/key interactions (including vanilla `Button` clicks) are reserved for future HUD editor work. F1 hides the HUD, and HUD rendering is suppressed when a normal game screen is open. Layout and widget instances are rebuilt when the GUI size, world or loaded resources change; they are not recreated every frame.
+
+Run `/anchorui test hud1` to toggle a built-in HUD preview (or use `/anchorui test hud1 on` / `off`). It combines `anchorui:text`, `anchorui:model` and widgets defined in `anchorui_test`, including cross-file anchors and a `ref` override. The preview resource files have `"testOnly": true` and are disabled by default.
+
+See [HUD Documentation](docs/HUD.md) for complete JSON examples and current limitations.

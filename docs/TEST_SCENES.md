@@ -124,3 +124,19 @@ GitHub Actions запускает `gradle build`, включая JUnit-тест�
 - Определение `anchorui_test:foreign_counter` используется через `ref`, но создаётся с локальным ID `anchorui:local_counter` и своими значениями `initial: 12`, `step: 3`.
 
 Проверь, что все четыре элемента располагаются последовательно, кнопка начинается с 12 и увеличивается на 3, а при нажатии G видны полные ID с неймспейсами. Важно: описание чужого виджета загружается в общий каталог, но его экземпляр существует только в том экране, куда он импортирован.
+
+## HUD testing: `/anchorui test hud1`
+
+Test HUDs render directly on top of the Minecraft world and do not open a `Screen`.
+
+1. Join a world and run `/anchorui test hud1 on` (or `/anchorui test hud1` to toggle).
+2. Close the chat. At the upper left, a header imported from the `anchorui_test` namespace should appear, followed by an Anchor UI text label, a diamond item, a second namespace label and a copied template `ref` below it.
+3. A separate `HUD corner anchor` label should remain 16 GUI pixels from the bottom-right corner when resizing the window or changing GUI Scale.
+4. Press **F1**. The Anchor UI HUD elements should disappear with the rest of the Minecraft GUI. Press F1 again to restore them.
+5. Open inventory or another game screen; the Anchor UI HUD is intentionally hidden until the screen closes.
+6. Use `/anchorui test hud1 off` to disable the preview. Check that these test-only widgets remain hidden after restarting with the preview off.
+7. With the HUD visible, press F3+T to reload resources. The renderer should rebuild from the new loaded JSON without multiplying the displayed widgets.
+
+The preview is assembled from `assets/anchorui/lore/hud/hud1.json`, `assets/anchorui_test/lore/hud/hud1_extra.json`, and the exported `anchorui_test:hud_header` template at `assets/anchorui_test/lore/widgets/hud_header.json`.
+
+JUnit checks cross-namespace layout, template overrides and bottom-right anchor positioning at different screen resolutions. A successful build verifies compilation and these data/layout tests; the in-game rendering still needs a manual visual check.

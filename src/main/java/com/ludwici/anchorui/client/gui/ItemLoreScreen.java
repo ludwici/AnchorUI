@@ -7,6 +7,7 @@ import com.ludwici.anchorui.api.WidgetTypeIds;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.style.LoreStyle;
 import com.ludwici.anchorui.api.widget.AnchorWidgetRegistry;
+import com.ludwici.anchorui.api.widget.WidgetConfigException;
 import com.ludwici.anchorui.api.widget.WidgetContext;
 import com.ludwici.anchorui.client.LoreLoader;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -118,6 +119,10 @@ public class ItemLoreScreen extends Screen {
         AbstractWidget widget;
         try {
             widget = factory.create(context, element, settings);
+        } catch (WidgetConfigException exception) {
+            AnchorUI.LOGGER.warn("{}", exception.getMessage());
+            warnings.add(exception.getMessage());
+            return;
         } catch (RuntimeException exception) {
             AnchorUI.LOGGER.error("Anchor UI widget factory failed: type='{}', id='{}'", element.type, id, exception);
             warnings.add("Widget factory failed for '" + id + "' (" + element.type + "): " + exception.getClass().getSimpleName());

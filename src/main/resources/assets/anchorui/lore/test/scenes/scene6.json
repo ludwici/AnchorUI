@@ -1,0 +1,111 @@
+{
+  "item": "minecraft:amethyst_shard",
+  "style": "anchorui:style/default",
+  "entities": [
+    {
+      "type": "text",
+      "id": "invisible",
+      "text": "YOU MUST NOT SEE THIS",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "width": 132,
+        "height": 52
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "DDFF0000"
+      },
+      "color": "#FFFFFF",
+      "hidden": true
+    },
+    {
+      "type": "text",
+      "id": "note",
+      "text": "Hidden frame is centered here",
+      "position": {
+        "point": "BOTTOM",
+        "anchor": "TOP",
+        "relativeTo": "invisible",
+        "x": 0,
+        "y": -8
+      },
+      "size": {
+        "width": 187,
+        "height": 27
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "AA316B77"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "dependent",
+      "text": "I follow the invisible frame",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "invisible",
+        "x": 0,
+        "y": 8
+      },
+      "size": {
+        "width": 205,
+        "height": 28
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "AA408351"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "chain",
+      "text": "I follow the visible child",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "dependent",
+        "x": 0,
+        "y": 8
+      },
+      "size": {
+        "width": 200,
+        "height": 28
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "AA615B93"
+      },
+      "color": "#FFFFFF"
+    }
+  ]
+}

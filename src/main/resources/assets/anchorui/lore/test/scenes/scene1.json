@@ -1,0 +1,240 @@
+{
+  "item": "minecraft:amethyst_shard",
+  "style": "anchorui:style/default",
+  "entities": [
+    {
+      "type": "text",
+      "id": "topleft",
+      "text": "TOPLEFT",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "TOPLEFT",
+        "relativeTo": "screen",
+        "x": 8,
+        "y": 42
+      },
+      "size": {
+        "width": 95,
+        "height": 23
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "AA365B83"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "top",
+      "text": "TOP",
+      "position": {
+        "point": "TOP",
+        "anchor": "TOP",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 42
+      },
+      "size": {
+        "width": 95,
+        "height": 23
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "AA315F65"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "topright",
+      "text": "TOPRIGHT",
+      "position": {
+        "point": "TOPRIGHT",
+        "anchor": "TOPRIGHT",
+        "relativeTo": "screen",
+        "x": -8,
+        "y": 42
+      },
+      "size": {
+        "width": 95,
+        "height": 23
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "AA765588"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "left",
+      "text": "LEFT",
+      "position": {
+        "point": "LEFT",
+        "anchor": "LEFT",
+        "relativeTo": "screen",
+        "x": 8,
+        "y": 0
+      },
+      "size": {
+        "width": 95,
+        "height": 23
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "AA536F4D"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "center",
+      "text": "CENTER",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "width": 95,
+        "height": 23
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "BB765D2E"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "right",
+      "text": "RIGHT",
+      "position": {
+        "point": "RIGHT",
+        "anchor": "RIGHT",
+        "relativeTo": "screen",
+        "x": -8,
+        "y": 0
+      },
+      "size": {
+        "width": 95,
+        "height": 23
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "AA745E4A"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "bottomleft",
+      "text": "BOTTOMLEFT",
+      "position": {
+        "point": "BOTTOMLEFT",
+        "anchor": "BOTTOMLEFT",
+        "relativeTo": "screen",
+        "x": 8,
+        "y": -45
+      },
+      "size": {
+        "width": 95,
+        "height": 23
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "AA3C6674"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "bottom",
+      "text": "BOTTOM",
+      "position": {
+        "point": "BOTTOM",
+        "anchor": "BOTTOM",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -45
+      },
+      "size": {
+        "width": 95,
+        "height": 23
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "AA7B4764"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "bottomright",
+      "text": "BOTTOMRIGHT",
+      "position": {
+        "point": "BOTTOMRIGHT",
+        "anchor": "BOTTOMRIGHT",
+        "relativeTo": "screen",
+        "x": -8,
+        "y": -45
+      },
+      "size": {
+        "width": 95,
+        "height": 23
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "AA456E4D"
+      },
+      "color": "#FFFFFF"
+    }
+  ]
+}

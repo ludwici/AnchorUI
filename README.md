@@ -43,3 +43,10 @@ Two input formats are supported:
 ## Development
 
 Java 21 and NeoForge 21.1 are required. Run `./gradlew build`; GitHub Actions checks builds and unit tests on the `1.21.1` branch.
+
+
+## Interactive test scenes
+
+Use `/anchorui test list` or `/anchorui test scene1` in-game to open the built-in client-only test harness. Eight scenes exercise anchors, relative chains, dimensions, styling, rich text, item model input, resizing, hidden frames and invalid references. Navigate with the on-screen arrows; press **G** to toggle anchor outlines and **Esc** to close.
+
+See [docs/TEST_SCENES.md](docs/TEST_SCENES.md) for each command and expected result. The scenes are JSON resources under `assets/anchorui/lore/test/scenes`, so they use the same rendering path as ordinary lore screens.

@@ -1,0 +1,78 @@
+{
+  "item": "minecraft:amethyst_shard",
+  "style": "anchorui:style/default",
+  "entities": [
+    {
+      "type": "model",
+      "id": "model",
+      "text": "",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": -99,
+        "y": 3
+      },
+      "size": {
+        "width": 98,
+        "height": 106
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "AA284D67"
+      },
+      "color": "#FFFFFF",
+      "path": "minecraft:amethyst_shard",
+      "scale": 4
+    },
+    {
+      "type": "list",
+      "id": "rich",
+      "text": "",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "TOPRIGHT",
+        "relativeTo": "model",
+        "x": 10,
+        "y": -5
+      },
+      "size": {
+        "width": 178,
+        "height": 148
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "AA363843"
+      },
+      "color": "#FFFFFF",
+      "lore": [
+        {
+          "desc": "<b>Bold text</b> and <i>italic text</i>."
+        },
+        {
+          "desc": "<u>Underlined text</u> and regular text."
+        },
+        {
+          "desc": "Hover this <t id=\"Anchor UI tooltip works\"><u>highlighted phrase</u></t> to see tooltip."
+        },
+        {
+          "desc": "Word wrapping: this long sentence should be split into multiple lines within the fixed list width."
+        },
+        {
+          "desc": "This hidden entry should display question marks.",
+          "hidden": true
+        }
+      ]
+    }
+  ]
+}

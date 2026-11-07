@@ -1,0 +1,32 @@
+{
+  "item": "minecraft:amethyst_shard",
+  "style": "anchorui:style/default",
+  "entities": [
+    {
+      "type": "text",
+      "id": "broken",
+      "text": "THIS FRAME HAS NO TARGET",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "CENTER",
+        "relativeTo": "missing_target",
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "width": 140,
+        "height": 32
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "CC762B41"
+      },
+      "color": "#FFFFFF"
+    }
+  ]
+}

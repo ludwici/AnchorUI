@@ -1,5 +1,6 @@
 package com.ludwici.anchorui.client.gui;
 
+import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.api.LoreEntity;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.style.LoreStyle;
@@ -13,11 +14,14 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class ItemLoreScreen extends Screen {
     private final Screen previous;
     private final ItemStack item;
     private final LoreEntity loreEntity;
+    private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
+    private String layoutError;
 
     public ItemLoreScreen(Screen previous, ItemStack item, LoreEntity entity) {
         super(Component.empty());
@@ -28,6 +32,8 @@ public class ItemLoreScreen extends Screen {
 
     @Override
     protected void init() {
+        layoutBounds = Map.of();
+        layoutError = null;
         LoreStyle theme = LoreLoader.INSTANCE.getStyle(loreEntity.style);
         List<AnchorLayout.Frame> frames = new ArrayList<>();
         List<AnchoredWidget> widgets = new ArrayList<>();
@@ -45,21 +51,31 @@ public class ItemLoreScreen extends Screen {
                     case "text" -> add(id, new AnchoredTextWidget(element.text, minecraft.font, settings), settings, frames, widgets);
                     case "model" -> add(id, new ItemModelWidget(modelItem(element.path), element.scale, settings), settings, frames, widgets);
                     case "list" -> add(id, new ItemLoreListWidget(element.lore.isEmpty() ? loreEntity.components : element.lore, minecraft.font, settings), settings, frames, widgets);
-                    default -> com.ludwici.anchorui.AnchorUI.LOGGER.warn("Unknown UI element type: {}", element.type);
+                    default -> AnchorUI.LOGGER.warn("Unknown UI element type: {}", element.type);
                 }
                 index++;
             }
         }
         try {
-            var positions = AnchorLayout.resolve(width, height, frames);
+            layoutBounds = AnchorLayout.resolve(width, height, frames);
             for (int i = 0; i < frames.size(); i++) {
-                var rect = positions.get(frames.get(i).id());
-                widgets.get(i).setPosition(rect.x(), rect.y());
+                var bounds = layoutBounds.get(frames.get(i).id());
+                widgets.get(i).setPosition(bounds.x(), bounds.y());
             }
         } catch (IllegalArgumentException ex) {
-            com.ludwici.anchorui.AnchorUI.LOGGER.error("Invalid Anchor UI layout: {}", ex.getMessage());
+            layoutError = ex.getMessage();
+            AnchorUI.LOGGER.error("Invalid Anchor UI layout: {}", layoutError);
+            return;
         }
         widgets.forEach(this::addRenderableWidget);
+    }
+
+    protected final Map<String, AnchorLayout.Bounds> getLayoutBounds() {
+        return layoutBounds;
+    }
+
+    protected final String getLayoutError() {
+        return layoutError;
     }
 
     private void add(String id, AnchoredWidget widget, LoreStyle.Element settings, List<AnchorLayout.Frame> frames, List<AnchoredWidget> widgets) {

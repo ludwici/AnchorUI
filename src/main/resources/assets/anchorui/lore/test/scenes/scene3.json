@@ -1,0 +1,110 @@
+{
+  "item": "minecraft:amethyst_shard",
+  "style": "anchorui:style/default",
+  "entities": [
+    {
+      "type": "text",
+      "id": "primary",
+      "text": "160 x 54, 12px padding",
+      "position": {
+        "point": "RIGHT",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": -6,
+        "y": 0
+      },
+      "size": {
+        "width": 160,
+        "height": 54
+      },
+      "padding": {
+        "left": 12,
+        "right": 4,
+        "top": 12,
+        "bottom": 4
+      },
+      "background": {
+        "color": "CC334E78"
+      },
+      "color": "#FFE278"
+    },
+    {
+      "type": "text",
+      "id": "secondary",
+      "text": "72 x 70",
+      "position": {
+        "point": "LEFT",
+        "anchor": "RIGHT",
+        "relativeTo": "primary",
+        "x": 10,
+        "y": 0
+      },
+      "size": {
+        "width": 72,
+        "height": 70
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "6639C8AF"
+      },
+      "color": "#0F131A"
+    },
+    {
+      "type": "text",
+      "id": "automatic",
+      "text": "Auto width, auto height",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "primary",
+        "x": 0,
+        "y": 14
+      },
+      "size": {
+        "width": 0,
+        "height": 0
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "CC73505E"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "offset",
+      "text": "Offset X=0 Y=-14",
+      "position": {
+        "point": "BOTTOM",
+        "anchor": "TOP",
+        "relativeTo": "primary",
+        "x": 0,
+        "y": -14
+      },
+      "size": {
+        "width": 140,
+        "height": 25
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "CC5C7147"
+      },
+      "color": "#FFFFFF"
+    }
+  ]
+}

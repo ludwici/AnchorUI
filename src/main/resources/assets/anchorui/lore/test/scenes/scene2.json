@@ -1,0 +1,162 @@
+{
+  "item": "minecraft:amethyst_shard",
+  "style": "anchorui:style/default",
+  "entities": [
+    {
+      "type": "text",
+      "id": "grandchild",
+      "text": "3. Child of RIGHT",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "BOTTOMLEFT",
+        "relativeTo": "right",
+        "x": 0,
+        "y": 7
+      },
+      "size": {
+        "width": 77,
+        "height": 32
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "BB2A735F"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "left",
+      "text": "LEFT",
+      "position": {
+        "point": "RIGHT",
+        "anchor": "LEFT",
+        "relativeTo": "panel",
+        "x": -10,
+        "y": 0
+      },
+      "size": {
+        "width": 65,
+        "height": 26
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "BB845B45"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "right",
+      "text": "RIGHT",
+      "position": {
+        "point": "LEFT",
+        "anchor": "RIGHT",
+        "relativeTo": "panel",
+        "x": 10,
+        "y": 0
+      },
+      "size": {
+        "width": 72,
+        "height": 26
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "BB467F9A"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "above",
+      "text": "TOP child",
+      "position": {
+        "point": "BOTTOM",
+        "anchor": "TOP",
+        "relativeTo": "panel",
+        "x": 0,
+        "y": -9
+      },
+      "size": {
+        "width": 100,
+        "height": 26
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "BB546A86"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "panel",
+      "text": "PARENT",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "width": 130,
+        "height": 68
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "CC4C486F"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "below",
+      "text": "BOTTOM child",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "panel",
+        "x": 0,
+        "y": 9
+      },
+      "size": {
+        "width": 116,
+        "height": 26
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "BB846F38"
+      },
+      "color": "#FFFFFF"
+    }
+  ]
+}

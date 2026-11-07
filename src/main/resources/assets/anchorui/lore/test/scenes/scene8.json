@@ -1,0 +1,58 @@
+{
+  "item": "minecraft:amethyst_shard",
+  "style": "anchorui:style/default",
+  "entities": [
+    {
+      "type": "text",
+      "id": "first",
+      "text": "A -> B",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "second",
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "width": 80,
+        "height": 24
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "CC762B41"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "second",
+      "text": "B -> A",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "first",
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "width": 80,
+        "height": 24
+      },
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 6,
+        "bottom": 5
+      },
+      "background": {
+        "color": "CC762B41"
+      },
+      "color": "#FFFFFF"
+    }
+  ]
+}

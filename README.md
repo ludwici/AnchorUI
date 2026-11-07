@@ -2,7 +2,7 @@
 
 JSON-driven, anchor-based user interface framework for Minecraft 1.21.1 (NeoForge).
 
-The current implementation provides the reusable `AnchorLayout` resolver, plus item-lore screens as a working consumer of the layout engine. This is an early framework prototype, not yet a complete public widget API.
+The current implementation provides the reusable `AnchorLayout` resolver, plus item-lore screens as a working consumer of the layout engine. The layout and JSON renderer are still evolving; a public widget-factory API is available for third-party integrations.
 
 ## WoW-style positioning
 
@@ -23,7 +23,7 @@ Each UI frame may declare a unique `id` and a `position`. `point` is the attachm
 }
 ```
 
-`point` and `anchor` accept `TOPLEFT`, `TOP`, `TOPRIGHT`, `LEFT`, `CENTER`, `RIGHT`, `BOTTOMLEFT`, `BOTTOM`, and `BOTTOMRIGHT`. If either point is omitted, it defaults to the other. `relativeTo` defaults to `screen`. Positive X offsets move right and positive Y offsets move down. The engine resolves references independently of JSON order, recalculates coordinates when the screen is initialized or resized, and rejects duplicate ids, invalid references, and circular dependencies.
+`point` and `anchor` accept `TOPLEFT`, `TOP`, `TOPRIGHT`, `LEFT`, `CENTER`, `RIGHT`, `BOTTOMLEFT`, `BOTTOM`, and `BOTTOMRIGHT`. If either point is omitted, it defaults to the other. `relativeTo` defaults to `screen`. Positive X offsets move right and positive Y offsets move down. The engine resolves references independently of JSON order, recalculates coordinates when the screen is initialized or resized, and rejects duplicate ids and circular dependencies; unknown references fall back to the screen with a warning.
 
 ## Resource packs
 
@@ -47,7 +47,7 @@ Java 21 and NeoForge 21.1 are required. Run `./gradlew build`; GitHub Actions ch
 
 ## Interactive test scenes
 
-Use `/anchorui test list` or `/anchorui test scene1` in-game to open the built-in client-only test harness. Nine scenes exercise anchors, relative chains, dimensions, styling, rich text, item model input, resizing, hidden frames, invalid references, and vanilla StringWidget text alignment and ellipsis. Navigate with the on-screen arrows; press **G** to toggle anchor outlines and **Esc** to close.
+Use `/anchorui test list` or `/anchorui test scene1` in-game to open the built-in client-only test harness. Twelve scenes exercise anchors, relative chains, dimensions, styling, rich text, item model input, resizing, hidden frames, invalid references, and vanilla StringWidget text alignment and ellipsis. Navigate with the on-screen arrows; press **G** to toggle anchor outlines and **Esc** to close.
 
 See [docs/TEST_SCENES.md](docs/TEST_SCENES.md) for each command and expected result. The scenes are JSON resources under `assets/anchorui/lore/test/scenes`, so they use the same rendering path as ordinary lore screens.
 
@@ -68,4 +68,12 @@ For compatibility, unqualified names like `"text"` are interpreted as `anchorui:
 
 In Java, `LoreEntity.UiElement.type` is a Minecraft `ResourceLocation`. Use `WidgetTypeIds.TEXT`, `WidgetTypeIds.MODEL`, and `WidgetTypeIds.LIST` for built-in identifiers. Type-specific style sections may use namespaced keys (such as `"anchorui:text"`). For built-in types only, legacy short keys (such as `"text"`) remain supported; a fully qualified style key takes precedence. A custom namespace never inherits styling intended for `anchorui:text`.
 
-Unknown namespaced types are currently logged and skipped. A public widget-factory registration API is a separate, future step; namespaces alone do not yet make external widgets render.
+Third-party mods can register namespaced widget factories through `AnchorWidgetRegistry.register`. Unknown widget types are logged and skipped; see [docs/CUSTOM_WIDGETS.md](docs/CUSTOM_WIDGETS.md) for the registration API and an example.
+
+## Extending Anchor UI with your own widgets
+
+External mods register a `WidgetFactory` under a namespaced `ResourceLocation` using `AnchorWidgetRegistry.register` during NeoForge client setup. A factory receives `WidgetContext`, `LoreEntity.UiElement` (including arbitrary JSON settings), and `LoreStyle.Element`; it returns any vanilla `AbstractWidget`. Anchor UI handles layout, configured dimensions, visibility, focus and mouse routing through the normal Minecraft screen.
+
+The demo type `anchorui_test:counter` uses a vanilla `Button` and can be tested with `/anchorui test scene11`. `/anchorui test scene12` checks unknown types and exceptions from factories without breaking the other widgets.
+
+See **[Custom Widgets API](docs/CUSTOM_WIDGETS.md)** for complete Java and JSON examples, guarantees, and current limitations.

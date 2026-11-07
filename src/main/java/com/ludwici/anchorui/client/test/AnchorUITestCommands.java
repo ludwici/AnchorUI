@@ -41,7 +41,7 @@ public final class AnchorUITestCommands {
     private static int listScenes() {
         var player = Minecraft.getInstance().player;
         if (player != null) {
-            player.displayClientMessage(Component.literal("Anchor UI — /anchorui test <scene1..scene12>"), false);
+            player.displayClientMessage(Component.literal("Anchor UI — /anchorui test <scene1..scene13>"), false);
             for (TestScene scene : TestScene.values()) {
                 player.displayClientMessage(Component.literal("/anchorui test " + scene.id() + " — " + scene.title()), false);
             }

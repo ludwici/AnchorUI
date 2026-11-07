@@ -49,7 +49,7 @@ public class TestSceneLayoutTest {
 
     @Test
     public void eachScenarioIsIncludedInResources() {
-        for (int i = 1; i <= 12; i++) {
+        for (int i = 1; i <= 13; i++) {
             assertTrue(resource(i).getAsJsonArray("entities").size() > 0);
         }
     }
@@ -133,6 +133,22 @@ public class TestSceneLayoutTest {
         assertTrue(wrapped.get("wrap").getAsBoolean());
         assertEquals(0, wrapped.getAsJsonObject("size").get("height").getAsInt());
         assertTrue(explicit.get("text").getAsString().contains("\n"));
+    }
+
+    @Test
+    public void recordCodecSceneHasValidDefaultsAndInvalidCases() {
+        var entries = resource(13).getAsJsonArray("entities");
+        JsonObject defaultCounter = entries.get(1).getAsJsonObject();
+        JsonObject configuredCounter = entries.get(2).getAsJsonObject();
+        JsonObject wrongType = entries.get(3).getAsJsonObject();
+        JsonObject wrongRange = entries.get(4).getAsJsonObject();
+        assertEquals("anchorui_test:counter", defaultCounter.get("type").getAsString());
+        assertTrue(!defaultCounter.has("initial") && !defaultCounter.has("step"));
+        assertEquals(30, configuredCounter.get("initial").getAsInt());
+        assertEquals(3, configuredCounter.get("step").getAsInt());
+        assertEquals("invalid", wrongType.get("step").getAsString());
+        assertEquals(0, wrongRange.get("step").getAsInt());
+        assertEquals("anchorui:text", entries.get(5).getAsJsonObject().get("type").getAsString());
     }
 
     @Test

@@ -1,6 +1,5 @@
 package com.ludwici.anchorui.api.widget;
 
-import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -11,14 +10,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class AnchorWidgetRegistryTest {
     @Test
     public void registrationLookupAndDuplicates() {
-        ResourceLocation type = ResourceLocation.fromNamespaceAndPath("anchorui_test", "registry_unit");
-        WidgetFactory factory = (context, element, style) -> null;
+        WidgetRegistryTable<String, Object> registry = new WidgetRegistryTable<>();
+        Object factory = new Object();
 
-        assertFalse(AnchorWidgetRegistry.contains(type));
-        AnchorWidgetRegistry.register(type, factory);
-        assertTrue(AnchorWidgetRegistry.contains(type));
-        assertSame(factory, AnchorWidgetRegistry.find(type).orElseThrow());
-        assertThrows(IllegalStateException.class, () -> AnchorWidgetRegistry.register(type, factory));
-        assertTrue(AnchorWidgetRegistry.find(ResourceLocation.fromNamespaceAndPath("anchorui_test", "not_registered")).isEmpty());
+        assertFalse(registry.contains("anchorui_test:registry_unit"));
+        registry.register("anchorui_test:registry_unit", factory);
+        assertTrue(registry.contains("anchorui_test:registry_unit"));
+        assertSame(factory, registry.find("anchorui_test:registry_unit").orElseThrow());
+        assertThrows(IllegalStateException.class, () -> registry.register("anchorui_test:registry_unit", factory));
+        assertTrue(registry.find("anchorui_test:not_registered").isEmpty());
+        assertThrows(NullPointerException.class, () -> registry.register(null, factory));
+        assertThrows(NullPointerException.class, () -> registry.register("anchorui_test:null_factory", null));
     }
 }

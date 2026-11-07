@@ -115,8 +115,56 @@ public class HudLayoutOffsetsTest {
         assertEquals(moved.get("modb:mana").y() + 5, movedChild.get("modb:mana").y());
     }
 
+    @Test
+    public void changingPointAndAnchorMovesWidgetAccordingToNewGeometry() {
+        PositionElement parent = new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, "screen", 20, 30);
+        PositionElement child = new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.BOTTOMLEFT, "moda:parent", 5, 6);
+        HudLayoutOffsets overrides = new HudLayoutOffsets();
+        overrides.set("modb:child", 3, -2);
+        var original = positioned(parent, child, overrides);
+
+        overrides.setAnchor("modb:child", new HudLayoutOffsets.AnchorOverride("moda:parent", ElementAnchor.BOTTOMRIGHT, ElementAnchor.BOTTOMLEFT));
+        var pointChanged = positioned(parent, child, overrides);
+        assertEquals(original.get("modb:child").x() - 60, pointChanged.get("modb:child").x());
+        assertEquals(original.get("modb:child").y() - 12, pointChanged.get("modb:child").y());
+        assertEquals(new HudLayoutOffsets.Offset(3, -2), overrides.get("modb:child"));
+
+        overrides.setAnchor("modb:child", new HudLayoutOffsets.AnchorOverride("moda:parent", ElementAnchor.BOTTOMRIGHT, ElementAnchor.TOPRIGHT));
+        var anchorChanged = positioned(parent, child, overrides);
+        assertEquals(pointChanged.get("modb:child").x() + 90, anchorChanged.get("modb:child").x());
+        assertEquals(pointChanged.get("modb:child").y() - 18, anchorChanged.get("modb:child").y());
+    }
+
+    @Test
+    public void reparentingMovesWidgetAndCircularParentsAreRejected() {
+        PositionElement parent = new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, "screen", 20, 30);
+        PositionElement child = new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.BOTTOMLEFT, "moda:parent", 5, 6);
+        HudLayoutOffsets overrides = new HudLayoutOffsets();
+        var original = positioned(parent, child, overrides);
+        overrides.setAnchor("modb:child", new HudLayoutOffsets.AnchorOverride("screen", ElementAnchor.TOPLEFT, ElementAnchor.BOTTOMLEFT));
+        var reparented = positioned(parent, child, overrides);
+        assertEquals(5, reparented.get("modb:child").x());
+        assertEquals(360 + 6, reparented.get("modb:child").y());
+        assertFalse(original.get("modb:child").equals(reparented.get("modb:child")));
+
+        overrides.setAnchor("modb:child", new HudLayoutOffsets.AnchorOverride("moda:parent", ElementAnchor.TOPLEFT, ElementAnchor.BOTTOMLEFT));
+        overrides.setAnchor("moda:parent", new HudLayoutOffsets.AnchorOverride("modb:child", ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
+        assertThrows(IllegalArgumentException.class, () -> positioned(parent, child, overrides));
+    }
+
+    private static java.util.Map<String, AnchorLayout.Bounds> positioned(PositionElement parent, PositionElement child, HudLayoutOffsets overrides) {
+        return AnchorLayout.resolve(640, 360, List.of(
+                new AnchorLayout.Frame("moda:parent", adjusted("moda:parent", parent, overrides), 90, 18),
+                new AnchorLayout.Frame("modb:child", adjusted("modb:child", child, overrides), 60, 12)
+        ));
+    }
+
     private static PositionElement adjusted(String id, PositionElement base, HudLayoutOffsets overrides) {
         HudLayoutOffsets.Offset offset = overrides.get(id);
-        return new PositionElement(base.point, base.anchor, base.relativeTo, base.x + offset.x(), base.y + offset.y());
+        HudLayoutOffsets.AnchorOverride anchor = overrides.anchor(id);
+        ElementAnchor point = anchor == null ? base.point : anchor.point();
+        ElementAnchor parentAnchor = anchor == null ? base.anchor : anchor.anchor();
+        String parent = anchor == null ? base.relativeTo : anchor.relativeTo();
+        return new PositionElement(point, parentAnchor, parent, base.x + offset.x(), base.y + offset.y());
     }
 }

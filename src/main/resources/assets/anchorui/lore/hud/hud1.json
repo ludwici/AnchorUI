@@ -14,7 +14,7 @@
         "anchor": "BOTTOMLEFT",
         "relativeTo": "anchorui_test:hud_header",
         "x": 0,
-        "y": 6
+        "y": 0
       },
       "size": {
         "width": 245,
@@ -43,7 +43,7 @@
         "anchor": "BOTTOMLEFT",
         "relativeTo": "anchorui:hud_body",
         "x": 0,
-        "y": 7
+        "y": 0
       },
       "size": {
         "width": 34,

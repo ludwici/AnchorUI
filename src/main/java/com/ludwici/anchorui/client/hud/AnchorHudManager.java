@@ -1,5 +1,6 @@
 package com.ludwici.anchorui.client.hud;
 
+import com.google.gson.JsonObject;
 import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.api.LoreEntity;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
@@ -234,6 +235,10 @@ public final class AnchorHudManager {
             editingOffsets = null;
             relayout(null);
         }
+    }
+
+    public JsonObject getWidgetSettings(String id) {
+        return registry.definition(id).map(element -> element.settings.deepCopy()).orElse(null);
     }
 
     public List<HudHandle> getHandles() {

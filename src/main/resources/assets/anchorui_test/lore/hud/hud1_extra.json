@@ -10,7 +10,7 @@
         "point": "LEFT",
         "anchor": "RIGHT",
         "relativeTo": "anchorui:hud_item",
-        "x": 9,
+        "x": 0,
         "y": 0
       },
       "size": {
@@ -66,7 +66,7 @@
         "anchor": "BOTTOMLEFT",
         "relativeTo": "anchorui_test:hud_extra",
         "x": 0,
-        "y": 8
+        "y": 0
       },
       "size": {
         "width": 202,

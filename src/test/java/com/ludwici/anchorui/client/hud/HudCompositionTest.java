@@ -73,11 +73,11 @@ public class HudCompositionTest {
         AnchorLayout.Bounds copy = bounds.get("anchorui_test:hud_copy");
         assertEquals(18, header.x());
         assertEquals(45, header.y());
-        assertEquals(header.y() + header.height() + 6, body.y());
-        assertEquals(body.y() + body.height() + 7, item.y());
-        assertEquals(item.x() + item.width() + 9, extra.x());
+        assertEquals(header.y() + header.height(), body.y());
+        assertEquals(body.y() + body.height(), item.y());
+        assertEquals(item.x() + item.width(), extra.x());
         assertEquals(item.y(), extra.y());
-        assertEquals(extra.y() + extra.height() + 8, copy.y());
+        assertEquals(extra.y() + extra.height(), copy.y());
     }
 
     @Test

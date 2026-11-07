@@ -205,6 +205,7 @@ public final class AnchorHudEditorScreen extends Screen {
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         manager.renderEditorPreview(graphics, partialTick);
         List<AnchorHudManager.HudHandle> handles = manager.getHandles();
+        AnchorHudManager.HudHandle hovered = clickedHandle(mouseX, mouseY);
         AnchorHudManager.HudHandle active = null;
         for (AnchorHudManager.HudHandle handle : handles) {
             if (handle.id().equals(selected)) {
@@ -220,12 +221,14 @@ public final class AnchorHudEditorScreen extends Screen {
             if (chosen) {
                 graphics.fill(bounds.x(), bounds.y(), bounds.x() + bounds.width(), bounds.y() + bounds.height(), 0x28FFC45B);
             }
-            String label = handle.id() + (handle.visible() ? "" : " (hidden)");
-            int labelX = Math.max(2, Math.min(bounds.x(), width - Math.min(font.width(label) + 8, width - 12) - 2));
-            if (compact || !insidePanel(labelX, bounds.y() - 12)) {
+            if (chosen || (hovered != null && hovered.id().equals(handle.id()))) {
+                String label = handle.id() + (handle.visible() ? "" : " (hidden)");
                 int labelWidth = Math.min(font.width(label) + 8, width - 12);
-                graphics.fill(labelX, bounds.y() - 12, labelX + labelWidth, bounds.y(), 0xD0101720);
-                graphics.drawString(font, font.plainSubstrByWidth(label, labelWidth - 6), labelX + 3, bounds.y() - 11, color, false);
+                int labelX = Math.max(2, Math.min(bounds.x(), width - labelWidth - 2));
+                if (compact || !insidePanel(labelX, bounds.y() - 12)) {
+                    graphics.fill(labelX, bounds.y() - 12, labelX + labelWidth, bounds.y(), 0xD0101720);
+                    graphics.drawString(font, font.plainSubstrByWidth(label, labelWidth - 6), labelX + 3, bounds.y() - 11, color, false);
+                }
             }
         }
 

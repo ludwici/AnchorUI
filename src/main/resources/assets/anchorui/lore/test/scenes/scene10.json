@@ -1,0 +1,115 @@
+{
+  "item": "minecraft:amethyst_shard",
+  "style": "anchorui:style/default",
+  "entities": [
+    {
+      "type": "text",
+      "id": "tags",
+      "text": "Обычный <b>жирный</b>, <i>курсив</i>, <u>подчёркнутый</u>",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -79
+      },
+      "size": {
+        "width": 255,
+        "height": 27
+      },
+      "padding": {
+        "left": 8,
+        "right": 8,
+        "top": 6,
+        "bottom": 6
+      },
+      "background": {
+        "color": "CC30465A"
+      },
+      "color": "#FFFFFF",
+      "align": "left"
+    },
+    {
+      "type": "text",
+      "id": "tooltip",
+      "text": "Наведи: <t id=\"Подсказка Anchor UI\"><u>эта надпись</u></t>",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "tags",
+        "x": 0,
+        "y": 9
+      },
+      "size": {
+        "width": 255,
+        "height": 26
+      },
+      "padding": {
+        "left": 8,
+        "right": 8,
+        "top": 6,
+        "bottom": 6
+      },
+      "background": {
+        "color": "CC30685A"
+      },
+      "color": "#FFFFFF",
+      "align": "left"
+    },
+    {
+      "type": "text",
+      "id": "wrapped",
+      "text": "Перенос строки с <b>жирным текстом</b> и <i>курсивом</i>. Длинное предложение должно занимать несколько строк.",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "tooltip",
+        "x": 0,
+        "y": 9
+      },
+      "size": {
+        "width": 255,
+        "height": 0
+      },
+      "padding": {
+        "left": 8,
+        "right": 8,
+        "top": 6,
+        "bottom": 6
+      },
+      "background": {
+        "color": "CC625B35"
+      },
+      "color": "#FFFFFF",
+      "align": "left",
+      "wrap": true
+    },
+    {
+      "type": "text",
+      "id": "explicit",
+      "text": "Первая <b>строка</b>\nВторая <i>строка</i>\nТретья <u>строка</u>",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "wrapped",
+        "x": 0,
+        "y": 9
+      },
+      "size": {
+        "width": 255,
+        "height": 0
+      },
+      "padding": {
+        "left": 8,
+        "right": 8,
+        "top": 6,
+        "bottom": 6
+      },
+      "background": {
+        "color": "CC5E415F"
+      },
+      "color": "#FFFFFF",
+      "align": "center"
+    }
+  ]
+}

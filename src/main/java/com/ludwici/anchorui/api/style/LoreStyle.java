@@ -44,6 +44,7 @@ public class LoreStyle {
         public final BackgroundElement background;
         public final int textColor;
         public final String textAlign;
+        public final boolean textWrap;
         public final boolean hidden;
 
         public Element(JsonObject root) {
@@ -58,6 +59,7 @@ public class LoreStyle {
             }
             textColor = (int) Long.parseLong(hex, 16) | 0xFF000000;
             textAlign = GsonHelper.getAsString(root, "align", GsonHelper.getAsString(text, "align", "left")).toLowerCase(Locale.ROOT);
+            textWrap = GsonHelper.getAsBoolean(root, "wrap", GsonHelper.getAsBoolean(text, "wrap", false));
             hidden = GsonHelper.getAsBoolean(root, "hidden", false);
         }
     }

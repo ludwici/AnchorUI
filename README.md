@@ -54,3 +54,9 @@ See [docs/TEST_SCENES.md](docs/TEST_SCENES.md) for each command and expected res
 ## Text widgets
 
 `AnchoredTextWidget` delegates text rendering to Minecraft's `StringWidget`. Anchor UI keeps the outer element's anchor, background, padding, dimensions and visibility. JSON `align` for `type: "text"` accepts `left`, `center` and `right` (default `left`). Built-in text is vertically centered and clipped with an ellipsis when too wide. Java callers can pass `Component` rather than a raw string.
+
+## Rich text and multiline text
+
+Text elements accept the same lore tags: `<b>`, `<i>`, `<u>` and `<t id="tooltip text">`. The existing lore parser converts these tags to styled Minecraft Components.
+Single-line text continues using vanilla `StringWidget`. Set `"wrap": true`, or include `\n` in text, for multiline wrapping through `Font.split`, preserving formatting and hover tooltips.
+Multiline text respects `align`, `padding`, `size`, and uses auto-height when `"size": {"height": 0}`. Run `/anchorui test scene10` to check both modes.

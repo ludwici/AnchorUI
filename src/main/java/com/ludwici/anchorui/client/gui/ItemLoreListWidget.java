@@ -1,13 +1,12 @@
 package com.ludwici.anchorui.client.gui;
 
 import com.ludwici.anchorui.api.LoreComponent;
-import com.ludwici.anchorui.api.LorePiece;
+import com.ludwici.anchorui.api.LoreParser;
 import com.ludwici.anchorui.api.style.LoreStyle;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 
 import java.util.ArrayList;
@@ -27,11 +26,7 @@ public class ItemLoreListWidget extends AnchoredWidget {
             if (entry.hidden) {
                 lines.addAll(font.split(Component.literal("??????"), availableWidth));
             } else {
-                Component richText = Component.empty();
-                for (LorePiece piece : entry.pieces) {
-                    richText.getSiblings().add(Component.literal(piece.text).withStyle(piece.getStyle()));
-                }
-                lines.addAll(font.split(richText, availableWidth));
+                lines.addAll(font.split(LoreParser.toComponent(entry.pieces), availableWidth));
             }
             lines.add(null);
         }
@@ -67,28 +62,13 @@ public class ItemLoreListWidget extends AnchoredWidget {
             }
             guiGraphics.drawString(font, line, x, y, style.textColor, false);
             if (mouseX >= x && mouseX < x + font.width(line) && mouseY >= y && mouseY < y + font.lineHeight) {
-                Style hovered = styleAt(line, mouseX - x);
+                var hovered = RichTextHover.styleAt(font, line, mouseX - x);
                 if (hovered != null && hovered.getHoverEvent() != null) {
                     guiGraphics.renderComponentHoverEffect(font, hovered, mouseX, mouseY);
                 }
             }
             y += lineHeight;
         }
-    }
-
-    private Style styleAt(FormattedCharSequence line, int offsetX) {
-        int[] used = {0};
-        Style[] found = {null};
-        line.accept((index, glyphStyle, codepoint) -> {
-            int width = font.width(Component.literal(new String(Character.toChars(codepoint))).withStyle(glyphStyle));
-            if (offsetX >= used[0] && offsetX < used[0] + width) {
-                found[0] = glyphStyle;
-                return false;
-            }
-            used[0] += width;
-            return true;
-        });
-        return found[0];
     }
 
     @Override

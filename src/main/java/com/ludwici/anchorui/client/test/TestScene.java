@@ -12,7 +12,8 @@ public enum TestScene {
     SCENE6("scene6", "Скрытые элементы", "Нажми G: невидимый якорь появится только в режиме контуров"),
     SCENE7("scene7", "Неизвестная ссылка", "Ссылка missing_target заменяется screen; предупреждение в консоли"),
     SCENE8("scene8", "Циклические якоря", "Ожидается сообщение Circular frame anchors, без вылета"),
-    SCENE9("scene9", "Ванильный StringWidget", "Выравнивание, вертикальный центр, padding и многоточие");
+    SCENE9("scene9", "Ванильный StringWidget", "Выравнивание, вертикальный центр, padding и многоточие"),
+    SCENE10("scene10", "Теги и многострочность", "Жирный, курсив, подчёркивание, подсказка, перенос и явные строки");
 
     private static final TestScene[] VALUES = values();
 

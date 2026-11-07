@@ -1,5 +1,8 @@
 package com.ludwici.anchorui.api;
 
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -59,6 +62,18 @@ public class LoreParser {
         }
 
         return result;
+    }
+
+    public static Component toComponent(List<LorePiece> pieces) {
+        MutableComponent result = Component.empty();
+        for (LorePiece piece : pieces) {
+            result.append(Component.literal(piece.text).withStyle(piece.getStyle()));
+        }
+        return result;
+    }
+
+    public static Component parseComponent(String input) {
+        return toComponent(parse(input));
     }
 
     private static Tag parseTag(String tagContent) {

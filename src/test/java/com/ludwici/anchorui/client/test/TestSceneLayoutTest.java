@@ -49,7 +49,7 @@ public class TestSceneLayoutTest {
 
     @Test
     public void eachScenarioIsIncludedInResources() {
-        for (int i = 1; i <= 9; i++) {
+        for (int i = 1; i <= 10; i++) {
             assertTrue(resource(i).getAsJsonArray("entities").size() > 0);
         }
     }
@@ -64,6 +64,9 @@ public class TestSceneLayoutTest {
         List<AnchorLayout.Frame> textDefinitions = frames(9);
         assertEquals(textDefinitions.size() + 1, AnchorLayout.resolve(320, 240, textDefinitions).size());
         assertEquals(textDefinitions.size() + 1, AnchorLayout.resolve(854, 480, textDefinitions).size());
+        List<AnchorLayout.Frame> richTextDefinitions = frames(10);
+        assertEquals(richTextDefinitions.size() + 1, AnchorLayout.resolve(320, 240, richTextDefinitions).size());
+        assertEquals(richTextDefinitions.size() + 1, AnchorLayout.resolve(854, 480, richTextDefinitions).size());
     }
 
     @Test
@@ -80,6 +83,22 @@ public class TestSceneLayoutTest {
         JsonObject ellipsis = elements.get(elements.size() - 1).getAsJsonObject();
         assertTrue(ellipsis.get("text").getAsString().length() > 70);
         assertTrue(ellipsis.getAsJsonObject("size").get("width").getAsInt() < 160);
+    }
+
+    @Test
+    public void richTextSceneContainsTagsWrapAndHardLineBreaks() {
+        var elements = resource(10).getAsJsonArray("entities");
+        JsonObject formatted = elements.get(0).getAsJsonObject();
+        JsonObject tooltip = elements.get(1).getAsJsonObject();
+        JsonObject wrapped = elements.get(2).getAsJsonObject();
+        JsonObject explicit = elements.get(3).getAsJsonObject();
+        assertTrue(formatted.get("text").getAsString().contains("<b>"));
+        assertTrue(formatted.get("text").getAsString().contains("<i>"));
+        assertTrue(formatted.get("text").getAsString().contains("<u>"));
+        assertTrue(tooltip.get("text").getAsString().contains("<t id="));
+        assertTrue(wrapped.get("wrap").getAsBoolean());
+        assertEquals(0, wrapped.getAsJsonObject("size").get("height").getAsInt());
+        assertTrue(explicit.get("text").getAsString().contains("\n"));
     }
 
     @Test

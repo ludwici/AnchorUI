@@ -29,6 +29,33 @@
       "background": {
         "color": "BB6B5057"
       }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui_test:hud_corner",
+      "text": "HUD corner anchor",
+      "position": {
+        "point": "BOTTOMRIGHT",
+        "anchor": "BOTTOMRIGHT",
+        "relativeTo": "screen",
+        "x": -16,
+        "y": -16
+      },
+      "size": {
+        "width": 128,
+        "height": 23
+      },
+      "align": "center",
+      "color": "#FFFFFF",
+      "padding": {
+        "left": 4,
+        "right": 4,
+        "top": 5,
+        "bottom": 5
+      },
+      "background": {
+        "color": "B0435568"
+      }
     }
   ]
 }

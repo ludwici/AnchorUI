@@ -1,0 +1,20 @@
+{
+  "title": "Супер крутой блок слизи",
+  "model": "mymod:item/model",
+  "item": "minecraft:crafting_table",
+  "scale": 4.0,
+  "style": "anchorui:default",
+  "lore": [
+    {
+      "desc": "Делается из шариков <u>слизи</u>"
+    },
+    {
+      "desc": "Можно найти <i>в пещерах</i> и под <b>водой</b>",
+      "trigger": "mymod:adv1"
+    },
+    {
+      "desc": "Используется в <t id=\"Фул в описании\"><u>зельеварении</u></t>",
+      "trigger": "mymod:adv2"
+    }
+  ]
+}

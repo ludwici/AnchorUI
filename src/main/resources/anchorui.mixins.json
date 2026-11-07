@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.ludwici.anchorui.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "anchorui.refmap.json",
+  "mixins": [
+    "ItemMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

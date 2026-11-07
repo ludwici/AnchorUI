@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.style.PositionElement;
+import com.ludwici.anchorui.api.style.ElementAnchor;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStreamReader;
@@ -35,7 +36,13 @@ public class TestSceneLayoutTest {
             JsonObject size = element.getAsJsonObject("size");
             int width = size == null ? 0 : size.get("width").getAsInt();
             int height = size == null ? 0 : size.get("height").getAsInt();
-            result.add(new AnchorLayout.Frame(element.get("id").getAsString(), new PositionElement(element.getAsJsonObject("position")), width, height));
+            JsonObject position = element.getAsJsonObject("position");
+            var point = ElementAnchor.fromString(position.get("point").getAsString());
+            var anchor = ElementAnchor.fromString(position.get("anchor").getAsString());
+            String relativeTo = position.get("relativeTo").getAsString();
+            int x = position.get("x").getAsInt();
+            int y = position.get("y").getAsInt();
+            result.add(new AnchorLayout.Frame(element.get("id").getAsString(), new PositionElement(point, anchor, relativeTo, x, y), width, height));
         }
         return result;
     }

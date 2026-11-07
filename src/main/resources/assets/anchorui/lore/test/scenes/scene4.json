@@ -60,16 +60,13 @@
           "desc": "<b>Bold text</b> and <i>italic text</i>."
         },
         {
-          "desc": "<u>Underlined text</u> and regular text."
+          "desc": "<u>Underlined</u> text. Hover <t id=\"Anchor UI tooltip works\"><u>this phrase</u></t> for a tooltip."
         },
         {
-          "desc": "Hover this <t id=\"Anchor UI tooltip works\"><u>highlighted phrase</u></t> to see tooltip."
+          "desc": "Word wrapping: a deliberately long sentence that must break into multiple lines inside this column."
         },
         {
-          "desc": "Word wrapping: this long sentence should be split into multiple lines within the fixed list width."
-        },
-        {
-          "desc": "This hidden entry should display question marks.",
+          "desc": "Hidden entry: tooltip should not reveal this.",
           "hidden": true
         }
       ]

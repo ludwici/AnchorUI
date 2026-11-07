@@ -78,7 +78,8 @@ public class TestSceneLayoutTest {
         }
         assertTrue(alignments.containsAll(List.of("left", "center", "right")));
         JsonObject ellipsis = elements.get(elements.size() - 1).getAsJsonObject();
-        assertTrue(ellipsis.get("text").getAsString().length() > ellipsis.getAsJsonObject("size").get("width").getAsInt());
+        assertTrue(ellipsis.get("text").getAsString().length() > 70);
+        assertTrue(ellipsis.getAsJsonObject("size").get("width").getAsInt() < 160);
     }
 
     @Test

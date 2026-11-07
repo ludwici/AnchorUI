@@ -83,9 +83,13 @@ public class TestSceneLayoutTest {
     }
 
     @Test
-    public void unknownReferenceHasExplicitError() {
-        var exception = assertThrows(IllegalArgumentException.class, () -> AnchorLayout.resolve(400, 240, frames(7)));
-        assertTrue(exception.getMessage().contains("missing_target"));
+    public void unknownReferenceFallsBackToScreenWithWarning() {
+        List<String> warnings = new ArrayList<>();
+        var positions = AnchorLayout.resolve(400, 240, frames(7), warnings::add);
+        assertEquals(new AnchorLayout.Bounds(200, 120, 160, 32), positions.get("broken"));
+        assertEquals(1, warnings.size());
+        assertTrue(warnings.getFirst().contains("broken"));
+        assertTrue(warnings.getFirst().contains("missing_target"));
     }
 
     @Test

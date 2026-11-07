@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public final class AnchorLayout {
     public record Bounds(int x, int y, int width, int height) {
@@ -34,6 +35,10 @@ public final class AnchorLayout {
     }
 
     public static Map<String, Bounds> resolve(int screenWidth, int screenHeight, Collection<Frame> definitions) {
+        return resolve(screenWidth, screenHeight, definitions, warning -> {});
+    }
+
+    public static Map<String, Bounds> resolve(int screenWidth, int screenHeight, Collection<Frame> definitions, Consumer<String> warningSink) {
         Map<String, Frame> frames = new LinkedHashMap<>();
         for (Frame frame : definitions) {
             if (frames.putIfAbsent(frame.id(), frame) != null) {
@@ -44,12 +49,12 @@ public final class AnchorLayout {
         resolved.put("screen", new Bounds(0, 0, screenWidth, screenHeight));
         Map<String, Boolean> visiting = new HashMap<>();
         for (String id : frames.keySet()) {
-            place(id, frames, resolved, visiting, new ArrayList<>());
+            place(id, frames, resolved, visiting, new ArrayList<>(), warningSink);
         }
         return Map.copyOf(resolved);
     }
 
-    private static Bounds place(String id, Map<String, Frame> frames, Map<String, Bounds> resolved, Map<String, Boolean> visiting, List<String> path) {
+    private static Bounds place(String id, Map<String, Frame> frames, Map<String, Bounds> resolved, Map<String, Boolean> visiting, List<String> path, Consumer<String> warningSink) {
         Bounds existing = resolved.get(id);
         if (existing != null) {
             return existing;
@@ -64,7 +69,12 @@ public final class AnchorLayout {
         }
         path.add(id);
         PositionElement p = frame.position();
-        Bounds target = place(p.relativeTo, frames, resolved, visiting, path);
+        String targetId = p.relativeTo;
+        if (!resolved.containsKey(targetId) && !frames.containsKey(targetId)) {
+            warningSink.accept("Frame '" + id + "' references unknown relativeTo '" + targetId + "'; falling back to screen");
+            targetId = "screen";
+        }
+        Bounds target = place(targetId, frames, resolved, visiting, path, warningSink);
         int x = target.x() + p.anchor.x(target.width()) + p.x - p.point.x(frame.width());
         int y = target.y() + p.anchor.y(target.height()) + p.y - p.point.y(frame.height());
         Bounds result = new Bounds(x, y, frame.width(), frame.height());

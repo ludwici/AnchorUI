@@ -22,6 +22,7 @@ public class ItemLoreScreen extends Screen {
     private final LoreEntity loreEntity;
     private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
     private String layoutError;
+    private List<String> layoutWarnings = List.of();
 
     public ItemLoreScreen(Screen previous, ItemStack item, LoreEntity entity) {
         super(Component.empty());
@@ -34,6 +35,7 @@ public class ItemLoreScreen extends Screen {
     protected void init() {
         layoutBounds = Map.of();
         layoutError = null;
+        layoutWarnings = List.of();
         LoreStyle theme = LoreLoader.INSTANCE.getStyle(loreEntity.style);
         List<AnchorLayout.Frame> frames = new ArrayList<>();
         List<AnchoredWidget> widgets = new ArrayList<>();
@@ -57,14 +59,19 @@ public class ItemLoreScreen extends Screen {
             }
         }
         try {
-            layoutBounds = AnchorLayout.resolve(width, height, frames);
+            List<String> warnings = new ArrayList<>();
+            layoutBounds = AnchorLayout.resolve(width, height, frames, warnings::add);
+            layoutWarnings = List.copyOf(warnings);
+            for (String warning : warnings) {
+                AnchorUI.LOGGER.warn("Anchor UI layout: {}", warning);
+            }
             for (int i = 0; i < frames.size(); i++) {
                 var bounds = layoutBounds.get(frames.get(i).id());
                 widgets.get(i).setPosition(bounds.x(), bounds.y());
             }
         } catch (IllegalArgumentException ex) {
             layoutError = ex.getMessage();
-            AnchorUI.LOGGER.error("Invalid Anchor UI layout: {}", layoutError);
+            AnchorUI.LOGGER.error("Anchor UI layout rejected ({}x{}, {} frames): {}", width, height, frames.size(), layoutError);
             return;
         }
         widgets.forEach(this::addRenderableWidget);
@@ -76,6 +83,10 @@ public class ItemLoreScreen extends Screen {
 
     protected final String getLayoutError() {
         return layoutError;
+    }
+
+    protected final List<String> getLayoutWarnings() {
+        return layoutWarnings;
     }
 
     private void add(String id, AnchoredWidget widget, LoreStyle.Element settings, List<AnchorLayout.Frame> frames, List<AnchoredWidget> widgets) {

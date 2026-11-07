@@ -52,8 +52,12 @@ public class TestSceneScreen extends ItemLoreScreen {
         if (error != null) {
             int y = Math.max(40, height / 2 - 15);
             graphics.fill(8, y - 7, width - 8, y + 30, 0xCC5C1722);
-            graphics.drawString(font, "Ошибка привязки (ожидается в scene7 и scene8):", 16, y, 0xFFFFC0C0, false);
+            graphics.drawString(font, "Ошибка привязки (ожидается в scene8):", 16, y, 0xFFFFC0C0, false);
             graphics.drawString(font, error, 16, y + 13, 0xFFFFFFFF, false);
+        }
+        if (!getLayoutWarnings().isEmpty()) {
+            graphics.fill(8, 37, width - 8, 62, 0xCC5A4824);
+            graphics.drawString(font, "WARN: " + getLayoutWarnings().getFirst(), 16, 45, 0xFFFFD080, false);
         }
         graphics.fill(0, height - 32, width, height, 0xEC0C1019);
         graphics.drawString(font, "G — контуры | Esc — закрыть", 7, height - 21, 0xFFBAC7D9, false);

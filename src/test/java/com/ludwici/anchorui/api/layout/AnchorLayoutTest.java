@@ -51,9 +51,17 @@ public class AnchorLayoutTest {
     }
 
     @Test
-    public void invalidReferencesAreRejected() {
-        var frames = List.of(frame("body", ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, "unknown", 0, 0, 10, 10));
-        assertTrue(assertThrows(IllegalArgumentException.class, () -> AnchorLayout.resolve(200, 100, frames)).getMessage().contains("unknown"));
+    public void invalidReferencesFallBackToScreen() {
+        var frames = List.of(
+                frame("child", ElementAnchor.TOPLEFT, ElementAnchor.BOTTOMRIGHT, "body", 4, 6, 10, 10),
+                frame("body", ElementAnchor.CENTER, ElementAnchor.CENTER, "unknown", 12, -5, 20, 10)
+        );
+        var warnings = new java.util.ArrayList<String>();
+        var result = AnchorLayout.resolve(200, 100, frames, warnings::add);
+        assertEquals(new AnchorLayout.Bounds(102, 40, 20, 10), result.get("body"));
+        assertEquals(new AnchorLayout.Bounds(126, 56, 10, 10), result.get("child"));
+        assertEquals(1, warnings.size());
+        assertTrue(warnings.getFirst().contains("unknown"));
     }
 
     @Test

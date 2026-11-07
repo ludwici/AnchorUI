@@ -64,6 +64,30 @@ public class HudLayoutOffsetsTest {
     }
 
     @Test
+    public void visibilityAndAnchorsSurviveRestartAndReset() throws IOException {
+        Path path = directory.resolve("anchorui/hud-layout.json");
+        HudLayoutOffsets offsets = new HudLayoutOffsets();
+        offsets.set("moda:health", 12, -3);
+        offsets.setHidden("moda:health", true);
+        offsets.setAnchor("modb:mana", new HudLayoutOffsets.AnchorOverride("moda:health", ElementAnchor.TOPLEFT, ElementAnchor.BOTTOMRIGHT));
+        HudLayoutStorage.save(path, offsets);
+
+        HudLayoutOffsets loaded = HudLayoutStorage.load(path);
+        assertTrue(loaded.sameAs(offsets));
+        assertTrue(loaded.isHidden("moda:health"));
+        assertEquals(new HudLayoutOffsets.AnchorOverride("moda:health", ElementAnchor.TOPLEFT, ElementAnchor.BOTTOMRIGHT), loaded.anchor("modb:mana"));
+        assertEquals(HudLayoutOffsets.Offset.ZERO, loaded.get("modb:mana"));
+        assertEquals("moda:health", loaded.toJson().getAsJsonObject("offsets").getAsJsonObject("modb:mana").get("relativeTo").getAsString());
+
+        loaded.setHidden("moda:health", false);
+        assertFalse(loaded.isHidden("moda:health"));
+        loaded.reset("modb:mana");
+        assertEquals(null, loaded.anchor("modb:mana"));
+        loaded.resetAll();
+        assertTrue(loaded.toJson().getAsJsonObject("offsets").entrySet().isEmpty());
+    }
+
+    @Test
     public void editorOffsetsKeepAnchoredChildrenAttached() {
         PositionElement root = new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, "screen", 15, 30);
         PositionElement child = new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.BOTTOMLEFT, "moda:health", 0, 6);

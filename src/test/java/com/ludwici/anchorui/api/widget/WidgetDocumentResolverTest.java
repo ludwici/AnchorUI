@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -114,6 +116,23 @@ public class WidgetDocumentResolverTest {
                 "modb:second", json("{\"ref\":\"moda:first\"}")
         );
         assertTrue(assertThrows(IllegalArgumentException.class, () -> WidgetDocumentResolver.resolve(doc, "modb", templates)).getMessage().contains("Circular widget definitions"));
+    }
+
+    @Test
+    public void missingOptionalDefinitionsSkipOnlyMissingWidgets() {
+        JsonObject document = json("""
+                {"imports":["missingmod:header"],"entities":[
+                    {"ref":"missingmod:button","id":"consumer:missing"},
+                    {"type":"anchorui:text","id":"consumer:survives"}
+                ]}
+                """);
+        List<String> warnings = new ArrayList<>();
+        JsonObject result = WidgetDocumentResolver.resolve(document, "consumer", Map.of(), warnings::add);
+        assertEquals(1, result.getAsJsonArray("entities").size());
+        assertEquals("consumer:survives", result.getAsJsonArray("entities").get(0).getAsJsonObject().get("id").getAsString());
+        assertEquals(2, warnings.size());
+        assertTrue(warnings.get(0).contains("missingmod:header"));
+        assertTrue(warnings.get(1).contains("missingmod:button"));
     }
 
     @Test

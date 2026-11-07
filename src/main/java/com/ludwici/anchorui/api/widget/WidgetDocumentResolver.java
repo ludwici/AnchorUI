@@ -5,23 +5,33 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.function.Consumer;
 
 public final class WidgetDocumentResolver {
     private WidgetDocumentResolver() {
     }
 
     public static JsonObject resolve(JsonObject document, String namespace, Map<String, JsonObject> templates) {
+        return resolve(document, namespace, templates, null);
+    }
+
+    public static JsonObject resolve(JsonObject document, String namespace, Map<String, JsonObject> templates, Consumer<String> warningSink) {
         JsonObject resolved = document.deepCopy();
         LinkedHashMap<String, JsonObject> elements = new LinkedHashMap<>();
         JsonArray imports = array(document, "imports");
         for (JsonElement value : imports) {
             String id = WidgetIds.id(value.getAsString(), namespace);
-            add(elements, template(id, templates, new ArrayList<>()));
+            try {
+                add(elements, template(id, templates, new ArrayList<>()));
+            } catch (UnknownWidgetDefinitionException exception) {
+                if (warningSink == null) {
+                    throw exception;
+                }
+                warningSink.accept(exception.getMessage());
+            }
         }
         JsonArray inline = array(document, "entities");
         int index = 0;
@@ -32,7 +42,16 @@ public final class WidgetDocumentResolver {
                 String referenced = WidgetIds.id(element.get("ref").getAsString(), namespace);
                 element.remove("ref");
                 normalizePosition(element, namespace);
-                output = merge(template(referenced, templates, new ArrayList<>()), element);
+                try {
+                    output = merge(template(referenced, templates, new ArrayList<>()), element);
+                } catch (UnknownWidgetDefinitionException exception) {
+                    if (warningSink == null) {
+                        throw exception;
+                    }
+                    warningSink.accept(exception.getMessage());
+                    index++;
+                    continue;
+                }
                 if (!element.has("id") || element.get("id").getAsString().isBlank()) {
                     output.addProperty("id", referenced);
                 }
@@ -58,10 +77,16 @@ public final class WidgetDocumentResolver {
         return resolved;
     }
 
+    public static final class UnknownWidgetDefinitionException extends IllegalArgumentException {
+        public UnknownWidgetDefinitionException(String id) {
+            super("Unknown widget definition: " + id);
+        }
+    }
+
     private static JsonObject template(String id, Map<String, JsonObject> templates, List<String> path) {
         JsonObject source = templates.get(id);
         if (source == null) {
-            throw new IllegalArgumentException("Unknown widget definition: " + id);
+            throw new UnknownWidgetDefinitionException(id);
         }
         if (path.contains(id)) {
             path.add(id);

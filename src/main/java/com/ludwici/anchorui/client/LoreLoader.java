@@ -56,7 +56,7 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
         for (var entry : rawDocuments.entrySet()) {
             ResourceLocation resource = entry.getKey();
             try {
-                JsonObject expanded = WidgetDocumentResolver.resolve(entry.getValue(), resource.getNamespace(), source);
+                JsonObject expanded = WidgetDocumentResolver.resolve(entry.getValue(), resource.getNamespace(), source, warning -> AnchorUI.LOGGER.warn("Anchor UI document '{}': {}", resource, warning));
                 loaded.put(resource, new LoreEntity(expanded, resource.getNamespace()));
             } catch (RuntimeException exception) {
                 AnchorUI.LOGGER.error("Failed to load Anchor UI document '{}'", resource, exception);

@@ -1,0 +1,51 @@
+name: Restore Gradle wrappers
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/restore-wrappers.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download the official Gradle 8.8 wrapper
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --silent --show-error \
+            https://raw.githubusercontent.com/gradle/gradle/v8.8.0/gradle/wrapper/gradle-wrapper.jar \
+            -o "$RUNNER_TEMP/gradle-wrapper.jar"
+          unzip -t "$RUNNER_TEMP/gradle-wrapper.jar" >/dev/null
+          unzip -l "$RUNNER_TEMP/gradle-wrapper.jar" | grep 'org/gradle/wrapper/GradleWrapperMain.class'
+
+      - name: Commit wrappers to both versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for version in 1.20.1 1.21.1; do
+            git checkout -B "$version" "origin/$version"
+            cp "$RUNNER_TEMP/gradle-wrapper.jar" gradle/wrapper/gradle-wrapper.jar
+            git add -f gradle/wrapper/gradle-wrapper.jar
+            git commit -m "Restore Gradle wrapper jar"
+            git push origin "HEAD:refs/heads/$version"
+          done
+
+      - name: Remove temporary restore workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout -B main origin/main
+          git rm .github/workflows/restore-wrappers.yml
+          git commit -m "Clean up Gradle wrapper bootstrap"
+          git push origin HEAD:main

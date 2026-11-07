@@ -3,7 +3,7 @@
   "style": "anchorui:style/default",
   "entities": [
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "header",
       "text": "Anchor UI - chained frames",
       "position": {
@@ -14,7 +14,7 @@
       }
     },
     {
-      "type": "model",
+      "type": "anchorui:model",
       "id": "itemModel",
       "path": "minecraft:amethyst_shard",
       "scale": 4,
@@ -30,7 +30,7 @@
       }
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "caption",
       "text": "Anchored to the model",
       "position": {

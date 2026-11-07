@@ -3,7 +3,7 @@
   "style": "anchorui:style/default",
   "entities": [
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "primary",
       "text": "160x54 / padding 12",
       "position": {
@@ -29,7 +29,7 @@
       "color": "#FFE278"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "secondary",
       "text": "72 x 70",
       "position": {
@@ -55,7 +55,7 @@
       "color": "#0F131A"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "automatic",
       "text": "Auto size",
       "position": {
@@ -81,7 +81,7 @@
       "color": "#FFFFFF"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "offset",
       "text": "Y=-14 от primary",
       "position": {
@@ -107,7 +107,7 @@
       "color": "#FFFFFF"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "alpha27",
       "text": "Alpha 27%",
       "position": {
@@ -133,7 +133,7 @@
       "color": "#FFFFFF"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "alpha53",
       "text": "Alpha 53%",
       "position": {
@@ -159,7 +159,7 @@
       "color": "#FFFFFF"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "alpha100",
       "text": "Alpha 100%",
       "position": {

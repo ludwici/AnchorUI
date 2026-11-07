@@ -3,7 +3,7 @@
   "style": "anchorui:style/default",
   "entities": [
     {
-      "type": "model",
+      "type": "anchorui:model",
       "id": "model",
       "text": "",
       "position": {
@@ -31,7 +31,7 @@
       "scale": 4
     },
     {
-      "type": "list",
+      "type": "anchorui:list",
       "id": "rich",
       "text": "",
       "position": {

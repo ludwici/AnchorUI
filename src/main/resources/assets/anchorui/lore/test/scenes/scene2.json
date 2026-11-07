@@ -3,7 +3,7 @@
   "style": "anchorui:style/default",
   "entities": [
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "grandchild",
       "text": "GRANDCHILD",
       "position": {
@@ -29,7 +29,7 @@
       "color": "#FFFFFF"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "left",
       "text": "LEFT",
       "position": {
@@ -55,7 +55,7 @@
       "color": "#FFFFFF"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "right",
       "text": "RIGHT",
       "position": {
@@ -81,7 +81,7 @@
       "color": "#FFFFFF"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "above",
       "text": "TOP child",
       "position": {
@@ -107,7 +107,7 @@
       "color": "#FFFFFF"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "panel",
       "text": "PARENT",
       "position": {
@@ -133,7 +133,7 @@
       "color": "#FFFFFF"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "below",
       "text": "BOTTOM child",
       "position": {

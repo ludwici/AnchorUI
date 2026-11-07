@@ -41,8 +41,9 @@ jobs:
             git rm -r --quiet --ignore-unmatch .
             git clean -fdx
             cp -a "$RUNNER_TEMP/anchorui-source/$version/." .
+            rm -rf .github/workflows
             git add -A
-            git commit -m "Import Anchor UI $version source and build workflow"
+            git commit -m "Import Anchor UI $version source"
             git push origin "HEAD:refs/heads/$version"
           done
 

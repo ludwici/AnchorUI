@@ -110,6 +110,14 @@ public final class AnchorHudEditorScreen extends Screen {
     }
 
     @Override
+    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    }
+
+    @Override
+    protected void renderBlurredBackground(float partialTick) {
+    }
+
+    @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         manager.renderEditorPreview(graphics, partialTick);
 

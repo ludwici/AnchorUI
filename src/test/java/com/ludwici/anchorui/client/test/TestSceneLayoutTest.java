@@ -49,7 +49,7 @@ public class TestSceneLayoutTest {
 
     @Test
     public void eachScenarioIsIncludedInResources() {
-        for (int i = 1; i <= 13; i++) {
+        for (int i = 1; i <= 14; i++) {
             assertTrue(resource(i).getAsJsonArray("entities").size() > 0);
         }
     }
@@ -149,6 +149,17 @@ public class TestSceneLayoutTest {
         assertEquals("invalid", wrongType.get("step").getAsString());
         assertEquals(0, wrongRange.get("step").getAsInt());
         assertEquals("anchorui:text", entries.get(5).getAsJsonObject().get("type").getAsString());
+    }
+
+    @Test
+    public void importedWidgetSceneDeclaresCrossNamespaceAnchors() {
+        JsonObject scene = resource(14);
+        var imports = scene.getAsJsonArray("imports");
+        assertEquals("anchorui_test:foreign_header", imports.get(0).getAsString());
+        var elements = scene.getAsJsonArray("entities");
+        assertEquals("anchorui_test:foreign_header", elements.get(0).getAsJsonObject().getAsJsonObject("position").get("relativeTo").getAsString());
+        assertEquals("anchorui_test:foreign_counter", elements.get(1).getAsJsonObject().get("ref").getAsString());
+        assertEquals("anchorui:local_counter", elements.get(1).getAsJsonObject().get("id").getAsString());
     }
 
     @Test

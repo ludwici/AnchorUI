@@ -23,12 +23,20 @@ public final class AnchorHudEditorScreen extends Screen {
     private static final int HEADER_HEIGHT = 34;
     private static final int INSPECTOR_LINE_HEIGHT = 11;
     private static final float INSPECTOR_SCALE = 0.83F;
+    private static final int RESET_SIZE = 11;
 
-    private record InspectorLine(FormattedCharSequence text, int color) {
+    private record InspectorLine(FormattedCharSequence text, int color, AnchorHudManager.EditableProperty reset, boolean modified) {
+    }
+
+    private record ResetHitbox(AnchorHudManager.EditableProperty property, int x, int y) {
+        private boolean contains(double mouseX, double mouseY) {
+            return mouseX >= x && mouseX < x + RESET_SIZE && mouseY >= y && mouseY < y + RESET_SIZE;
+        }
     }
 
     private final AnchorHudManager manager = AnchorHudManager.INSTANCE;
     private final List<Button> controls = new ArrayList<>();
+    private final List<ResetHitbox> resetHitboxes = new ArrayList<>();
     private boolean editorStarted;
     private boolean compact;
     private boolean choosingParent;
@@ -204,6 +212,7 @@ public final class AnchorHudEditorScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         manager.renderEditorPreview(graphics, partialTick);
+        resetHitboxes.clear();
         List<AnchorHudManager.HudHandle> handles = manager.getHandles();
         AnchorHudManager.HudHandle hovered = clickedHandle(mouseX, mouseY);
         AnchorHudManager.HudHandle active = null;
@@ -285,6 +294,17 @@ public final class AnchorHudEditorScreen extends Screen {
                 graphics.pose().scale(INSPECTOR_SCALE, INSPECTOR_SCALE, 1.0F);
                 graphics.drawString(font, line.text(), 0, 0, line.color(), false);
                 graphics.pose().popPose();
+                if (line.reset() != null) {
+                    int x = panelX + panelWidth - 21;
+                    int buttonY = y;
+                    int background = line.modified() ? 0xCC3D6273 : 0x8840505D;
+                    int foreground = line.modified() ? 0xFFECF8FF : 0xFF80919E;
+                    graphics.fill(x, buttonY, x + RESET_SIZE, buttonY + RESET_SIZE, background);
+                    graphics.drawString(font, "R", x + 2, buttonY + 1, foreground, false);
+                    if (line.modified() && buttonY >= top && buttonY + RESET_SIZE <= bottom) {
+                        resetHitboxes.add(new ResetHitbox(line.reset(), x, buttonY));
+                    }
+                }
             }
             y += INSPECTOR_LINE_HEIGHT;
         }
@@ -319,14 +339,14 @@ public final class AnchorHudEditorScreen extends Screen {
         } else {
             appendLine(lines, "CURRENT WIDGET", 0xFFFFCF64);
             appendLine(lines, "id: " + active.id(), 0xFFE5EEF5);
-            appendLine(lines, "parent: " + active.relativeTo(), 0xFFE5EEF5);
-            appendLine(lines, "point: " + active.point(), 0xFFE5EEF5);
-            appendLine(lines, "anchor: " + active.anchor(), 0xFFE5EEF5);
+            appendEditableLine(lines, "parent: " + active.relativeTo(), AnchorHudManager.EditableProperty.PARENT, active);
+            appendEditableLine(lines, "point: " + active.point(), AnchorHudManager.EditableProperty.POINT, active);
+            appendEditableLine(lines, "anchor: " + active.anchor(), AnchorHudManager.EditableProperty.ANCHOR, active);
             var bounds = active.bounds();
             appendLine(lines, "screen: " + bounds.x() + ", " + bounds.y(), 0xFFE5EEF5);
             appendLine(lines, "size: " + bounds.width() + " x " + bounds.height(), 0xFFE5EEF5);
-            appendLine(lines, "user offset: " + active.offset().x() + ", " + active.offset().y(), 0xFFE5EEF5);
-            appendLine(lines, "visible: " + active.visible(), 0xFFE5EEF5);
+            appendEditableLine(lines, "user offset: " + active.offset().x() + ", " + active.offset().y(), AnchorHudManager.EditableProperty.OFFSET, active);
+            appendEditableLine(lines, "visible: " + active.visible(), AnchorHudManager.EditableProperty.VISIBILITY, active);
             if (!active.id().equals(inspectedId)) {
                 JsonObject settings = manager.getWidgetSettings(active.id());
                 sourceProperties = HudInspectorProperties.flatten(settings);
@@ -341,9 +361,20 @@ public final class AnchorHudEditorScreen extends Screen {
     }
 
     private void appendLine(List<InspectorLine> lines, String value, int color) {
-        int availableWidth = Math.max(20, (int) ((panelWidth - 20) / INSPECTOR_SCALE));
+        appendFormattedLine(lines, value, color, null, false);
+    }
+
+    private void appendEditableLine(List<InspectorLine> lines, String value, AnchorHudManager.EditableProperty property, AnchorHudManager.HudHandle handle) {
+        appendFormattedLine(lines, value, 0xFFE5EEF5, property, handle.isModified(property));
+    }
+
+    private void appendFormattedLine(List<InspectorLine> lines, String value, int color, AnchorHudManager.EditableProperty property, boolean modified) {
+        int reserved = property == null ? 20 : 39;
+        int availableWidth = Math.max(20, (int) ((panelWidth - reserved) / INSPECTOR_SCALE));
+        boolean first = true;
         for (FormattedCharSequence part : font.split(Component.literal(value), availableWidth)) {
-            lines.add(new InspectorLine(part, color));
+            lines.add(new InspectorLine(part, color, first ? property : null, modified));
+            first = false;
         }
     }
 
@@ -392,6 +423,14 @@ public final class AnchorHudEditorScreen extends Screen {
             return false;
         }
         if (!compact && insidePanel(mouseX, mouseY)) {
+            if (selected != null && insideInspector(mouseX, mouseY)) {
+                for (ResetHitbox hitbox : resetHitboxes) {
+                    if (hitbox.contains(mouseX, mouseY) && manager.resetPreviewProperty(selected, hitbox.property())) {
+                        status = "Restored " + hitbox.property().name().toLowerCase(java.util.Locale.ROOT) + " to default";
+                        return true;
+                    }
+                }
+            }
             if (mouseY < panelY + 20) {
                 draggingPanel = true;
                 dragStartX = mouseX;

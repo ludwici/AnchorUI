@@ -266,7 +266,7 @@ public final class AnchorHudManager {
             clear();
             return;
         }
-        if (minecraft.options.hideGui || (minecraft.screen != null && !(minecraft.screen instanceof ChatScreen))) {
+        if (!HudVisibilityPolicy.shouldRender(true, minecraft.options.hideGui, minecraft.screen != null, minecraft.screen instanceof ChatScreen)) {
             return;
         }
         prepare(minecraft, graphics.guiWidth(), graphics.guiHeight());

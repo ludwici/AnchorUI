@@ -6,6 +6,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public final class AnchorHudEditorScreen extends Screen {
@@ -15,6 +16,8 @@ public final class AnchorHudEditorScreen extends Screen {
 
     private final AnchorHudManager manager = AnchorHudManager.INSTANCE;
     private boolean editorStarted;
+    private boolean compact;
+    private final List<Button> controls = new ArrayList<>();
     private String selected;
     private String status = "";
     private boolean dragging;
@@ -31,6 +34,8 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     protected void init() {
+        dragging = false;
+        controls.clear();
         if (!editorStarted) {
             manager.beginEditing();
             editorStarted = true;
@@ -40,17 +45,17 @@ public final class AnchorHudEditorScreen extends Screen {
         int rowWidth = width3 * 3 + gap * 2;
         int rowX = (width - rowWidth) / 2;
         int rowY = height - 54;
-        resetSelectedButton = addRenderableWidget(Button.builder(Component.literal("Reset widget"), button -> {
+        resetSelectedButton = addControl(Button.builder(Component.literal("Reset widget"), button -> {
             if (selected != null) {
                 manager.resetPreviewOffset(selected);
                 status = "Restored default offset for " + selected;
             }
         }).bounds(rowX, rowY, width3, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("Reset all"), button -> {
+        addControl(Button.builder(Component.literal("Reset all"), button -> {
             manager.resetAllPreviewOffsets();
             status = "All HUD positions restored in preview";
         }).bounds(rowX + width3 + gap, rowY, width3, 20).build());
-        demoButton = addRenderableWidget(Button.builder(Component.literal("Demo HUD"), button -> {
+        demoButton = addControl(Button.builder(Component.literal("Demo HUD"), button -> {
             manager.setTestEnabled(!manager.isTestEnabled());
             selected = null;
             status = manager.isTestEnabled() ? "Demo HUD enabled for this session" : "Demo HUD disabled";
@@ -58,8 +63,13 @@ public final class AnchorHudEditorScreen extends Screen {
 
         int actionWidth = Math.min(115, Math.max(80, (width - 20) / 2 - 5));
         int actionsLeft = (width - actionWidth * 2 - 6) / 2;
-        addRenderableWidget(Button.builder(Component.literal("Save & close"), button -> saveAndClose()).bounds(actionsLeft, height - 28, actionWidth, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("Cancel"), button -> onClose()).bounds(actionsLeft + actionWidth + 6, height - 28, actionWidth, 20).build());
+        addControl(Button.builder(Component.literal("Save & close"), button -> saveAndClose()).bounds(actionsLeft, height - 28, actionWidth, 20).build());
+        addControl(Button.builder(Component.literal("Cancel"), button -> onClose()).bounds(actionsLeft + actionWidth + 6, height - 28, actionWidth, 20).build());
+    }
+
+    private Button addControl(Button button) {
+        controls.add(button);
+        return addRenderableWidget(button);
     }
 
     private void saveAndClose() {
@@ -91,7 +101,7 @@ public final class AnchorHudEditorScreen extends Screen {
             if (chosen) {
                 graphics.fill(bounds.x(), bounds.y(), bounds.x() + bounds.width(), bounds.y() + bounds.height(), 0x28FFC45B);
             }
-            if (bounds.y() >= 58 && bounds.y() < height - 82) {
+            if (compact || (bounds.y() >= 58 && bounds.y() < height - 82)) {
                 String label = handle.id() + (handle.visible() ? "" : " (hidden)");
                 int textWidth = Math.min(font.width(label) + 8, width - 12);
                 int labelX = Math.max(2, Math.min(bounds.x(), width - textWidth - 2));
@@ -100,15 +110,17 @@ public final class AnchorHudEditorScreen extends Screen {
             }
         }
 
-        graphics.fill(0, 0, width, 44, 0xDF111C29);
-        graphics.drawString(font, "Anchor UI - HUD Editor", 10, 6, 0xFFE6EDF5, false);
-        graphics.drawString(font, "Drag widgets | Arrows: 1 px | Shift+Arrows: 10 px | R: reset", 10, 19, 0xFFB3C9D9, false);
-        String info = selected == null ? "Click a highlighted widget to select it" : details(selected, handles);
-        graphics.drawString(font, font.plainSubstrByWidth(info, width - 20), 10, 31, 0xFFFFD37C, false);
+        if (!compact) {
+            graphics.fill(0, 0, width, 44, 0xDF111C29);
+            graphics.drawString(font, "Anchor UI - HUD Editor", 10, 6, 0xFFE6EDF5, false);
+            graphics.drawString(font, font.plainSubstrByWidth("Drag widgets | Arrows: 1/10 px | R: reset | Tab: hide controls", width - 20), 10, 19, 0xFFB3C9D9, false);
+            String info = selected == null ? "Click a highlighted widget to select it" : details(selected, handles);
+            graphics.drawString(font, font.plainSubstrByWidth(info, width - 20), 10, 31, 0xFFFFD37C, false);
 
-        graphics.fill(0, height - 67, width, height, 0xE7121C29);
-        String summary = status.isEmpty() ? (manager.hasUnsavedChanges() ? "Unsaved changes - Save & close to keep them" : "Changes are saved only when you press Save & close") : status;
-        graphics.drawString(font, font.plainSubstrByWidth(summary, width - 20), 8, height - 66, manager.hasUnsavedChanges() ? 0xFFFFD37C : 0xFFD4E0EC, false);
+            graphics.fill(0, height - 67, width, height, 0xE7121C29);
+            String summary = status.isEmpty() ? (manager.hasUnsavedChanges() ? "Unsaved changes - Save & close to keep them" : "Changes are saved only when you press Save & close") : status;
+            graphics.drawString(font, font.plainSubstrByWidth(summary, width - 20), 8, height - 66, manager.hasUnsavedChanges() ? 0xFFFFD37C : 0xFFD4E0EC, false);
+        }
 
         if (handles.isEmpty()) {
             graphics.drawCenteredString(font, "No HUD widgets loaded. Enable Demo HUD below.", width / 2, height / 2, 0xFFFFD37C);
@@ -116,6 +128,9 @@ public final class AnchorHudEditorScreen extends Screen {
 
         resetSelectedButton.active = selected != null;
         demoButton.setMessage(Component.literal(manager.isTestEnabled() ? "Hide demo" : "Show demo"));
+        for (Button control : controls) {
+            control.visible = !compact;
+        }
         super.render(graphics, mouseX, mouseY, partialTick);
     }
 
@@ -143,7 +158,7 @@ public final class AnchorHudEditorScreen extends Screen {
         if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             return false;
         }
-        if (mouseY < 44 || mouseY >= height - 67) {
+        if (!compact && (mouseY < 44 || mouseY >= height - 67)) {
             return false;
         }
 
@@ -188,6 +203,10 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == GLFW.GLFW_KEY_TAB) {
+            compact = !compact;
+            return true;
+        }
         if (keyCode == GLFW.GLFW_KEY_S && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
             saveAndClose();
             return true;

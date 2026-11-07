@@ -3,7 +3,7 @@
   "style": "anchorui:style/default",
   "entities": [
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "header",
       "text": "StringWidget: text rendering",
       "position": {
@@ -30,7 +30,7 @@
       "align": "center"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "left",
       "text": "LEFT aligned",
       "position": {
@@ -57,7 +57,7 @@
       "align": "left"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "center",
       "text": "CENTER aligned",
       "position": {
@@ -84,7 +84,7 @@
       "align": "center"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "right",
       "text": "RIGHT aligned",
       "position": {
@@ -111,7 +111,7 @@
       "align": "right"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "ellipsis",
       "text": "This text is intentionally too long to fit the narrow fixed-width element, so it must end with an ellipsis.",
       "position": {

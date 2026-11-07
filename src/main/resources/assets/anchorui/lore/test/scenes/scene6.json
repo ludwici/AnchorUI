@@ -3,7 +3,7 @@
   "style": "anchorui:style/default",
   "entities": [
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "invisible",
       "text": "YOU MUST NOT SEE THIS",
       "position": {
@@ -30,7 +30,7 @@
       "hidden": true
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "note",
       "text": "Hidden frame is centered here",
       "position": {
@@ -56,7 +56,7 @@
       "color": "#FFFFFF"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "dependent",
       "text": "I follow the invisible frame",
       "position": {
@@ -82,7 +82,7 @@
       "color": "#FFFFFF"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "chain",
       "text": "I follow the visible child",
       "position": {

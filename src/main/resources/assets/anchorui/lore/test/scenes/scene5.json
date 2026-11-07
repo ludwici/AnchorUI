@@ -3,7 +3,7 @@
   "style": "anchorui:style/default",
   "entities": [
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "header",
       "text": "TOP / screen",
       "position": {
@@ -29,7 +29,7 @@
       "color": "#FFFFFF"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "footer",
       "text": "BOTTOM / screen",
       "position": {
@@ -55,7 +55,7 @@
       "color": "#FFFFFF"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "root",
       "text": "CENTER",
       "position": {
@@ -81,7 +81,7 @@
       "color": "#FFFFFF"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "left",
       "text": "LEFT of center",
       "position": {
@@ -107,7 +107,7 @@
       "color": "#FFFFFF"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "right",
       "text": "RIGHT of center",
       "position": {
@@ -133,7 +133,7 @@
       "color": "#FFFFFF"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "bottom",
       "text": "Below center",
       "position": {

@@ -3,7 +3,7 @@
   "style": "anchorui:style/default",
   "entities": [
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "tags",
       "text": "Обычный <b>жирный</b>, <i>курсив</i>, <u>подчёркнутый</u>",
       "position": {
@@ -30,7 +30,7 @@
       "align": "left"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "tooltip",
       "text": "Наведи: <t id=\"Подсказка Anchor UI\"><u>эта надпись</u></t>",
       "position": {
@@ -57,7 +57,7 @@
       "align": "left"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "wrapped",
       "text": "Перенос строки с <b>жирным текстом</b> и <i>курсивом</i>. Длинное предложение должно занимать несколько строк.",
       "position": {
@@ -85,7 +85,7 @@
       "wrap": true
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "explicit",
       "text": "Первая <b>строка</b>\nВторая <i>строка</i>\nТретья <u>строка</u>",
       "position": {

@@ -3,7 +3,7 @@
   "style": "anchorui:style/default",
   "entities": [
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "broken",
       "text": "Fallback to screen",
       "position": {

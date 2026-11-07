@@ -3,7 +3,7 @@
   "style": "anchorui:style/default",
   "entities": [
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "first",
       "text": "A -> B",
       "position": {
@@ -29,7 +29,7 @@
       "color": "#FFFFFF"
     },
     {
-      "type": "text",
+      "type": "anchorui:text",
       "id": "second",
       "text": "B -> A",
       "position": {

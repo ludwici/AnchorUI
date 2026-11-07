@@ -6,7 +6,31 @@
 
 Подключи Anchor UI как зависимость для компиляции и укажи обязательную зависимость `anchorui` в метаданных своего мода. Регистрацию выполняй только на клиентской стороне во время `FMLClientSetupEvent`; на сервере виджеты не регистрируются.
 
-## 2. Регистрация фабрики
+## 2. Типизированная конфигурация через Java record и Codec
+
+Для собственного виджета удобно объявить конфигурацию как Java `record`. `Codec<T>` из Minecraft DataFixerUpper описывает JSON-поля, их типы, значения по умолчанию и дополнительные ограничения.
+
+Например, счётчик принимает `initial` и `step`:
+
+```java
+public record CounterConfig(int initial, int step) {
+    private static final Codec<CounterConfig> BASE_CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            Codec.INT.optionalFieldOf("initial", 0).forGetter(CounterConfig::initial),
+            Codec.INT.optionalFieldOf("step", 1).forGetter(CounterConfig::step)
+    ).apply(instance, CounterConfig::new));
+
+    public static final Codec<CounterConfig> CODEC = BASE_CODEC.validate(config -> {
+        if (config.step() <= 0) {
+            return DataResult.error(() -> "step must be greater than zero");
+        }
+        return DataResult.success(config);
+    });
+}
+```
+
+Используются `com.mojang.serialization.Codec`, `DataResult` и `com.mojang.serialization.codecs.RecordCodecBuilder`.
+
+**Регистрация фабрики:** рядом с идентификатором типа передаём `CounterConfig.CODEC`. Anchor UI автоматически декодирует JSON до вызова фабрики и передаёт в неё готовый `CounterConfig`.
 
 ```java
 @EventBusSubscriber(modid = "examplemod", bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
@@ -15,26 +39,22 @@ public final class ClientEvents {
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
             ResourceLocation type = ResourceLocation.fromNamespaceAndPath("examplemod", "counter");
-            AnchorWidgetRegistry.register(type, (context, element, style) -> {
-                int initial = GsonHelper.getAsInt(element.settings, "initial", 0);
-                int step = GsonHelper.getAsInt(element.settings, "step", 1);
-                AtomicInteger value = new AtomicInteger(initial);
-                return Button.builder(Component.literal("Счётчик: " + initial),
-                        button -> button.setMessage(Component.literal("Счётчик: " + value.addAndGet(step))))
-                        .bounds(0, 0, 100, 20).build();
+            AnchorWidgetRegistry.register(type, CounterConfig.CODEC, (context, element, style, config) -> {
+                AtomicInteger value = new AtomicInteger(config.initial());
+                return Button.builder(Component.literal("Счётчик: " + config.initial()), button -> button.setMessage(Component.literal("Счётчик: " + value.addAndGet(config.step())))).bounds(0, 0, 100, 20).build();
             });
         });
     }
 }
 ```
 
-Необходимые классы импортируются из NeoForge, Minecraft, `java.util.concurrent.atomic.AtomicInteger` и публичного API Anchor UI:
+Для примера также потребуются импорты `java.util.concurrent.atomic.AtomicInteger`, `com.ludwici.anchorui.api.widget.AnchorWidgetRegistry` и стандартных классов NeoForge и Minecraft.
 
-- `com.ludwici.anchorui.api.widget.AnchorWidgetRegistry`
-- `com.ludwici.anchorui.api.widget.WidgetFactory`
-- `com.ludwici.anchorui.api.widget.WidgetContext`
+Типизация распространяется и на вложенные объекты: можно определить вложенный record, например `AnimationConfig`, создать для него свой `Codec<AnimationConfig>` и включить его через `AnimationConfig.CODEC.fieldOf("animation")` в основной `RecordCodecBuilder`.
 
-Наследоваться от `AnchoredWidget` не требуется. В примере создаётся обычный `Button` из Minecraft. Регистрируй тип ровно один раз; повторная регистрация одного ID вызывает `IllegalStateException`, чтобы не позволять модам молча заменять виджеты друг друга.
+**Совместимость:** старый `AnchorWidgetRegistry.register(type, WidgetFactory)` остаётся доступным. В нём сторонний код может самостоятельно читать `element.settings` как `JsonObject`. Для новых виджетов рекомендуется перегрузка с `Codec<T>` и `ConfiguredWidgetFactory<T>`.
+
+При повторной регистрации того же ID возникает `IllegalStateException`. Наследоваться от `AnchoredWidget` не требуется: фабрика может вернуть обычный `AbstractWidget`.
 
 ## 3. JSON
 
@@ -58,11 +78,13 @@ public final class ClientEvents {
 }
 ```
 
-`type`, `id`, `position`, `size` и `hidden` обрабатывает Anchor UI. Остальные поля фабрика может читать из `element.settings` (это полный `JsonObject` элемента).
+Общие поля `type`, `id`, `position`, `size`, `hidden` обрабатывает Anchor UI. `CounterConfig.CODEC` читает только `initial` и `step`: лишние поля интерфейса не мешают. Пропущенные `initial` и `step` получают значения `0` и `1`.
+
+Например, `"step": "slow"` нарушает тип, а `"step": 0` нарушает правило из `validate`. Такой виджет пропускается с предупреждением, где указаны тип, ID и ошибка декодирования.
 
 ## 4. Контекст и стили
 
-`WidgetFactory` получает:
+Обычная `WidgetFactory` получает три параметра. `ConfiguredWidgetFactory<T>` получает те же параметры плюс четвёртый — типизированный `config`:
 
 - `WidgetContext`: `minecraft()`, `screen()`, `item()`, `entity()`, `font()` и `resolveItem(String)`.
 - `LoreEntity.UiElement`: `type`, `id`, `text`, `path`, `scale`, `lore`, `settings`.
@@ -76,6 +98,8 @@ Anchor UI автоматически выставляет координаты, 
 
 ## 5. Ошибки и изоляция
 
+При ошибке в `Codec<T>` Anchor UI создаёт `WidgetConfigException`, пишет `WARN` с названием типа, ID элемента и описанием ошибки, пропускает этот виджет и продолжает создание остальных. При этом пользовательская фабрика вообще не вызывается для неверной конфигурации.
+
 При неизвестном `type` виджет пропускается, а в журнал выводится `WARN`. Если фабрика бросает `RuntimeException`, Anchor UI записывает `ERROR` со стеком, пропускает только проблемный виджет и продолжает собирать остальной экран. Возврат `null` тоже пропускается с предупреждением.
 
 Порядок размещения соседних элементов сохраняется: описания фреймов и созданные виджеты хранятся вместе. Если `relativeTo` указывает на несуществующий или пропущенный виджет, используется существующий механизм резервной привязки к `screen` с `WARN`. Циклы между существующими элементами продолжают считаться ошибкой компоновки.
@@ -85,5 +109,7 @@ Anchor UI автоматически выставляет координаты, 
 `/anchorui test scene11` — два работающих `anchorui_test:counter` через публичную фабрику.
 
 `/anchorui test scene12` — незарегистрированный тип и исключение фабрики, остальные элементы продолжают отображаться.
+
+`/anchorui test scene13` — запись `CounterConfig`, значения по умолчанию и неверные значения `step`. Корректные счётчики работают, ошибочные пропускаются с `WARN`.
 
 Для следующих этапов остаются отдельные задачи: универсальные вложенные контейнеры, произвольные `Renderable`, реактивные данные и обновление динамических виджетов.

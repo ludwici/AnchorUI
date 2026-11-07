@@ -47,7 +47,7 @@ Java 21 and NeoForge 21.1 are required. Run `./gradlew build`; GitHub Actions ch
 
 ## Interactive test scenes
 
-Use `/anchorui test list` or `/anchorui test scene1` in-game to open the built-in client-only test harness. Twelve scenes exercise anchors, relative chains, dimensions, styling, rich text, item model input, resizing, hidden frames, invalid references, and vanilla StringWidget text alignment and ellipsis. Navigate with the on-screen arrows; press **G** to toggle anchor outlines and **Esc** to close.
+Use `/anchorui test list` or `/anchorui test scene1` in-game to open the built-in client-only test harness. Thirteen scenes exercise anchors, relative chains, dimensions, styling, rich text, item model input, resizing, hidden frames, invalid references, and vanilla StringWidget text alignment and ellipsis. Navigate with the on-screen arrows; press **G** to toggle anchor outlines and **Esc** to close.
 
 See [docs/TEST_SCENES.md](docs/TEST_SCENES.md) for each command and expected result. The scenes are JSON resources under `assets/anchorui/lore/test/scenes`, so they use the same rendering path as ordinary lore screens.
 
@@ -77,3 +77,9 @@ External mods register a `WidgetFactory` under a namespaced `ResourceLocation` u
 The demo type `anchorui_test:counter` uses a vanilla `Button` and can be tested with `/anchorui test scene11`. `/anchorui test scene12` checks unknown types and exceptions from factories without breaking the other widgets.
 
 See **[Custom Widgets API](docs/CUSTOM_WIDGETS.md)** for complete Java and JSON examples, guarantees, and current limitations.
+
+## Typed widget configuration using records
+
+A third-party mod can declare its custom fields as a Java `record` with a Mojang `Codec<T>` (typically built with `RecordCodecBuilder`) and register it using `AnchorWidgetRegistry.register(type, codec, (context, element, style, config) -> widget)`. Anchor UI parses the full JSON element using `JsonOps.INSTANCE`, ignores unrelated layout fields, and supplies a validated, typed configuration object. Defaults can be declared with `optionalFieldOf` and invariants with `Codec.validate`.
+
+Bad configuration is reported as a `WARN` with the widget type and ID; the problematic widget is skipped without affecting its neighbors. The existing three-parameter `WidgetFactory` overload and raw `element.settings` remain available. The test counter now uses `CounterConfig` and `scene13` demonstrates defaults and validation failures. See [docs/CUSTOM_WIDGETS.md](docs/CUSTOM_WIDGETS.md).

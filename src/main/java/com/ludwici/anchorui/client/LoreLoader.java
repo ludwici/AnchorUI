@@ -14,38 +14,40 @@ import java.util.Map;
 import static com.ludwici.anchorui.AnchorUI.GSON;
 
 public class LoreLoader extends SimpleJsonResourceReloadListener {
-
-    private Map<ResourceLocation, LoreEntity> data = Map.of();
-    private Map<ResourceLocation, LoreStyle> styles;
-
     public static final LoreLoader INSTANCE = new LoreLoader();
+    private Map<ResourceLocation, LoreEntity> data = Map.of();
+    private Map<ResourceLocation, LoreStyle> styles = Map.of();
 
     private LoreLoader() {
         super(GSON, "lore");
     }
 
     @Override
-    protected void apply(Map<ResourceLocation, JsonElement> object, ResourceManager resourceManager, ProfilerFiller profiler) {
-        Map<ResourceLocation, LoreEntity> data = new HashMap<>();
-        Map<ResourceLocation, LoreStyle> styles = new HashMap<>();
-        for (var entry: object.entrySet()) {
-            var key = entry.getKey();
-            String path = entry.getKey().getPath();
-            String[] parts = path.split("/", 2);
-            if (parts.length > 1) {
-                if (parts[0].equals("style")) {
-                    System.out.println("Detect style file: " + parts[1]);
-                    styles.computeIfAbsent(key, s -> new LoreStyle(entry.getValue().getAsJsonObject()));
-                } else {
-                    System.out.println(key.getNamespace() + ":lore/" + path);
-                    data.computeIfAbsent(key, e -> new LoreEntity(entry.getValue().getAsJsonObject()));
-                }
+    protected void apply(Map<ResourceLocation, JsonElement> objects, ResourceManager resourceManager, ProfilerFiller profiler) {
+        Map<ResourceLocation, LoreEntity> loaded = new HashMap<>();
+        Map<ResourceLocation, LoreStyle> loadedStyles = new HashMap<>();
+        for (var entry : objects.entrySet()) {
+            ResourceLocation key = entry.getKey();
+            if (key.getPath().startsWith("style/")) {
+                loadedStyles.put(key, new LoreStyle(entry.getValue().getAsJsonObject()));
+            } else {
+                loaded.put(key, new LoreEntity(entry.getValue().getAsJsonObject()));
             }
-
         }
+        data = Map.copyOf(loaded);
+        styles = Map.copyOf(loadedStyles);
+    }
 
-        this.data = data;
-        this.styles = styles;
+    public LoreStyle getStyle(String id) {
+        ResourceLocation key = ResourceLocation.tryParse(id);
+        if (key != null && !key.getPath().startsWith("style/")) {
+            key = ResourceLocation.fromNamespaceAndPath(key.getNamespace(), "style/" + key.getPath());
+        }
+        LoreStyle style = key == null ? null : styles.get(key);
+        if (style == null) {
+            style = styles.get(ResourceLocation.fromNamespaceAndPath("anchorui", "style/default"));
+        }
+        return style == null ? new LoreStyle(new com.google.gson.JsonObject()) : style;
     }
 
     public Map<ResourceLocation, LoreEntity> getData() {

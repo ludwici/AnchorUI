@@ -1,52 +1,59 @@
 package com.ludwici.anchorui.api;
 
 import com.google.gson.JsonObject;
-import com.ludwici.anchorui.api.style.LoreStyle;
 import net.minecraft.util.GsonHelper;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class LoreEntity {
-    public String title = "";
-    public String item = "";
-    public String model = "";
-    public float scale = 1.0F;
-    public List<LoreComponent> components = new ArrayList<>();
-
-    public LoreEntity() {
-
-    }
-
-    public LoreEntity(String title, String item, String model, float scale) {
-        this.title = title;
-        this.item = item;
-        this.model = model;
-        this.scale = scale;
-        components = new ArrayList<>();
-    }
+    public final String title;
+    public final String item;
+    public final String model;
+    public final String style;
+    public final float scale;
+    public final List<LoreComponent> components = new ArrayList<>();
+    public final List<UiElement> entities = new ArrayList<>();
 
     public LoreEntity(JsonObject root) {
-        this(
-                GsonHelper.getAsString(root, "title", ""),
-                GsonHelper.getAsString(root, "item", ""),
-                GsonHelper.getAsString(root, "model", ""),
-                GsonHelper.getAsFloat(root, "scale", 1.0F)
-        );
-        var components = GsonHelper.getAsJsonArray(root, "lore");
-        components.asList().forEach(jsonElement -> {
-            this.components.add(new LoreComponent(jsonElement.getAsJsonObject()));
-        });
+        title = GsonHelper.getAsString(root, "title", "");
+        item = GsonHelper.getAsString(root, "item", "");
+        model = GsonHelper.getAsString(root, "model", "");
+        style = GsonHelper.getAsString(root, "style", "anchorui:style/default");
+        scale = GsonHelper.getAsFloat(root, "scale", 1.0F);
+        if (root.has("lore")) {
+            for (var entry : GsonHelper.getAsJsonArray(root, "lore")) {
+                components.add(new LoreComponent(entry.getAsJsonObject()));
+            }
+        }
+        if (root.has("entities")) {
+            for (var entry : GsonHelper.getAsJsonArray(root, "entities")) {
+                entities.add(new UiElement(entry.getAsJsonObject()));
+            }
+        }
     }
 
-    public Map.Entry<String, String> getItemData() {
-        var results = item.split(":");
-        return Map.entry(results[0], results[1]);
+    public static class UiElement {
+        public final String type;
+        public final String id;
+        public final String text;
+        public final String path;
+        public final float scale;
+        public final JsonObject settings;
+        public final List<LoreComponent> lore = new ArrayList<>();
+
+        public UiElement(JsonObject root) {
+            type = GsonHelper.getAsString(root, "type");
+            id = GsonHelper.getAsString(root, "id", "");
+            text = GsonHelper.getAsString(root, "text", "");
+            path = GsonHelper.getAsString(root, "path", "");
+            scale = GsonHelper.getAsFloat(root, "scale", 1.0F);
+            settings = root.deepCopy();
+            if (root.has("lore")) {
+                for (var entry : GsonHelper.getAsJsonArray(root, "lore")) {
+                    lore.add(new LoreComponent(entry.getAsJsonObject()));
+                }
+            }
+        }
     }
-
-//    public LoreStyle getStyleSettings() {
-//
-//    }
-
 }

@@ -1,79 +1,46 @@
 package com.ludwici.anchorui.client.gui;
 
+import com.ludwici.anchorui.api.style.LoreStyle;
 import com.mojang.math.Axis;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.state.BlockState;
 
-public class ItemModelWidget extends AbstractWidget {
-
-    private ItemLoreScreen screen;
+public class ItemModelWidget extends AnchoredWidget {
+    private final ItemStack stack;
+    private final float scale;
     private float rotationX;
-    private float rotationY;
+    private float rotationY = 45;
 
-    public ItemModelWidget(int x, int y, ItemLoreScreen screen) {
-        super(x, y, screen.width / 2, screen.height / 2, Component.empty());
-        this.screen = screen;
-        this.rotationX = 0;
-        this.rotationY = 45;
-    }
-
-    private void renderModel(GuiGraphics guiGraphics) {
-        ItemStack stack = this.screen.item;
-
-        if (stack.isEmpty()) {
-            return;
-        }
-
-//        Minecraft minecraft = Minecraft.getInstance();
-//        ResourceManager manager = minecraft.getResourceManager();
-//        BlockModel blockModel;
-//        BlockItemStateProperties blockItemStateProperties = (BlockItemStateProperties) stack.getOrDefault(DataComponents.BLOCK_STATE, BlockItemStateProperties.EMPTY);
-//        if (blockItemStateProperties.isEmpty()) {
-//            guiGraphics.renderItem(stack, 0, 0);
-//        } else {
-//            BlockState blockState = blockItemStateProperties.
-//        }
-//        BlockState state = stack.getOrDefault(DataComponents.BLOCK_STATE, BlockItemStateProperties.EMPTY).;
-//        BakedModel bakedModel = minecraft.getBlockRenderer().getBlockModel();
-
-//        this.screen.getMinecraft().getBlockRenderer().getBlockModel(new BlockState())
-//        Optional<Resource> resourceOptional = Minecraft.getInstance().getResourceManager().getResource(this.resourceLocation);
-        guiGraphics.renderItem(stack, 0, 0);
-//        this.screen.getMinecraft().getBlockRenderer().getBlockModel()
+    public ItemModelWidget(ItemStack stack, float scale, LoreStyle.Element style) {
+        super(style.size.width > 0 ? style.size.width : 128, style.size.height > 0 ? style.size.height : 128, style);
+        this.stack = stack;
+        this.scale = scale;
     }
 
     @Override
     protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        var poseStack = guiGraphics.pose();
-        poseStack.pushPose();
-        float scale = 4.0F;
-        poseStack.translate(width, height, 10);
-        poseStack.rotateAround(Axis.XP.rotationDegrees(this.rotationX), 0.0f, 0.0f, 0.0F);
-        poseStack.mulPose(Axis.YP.rotationDegrees(this.rotationY));
-        poseStack.translate(-8 * scale, -8 * scale, -150 * scale);
-        poseStack.scale(scale, scale, scale);
-        renderModel(guiGraphics);
-        poseStack.popPose();
-
-//        if (isHovered()) {
-//            guiGraphics.fill(getX(), getY(), getRight(), getBottom(), 0x80FFFFFF);
-//        } else {
-//            guiGraphics.fill(getX(), getY(), getRight(), getBottom(), -10,0x80000000);
-//        }
+        renderBackground(guiGraphics);
+        if (stack.isEmpty()) {
+            return;
+        }
+        var pose = guiGraphics.pose();
+        pose.pushPose();
+        pose.translate(getX() + getWidth() / 2.0F, getY() + getHeight() / 2.0F, 150);
+        pose.mulPose(Axis.XP.rotationDegrees(rotationX));
+        pose.mulPose(Axis.YP.rotationDegrees(rotationY));
+        pose.scale(scale, scale, scale);
+        guiGraphics.renderItem(stack, -8, -8);
+        pose.popPose();
     }
 
     @Override
     protected void onDrag(double mouseX, double mouseY, double dragX, double dragY) {
-        this.rotationX = (this.rotationX - (float)dragY * 2.5F) % 360.0F;
-        this.rotationY += (float)dragX * 2.5F;
+        rotationX = (rotationX - (float) dragY * 2.5F) % 360.0F;
+        rotationY = (rotationY + (float) dragX * 2.5F) % 360.0F;
     }
 
     @Override
-    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
-
+    protected void updateWidgetNarration(NarrationElementOutput output) {
     }
 }

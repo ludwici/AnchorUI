@@ -11,7 +11,8 @@ public enum TestScene {
     SCENE5("scene5", "Изменение размера", "Измени размер окна или масштаб GUI: блоки должны перестроиться"),
     SCENE6("scene6", "Скрытые элементы", "Нажми G: невидимый якорь появится только в режиме контуров"),
     SCENE7("scene7", "Неизвестная ссылка", "Ссылка missing_target заменяется screen; предупреждение в консоли"),
-    SCENE8("scene8", "Циклические якоря", "Ожидается сообщение Circular frame anchors, без вылета");
+    SCENE8("scene8", "Циклические якоря", "Ожидается сообщение Circular frame anchors, без вылета"),
+    SCENE9("scene9", "Ванильный StringWidget", "Выравнивание, вертикальный центр, padding и многоточие");
 
     private static final TestScene[] VALUES = values();
 

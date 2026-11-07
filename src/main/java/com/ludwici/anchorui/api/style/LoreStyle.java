@@ -4,6 +4,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.util.GsonHelper;
 
+import java.util.Locale;
+
 public class LoreStyle {
     private final JsonObject root;
 
@@ -41,6 +43,7 @@ public class LoreStyle {
         public final SizeElement size;
         public final BackgroundElement background;
         public final int textColor;
+        public final String textAlign;
         public final boolean hidden;
 
         public Element(JsonObject root) {
@@ -54,6 +57,7 @@ public class LoreStyle {
                 hex = root.get("color").getAsString().replace("#", "");
             }
             textColor = (int) Long.parseLong(hex, 16) | 0xFF000000;
+            textAlign = GsonHelper.getAsString(root, "align", GsonHelper.getAsString(text, "align", "left")).toLowerCase(Locale.ROOT);
             hidden = GsonHelper.getAsBoolean(root, "hidden", false);
         }
     }

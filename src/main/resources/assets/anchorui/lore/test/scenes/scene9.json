@@ -1,0 +1,141 @@
+{
+  "item": "minecraft:amethyst_shard",
+  "style": "anchorui:style/default",
+  "entities": [
+    {
+      "type": "text",
+      "id": "header",
+      "text": "StringWidget: text rendering",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -73
+      },
+      "size": {
+        "width": 212,
+        "height": 22
+      },
+      "padding": {
+        "left": 8,
+        "right": 8,
+        "top": 4,
+        "bottom": 4
+      },
+      "background": {
+        "color": "BB30465A"
+      },
+      "color": "#FFFFFF",
+      "align": "center"
+    },
+    {
+      "type": "text",
+      "id": "left",
+      "text": "LEFT aligned",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "header",
+        "x": 0,
+        "y": 8
+      },
+      "size": {
+        "width": 212,
+        "height": 24
+      },
+      "padding": {
+        "left": 8,
+        "right": 8,
+        "top": 4,
+        "bottom": 4
+      },
+      "background": {
+        "color": "BB385E81"
+      },
+      "color": "#FFFFFF",
+      "align": "left"
+    },
+    {
+      "type": "text",
+      "id": "center",
+      "text": "CENTER aligned",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "left",
+        "x": 0,
+        "y": 6
+      },
+      "size": {
+        "width": 212,
+        "height": 24
+      },
+      "padding": {
+        "left": 8,
+        "right": 8,
+        "top": 4,
+        "bottom": 4
+      },
+      "background": {
+        "color": "BB4B625A"
+      },
+      "color": "#FFFFFF",
+      "align": "center"
+    },
+    {
+      "type": "text",
+      "id": "right",
+      "text": "RIGHT aligned",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "center",
+        "x": 0,
+        "y": 6
+      },
+      "size": {
+        "width": 212,
+        "height": 24
+      },
+      "padding": {
+        "left": 8,
+        "right": 8,
+        "top": 4,
+        "bottom": 4
+      },
+      "background": {
+        "color": "BB695C4A"
+      },
+      "color": "#FFFFFF",
+      "align": "right"
+    },
+    {
+      "type": "text",
+      "id": "ellipsis",
+      "text": "This text is intentionally too long to fit the narrow fixed-width element, so it must end with an ellipsis.",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "right",
+        "x": 0,
+        "y": 9
+      },
+      "size": {
+        "width": 126,
+        "height": 25
+      },
+      "padding": {
+        "left": 8,
+        "right": 8,
+        "top": 4,
+        "bottom": 4
+      },
+      "background": {
+        "color": "BB6D415B"
+      },
+      "color": "#FFFFFF",
+      "align": "left"
+    }
+  ]
+}

@@ -49,18 +49,36 @@ public class TestSceneLayoutTest {
 
     @Test
     public void eachScenarioIsIncludedInResources() {
-        for (int i = 1; i <= 8; i++) {
+        for (int i = 1; i <= 9; i++) {
             assertTrue(resource(i).getAsJsonArray("entities").size() > 0);
         }
     }
 
     @Test
-    public void sixVisualScenariosResolveAtMultipleSizes() {
+    public void visualScenariosResolveAtMultipleSizes() {
         for (int i = 1; i <= 6; i++) {
             List<AnchorLayout.Frame> definitions = frames(i);
             assertEquals(definitions.size() + 1, AnchorLayout.resolve(320, 240, definitions).size());
             assertEquals(definitions.size() + 1, AnchorLayout.resolve(854, 480, definitions).size());
         }
+        List<AnchorLayout.Frame> textDefinitions = frames(9);
+        assertEquals(textDefinitions.size() + 1, AnchorLayout.resolve(320, 240, textDefinitions).size());
+        assertEquals(textDefinitions.size() + 1, AnchorLayout.resolve(854, 480, textDefinitions).size());
+    }
+
+    @Test
+    public void textSceneCoversAlignmentsAndEllipsis() {
+        JsonObject scene = resource(9);
+        var elements = scene.getAsJsonArray("entities");
+        List<String> alignments = new ArrayList<>();
+        for (var json : elements) {
+            JsonObject element = json.getAsJsonObject();
+            assertEquals("text", element.get("type").getAsString());
+            alignments.add(element.get("align").getAsString());
+        }
+        assertTrue(alignments.containsAll(List.of("left", "center", "right")));
+        JsonObject ellipsis = elements.get(elements.size() - 1).getAsJsonObject();
+        assertTrue(ellipsis.get("text").getAsString().length() > ellipsis.getAsJsonObject("size").get("width").getAsInt());
     }
 
     @Test

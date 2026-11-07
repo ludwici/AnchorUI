@@ -1,9 +1,11 @@
 package com.ludwici.anchorui.client.test;
 
 import com.ludwici.anchorui.AnchorUI;
+import com.ludwici.anchorui.KeyRegistry;
 import com.ludwici.anchorui.api.LoreEntity;
 import com.ludwici.anchorui.client.LoreLoader;
 import com.ludwici.anchorui.client.hud.AnchorHudManager;
+import com.ludwici.anchorui.client.hud.AnchorHudEditorScreen;
 import com.mojang.brigadier.Command;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.Commands;
@@ -17,6 +19,7 @@ import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 @EventBusSubscriber(modid = AnchorUI.MODID, value = Dist.CLIENT)
 public final class AnchorUITestCommands {
     private static TestScene pending;
+    private static boolean pendingHudEditor;
 
     private AnchorUITestCommands() {
     }
@@ -36,7 +39,9 @@ public final class AnchorUITestCommands {
             test.then(Commands.literal(scene.id()).executes(context -> queueScene(scene)));
         }
 
-        event.getDispatcher().register(Commands.literal("anchorui").then(test));
+        var hud = Commands.literal("hud")
+                .then(Commands.literal("edit").executes(context -> queueHudEditor()));
+        event.getDispatcher().register(Commands.literal("anchorui").then(test).then(hud));
     }
 
     private static int setHud(boolean enabled) {
@@ -46,6 +51,21 @@ public final class AnchorUITestCommands {
             player.displayClientMessage(Component.literal("Anchor UI HUD test: " + (enabled ? "enabled" : "disabled")), false);
         }
         return Command.SINGLE_SUCCESS;
+    }
+
+    private static int queueHudEditor() {
+        pendingHudEditor = true;
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static void openHudEditor() {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.player == null || minecraft.level == null) {
+            return;
+        }
+        if (!(minecraft.screen instanceof AnchorHudEditorScreen)) {
+            minecraft.setScreen(new AnchorHudEditorScreen());
+        }
     }
 
     private static int queueScene(TestScene scene) {
@@ -66,12 +86,22 @@ public final class AnchorUITestCommands {
 
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
-        if (pending == null) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (pendingHudEditor) {
+            pendingHudEditor = false;
+            openHudEditor();
             return;
         }
-        TestScene scene = pending;
-        pending = null;
-        openScene(scene);
+        while (KeyRegistry.EDIT_HUD.consumeClick()) {
+            if (minecraft.screen == null) {
+                openHudEditor();
+            }
+        }
+        if (pending != null) {
+            TestScene scene = pending;
+            pending = null;
+            openScene(scene);
+        }
     }
 
     public static void openScene(TestScene scene) {

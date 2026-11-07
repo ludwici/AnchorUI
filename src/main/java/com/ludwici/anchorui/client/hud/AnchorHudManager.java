@@ -4,6 +4,7 @@ import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.api.LoreEntity;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.style.LoreStyle;
+import com.ludwici.anchorui.api.style.ElementAnchor;
 import com.ludwici.anchorui.api.style.PositionElement;
 import com.ludwici.anchorui.api.widget.AnchorWidgetRegistry;
 import com.ludwici.anchorui.api.widget.WidgetConfigException;
@@ -34,17 +35,24 @@ import java.util.Set;
 public final class AnchorHudManager {
     public static final AnchorHudManager INSTANCE = new AnchorHudManager();
 
-    public record HudHandle(String id, AnchorLayout.Bounds bounds, String relativeTo, HudLayoutOffsets.Offset offset, boolean visible) {
+    public record HudHandle(String id, AnchorLayout.Bounds bounds, String relativeTo, ElementAnchor point, ElementAnchor anchor, HudLayoutOffsets.Offset offset, boolean visible, boolean hiddenByUser) {
     }
 
     private record Description(String id, LoreEntity entity, LoreEntity.UiElement element) {
     }
 
-    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position) {
-        private AnchorLayout.Frame frame(HudLayoutOffsets offsets) {
+    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, boolean baseVisible) {
+        private PositionElement effectivePosition(HudLayoutOffsets offsets) {
             HudLayoutOffsets.Offset delta = offsets.get(id);
-            PositionElement applied = new PositionElement(position.point, position.anchor, position.relativeTo, position.x + delta.x(), position.y + delta.y());
-            return new AnchorLayout.Frame(id, applied, widget.getWidth(), widget.getHeight());
+            HudLayoutOffsets.AnchorOverride anchor = offsets.anchor(id);
+            ElementAnchor point = anchor == null ? position.point : anchor.point();
+            ElementAnchor targetPoint = anchor == null ? position.anchor : anchor.anchor();
+            String relativeTo = anchor == null ? position.relativeTo : anchor.relativeTo();
+            return new PositionElement(point, targetPoint, relativeTo, position.x + delta.x(), position.y + delta.y());
+        }
+
+        private AnchorLayout.Frame frame(HudLayoutOffsets offsets) {
+            return new AnchorLayout.Frame(id, effectivePosition(offsets), widget.getWidth(), widget.getHeight());
         }
     }
 
@@ -101,6 +109,98 @@ public final class AnchorHudManager {
         relayout(null);
     }
 
+    public void togglePreviewHidden(String id) {
+        if (editingOffsets == null || !layoutBounds.containsKey(id)) {
+            return;
+        }
+        editingOffsets.setHidden(id, !editingOffsets.isHidden(id));
+        applyVisibility();
+    }
+
+    public boolean cyclePreviewPoint(String id) {
+        HudHandle handle = handle(id);
+        if (handle == null) {
+            return false;
+        }
+        ElementAnchor[] values = ElementAnchor.values();
+        ElementAnchor next = values[(handle.point().ordinal() + 1) % values.length];
+        return changePreviewAnchor(id, new HudLayoutOffsets.AnchorOverride(handle.relativeTo(), next, handle.anchor()));
+    }
+
+    public boolean cyclePreviewTargetPoint(String id) {
+        HudHandle handle = handle(id);
+        if (handle == null) {
+            return false;
+        }
+        ElementAnchor[] values = ElementAnchor.values();
+        ElementAnchor next = values[(handle.anchor().ordinal() + 1) % values.length];
+        return changePreviewAnchor(id, new HudLayoutOffsets.AnchorOverride(handle.relativeTo(), handle.point(), next));
+    }
+
+    public boolean cyclePreviewTarget(String id) {
+        HudHandle handle = handle(id);
+        if (handle == null) {
+            return false;
+        }
+        List<String> candidates = new ArrayList<>();
+        candidates.add("screen");
+        getHandles().stream().map(HudHandle::id).filter(candidate -> !candidate.equals(id)).sorted().forEach(candidates::add);
+        int current = candidates.indexOf(handle.relativeTo());
+        for (int n = 1; n <= candidates.size(); n++) {
+            String candidate = candidates.get((current + n + candidates.size()) % candidates.size());
+            if (changePreviewAnchor(id, new HudLayoutOffsets.AnchorOverride(candidate, handle.point(), handle.anchor()))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private HudHandle handle(String id) {
+        if (editingOffsets == null) {
+            return null;
+        }
+        for (HudHandle handle : getHandles()) {
+            if (handle.id().equals(id)) {
+                return handle;
+            }
+        }
+        return null;
+    }
+
+    private boolean changePreviewAnchor(String id, HudLayoutOffsets.AnchorOverride override) {
+        if (editingOffsets == null) {
+            return false;
+        }
+        AnchorLayout.Bounds before = layoutBounds.get(id);
+        if (before == null) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingOffsets.copy();
+        candidate.setAnchor(id, override);
+        try {
+            AnchorLayout.Bounds changed = resolveBounds(candidate).get(id);
+            HudLayoutOffsets.Offset original = candidate.get(id);
+            candidate.set(id, original.x() + before.x() - changed.x(), original.y() + before.y() - changed.y());
+            resolveBounds(candidate);
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
+        editingOffsets = candidate;
+        relayout(null);
+        return true;
+    }
+
+    private Map<String, AnchorLayout.Bounds> resolveBounds(HudLayoutOffsets offsets) {
+        return AnchorLayout.resolve(builtWidth, builtHeight, widgets.stream().map(placed -> placed.frame(offsets)).toList());
+    }
+
+    private void applyVisibility() {
+        HudLayoutOffsets offsets = currentOffsets();
+        for (PlacedWidget placed : widgets) {
+            placed.widget().visible = placed.baseVisible() && !offsets.isHidden(placed.id());
+        }
+    }
+
     public void resetPreviewOffset(String id) {
         if (editingOffsets != null) {
             editingOffsets.reset(id);
@@ -153,7 +253,8 @@ public final class AnchorHudManager {
         for (PlacedWidget placed : widgets) {
             AnchorLayout.Bounds bounds = layoutBounds.get(placed.id());
             if (bounds != null && !renderFailures.contains(placed.id())) {
-                result.add(new HudHandle(placed.id(), bounds, placed.position().relativeTo, offsets.get(placed.id()), placed.widget().visible));
+                PositionElement effective = placed.effectivePosition(offsets);
+                result.add(new HudHandle(placed.id(), bounds, effective.relativeTo, effective.point, effective.anchor, offsets.get(placed.id()), placed.widget().visible, offsets.isHidden(placed.id())));
             }
         }
         return List.copyOf(result);
@@ -299,7 +400,7 @@ public final class AnchorHudManager {
                 String relativeTo = WidgetIds.reference(position.relativeTo, entity.namespace);
                 PositionElement anchored = new PositionElement(position.point, position.anchor, relativeTo, position.x, position.y);
                 registry.attach(definition.id(), widget);
-                created.add(new PlacedWidget(definition.id(), widget, style, anchored));
+                created.add(new PlacedWidget(definition.id(), widget, style, anchored, widget.visible));
             } catch (WidgetConfigException exception) {
                 warnings.add(exception.getMessage());
             } catch (RuntimeException exception) {
@@ -331,6 +432,7 @@ public final class AnchorHudManager {
                 placed.widget().setPosition(frame.x(), frame.y());
             }
             layoutBounds = bounds;
+            applyVisibility();
         } catch (IllegalArgumentException exception) {
             AnchorUI.LOGGER.error("Anchor UI HUD layout rejected ({}x{}, {} widgets): {}", builtWidth, builtHeight, widgets.size(), exception.getMessage());
             layoutBounds = Map.of();

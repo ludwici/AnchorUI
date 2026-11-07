@@ -1,6 +1,7 @@
 package com.ludwici.anchorui.api;
 
 import com.google.gson.JsonObject;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.GsonHelper;
 
 import java.util.ArrayList;
@@ -34,7 +35,7 @@ public class LoreEntity {
     }
 
     public static class UiElement {
-        public final String type;
+        public final ResourceLocation type;
         public final String id;
         public final String text;
         public final String path;
@@ -43,7 +44,7 @@ public class LoreEntity {
         public final List<LoreComponent> lore = new ArrayList<>();
 
         public UiElement(JsonObject root) {
-            type = GsonHelper.getAsString(root, "type");
+            type = WidgetTypeIds.parse(GsonHelper.getAsString(root, "type"));
             id = GsonHelper.getAsString(root, "id", "");
             text = GsonHelper.getAsString(root, "text", "");
             path = GsonHelper.getAsString(root, "path", "");

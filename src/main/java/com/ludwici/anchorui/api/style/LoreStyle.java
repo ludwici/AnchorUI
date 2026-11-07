@@ -3,6 +3,9 @@ package com.ludwici.anchorui.api.style;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.util.GsonHelper;
+import net.minecraft.resources.ResourceLocation;
+
+import com.ludwici.anchorui.AnchorUI;
 
 import java.util.Locale;
 
@@ -13,14 +16,27 @@ public class LoreStyle {
         this.root = root.deepCopy();
     }
 
+    public Element get(ResourceLocation type, JsonObject overrides) {
+        JsonObject source = new JsonObject();
+        if (root.has(type.toString()) && root.get(type.toString()).isJsonObject()) {
+            source = root.getAsJsonObject(type.toString());
+        } else if (type.getNamespace().equals(AnchorUI.MODID) && root.has(type.getPath()) && root.get(type.getPath()).isJsonObject()) {
+            source = root.getAsJsonObject(type.getPath());
+        }
+        return new Element(merge(source, sanitizeOverrides(overrides)));
+    }
+
     public Element get(String type, JsonObject overrides) {
         JsonObject source = root.has(type) && root.get(type).isJsonObject() ? root.getAsJsonObject(type) : new JsonObject();
-        JsonObject elementOverrides = overrides == null ? new JsonObject() : overrides.deepCopy();
-        if (elementOverrides.has("text") && !elementOverrides.get("text").isJsonObject()) {
-            elementOverrides.remove("text");
+        return new Element(merge(source, sanitizeOverrides(overrides)));
+    }
+
+    private static JsonObject sanitizeOverrides(JsonObject overrides) {
+        JsonObject result = overrides == null ? new JsonObject() : overrides.deepCopy();
+        if (result.has("text") && !result.get("text").isJsonObject()) {
+            result.remove("text");
         }
-        JsonObject merged = merge(source, elementOverrides);
-        return new Element(merged);
+        return result;
     }
 
     private static JsonObject merge(JsonObject source, JsonObject overrides) {

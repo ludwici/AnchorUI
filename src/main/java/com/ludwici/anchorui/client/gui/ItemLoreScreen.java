@@ -2,6 +2,7 @@ package com.ludwici.anchorui.client.gui;
 
 import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.api.LoreEntity;
+import com.ludwici.anchorui.api.WidgetTypeIds;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.style.LoreStyle;
 import com.ludwici.anchorui.client.LoreLoader;
@@ -48,12 +49,15 @@ public class ItemLoreScreen extends Screen {
             for (LoreEntity.UiElement element : loreEntity.entities) {
                 LoreStyle widgetTheme = element.settings.has("style") ? LoreLoader.INSTANCE.getStyle(element.settings.get("style").getAsString()) : theme;
                 LoreStyle.Element settings = widgetTheme.get(element.type, element.settings);
-                String id = element.id.isBlank() ? element.type + "_" + index : element.id;
-                switch (element.type) {
-                    case "text" -> add(id, new AnchoredTextWidget(element.text, minecraft.font, settings), settings, frames, widgets);
-                    case "model" -> add(id, new ItemModelWidget(modelItem(element.path), element.scale, settings), settings, frames, widgets);
-                    case "list" -> add(id, new ItemLoreListWidget(element.lore.isEmpty() ? loreEntity.components : element.lore, minecraft.font, settings), settings, frames, widgets);
-                    default -> AnchorUI.LOGGER.warn("Unknown UI element type: {}", element.type);
+                String id = element.id.isBlank() ? element.type.getPath().replace('/', '_') + "_" + index : element.id;
+                if (WidgetTypeIds.TEXT.equals(element.type)) {
+                    add(id, new AnchoredTextWidget(element.text, minecraft.font, settings), settings, frames, widgets);
+                } else if (WidgetTypeIds.MODEL.equals(element.type)) {
+                    add(id, new ItemModelWidget(modelItem(element.path), element.scale, settings), settings, frames, widgets);
+                } else if (WidgetTypeIds.LIST.equals(element.type)) {
+                    add(id, new ItemLoreListWidget(element.lore.isEmpty() ? loreEntity.components : element.lore, minecraft.font, settings), settings, frames, widgets);
+                } else {
+                    AnchorUI.LOGGER.warn("Unknown UI widget type '{}' on element '{}'; no widget registered", element.type, id);
                 }
                 index++;
             }

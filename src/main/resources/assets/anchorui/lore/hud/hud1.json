@@ -1,0 +1,57 @@
+{
+  "testOnly": true,
+  "style": "anchorui:style/default",
+  "imports": [
+    "anchorui_test:hud_header"
+  ],
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:hud_body",
+      "text": "<i>Text and model rendered in the game HUD</i>",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "BOTTOMLEFT",
+        "relativeTo": "anchorui_test:hud_header",
+        "x": 0,
+        "y": 6
+      },
+      "size": {
+        "width": 245,
+        "height": 30
+      },
+      "wrap": true,
+      "align": "center",
+      "color": "#FFFFFF",
+      "padding": {
+        "left": 6,
+        "right": 6,
+        "top": 5,
+        "bottom": 5
+      },
+      "background": {
+        "color": "BB264A40"
+      }
+    },
+    {
+      "type": "anchorui:model",
+      "id": "anchorui:hud_item",
+      "path": "minecraft:diamond",
+      "scale": 2,
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "BOTTOMLEFT",
+        "relativeTo": "anchorui:hud_body",
+        "x": 0,
+        "y": 7
+      },
+      "size": {
+        "width": 34,
+        "height": 34
+      },
+      "background": {
+        "color": "BB375C74"
+      }
+    }
+  ]
+}

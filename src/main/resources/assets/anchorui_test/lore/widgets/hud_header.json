@@ -1,0 +1,26 @@
+{
+  "type": "anchorui:text",
+  "text": "<b>Anchor UI</b> - HUD Core",
+  "position": {
+    "point": "TOPLEFT",
+    "anchor": "TOPLEFT",
+    "relativeTo": "screen",
+    "x": 18,
+    "y": 45
+  },
+  "size": {
+    "width": 245,
+    "height": 27
+  },
+  "align": "center",
+  "color": "#FFFFFF",
+  "padding": {
+    "left": 5,
+    "right": 5,
+    "top": 5,
+    "bottom": 5
+  },
+  "background": {
+    "color": "D024405A"
+  }
+}

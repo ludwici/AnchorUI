@@ -119,7 +119,7 @@ The HUD core covers JSON composition, read-only display and an optional player-f
 
 ## HUD editor
 
-The HUD editor opens **above the world** and previews all currently loaded HUD widgets, including elements contributed by other mods. Unlike the normal HUD layer, the editor accepts mouse and keyboard input **for editing placement only**.
+The HUD editor opens **above the world** and previews all currently loaded HUD widgets, including elements contributed by other mods. Unlike the normal HUD layer, the editor accepts mouse and keyboard input **for editing placement only**. The world remains fully sharp in the editor: vanilla screen background blurring and fullscreen dimming are intentionally disabled. Only the editor's own toolbar strips and widget-selection overlays are drawn.
 
 Open it with either:
 

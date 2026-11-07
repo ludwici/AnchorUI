@@ -13,10 +13,16 @@ public class LoreEntity {
     public final String model;
     public final String style;
     public final float scale;
+    public final String namespace;
     public final List<LoreComponent> components = new ArrayList<>();
     public final List<UiElement> entities = new ArrayList<>();
 
     public LoreEntity(JsonObject root) {
+        this(root, "anchorui");
+    }
+
+    public LoreEntity(JsonObject root, String namespace) {
+        this.namespace = namespace;
         title = GsonHelper.getAsString(root, "title", "");
         item = GsonHelper.getAsString(root, "item", "");
         model = GsonHelper.getAsString(root, "model", "");

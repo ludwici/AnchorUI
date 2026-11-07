@@ -1,7 +1,11 @@
 package com.ludwici.anchorui.client;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.api.LoreEntity;
+import com.ludwici.anchorui.api.widget.WidgetDefinitionRegistry;
+import com.ludwici.anchorui.api.widget.WidgetDocumentResolver;
 import com.ludwici.anchorui.api.style.LoreStyle;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -10,6 +14,7 @@ import net.minecraft.util.profiling.ProfilerFiller;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.LinkedHashMap;
 
 import static com.ludwici.anchorui.AnchorUI.GSON;
 
@@ -17,6 +22,7 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
     public static final LoreLoader INSTANCE = new LoreLoader();
     private Map<ResourceLocation, LoreEntity> data = Map.of();
     private Map<ResourceLocation, LoreStyle> styles = Map.of();
+    private WidgetDefinitionRegistry definitions = new WidgetDefinitionRegistry(Map.of());
 
     private LoreLoader() {
         super(GSON, "lore");
@@ -24,18 +30,41 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
 
     @Override
     protected void apply(Map<ResourceLocation, JsonElement> objects, ResourceManager resourceManager, ProfilerFiller profiler) {
-        Map<ResourceLocation, LoreEntity> loaded = new HashMap<>();
+        Map<ResourceLocation, JsonObject> rawDocuments = new LinkedHashMap<>();
+        Map<ResourceLocation, JsonObject> rawDefinitions = new LinkedHashMap<>();
         Map<ResourceLocation, LoreStyle> loadedStyles = new HashMap<>();
         for (var entry : objects.entrySet()) {
-            ResourceLocation key = entry.getKey();
-            if (key.getPath().startsWith("style/")) {
-                loadedStyles.put(key, new LoreStyle(entry.getValue().getAsJsonObject()));
+            ResourceLocation resource = entry.getKey();
+            JsonObject json = entry.getValue().getAsJsonObject();
+            if (resource.getPath().startsWith("style/")) {
+                loadedStyles.put(resource, new LoreStyle(json));
+            } else if (resource.getPath().startsWith("widgets/")) {
+                String path = resource.getPath().substring("widgets/".length());
+                if (path.isBlank()) {
+                    AnchorUI.LOGGER.warn("Empty widget definition path: {}", resource);
+                    continue;
+                }
+                ResourceLocation id = ResourceLocation.fromNamespaceAndPath(resource.getNamespace(), path);
+                rawDefinitions.put(id, json);
             } else {
-                loaded.put(key, new LoreEntity(entry.getValue().getAsJsonObject()));
+                rawDocuments.put(resource, json);
             }
         }
-        data = Map.copyOf(loaded);
+        WidgetDefinitionRegistry loadedDefinitions = new WidgetDefinitionRegistry(rawDefinitions);
+        Map<String, JsonObject> source = loadedDefinitions.exportForResolution();
+        Map<ResourceLocation, LoreEntity> loaded = new LinkedHashMap<>();
+        for (var entry : rawDocuments.entrySet()) {
+            ResourceLocation resource = entry.getKey();
+            try {
+                JsonObject expanded = WidgetDocumentResolver.resolve(entry.getValue(), resource.getNamespace(), source);
+                loaded.put(resource, new LoreEntity(expanded, resource.getNamespace()));
+            } catch (RuntimeException exception) {
+                AnchorUI.LOGGER.error("Failed to load Anchor UI document '{}'", resource, exception);
+            }
+        }
+        definitions = loadedDefinitions;
         styles = Map.copyOf(loadedStyles);
+        data = Map.copyOf(loaded);
     }
 
     public LoreStyle getStyle(String id) {
@@ -52,6 +81,10 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
 
     public Map<ResourceLocation, LoreEntity> getData() {
         return data;
+    }
+
+    public WidgetDefinitionRegistry getDefinitions() {
+        return definitions;
     }
 
     public Map<ResourceLocation, LoreStyle> getStyles() {

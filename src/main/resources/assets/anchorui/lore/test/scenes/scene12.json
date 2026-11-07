@@ -1,0 +1,90 @@
+{
+  "item": "minecraft:amethyst_shard",
+  "style": "anchorui:style/default",
+  "entities": [
+    {
+      "type": "unregistered:missing_widget",
+      "id": "unknown",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "width": 120,
+        "height": 20
+      }
+    },
+    {
+      "type": "anchorui_test:broken",
+      "id": "broken",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "width": 120,
+        "height": 20
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "still_alive",
+      "text": "Действующий виджет остаётся на экране",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "width": 260,
+        "height": 32
+      },
+      "align": "center",
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 5,
+        "bottom": 5
+      },
+      "background": {
+        "color": "CC3B7467"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:text",
+      "id": "after_unknown",
+      "text": "Нет обрушения и смещения индексов",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "still_alive",
+        "x": 0,
+        "y": 11
+      },
+      "size": {
+        "width": 260,
+        "height": 32
+      },
+      "align": "center",
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 5,
+        "bottom": 5
+      },
+      "background": {
+        "color": "CC4D6185"
+      },
+      "color": "#FFFFFF"
+    }
+  ]
+}

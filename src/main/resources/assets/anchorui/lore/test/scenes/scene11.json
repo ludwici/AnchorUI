@@ -1,0 +1,100 @@
+{
+  "item": "minecraft:amethyst_shard",
+  "style": "anchorui:style/default",
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "heading",
+      "text": "Регистрация через WidgetFactory",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -60
+      },
+      "size": {
+        "width": 266,
+        "height": 29
+      },
+      "align": "center",
+      "padding": {
+        "left": 6,
+        "right": 6,
+        "top": 5,
+        "bottom": 5
+      },
+      "background": {
+        "color": "CC34546B"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui_test:counter",
+      "id": "counter_a",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "heading",
+        "x": -63,
+        "y": 11
+      },
+      "size": {
+        "width": 112,
+        "height": 26
+      },
+      "initial": 0,
+      "step": 1,
+      "background": {
+        "color": "882C3F68"
+      }
+    },
+    {
+      "type": "anchorui_test:counter",
+      "id": "counter_b",
+      "position": {
+        "point": "LEFT",
+        "anchor": "RIGHT",
+        "relativeTo": "counter_a",
+        "x": 13,
+        "y": 0
+      },
+      "size": {
+        "width": 112,
+        "height": 26
+      },
+      "initial": 10,
+      "step": 5,
+      "background": {
+        "color": "88465931"
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "footer",
+      "text": "Два независимых счётчика. Нажимай!",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "counter_a",
+        "x": 63,
+        "y": 13
+      },
+      "size": {
+        "width": 266,
+        "height": 29
+      },
+      "align": "center",
+      "padding": {
+        "left": 5,
+        "right": 5,
+        "top": 5,
+        "bottom": 5
+      },
+      "background": {
+        "color": "CC394B40"
+      },
+      "color": "#FFFFFF"
+    }
+  ]
+}

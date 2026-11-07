@@ -10,6 +10,7 @@ import com.ludwici.anchorui.api.style.LoreStyle;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
+import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.ProfilerFiller;
 
 import java.util.HashMap;
@@ -23,6 +24,11 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
     private Map<ResourceLocation, LoreEntity> data = Map.of();
     private Map<ResourceLocation, LoreStyle> styles = Map.of();
     private WidgetDefinitionRegistry definitions = new WidgetDefinitionRegistry(Map.of());
+    private volatile Map<ResourceLocation, HudDocument> hudDocuments = Map.of();
+    private volatile long revision;
+
+    public record HudDocument(LoreEntity entity, boolean testOnly) {
+    }
 
     private LoreLoader() {
         super(GSON, "lore");
@@ -32,6 +38,7 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
     protected void apply(Map<ResourceLocation, JsonElement> objects, ResourceManager resourceManager, ProfilerFiller profiler) {
         Map<ResourceLocation, JsonObject> rawDocuments = new LinkedHashMap<>();
         Map<ResourceLocation, JsonObject> rawDefinitions = new LinkedHashMap<>();
+        Map<ResourceLocation, JsonObject> rawHuds = new LinkedHashMap<>();
         Map<ResourceLocation, LoreStyle> loadedStyles = new HashMap<>();
         for (var entry : objects.entrySet()) {
             ResourceLocation resource = entry.getKey();
@@ -46,6 +53,8 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
                 }
                 ResourceLocation id = ResourceLocation.fromNamespaceAndPath(resource.getNamespace(), path);
                 rawDefinitions.put(id, json);
+            } else if (resource.getPath().startsWith("hud/")) {
+                rawHuds.put(resource, json);
             } else {
                 rawDocuments.put(resource, json);
             }
@@ -62,9 +71,21 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
                 AnchorUI.LOGGER.error("Failed to load Anchor UI document '{}'", resource, exception);
             }
         }
+        Map<ResourceLocation, HudDocument> loadedHuds = new LinkedHashMap<>();
+        for (var entry : rawHuds.entrySet()) {
+            ResourceLocation resource = entry.getKey();
+            try {
+                JsonObject expanded = WidgetDocumentResolver.resolve(entry.getValue(), resource.getNamespace(), source, warning -> AnchorUI.LOGGER.warn("Anchor UI HUD '{}': {}", resource, warning));
+                loadedHuds.put(resource, new HudDocument(new LoreEntity(expanded, resource.getNamespace()), GsonHelper.getAsBoolean(entry.getValue(), "testOnly", false)));
+            } catch (RuntimeException exception) {
+                AnchorUI.LOGGER.error("Failed to load Anchor UI HUD '{}'", resource, exception);
+            }
+        }
         definitions = loadedDefinitions;
         styles = Map.copyOf(loadedStyles);
         data = Map.copyOf(loaded);
+        hudDocuments = Map.copyOf(loadedHuds);
+        revision++;
     }
 
     public LoreStyle getStyle(String id) {
@@ -85,6 +106,14 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
 
     public WidgetDefinitionRegistry getDefinitions() {
         return definitions;
+    }
+
+    public Map<ResourceLocation, HudDocument> getHudDocuments() {
+        return hudDocuments;
+    }
+
+    public long getRevision() {
+        return revision;
     }
 
     public Map<ResourceLocation, LoreStyle> getStyles() {

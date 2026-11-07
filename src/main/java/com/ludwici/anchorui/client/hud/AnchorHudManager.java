@@ -36,7 +36,21 @@ import java.util.Set;
 public final class AnchorHudManager {
     public static final AnchorHudManager INSTANCE = new AnchorHudManager();
 
-    public record HudHandle(String id, AnchorLayout.Bounds bounds, String relativeTo, ElementAnchor point, ElementAnchor anchor, HudLayoutOffsets.Offset offset, boolean visible, boolean hiddenByUser) {
+    public enum EditableProperty {
+        OFFSET, PARENT, POINT, ANCHOR, VISIBILITY
+    }
+
+    public record HudHandle(String id, AnchorLayout.Bounds bounds, String relativeTo, ElementAnchor point, ElementAnchor anchor, HudLayoutOffsets.Offset offset, boolean visible, boolean hiddenByUser,
+                            String defaultParent, ElementAnchor defaultPoint, ElementAnchor defaultAnchor, boolean defaultVisible) {
+        public boolean isModified(EditableProperty property) {
+            return switch (property) {
+                case OFFSET -> !offset.equals(HudLayoutOffsets.Offset.ZERO);
+                case PARENT -> !relativeTo.equals(defaultParent);
+                case POINT -> point != defaultPoint;
+                case ANCHOR -> anchor != defaultAnchor;
+                case VISIBILITY -> hiddenByUser;
+            };
+        }
     }
 
     private record Description(String id, LoreEntity entity, LoreEntity.UiElement element) {
@@ -191,6 +205,46 @@ public final class AnchorHudManager {
         }
     }
 
+    public boolean resetPreviewProperty(String id, EditableProperty property) {
+        if (editingOffsets == null || !layoutBounds.containsKey(id)) {
+            return false;
+        }
+        PlacedWidget placed = null;
+        for (PlacedWidget candidate : widgets) {
+            if (candidate.id().equals(id)) {
+                placed = candidate;
+                break;
+            }
+        }
+        if (placed == null) {
+            return false;
+        }
+        switch (property) {
+            case OFFSET -> {
+                editingOffsets.set(id, 0, 0);
+                relayout(null);
+                return true;
+            }
+            case VISIBILITY -> {
+                editingOffsets.setHidden(id, false);
+                applyVisibility();
+                return true;
+            }
+            case PARENT, POINT, ANCHOR -> {
+                HudHandle current = handle(id);
+                if (current == null) {
+                    return false;
+                }
+                PositionElement defaults = placed.position();
+                String parent = property == EditableProperty.PARENT ? defaults.relativeTo : current.relativeTo();
+                ElementAnchor point = property == EditableProperty.POINT ? defaults.point : current.point();
+                ElementAnchor anchor = property == EditableProperty.ANCHOR ? defaults.anchor : current.anchor();
+                return changePreviewAnchor(id, new HudLayoutOffsets.AnchorOverride(parent, point, anchor));
+            }
+        }
+        return false;
+    }
+
     public void resetPreviewOffset(String id) {
         if (editingOffsets != null) {
             editingOffsets.reset(id);
@@ -248,7 +302,8 @@ public final class AnchorHudManager {
             AnchorLayout.Bounds bounds = layoutBounds.get(placed.id());
             if (bounds != null && !renderFailures.contains(placed.id())) {
                 PositionElement effective = placed.effectivePosition(offsets);
-                result.add(new HudHandle(placed.id(), bounds, effective.relativeTo, effective.point, effective.anchor, offsets.get(placed.id()), placed.widget().visible, offsets.isHidden(placed.id())));
+                result.add(new HudHandle(placed.id(), bounds, effective.relativeTo, effective.point, effective.anchor, offsets.get(placed.id()), placed.widget().visible, offsets.isHidden(placed.id()),
+                        placed.position().relativeTo, placed.position().point, placed.position().anchor, placed.baseVisible()));
             }
         }
         return List.copyOf(result);

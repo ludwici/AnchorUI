@@ -27,10 +27,11 @@ resourcepacks/
                 │   └── status.json
                 └── screens/
                     ├── traveler.json
-                    └── traveler_next.json
+                    ├── traveler_next.json
+                    └── bindings.json
 ```
 
-Use `assets/<namespace>/anchorui/` for **all** Anchor UI JSON data. The old `assets/<namespace>/lore/` path is no longer read. There is currently **no need** to create a separate `anchorui/` folder in your game root. The root-level directory is reserved for future optional direct-file loading, but this feature is not implemented.
+Use `assets/<namespace>/anchorui/` for **all** Anchor UI JSON data. The old `assets/<namespace>/lore/` path is no longer read. Anchor UI uses **resource packs only** for no-Java authoring. It does not scan or create a separate game-root `anchorui/` folder.
 
 As before, widget IDs and references use namespaced identifiers; `id: "health"` within `assets/mypack/anchorui/hud/status.json` resolves to `mypack:health`.
 
@@ -107,3 +108,15 @@ Use `{"type": "anchorui:close_screen"}` to return to the previous screen. Invali
 A Java mod can provide additional numeric values by registering them in `NumericDataRegistry`, making its client data available to resource-pack authors. See [Custom Widgets and Data API](CUSTOM_WIDGETS.md) for examples. Screen actions similarly use an explicit registry, with only pre-registered action types accepted.
 
 For the next milestones, Anchor UI will add conditional visibility and dialogue state, then connect server-authorized quest data and actions. Character/skill-tree screens and fully custom game systems are deferred.
+
+## Expanded data bindings
+
+In addition to numeric health and hunger bars, built-in widgets now support string, boolean, object and list bindings. Use a direct `text` binding or placeholders such as `"Hello, {{anchorui:player.name}}"` to display the player's name, `visibleWhen` to hide or show a widget based on a boolean, and `anchorui:data_list` to display active effects or another mod's quest list. Structured data sources accept a `path` field such as `"stats.health"` or `"quests[0].title"`.
+
+Open the new starter-pack screen with:
+
+```text
+/anchorui screen open mypack:bindings
+```
+
+The built-in test HUD can be enabled separately using `/anchorui test binding on`. See [Typed Data Binding](DATA_BINDINGS.md) for all JSON options, Java extension API, fallbacks, and event-driven mutable providers.

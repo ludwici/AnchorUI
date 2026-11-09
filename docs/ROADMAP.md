@@ -4,9 +4,9 @@ Anchor UI should let Minecraft modpack creators build useful HUDs and game scree
 
 ## Current priorities
 
-- **RPG-style HUDs:** first numeric data bindings and the `anchorui:progress` widget are implemented, including live health, hunger and experience sources. Next: richer status effects, conditional visibility, images, containers and additional data types.
+- **RPG-style HUDs:** typed data bindings (numbers, strings, booleans, objects and lists), nested paths, live text, progress and data-list widgets are implemented. Boolean `visibleWhen` is available. Next: texture widgets, richer rendering, containers and more complex conditions.
 - **Dialogue and quest interfaces:** first JSON buttons and client-only `open_screen` / `close_screen` actions are implemented, together with a standalone two-page dialogue resource pack. Next: portraits, dialogue state, conditions and server-authorized quests/rewards.
-- **JSON authoring with resource packs:** all built-in resources and the reload listener now use `assets/<namespace>/anchorui/`. An installable starter resource pack is included under `examples/resourcepack/`. The optional external `anchorui/` root directory remains reserved and is not automatically created or loaded.
+- **JSON authoring with resource packs:** all built-in resources and the reload listener now use `assets/<namespace>/anchorui/`. An installable starter resource pack is included under `examples/resourcepack/`. Resource packs are the sole supported no-Java distribution method. No separate game-root loader is planned.
 
 ## Deferred, not ruled out
 

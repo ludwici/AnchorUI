@@ -17,5 +17,6 @@ The pack uses `pack_format: 34` for Minecraft 1.21.1 and files under `assets/myp
 - `hud/status.json`: two `anchorui:progress` widgets binding to `anchorui:player.health`, `anchorui:player.max_health`, and `anchorui:player.food`.
 - `screens/traveler.json`: a dialogue screen using `anchorui:text` and `anchorui:button` with `anchorui:open_screen` and `anchorui:close_screen` actions.
 - `screens/traveler_next.json`: the next dialogue page, with a button returning to the previous screen.
+- `screens/bindings.json`: a live data screen with the local player's name, current dimension, level and status-effect list. Open with `/anchorui screen open mypack:bindings`.
 
 There is no client-side arbitrary command execution or server-side quest logic in this starter pack. A server-controlled quests API will be developed separately.

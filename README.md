@@ -25,7 +25,7 @@ Each UI frame may declare a unique `id` and a `position`. `point` is the attachm
 
 `point` and `anchor` accept `TOPLEFT`, `TOP`, `TOPRIGHT`, `LEFT`, `CENTER`, `RIGHT`, `BOTTOMLEFT`, `BOTTOM`, and `BOTTOMRIGHT`. If either point is omitted, it defaults to the other. `relativeTo` defaults to `screen`. Positive X offsets move right and positive Y offsets move down. The engine resolves references independently of JSON order, recalculates coordinates when the screen is initialized or resized, and rejects duplicate ids and circular dependencies; unknown references fall back to the screen with a warning.
 
-## Resource packs and optional external directory
+## Resource packs
 
 **Modpack authors do not need to write a Java mod or create a separate folder in the game root.** They can distribute Anchor UI documents as a standard Minecraft resource pack under `resourcepacks/`:
 
@@ -35,7 +35,7 @@ resourcepacks/
     ├── pack.mcmeta
     └── assets/
         └── mypack/
-            └── lore/
+            └── anchorui/
                 ├── hud/
                 │   └── status.json
                 ├── widgets/
@@ -44,11 +44,7 @@ resourcepacks/
 
 Enable the pack in Minecraft's Resource Packs menu. Anchor UI already reads JSON from `assets/<namespace>/anchorui/` through the client resource reload listener, including resources provided by other mods or enabled resource packs. Resource packs also carry textures and can be reloaded with F3+T.
 
-**Root directory naming:** the formerly reserved top-level `lore/` directory is now named `anchorui/` in the code. It is reserved for a possible standalone external JSON loader, but the current implementation does not load JSON from that folder. Anchor UI no longer creates the empty directory automatically on startup. No migration, rename check or old-directory scan is performed.
-
-Do not confuse the future optional game-root `anchorui/` directory with the existing `assets/<namespace>/anchorui/` path inside resource packs. The latter remains unchanged for compatibility with existing screens, HUD documents, templates, tests, and styles.
-
-## Resource packs
+## JSON layouts and styles
 
 The bundled demo uses `assets/anchorui/anchorui/test/block.json` and `assets/anchorui/anchorui/test/anchors.json`. Layout styles live at `assets/<namespace>/anchorui/style/<name>.json` and are selected through `"style": "namespace:style/name"` (or `namespace:name`). Styles provide per-type `position`, `size`, `padding`, `text.color` and `background.color`. An element can override these settings, including individual fields nested inside objects.
 
@@ -150,3 +146,13 @@ The repo includes a **ready-to-copy resource pack** at [examples/resourcepack/An
 ### Separate HUD demos and short screen IDs
 
 Use `/anchorui test hud1 on` for anchoring/reference tests and `/anchorui test rpg on` for the live health/food RPG demo. They are independently toggled and default to off. For resource-pack screens, use `/anchorui screen open mypack:traveler`; the loader looks under `assets/mypack/anchorui/screens/traveler.json` automatically. Unquoted namespaced IDs (including `:`) work in the command. Screen button actions may likewise reference `"screen": "mypack:traveler_next"`.
+
+## Typed Data Binding for modpack authors
+
+Anchor UI now supports **number, string, boolean, object and list bindings** through a shared namespaced registry. Built-in `anchorui:text` can display dynamic strings and `{{namespace:value}}` templates, `visibleWhen` conditionally shows any screen/HUD widget, `anchorui:data_list` renders arrays, and `anchorui:progress` can read numbers from nested objects with `path`. Existing `NumericDataRegistry` registrations remain compatible.
+
+Run `/anchorui test binding on` to view a live data HUD, and `/anchorui screen open anchorui:bindings` to check the matching JSON Screen. The starter resource pack includes `/anchorui screen open mypack:bindings`.
+
+External mods can publish values through `DataValueRegistry.registerNumber`, `registerString`, `registerBoolean`, `registerObject` and `registerList`. `registerMutable` provides a publish-on-event cache without a tick loop.
+
+See [Typed Data Binding](docs/DATA_BINDINGS.md) for supported JSON syntax, data types, providers, paths, fallbacks and Java examples. Only resource packs are supported for standalone authoring; no direct game-root JSON loader is planned.

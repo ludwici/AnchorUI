@@ -45,7 +45,7 @@ Mod A exports a widget definition in its resource directory:
 }
 ```
 
-Its globally registered definition ID is **`moda:header`**, derived from the resource path. The definition registry loads all `lore/widgets/` resources before processing individual screens; the order in which different mods provide them does not matter.
+Its globally registered definition ID is **`moda:header`**, derived from the resource path. The definition registry loads all `anchorui/widgets/` resources before processing individual screens; the order in which different mods provide them does not matter.
 
 ## Import that widget in another mod
 

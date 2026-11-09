@@ -14,7 +14,7 @@ public record DataBindingSpec(String source, String path, JsonElement literal, J
                 return false;
             }
             return switch (this) {
-                case NUMBER -> element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber();
+                case NUMBER -> element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber() && Double.isFinite(element.getAsDouble());
                 case STRING -> element.isJsonPrimitive() && element.getAsJsonPrimitive().isString();
                 case BOOLEAN -> element.isJsonPrimitive() && element.getAsJsonPrimitive().isBoolean();
                 case OBJECT -> element.isJsonObject();

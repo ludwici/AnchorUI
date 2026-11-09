@@ -22,6 +22,12 @@ public final class NumericDataRegistry {
         if (PROVIDERS.putIfAbsent(id, provider) != null) {
             throw new IllegalStateException("Anchor UI numeric data provider already registered: " + id);
         }
+        try {
+            DataValueRegistry.registerNumber(id, provider::read);
+        } catch (RuntimeException exception) {
+            PROVIDERS.remove(id, provider);
+            throw exception;
+        }
     }
 
     public static Optional<Provider> find(ResourceLocation id) {

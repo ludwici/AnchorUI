@@ -1,0 +1,128 @@
+{
+  "style": "anchorui:style/default",
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:binding_screen_title",
+      "text": "<b>LIVE DATA SCREEN</b>",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -98
+      },
+      "size": {
+        "width": 310,
+        "height": 28
+      },
+      "background": {
+        "color": "D024405A"
+      },
+      "color": "#FFFFFF",
+      "align": "center",
+      "padding": {
+        "left": 4,
+        "right": 4,
+        "top": 8,
+        "bottom": 5
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:binding_screen_name",
+      "text": {
+        "bind": "anchorui:player.name",
+        "fallback": "Unknown player"
+      },
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "anchorui:binding_screen_title",
+        "x": 0,
+        "y": 4
+      },
+      "size": {
+        "width": 310,
+        "height": 24
+      },
+      "background": {
+        "color": "CC263447"
+      },
+      "align": "center",
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:binding_screen_summary",
+      "text": "Level {{anchorui:player.profile#level}} | {{anchorui:world.dimension}}",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "anchorui:binding_screen_name",
+        "x": 0,
+        "y": 4
+      },
+      "size": {
+        "width": 310,
+        "height": 24
+      },
+      "background": {
+        "color": "CC263447"
+      },
+      "align": "center",
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:data_list",
+      "id": "anchorui:binding_screen_effects",
+      "items": {
+        "bind": "anchorui:player.effects",
+        "fallback": []
+      },
+      "itemPath": "name",
+      "emptyText": "No active status effects",
+      "maxEntries": 10,
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "anchorui:binding_screen_summary",
+        "x": 0,
+        "y": 5
+      },
+      "size": {
+        "width": 310,
+        "height": 75
+      },
+      "padding": {
+        "left": 8,
+        "right": 8,
+        "top": 5,
+        "bottom": 5
+      },
+      "background": {
+        "color": "DD263447"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:binding_screen_close",
+      "text": "Close",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "anchorui:binding_screen_effects",
+        "x": 0,
+        "y": 8
+      },
+      "size": {
+        "width": 110,
+        "height": 20
+      },
+      "onClick": {
+        "type": "anchorui:close_screen"
+      }
+    }
+  ]
+}

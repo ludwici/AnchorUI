@@ -1,0 +1,79 @@
+{
+  "style": "anchorui:style/default",
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:dialogue_title",
+      "text": "<b>The Traveler</b>",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -46
+      },
+      "size": {
+        "width": 300,
+        "height": 28
+      },
+      "align": "center",
+      "color": "#FFFFFF",
+      "background": {
+        "color": "D020364B"
+      },
+      "padding": {
+        "left": 6,
+        "right": 6,
+        "top": 7,
+        "bottom": 7
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:dialogue_body",
+      "text": "Your next quest awaits! Quest data and rewards will be connected through server-authorized providers in a later step.",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "anchorui:dialogue_title",
+        "x": 0,
+        "y": 2
+      },
+      "size": {
+        "width": 300,
+        "height": 56
+      },
+      "wrap": true,
+      "align": "center",
+      "color": "#F3F3F3",
+      "padding": {
+        "left": 10,
+        "right": 10,
+        "top": 8,
+        "bottom": 8
+      },
+      "background": {
+        "color": "CC1A2C3C"
+      }
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:dialogue_back",
+      "text": "Back",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "anchorui:dialogue_body",
+        "x": 0,
+        "y": 8
+      },
+      "size": {
+        "width": 120,
+        "height": 20
+      },
+      "onClick": {
+        "type": "anchorui:close_screen"
+      }
+    }
+  ]
+}

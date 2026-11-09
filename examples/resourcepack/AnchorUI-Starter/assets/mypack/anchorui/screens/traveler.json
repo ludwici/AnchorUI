@@ -1,0 +1,99 @@
+{
+  "style": "anchorui:style/default",
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "mypack:title",
+      "text": "<b>The Village Elder</b>",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -44
+      },
+      "size": {
+        "width": 290,
+        "height": 28
+      },
+      "align": "center",
+      "color": "#FFFFFF",
+      "background": {
+        "color": "E026364A"
+      },
+      "padding": {
+        "left": 6,
+        "right": 6,
+        "top": 7,
+        "bottom": 7
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "mypack:dialogue",
+      "text": "Adventurer, the old ruins are calling. Will you explore them?",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "mypack:title",
+        "x": 0,
+        "y": 2
+      },
+      "size": {
+        "width": 290,
+        "height": 53
+      },
+      "align": "center",
+      "wrap": true,
+      "color": "#FFFFFF",
+      "background": {
+        "color": "D01A2736"
+      },
+      "padding": {
+        "left": 8,
+        "right": 8,
+        "top": 8,
+        "bottom": 8
+      }
+    },
+    {
+      "type": "anchorui:button",
+      "id": "mypack:accept",
+      "text": "Tell me more",
+      "position": {
+        "point": "TOPRIGHT",
+        "anchor": "BOTTOMRIGHT",
+        "relativeTo": "mypack:dialogue",
+        "x": 0,
+        "y": 8
+      },
+      "size": {
+        "width": 115,
+        "height": 20
+      },
+      "onClick": {
+        "type": "anchorui:open_screen",
+        "screen": "mypack:screens/traveler_next"
+      }
+    },
+    {
+      "type": "anchorui:button",
+      "id": "mypack:decline",
+      "text": "Leave",
+      "position": {
+        "point": "RIGHT",
+        "anchor": "LEFT",
+        "relativeTo": "mypack:accept",
+        "x": -6,
+        "y": 0
+      },
+      "size": {
+        "width": 115,
+        "height": 20
+      },
+      "onClick": {
+        "type": "anchorui:close_screen"
+      }
+    }
+  ]
+}

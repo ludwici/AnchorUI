@@ -1,0 +1,77 @@
+{
+  "style": "anchorui:style/default",
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "mypack:status_label",
+      "text": "<b>ADVENTURER</b>",
+      "position": {
+        "point": "BOTTOMLEFT",
+        "anchor": "BOTTOMLEFT",
+        "relativeTo": "screen",
+        "x": 18,
+        "y": -64
+      },
+      "size": {
+        "width": 164,
+        "height": 16
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:progress",
+      "id": "mypack:health",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "BOTTOMLEFT",
+        "relativeTo": "mypack:status_label",
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "width": 164,
+        "height": 16
+      },
+      "background": {
+        "color": "BB17171B"
+      },
+      "fillColor": "#C94454",
+      "value": {
+        "bind": "anchorui:player.health",
+        "fallback": 0
+      },
+      "max": {
+        "bind": "anchorui:player.max_health",
+        "fallback": 20
+      },
+      "showText": true,
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:progress",
+      "id": "mypack:hunger",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "BOTTOMLEFT",
+        "relativeTo": "mypack:health",
+        "x": 0,
+        "y": 3
+      },
+      "size": {
+        "width": 164,
+        "height": 13
+      },
+      "background": {
+        "color": "BB17171B"
+      },
+      "fillColor": "#D69A40",
+      "value": {
+        "bind": "anchorui:player.food",
+        "fallback": 0
+      },
+      "max": 20,
+      "showText": true,
+      "color": "#FFFFFF"
+    }
+  ]
+}

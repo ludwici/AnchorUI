@@ -1,6 +1,8 @@
 package com.ludwici.anchorui.api.binding;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonPrimitive;
 import com.ludwici.anchorui.api.widget.WidgetContext;
@@ -77,6 +79,22 @@ public final class DataValueRegistry {
     public static void registerBoolean(ResourceLocation id, Predicate<WidgetContext> provider) {
         Objects.requireNonNull(provider, "Boolean provider must not be null");
         register(id, context -> new JsonPrimitive(provider.test(context)));
+    }
+
+    public static void registerObject(ResourceLocation id, Function<WidgetContext, JsonObject> provider) {
+        Objects.requireNonNull(provider, "Object provider must not be null");
+        register(id, context -> {
+            JsonObject value = provider.apply(context);
+            return value == null ? JsonNull.INSTANCE : value;
+        });
+    }
+
+    public static void registerList(ResourceLocation id, Function<WidgetContext, JsonArray> provider) {
+        Objects.requireNonNull(provider, "List provider must not be null");
+        register(id, context -> {
+            JsonArray value = provider.apply(context);
+            return value == null ? JsonNull.INSTANCE : value;
+        });
     }
 
     private static JsonElement copy(JsonElement value) {

@@ -22,8 +22,8 @@ public final class MinecraftDataSources {
         DataValueRegistry.registerBoolean(id("player.alive"), ctx -> ctx.minecraft().player != null && ctx.minecraft().player.isAlive());
         DataValueRegistry.registerBoolean(id("player.sneaking"), ctx -> ctx.minecraft().player != null && ctx.minecraft().player.isShiftKeyDown());
         DataValueRegistry.registerBoolean(id("player.creative"), ctx -> ctx.minecraft().player != null && ctx.minecraft().player.getAbilities().instabuild);
-        DataValueRegistry.register(id("player.profile"), MinecraftDataSources::profile);
-        DataValueRegistry.register(id("player.effects"), MinecraftDataSources::effects);
+        DataValueRegistry.registerObject(id("player.profile"), MinecraftDataSources::profile);
+        DataValueRegistry.registerList(id("player.effects"), MinecraftDataSources::effects);
     }
 
     private static JsonObject profile(WidgetContext context) {

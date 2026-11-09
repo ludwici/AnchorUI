@@ -3,6 +3,7 @@ package com.ludwici.anchorui.client.hud;
 import com.google.gson.JsonObject;
 import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.api.LoreEntity;
+import com.ludwici.anchorui.api.binding.BoundBoolean;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.style.LoreStyle;
 import com.ludwici.anchorui.api.style.ElementAnchor;
@@ -56,7 +57,7 @@ public final class AnchorHudManager {
     private record Description(String id, LoreEntity entity, LoreEntity.UiElement element) {
     }
 
-    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, boolean baseVisible) {
+    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, boolean baseVisible, WidgetContext context, BoundBoolean visibleWhen) {
         private PositionElement effectivePosition(HudLayoutOffsets offsets) {
             HudLayoutOffsets.Offset delta = offsets.get(id);
             HudLayoutOffsets.AnchorOverride anchor = offsets.anchor(id);
@@ -222,7 +223,7 @@ public final class AnchorHudManager {
     private void applyVisibility() {
         HudLayoutOffsets offsets = currentOffsets();
         for (PlacedWidget placed : widgets) {
-            placed.widget().visible = placed.baseVisible() && !offsets.isHidden(placed.id());
+            placed.widget().visible = placed.baseVisible() && !offsets.isHidden(placed.id()) && placed.visibleWhen().get(placed.context());
         }
     }
 
@@ -383,6 +384,7 @@ public final class AnchorHudManager {
     }
 
     private void renderWidgets(GuiGraphics graphics, float partialTick) {
+        applyVisibility();
         for (PlacedWidget placed : widgets) {
             if (renderFailures.contains(placed.id())) {
                 continue;
@@ -470,7 +472,7 @@ public final class AnchorHudManager {
                 String relativeTo = WidgetIds.reference(position.relativeTo, entity.namespace);
                 PositionElement anchored = new PositionElement(position.point, position.anchor, relativeTo, position.x, position.y);
                 registry.attach(definition.id(), widget);
-                created.add(new PlacedWidget(definition.id(), widget, style, anchored, widget.visible));
+                created.add(new PlacedWidget(definition.id(), widget, style, anchored, widget.visible, context, BoundBoolean.parse(element.settings, "visibleWhen", true)));
             } catch (WidgetConfigException exception) {
                 warnings.add(exception.getMessage());
             } catch (RuntimeException exception) {

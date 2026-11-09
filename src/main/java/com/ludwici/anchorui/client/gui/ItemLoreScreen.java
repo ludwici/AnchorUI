@@ -3,6 +3,7 @@ package com.ludwici.anchorui.client.gui;
 import com.google.gson.JsonObject;
 import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.api.LoreEntity;
+import com.ludwici.anchorui.api.binding.BoundBoolean;
 import com.ludwici.anchorui.api.WidgetTypeIds;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.style.LoreStyle;
@@ -29,7 +30,7 @@ public class ItemLoreScreen extends Screen {
     private record DeclaredWidget(String id, LoreEntity.UiElement element, String legacyStyle) {
     }
 
-    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position) {
+    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, WidgetContext context, BoundBoolean visibleWhen, boolean baseVisible) {
         private AnchorLayout.Frame frame() {
             return new AnchorLayout.Frame(id, position, widget.getWidth(), widget.getHeight());
         }
@@ -175,13 +176,14 @@ public class ItemLoreScreen extends Screen {
         String relativeTo = WidgetIds.reference(p.relativeTo, loreEntity.namespace);
         PositionElement position = new PositionElement(p.point, p.anchor, relativeTo, p.x, p.y);
         widgetRegistry.attach(id, widget);
-        created.add(new PlacedWidget(id, widget, settings, position));
+        created.add(new PlacedWidget(id, widget, settings, position, context, BoundBoolean.parse(element.settings, "visibleWhen", true), widget.visible));
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         for (PlacedWidget placed : placedWidgets) {
             AbstractWidget widget = placed.widget();
+            widget.visible = placed.baseVisible() && placed.visibleWhen().get(placed.context());
             int color = placed.style().background.color;
             if (widget.visible && !(widget instanceof AnchoredWidget) && (color >>> 24) != 0) {
                 graphics.fill(widget.getX(), widget.getY(), widget.getRight(), widget.getBottom(), color);

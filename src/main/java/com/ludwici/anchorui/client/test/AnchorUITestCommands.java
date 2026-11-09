@@ -36,10 +36,8 @@ public final class AnchorUITestCommands {
                 .executes(context -> listScenes())
                 .then(Commands.literal("list").executes(context -> listScenes()));
 
-        test.then(Commands.literal("hud1")
-                .executes(context -> setHud(!AnchorHudManager.INSTANCE.isTestEnabled()))
-                .then(Commands.literal("on").executes(context -> setHud(true)))
-                .then(Commands.literal("off").executes(context -> setHud(false))));
+        registerHudTest(test, "hud1");
+        registerHudTest(test, "rpg");
 
         for (TestScene scene : TestScene.values()) {
             test.then(Commands.literal(scene.id()).executes(context -> queueScene(scene)));
@@ -60,11 +58,18 @@ public final class AnchorUITestCommands {
         event.getDispatcher().register(Commands.literal("anchorui").then(test).then(hud).then(screens));
     }
 
-    private static int setHud(boolean enabled) {
-        AnchorHudManager.INSTANCE.setTestEnabled(enabled);
+    private static void registerHudTest(com.mojang.brigadier.builder.LiteralArgumentBuilder<net.minecraft.commands.CommandSourceStack> test, String group) {
+        test.then(Commands.literal(group)
+                .executes(context -> setHud(group, !AnchorHudManager.INSTANCE.isTestEnabled(group)))
+                .then(Commands.literal("on").executes(context -> setHud(group, true)))
+                .then(Commands.literal("off").executes(context -> setHud(group, false))));
+    }
+
+    private static int setHud(String group, boolean enabled) {
+        AnchorHudManager.INSTANCE.setTestEnabled(group, enabled);
         var player = Minecraft.getInstance().player;
         if (player != null) {
-            player.displayClientMessage(Component.literal("Anchor UI HUD test: " + (enabled ? "enabled" : "disabled")), false);
+            player.displayClientMessage(Component.literal("Anchor UI HUD test '" + group + "': " + (enabled ? "enabled" : "disabled")), false);
         }
         return Command.SINGLE_SUCCESS;
     }
@@ -117,7 +122,7 @@ public final class AnchorUITestCommands {
     private static int listScenes() {
         var player = Minecraft.getInstance().player;
         if (player != null) {
-            player.displayClientMessage(Component.literal("Anchor UI — /anchorui test <scene1..scene14> or hud1"), false);
+            player.displayClientMessage(Component.literal("Anchor UI — /anchorui test <scene1..scene14>, hud1 or rpg"), false);
             for (TestScene scene : TestScene.values()) {
                 player.displayClientMessage(Component.literal("/anchorui test " + scene.id() + " — " + scene.title()), false);
             }

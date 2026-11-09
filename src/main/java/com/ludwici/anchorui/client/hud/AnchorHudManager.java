@@ -83,19 +83,30 @@ public final class AnchorHudManager {
     private int builtWidth = -1;
     private int builtHeight = -1;
     private ClientLevel builtLevel;
-    private boolean builtTestEnabled;
-    private boolean testEnabled;
+    private Set<String> builtTestGroups = Set.of();
+    private final Set<String> enabledTestGroups = new HashSet<>();
 
     private AnchorHudManager() {
     }
 
     public boolean isTestEnabled() {
-        return testEnabled;
+        return isTestEnabled("hud1");
+    }
+
+    public boolean isTestEnabled(String group) {
+        return enabledTestGroups.contains(group);
     }
 
     public void setTestEnabled(boolean enabled) {
-        if (testEnabled != enabled) {
-            testEnabled = enabled;
+        setTestEnabled("hud1", enabled);
+    }
+
+    public void setTestEnabled(String group, boolean enabled) {
+        if (group == null || group.isBlank()) {
+            throw new IllegalArgumentException("HUD test group must not be blank");
+        }
+        boolean changed = enabled ? enabledTestGroups.add(group) : enabledTestGroups.remove(group);
+        if (changed) {
             builtRevision = -1;
         }
     }
@@ -344,7 +355,7 @@ public final class AnchorHudManager {
     private void prepare(Minecraft minecraft, int width, int height) {
         ensureStorageLoaded();
         long revision = LoreLoader.INSTANCE.getRevision();
-        if (builtRevision != revision || builtWidth != width || builtHeight != height || builtLevel != minecraft.level || builtTestEnabled != testEnabled) {
+        if (builtRevision != revision || builtWidth != width || builtHeight != height || builtLevel != minecraft.level || !builtTestGroups.equals(enabledTestGroups)) {
             rebuild(minecraft, width, height, revision);
         }
     }
@@ -401,7 +412,7 @@ public final class AnchorHudManager {
         builtWidth = width;
         builtHeight = height;
         builtLevel = minecraft.level;
-        builtTestEnabled = testEnabled;
+        builtTestGroups = Set.copyOf(enabledTestGroups);
         registry = new WidgetInstanceRegistry();
         widgets = List.of();
         layoutBounds = Map.of();
@@ -413,7 +424,7 @@ public final class AnchorHudManager {
         for (var document : documents) {
             ResourceLocation source = document.getKey();
             LoreLoader.HudDocument hud = document.getValue();
-            if (hud.testOnly() && !testEnabled) {
+            if (hud.testOnly() && !enabledTestGroups.contains(hud.testGroup())) {
                 continue;
             }
             int index = 0;

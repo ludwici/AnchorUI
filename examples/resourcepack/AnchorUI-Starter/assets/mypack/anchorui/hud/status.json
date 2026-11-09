@@ -45,7 +45,13 @@
         "fallback": 20
       },
       "showText": true,
-      "color": "#FFFFFF"
+      "color": "#FFFFFF",
+      "padding": {
+        "left": 1,
+        "right": 1,
+        "top": 1,
+        "bottom": 1
+      }
     },
     {
       "type": "anchorui:progress",
@@ -59,7 +65,7 @@
       },
       "size": {
         "width": 164,
-        "height": 13
+        "height": 16
       },
       "background": {
         "color": "BB17171B"
@@ -71,7 +77,13 @@
       },
       "max": 20,
       "showText": true,
-      "color": "#FFFFFF"
+      "color": "#FFFFFF",
+      "padding": {
+        "left": 1,
+        "right": 1,
+        "top": 1,
+        "bottom": 1
+      }
     }
   ]
 }

@@ -67,7 +67,7 @@
       },
       "size": {
         "width": 180,
-        "height": 13
+        "height": 16
       },
       "background": {
         "color": "#AA231E27"
@@ -79,7 +79,14 @@
       },
       "max": 20,
       "showText": true,
-      "color": "#FFFFFF"
+      "color": "#FFFFFF",
+      "padding": {
+        "left": 1,
+        "right": 1,
+        "top": 1,
+        "bottom": 1
+      }
     }
-  ]
+  ],
+  "testGroup": "rpg"
 }

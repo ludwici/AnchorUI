@@ -27,7 +27,7 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
     private volatile Map<ResourceLocation, HudDocument> hudDocuments = Map.of();
     private volatile long revision;
 
-    public record HudDocument(LoreEntity entity, boolean testOnly) {
+    public record HudDocument(LoreEntity entity, boolean testOnly, String testGroup) {
     }
 
     private LoreLoader() {
@@ -76,7 +76,7 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
             ResourceLocation resource = entry.getKey();
             try {
                 JsonObject expanded = WidgetDocumentResolver.resolve(entry.getValue(), resource.getNamespace(), source, warning -> AnchorUI.LOGGER.warn("Anchor UI HUD '{}': {}", resource, warning));
-                loadedHuds.put(resource, new HudDocument(new LoreEntity(expanded, resource.getNamespace()), GsonHelper.getAsBoolean(entry.getValue(), "testOnly", false)));
+                loadedHuds.put(resource, new HudDocument(new LoreEntity(expanded, resource.getNamespace()), GsonHelper.getAsBoolean(entry.getValue(), "testOnly", false), GsonHelper.getAsString(entry.getValue(), "testGroup", "hud1")));
             } catch (RuntimeException exception) {
                 AnchorUI.LOGGER.error("Failed to load Anchor UI HUD '{}'", resource, exception);
             }

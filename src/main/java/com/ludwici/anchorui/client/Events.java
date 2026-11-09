@@ -7,6 +7,8 @@ import com.ludwici.anchorui.client.gui.ItemLoreListWidget;
 import com.ludwici.anchorui.client.gui.ItemModelWidget;
 import com.ludwici.anchorui.client.gui.ProgressWidget;
 import com.ludwici.anchorui.client.binding.MinecraftDataSources;
+import com.ludwici.anchorui.client.action.ClientUiActions;
+import com.ludwici.anchorui.client.gui.JsonActionButton;
 import com.ludwici.anchorui.client.hud.AnchorHudManager;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
@@ -27,6 +29,8 @@ public class Events {
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
             MinecraftDataSources.register();
+            ClientUiActions.register();
+            AnchorWidgetRegistry.register(WidgetTypeIds.BUTTON, JsonActionButton::create);
             AnchorWidgetRegistry.register(WidgetTypeIds.PROGRESS, (context, element, style) -> new ProgressWidget(context, element.settings, style));
             AnchorWidgetRegistry.register(WidgetTypeIds.TEXT, (context, element, style) -> new AnchoredTextWidget(element.text, context.font(), style));
             AnchorWidgetRegistry.register(WidgetTypeIds.MODEL, (context, element, style) -> new ItemModelWidget(context.resolveItem(element.path), element.scale, style));

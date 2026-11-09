@@ -6,7 +6,11 @@ import com.ludwici.anchorui.api.LoreEntity;
 import com.ludwici.anchorui.client.LoreLoader;
 import com.ludwici.anchorui.client.hud.AnchorHudManager;
 import com.ludwici.anchorui.client.hud.AnchorHudEditorScreen;
+import com.ludwici.anchorui.client.gui.ItemLoreScreen;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -20,6 +24,7 @@ import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 public final class AnchorUITestCommands {
     private static TestScene pending;
     private static boolean pendingHudEditor;
+    private static ResourceLocation pendingScreen;
 
     private AnchorUITestCommands() {
     }
@@ -41,7 +46,17 @@ public final class AnchorUITestCommands {
 
         var hud = Commands.literal("hud")
                 .then(Commands.literal("edit").executes(context -> queueHudEditor()));
-        event.getDispatcher().register(Commands.literal("anchorui").then(test).then(hud));
+        var screens = Commands.literal("screen")
+                .then(Commands.literal("open")
+                        .then(Commands.argument("id", StringArgumentType.word())
+                                .suggests((context, builder) -> {
+                                    LoreLoader.INSTANCE.getData().keySet().stream()
+                                            .filter(id -> id.getPath().startsWith("screens/"))
+                                            .map(ResourceLocation::toString).sorted().forEach(builder::suggest);
+                                    return builder.buildFuture();
+                                })
+                                .executes(context -> queueScreen(StringArgumentType.getString(context, "id")))));
+        event.getDispatcher().register(Commands.literal("anchorui").then(test).then(hud).then(screens));
     }
 
     private static int setHud(boolean enabled) {
@@ -51,6 +66,31 @@ public final class AnchorUITestCommands {
             player.displayClientMessage(Component.literal("Anchor UI HUD test: " + (enabled ? "enabled" : "disabled")), false);
         }
         return Command.SINGLE_SUCCESS;
+    }
+
+    private static int queueScreen(String rawId) {
+        ResourceLocation id = ResourceLocation.tryParse(rawId);
+        if (id == null || !rawId.contains(":") || !id.getPath().startsWith("screens/")) {
+            var player = Minecraft.getInstance().player;
+            if (player != null) {
+                player.displayClientMessage(Component.literal("Anchor UI: screen id must be namespace:screens/name"), false);
+            }
+            return 0;
+        }
+        pendingScreen = id;
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static void openPendingScreen(ResourceLocation id) {
+        Minecraft minecraft = Minecraft.getInstance();
+        LoreEntity entity = LoreLoader.INSTANCE.getData().get(id);
+        if (entity == null) {
+            if (minecraft.player != null) {
+                minecraft.player.displayClientMessage(Component.literal("Anchor UI: screen '" + id + "' not found in client resources"), false);
+            }
+            return;
+        }
+        minecraft.setScreen(new ItemLoreScreen(minecraft.screen, ItemStack.EMPTY, entity));
     }
 
     private static int queueHudEditor() {
@@ -87,6 +127,12 @@ public final class AnchorUITestCommands {
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
         Minecraft minecraft = Minecraft.getInstance();
+        if (pendingScreen != null) {
+            ResourceLocation id = pendingScreen;
+            pendingScreen = null;
+            openPendingScreen(id);
+            return;
+        }
         if (pendingHudEditor) {
             pendingHudEditor = false;
             openHudEditor();

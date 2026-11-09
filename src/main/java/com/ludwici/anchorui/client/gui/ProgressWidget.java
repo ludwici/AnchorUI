@@ -2,6 +2,7 @@ package com.ludwici.anchorui.client.gui;
 
 import com.google.gson.JsonObject;
 import com.ludwici.anchorui.api.binding.BoundNumber;
+import com.ludwici.anchorui.api.binding.ProgressMath;
 import com.ludwici.anchorui.api.style.LoreStyle;
 import com.ludwici.anchorui.api.widget.WidgetContext;
 import net.minecraft.client.gui.Font;
@@ -9,7 +10,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.util.GsonHelper;
 
-import java.util.Locale;
 
 public final class ProgressWidget extends AnchoredWidget {
     private final WidgetContext context;
@@ -42,13 +42,13 @@ public final class ProgressWidget extends AnchoredWidget {
         }
         double current = value.get(context);
         double max = maximum.get(context);
-        double ratio = max > 0 ? Math.max(0.0, Math.min(1.0, current / max)) : 0.0;
+        double ratio = ProgressMath.fraction(current, max);
         int filled = (int) Math.round(width * ratio);
         if (filled > 0) {
             graphics.fill(left, top, left + filled, top + height, fillColor);
         }
         if (showText) {
-            String label = String.format(Locale.ROOT, "%.0f / %.0f", current, max);
+            String label = Math.round(current) + " / " + Math.round(max);
             int textY = top + (height - font.lineHeight) / 2;
             graphics.drawCenteredString(font, label, left + width / 2, textY, style.textColor);
         }

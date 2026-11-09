@@ -2,7 +2,6 @@ package com.ludwici.anchorui;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.ludwici.anchorui.client.ResLoader;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -17,6 +16,5 @@ public class AnchorUI {
     public static final Gson GSON = new GsonBuilder().registerTypeAdapter(ResourceLocation.class, new ResourceLocation.Serializer()).create();
 
     public AnchorUI(IEventBus modEventBus, ModContainer modContainer) {
-        ResLoader.load();
     }
 }

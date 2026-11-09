@@ -25,6 +25,29 @@ Each UI frame may declare a unique `id` and a `position`. `point` is the attachm
 
 `point` and `anchor` accept `TOPLEFT`, `TOP`, `TOPRIGHT`, `LEFT`, `CENTER`, `RIGHT`, `BOTTOMLEFT`, `BOTTOM`, and `BOTTOMRIGHT`. If either point is omitted, it defaults to the other. `relativeTo` defaults to `screen`. Positive X offsets move right and positive Y offsets move down. The engine resolves references independently of JSON order, recalculates coordinates when the screen is initialized or resized, and rejects duplicate ids and circular dependencies; unknown references fall back to the screen with a warning.
 
+## Resource packs and optional external directory
+
+**Modpack authors do not need to write a Java mod or create a separate folder in the game root.** They can distribute Anchor UI documents as a standard Minecraft resource pack under `resourcepacks/`:
+
+```text
+resourcepacks/
+└── MyPack/
+    ├── pack.mcmeta
+    └── assets/
+        └── mypack/
+            └── lore/
+                ├── hud/
+                │   └── status.json
+                ├── widgets/
+                └── style/
+```
+
+Enable the pack in Minecraft's Resource Packs menu. Anchor UI already reads JSON from `assets/<namespace>/lore/` through the client resource reload listener, including resources provided by other mods or enabled resource packs. Resource packs also carry textures and can be reloaded with F3+T.
+
+**Root directory naming:** the formerly reserved top-level `lore/` directory is now named `anchorui/` in the code. It is reserved for a possible standalone external JSON loader, but the current implementation does not load JSON from that folder. Anchor UI no longer creates the empty directory automatically on startup. No migration, rename check or old-directory scan is performed.
+
+Do not confuse the future optional game-root `anchorui/` directory with the existing `assets/<namespace>/lore/` path inside resource packs. The latter remains unchanged for compatibility with existing screens, HUD documents, templates, tests, and styles.
+
 ## Resource packs
 
 The bundled demo uses `assets/anchorui/lore/test/block.json` and `assets/anchorui/lore/test/anchors.json`. Layout styles live at `assets/<namespace>/lore/style/<name>.json` and are selected through `"style": "namespace:style/name"` (or `namespace:name`). Styles provide per-type `position`, `size`, `padding`, `text.color` and `background.color`. An element can override these settings, including individual fields nested inside objects.

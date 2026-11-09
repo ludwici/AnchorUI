@@ -94,6 +94,8 @@ When creating bundled visual demos, use `"testOnly": true` on the HUD root. Such
 /anchorui test hud1 off
 ```
 
+The `hud1` test is independent of the RPG bars. Turn on the RPG demo separately with `/anchorui test rpg on` and disable it using `/anchorui test rpg off`. Turning off `hud1` never turns off `rpg`, and vice versa. Each test-only HUD document can declare a `"testGroup"` alongside `"testOnly": true`; `hud1` remains the fallback group for older test JSON.
+
 The built-in preview contains:
 
 - An imported `anchorui_test:hud_header` text widget (exported from a different namespace).
@@ -238,4 +240,8 @@ A resource pack author can now display a live health bar, hunger bar or other nu
 
 Numeric values can also be literals, for example `"max": 20`. `fallback` is optional. The built-in data IDs are `anchorui:player.health`, `anchorui:player.max_health`, `anchorui:player.food`, `anchorui:player.experience` (0.0 to 1.0) and `anchorui:player.level`. Other mods can supply their own numeric providers.
 
-A bound progress bar reads the data when rendering but **does not recreate the widget or reparse the JSON every frame**. The bar is display-only on the gameplay HUD. For a visual test, use `/anchorui test hud1 on`, which also enables the bundled RPG status demo, or enable the standalone sample resource pack from `examples/resourcepack/AnchorUI-Starter`.
+A bound progress bar reads the data when rendering but **does not recreate the widget or reparse the JSON every frame**. The bar is display-only on the gameplay HUD. For a visual test, use `/anchorui test rpg on` (and `/anchorui test rpg off` to disable it), or enable the standalone sample resource pack from `examples/resourcepack/AnchorUI-Starter`.
+
+## RPG bar consistency
+
+The bundled RPG health and food progress bars use the same 16-pixel height, `padding: {"left":1,"right":1,"top":1,"bottom":1}` and background color. That padding leaves a visible one-pixel border around each colored fill. The standalone starter resource pack uses matching progress-bar styling. The RPG test is enabled separately with `/anchorui test rpg on`.

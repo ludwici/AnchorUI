@@ -9,7 +9,7 @@ Copy [AnchorUI-Starter](../examples/resourcepack/AnchorUI-Starter) into the `res
 The included HUD automatically displays live health and hunger. Test the example dialogue using:
 
 ```text
-/anchorui screen open mypack:screens/traveler
+/anchorui screen open mypack:traveler
 ```
 
 To reload changes, use **F3+T**; use **F8** to adjust your HUD position.
@@ -74,7 +74,7 @@ The same `anchorui:progress` widget can be placed in a normal `Screen` JSON docu
 
 ## Screen navigation and simple dialogue
 
-A JSON screen can be stored at `assets/mypack/anchorui/screens/traveler.json` and opened by the client command `/anchorui screen open mypack:screens/traveler`.
+A JSON screen can be stored at `assets/mypack/anchorui/screens/traveler.json` and opened by the client command `/anchorui screen open mypack:traveler`.
 
 Use `anchorui:button` to create an interactive button in a normal screen:
 
@@ -93,7 +93,7 @@ Use `anchorui:button` to create an interactive button in a normal screen:
   "size": {"width": 120, "height": 20},
   "onClick": {
     "type": "anchorui:open_screen",
-    "screen": "mypack:screens/traveler_next"
+    "screen": "mypack:traveler_next"
   }
 }
 ```

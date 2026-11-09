@@ -39,7 +39,7 @@ public class ResourcePackStarterTest {
         JsonObject next = read("assets/mypack/anchorui/screens/traveler_next.json");
         var elements = intro.getAsJsonArray("entities");
         assertEquals("anchorui:open_screen", elements.get(2).getAsJsonObject().getAsJsonObject("onClick").get("type").getAsString());
-        assertEquals("mypack:screens/traveler_next", elements.get(2).getAsJsonObject().getAsJsonObject("onClick").get("screen").getAsString());
+        assertEquals("mypack:traveler_next", elements.get(2).getAsJsonObject().getAsJsonObject("onClick").get("screen").getAsString());
         assertEquals("anchorui:close_screen", elements.get(3).getAsJsonObject().getAsJsonObject("onClick").get("type").getAsString());
         assertEquals("anchorui:close_screen", next.getAsJsonArray("entities").get(2).getAsJsonObject().getAsJsonObject("onClick").get("type").getAsString());
     }

@@ -73,7 +73,7 @@
       },
       "onClick": {
         "type": "anchorui:open_screen",
-        "screen": "mypack:screens/traveler_next"
+        "screen": "mypack:traveler_next"
       }
     },
     {

@@ -156,3 +156,9 @@ With HUD Editor open, press **Point** or **Anchor** on a selected widget: its ac
 ### Compact right-side HUD inspector
 
 Test `/anchorui test hud1 on` after removing saved overrides or using **Reset all**. Header/body, body/diamond, diamond/extra and extra/copied header should touch with no gaps. Open `/anchorui hud edit`: a narrow draggable panel should appear on the right, away from the bottom-right corner widget. Drag its title, select different widgets, then scroll their inspector values with the mouse wheel and scrollbar. Verify namespaced IDs, current position and size, parent and anchor points, visibility, source `position`, `size`, `padding` and custom JSON values. Only the selected or hovered widget's ID label should be drawn in the game area.
+
+## RPG HUD demo (independent of hud1)
+
+Run `/anchorui test rpg on` to enable the separate health/food bars, and `/anchorui test rpg off` to disable them. `/anchorui test hud1 on/off` should only affect the anchoring/reference demo, not RPG bars. Both bars should have identical one-pixel padding/border, dimensions and background styling (apart from their fill colors). Normal resource-pack HUDs remain unaffected by these test commands.
+
+Test a JSON dialogue by entering the unquoted command `/anchorui screen open anchorui:dialogue_intro`. Autocompletion should suggest `anchorui:dialogue_intro`, without the internal `screens/` prefix. The Continue button should open `anchorui:dialogue_next`.

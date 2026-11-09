@@ -31,7 +31,7 @@ public class DialogueResourceTest {
         assertEquals("anchorui:button", entries.get(2).getAsJsonObject().get("type").getAsString());
         JsonObject open = entries.get(2).getAsJsonObject().getAsJsonObject("onClick");
         assertEquals("anchorui:open_screen", open.get("type").getAsString());
-        assertEquals("anchorui:screens/dialogue_next", open.get("screen").getAsString());
+        assertEquals("anchorui:dialogue_next", open.get("screen").getAsString());
         JsonObject close = entries.get(3).getAsJsonObject().getAsJsonObject("onClick");
         assertEquals("anchorui:close_screen", close.get("type").getAsString());
 

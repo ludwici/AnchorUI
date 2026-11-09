@@ -123,7 +123,7 @@ Anchor UI also renders **in-game HUD documents** via a single NeoForge `Register
 
 The HUD is rendered without an open `Screen`. A HUD factory receives `WidgetContext.screen() == null` and should not depend on screen-only functions. HUD widgets are currently **display-only**: mouse/key interactions (including vanilla `Button` clicks) are reserved for future HUD editor work. F1 hides the HUD, and HUD rendering is suppressed when a normal game screen is open. Layout and widget instances are rebuilt when the GUI size, world or loaded resources change; they are not recreated every frame.
 
-Run `/anchorui test hud1` to toggle a built-in HUD preview (or use `/anchorui test hud1 on` / `off`). It combines `anchorui:text`, `anchorui:model` and widgets defined in `anchorui_test`, including cross-file anchors and a `ref` override. The preview resource files have `"testOnly": true` and are disabled by default.
+Run `/anchorui test hud1` to toggle the anchoring HUD preview (or use `/anchorui test hud1 on` / `off`). It combines `anchorui:text`, `anchorui:model` and widgets defined in `anchorui_test`, including cross-file anchors and a `ref` override. The preview resource files have `"testOnly": true` and are disabled by default.
 
 See [HUD Documentation](docs/HUD.md) for complete JSON examples and current limitations.
 
@@ -143,6 +143,10 @@ The bundled HUD preview uses zero offsets between adjacent widgets, so their bou
 
 The new built-in `anchorui:progress` widget supports numeric data bindings. A value may be a literal number or a `{"bind": "anchorui:player.health", "fallback": 0}` reference to a registered provider. Built-in client sources currently include `anchorui:player.health`, `anchorui:player.max_health`, `anchorui:player.food`, `anchorui:player.experience` and `anchorui:player.level`. Other mods can register numeric providers using `NumericDataRegistry.register`.
 
-For dialogue-style screens, `anchorui:button` accepts `onClick` actions. Currently allowed bundled actions are `anchorui:open_screen` and `anchorui:close_screen`. Open a resource-pack screen directly using `/anchorui screen open namespace:screens/name`. HUD widgets remain display-only; clickable buttons only work in normal `Screen` interfaces.
+For dialogue-style screens, `anchorui:button` accepts `onClick` actions. Currently allowed bundled actions are `anchorui:open_screen` and `anchorui:close_screen`. Open a resource-pack screen directly using `/anchorui screen open namespace:name`. HUD widgets remain display-only; clickable buttons only work in normal `Screen` interfaces.
 
 The repo includes a **ready-to-copy resource pack** at [examples/resourcepack/AnchorUI-Starter](examples/resourcepack/AnchorUI-Starter). It contains a live RPG HUD and a two-page dialogue. See [Modpack Authoring Guide](docs/MODPACK_AUTHORING.md) for paths, JSON examples, installation and current safety limits. Quest actions and rewards will be connected through server-authorized data/actions in a later milestone.
+
+### Separate HUD demos and short screen IDs
+
+Use `/anchorui test hud1 on` for anchoring/reference tests and `/anchorui test rpg on` for the live health/food RPG demo. They are independently toggled and default to off. For resource-pack screens, use `/anchorui screen open mypack:traveler`; the loader looks under `assets/mypack/anchorui/screens/traveler.json` automatically. Unquoted namespaced IDs (including `:`) work in the command. Screen button actions may likewise reference `"screen": "mypack:traveler_next"`.

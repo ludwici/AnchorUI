@@ -73,7 +73,7 @@
       },
       "onClick": {
         "type": "anchorui:open_screen",
-        "screen": "anchorui:screens/dialogue_next"
+        "screen": "anchorui:dialogue_next"
       }
     },
     {

@@ -7,7 +7,7 @@ A simple, no-Java example for **Minecraft 1.21.1 NeoForge** with Anchor UI insta
 1. Copy the entire `AnchorUI-Starter` folder into `.minecraft/resourcepacks/` (or the `resourcepacks` folder of your launcher profile).
 2. Enable **Anchor UI Starter** in Options → Resource Packs. This requires no new Java mod.
 3. Enter a world. A small HUD with live health and food progress bars should appear automatically.
-4. Run `/anchorui screen open mypack:screens/traveler` to try a two-screen dialogue with JSON buttons. This is a client command, not a server command.
+4. Run `/anchorui screen open mypack:traveler` to try a two-screen dialogue with JSON buttons. This is a client command, not a server command.
 5. Press **F3+T** after changing the JSON. For HUD layout editing, press **F8**.
 
 The pack uses `pack_format: 34` for Minecraft 1.21.1 and files under `assets/mypack/anchorui/`.

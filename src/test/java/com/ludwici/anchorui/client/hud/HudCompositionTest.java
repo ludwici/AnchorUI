@@ -33,10 +33,10 @@ public class HudCompositionTest {
     }
 
     private List<AnchorLayout.Frame> composedFrames() {
-        JsonObject template = resource("assets/anchorui_test/lore/widgets/hud_header.json");
+        JsonObject template = resource("assets/anchorui_test/anchorui/widgets/hud_header.json");
         Map<String, JsonObject> definitions = Map.of("anchorui_test:hud_header", template);
-        JsonObject hudA = resource("assets/anchorui/lore/hud/hud1.json");
-        JsonObject hudB = resource("assets/anchorui_test/lore/hud/hud1_extra.json");
+        JsonObject hudA = resource("assets/anchorui/anchorui/hud/hud1.json");
+        JsonObject hudB = resource("assets/anchorui_test/anchorui/hud/hud1_extra.json");
         assertTrue(hudA.get("testOnly").getAsBoolean());
         assertTrue(hudB.get("testOnly").getAsBoolean());
 
@@ -93,8 +93,8 @@ public class HudCompositionTest {
 
     @Test
     public void importedTemplateAndRefOverrideRemainIndependent() {
-        JsonObject hud = resource("assets/anchorui_test/lore/hud/hud1_extra.json");
-        JsonObject template = resource("assets/anchorui_test/lore/widgets/hud_header.json");
+        JsonObject hud = resource("assets/anchorui_test/anchorui/hud/hud1_extra.json");
+        JsonObject template = resource("assets/anchorui_test/anchorui/widgets/hud_header.json");
         JsonObject expanded = WidgetDocumentResolver.resolve(hud, "anchorui_test", Map.of("anchorui_test:hud_header", template));
         JsonObject reference = expanded.getAsJsonArray("entities").get(2).getAsJsonObject();
         assertEquals("anchorui:text", reference.get("type").getAsString());

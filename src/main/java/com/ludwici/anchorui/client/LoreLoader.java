@@ -31,7 +31,7 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
     }
 
     private LoreLoader() {
-        super(GSON, "lore");
+        super(GSON, "anchorui");
     }
 
     @Override

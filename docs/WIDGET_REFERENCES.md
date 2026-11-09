@@ -14,7 +14,7 @@ Anchor UI identifies a **widget factory** by `type` and an individual **widget i
 
 ## ID resolution
 
-- `"id": "header"` in an `assets/my_mod/lore/...json` screen becomes `my_mod:header`.
+- `"id": "header"` in an `assets/my_mod/anchorui/...json` screen becomes `my_mod:header`.
 - `"relativeTo": "footer"` in that screen refers to `my_mod:footer`.
 - `"id": "othermod:header"` or `"relativeTo": "othermod:header"` keeps that namespace.
 - `"relativeTo": "screen"` references the current screen and is always available.
@@ -25,7 +25,7 @@ All IDs are validated and duplicate fully qualified IDs in one screen are reject
 
 Mod A exports a widget definition in its resource directory:
 
-**`assets/moda/lore/widgets/header.json`**
+**`assets/moda/anchorui/widgets/header.json`**
 
 ```json
 {
@@ -49,7 +49,7 @@ Its globally registered definition ID is **`moda:header`**, derived from the res
 
 ## Import that widget in another mod
 
-Mod B creates a screen in **`assets/modb/lore/my_screen.json`**:
+Mod B creates a screen in **`assets/modb/anchorui/my_screen.json`**:
 
 ```json
 {
@@ -109,4 +109,4 @@ This separation matters: a widget in one open screen cannot anchor to a widget v
 
 ## Test
 
-Run `/anchorui test scene14`. The scene includes an exported template under `assets/anchorui_test/lore/widgets/`, a screen-local widget anchored to it, and a customized counter created with `ref`. Press **G** to inspect IDs and click the counter to check interaction.
+Run `/anchorui test scene14`. The scene includes an exported template under `assets/anchorui_test/anchorui/widgets/`, a screen-local widget anchored to it, and a customized counter created with `ref`. Press **G** to inspect IDs and click the counter to check interaction.

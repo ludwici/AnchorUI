@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestSceneLayoutTest {
     private JsonObject resource(int number) {
-        String path = "assets/anchorui/lore/test/scenes/scene" + number + ".json";
+        String path = "assets/anchorui/anchorui/test/scenes/scene" + number + ".json";
         var stream = getClass().getClassLoader().getResourceAsStream(path);
         assertNotNull(stream, "Missing bundled test scene: " + path);
         try (var reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {

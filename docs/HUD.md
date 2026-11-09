@@ -7,8 +7,8 @@ Anchor UI supports mod-contributed HUD elements in Minecraft **1.21.1 NeoForge**
 Provide one or more files under:
 
 ```text
-src/main/resources/assets/mymod/lore/hud/status.json
-src/main/resources/assets/mymod/lore/hud/progress.json
+src/main/resources/assets/mymod/anchorui/hud/status.json
+src/main/resources/assets/mymod/anchorui/hud/progress.json
 ```
 
 Each JSON document has the same `entities` and `imports` structure as a screen. Unlike item-lore screens, **all regular HUD documents from all mods are composed into one shared in-game HUD**, allowing cross-file and cross-mod anchors.
@@ -46,7 +46,7 @@ The `mymod:status` widget becomes part of the HUD automatically when the resourc
 
 ## Cross-mod HUD anchors
 
-Suppose Mod A defines `moda:health` in `assets/moda/lore/hud/health.json`. Mod B can place a widget below it in `assets/modb/lore/hud/mana.json`:
+Suppose Mod A defines `moda:health` in `assets/moda/anchorui/hud/health.json`. Mod B can place a widget below it in `assets/modb/anchorui/hud/mana.json`:
 
 ```json
 {
@@ -69,7 +69,7 @@ Suppose Mod A defines `moda:health` in `assets/moda/lore/hud/health.json`. Mod B
 
 The layout solver resolves both widgets together regardless of which HUD document was loaded first. If `moda:health` is unavailable, the anchor falls back to `screen` with a warning, as it does in ordinary screens. Fully qualified widget IDs must be unique across the assembled HUD.
 
-An exported `assets/<namespace>/lore/widgets/<name>.json` definition can also be included in a HUD using `imports` or instantiated using `ref` and local overrides. Reusable definitions are only instantiated where explicitly referenced; other mods do not populate your HUD automatically.
+An exported `assets/<namespace>/anchorui/widgets/<name>.json` definition can also be included in a HUD using `imports` or instantiated using `ref` and local overrides. Reusable definitions are only instantiated where explicitly referenced; other mods do not populate your HUD automatically.
 
 ## Lifecycle and input behavior
 
@@ -106,9 +106,9 @@ The built-in preview contains:
 Test resources are located at:
 
 ```text
-assets/anchorui/lore/hud/hud1.json
-assets/anchorui_test/lore/hud/hud1_extra.json
-assets/anchorui_test/lore/widgets/hud_header.json
+assets/anchorui/anchorui/hud/hud1.json
+assets/anchorui_test/anchorui/hud/hud1_extra.json
+assets/anchorui_test/anchorui/widgets/hud_header.json
 ```
 
 Preview state is a local session setting, not a saved player preference. Resource packs can customize or replace the test JSON files during development.

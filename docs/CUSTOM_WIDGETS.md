@@ -118,7 +118,7 @@ Anchor UI автоматически выставляет координаты, 
 
 Тип (например, `anchorui:text`) описывает фабрику, а `id` (например, `othermod:header`) — конкретный элемент на экране. Они имеют независимые пространства имён. Неуточнённые значения `id` и `position.relativeTo` получают неймспейс ресурса экрана; `relativeTo: "screen"` остаётся специальным значением.
 
-Подключаемые виджеты другого мода должны быть опубликованы как шаблоны в `assets/<namespace>/lore/widgets/<name>.json`. В своём документе можно использовать `"imports": ["othermod:header"]` и после этого указывать `"relativeTo": "othermod:header"`. Альтернативно, в `entities` доступен `"ref": "othermod:header"` с локальными переопределениями, в том числе с новым `id`.
+Подключаемые виджеты другого мода должны быть опубликованы как шаблоны в `assets/<namespace>/anchorui/widgets/<name>.json`. В своём документе можно использовать `"imports": ["othermod:header"]` и после этого указывать `"relativeTo": "othermod:header"`. Альтернативно, в `entities` доступен `"ref": "othermod:header"` с локальными переопределениями, в том числе с новым `id`.
 
 Anchor UI загружает все описания и регистрирует их перед созданием экранов. Затем он собирает все определения элементов текущего экрана, вызывает фабрики и разрешает якоря. `WidgetContext.widgets()` позволяет найти объявление по полному ID с помощью `definition(id)` или уже созданный виджет через `widget(id)`. Во время вызова фабрики остальные экземпляры ещё могут отсутствовать, но все объявления уже зарегистрированы.
 
@@ -128,7 +128,7 @@ Anchor UI загружает все описания и регистрирует
 
 ## 8. HUD widget factories
 
-Anchor UI's single NeoForge HUD layer invokes the **same** `WidgetFactory` and `ConfiguredWidgetFactory<T>` registrations used by `ItemLoreScreen`. HUD JSON lives under `assets/<namespace>/lore/hud/<name>.json` and can use `imports`, `ref`, namespaced `id` and `position.relativeTo`. All HUD documents contributed by mods are composed into one layout.
+Anchor UI's single NeoForge HUD layer invokes the **same** `WidgetFactory` and `ConfiguredWidgetFactory<T>` registrations used by `ItemLoreScreen`. HUD JSON lives under `assets/<namespace>/anchorui/hud/<name>.json` and can use `imports`, `ref`, namespaced `id` and `position.relativeTo`. All HUD documents contributed by mods are composed into one layout.
 
 When called from a HUD, `WidgetContext.screen()` returns `null` because no normal `Screen` is open. Factories should rely on `context.minecraft()`, `context.font()`, `context.widgets()`, etc., and handle the nullable screen properly. The HUD supplies an empty `ItemStack` as the default item; an `anchorui:model` widget can specify `path` to display a particular item.
 

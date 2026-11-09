@@ -10,7 +10,7 @@
 4. Кнопки со стрелками переключают сцены. **G** включает и отключает контуры, ID элементов и центральные направляющие. **Esc** закрывает экран.
 5. В `scene5` измени размер окна или значение «Масштаб интерфейса» в настройках Minecraft.
 
-JSON-файлы находятся в `src/main/resources/assets/anchorui/lore/test/scenes/`. После изменений ресурсов используй **F3+T**.
+JSON-файлы находятся в `src/main/resources/assets/anchorui/anchorui/test/scenes/`. После изменений ресурсов используй **F3+T**.
 
 ## Проверки
 
@@ -119,7 +119,7 @@ GitHub Actions запускает `gradle build`, включая JUnit-тест�
 
 Открой `/anchorui test scene14`. Эта сцена загружает определения из другого пространства имён, `anchorui_test`:
 
-- `assets/anchorui_test/lore/widgets/foreign_header.json` экспортирует `anchorui_test:foreign_header`. Экран явно добавляет его через `imports`.
+- `assets/anchorui_test/anchorui/widgets/foreign_header.json` экспортирует `anchorui_test:foreign_header`. Экран явно добавляет его через `imports`.
 - Собственный элемент `anchorui:explanation` ссылается на `anchorui_test:foreign_header` через `relativeTo`.
 - Определение `anchorui_test:foreign_counter` используется через `ref`, но создаётся с локальным ID `anchorui:local_counter` и своими значениями `initial: 12`, `step: 3`.
 
@@ -137,7 +137,7 @@ Test HUDs render directly on top of the Minecraft world and do not open a `Scree
 6. Use `/anchorui test hud1 off` to disable the preview. Check that these test-only widgets remain hidden after restarting with the preview off.
 7. With the HUD visible, press F3+T to reload resources. The renderer should rebuild from the new loaded JSON without multiplying the displayed widgets.
 
-The preview is assembled from `assets/anchorui/lore/hud/hud1.json`, `assets/anchorui_test/lore/hud/hud1_extra.json`, and the exported `anchorui_test:hud_header` template at `assets/anchorui_test/lore/widgets/hud_header.json`.
+The preview is assembled from `assets/anchorui/anchorui/hud/hud1.json`, `assets/anchorui_test/anchorui/hud/hud1_extra.json`, and the exported `anchorui_test:hud_header` template at `assets/anchorui_test/anchorui/widgets/hud_header.json`.
 
 JUnit checks cross-namespace layout, template overrides and bottom-right anchor positioning at different screen resolutions. A successful build verifies compilation and these data/layout tests; the in-game rendering still needs a manual visual check.
 

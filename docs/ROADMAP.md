@@ -15,7 +15,7 @@ Anchor UI should let Minecraft modpack creators build useful HUDs and game scree
 
 ## Architecture guardrails
 
-- Preserve compatibility with existing `assets/<namespace>/lore/` resources.
+- Preserve compatibility with existing `assets/<namespace>/anchorui/` resources.
 - Keep JSON declarative and avoid arbitrary script execution.
 - Reuse the same widget registry, layout system and validation for HUD and screens.
 - Prefer event-driven changes to dynamic values; avoid recreating every widget per frame.

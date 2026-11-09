@@ -42,15 +42,15 @@ resourcepacks/
                 └── style/
 ```
 
-Enable the pack in Minecraft's Resource Packs menu. Anchor UI already reads JSON from `assets/<namespace>/lore/` through the client resource reload listener, including resources provided by other mods or enabled resource packs. Resource packs also carry textures and can be reloaded with F3+T.
+Enable the pack in Minecraft's Resource Packs menu. Anchor UI already reads JSON from `assets/<namespace>/anchorui/` through the client resource reload listener, including resources provided by other mods or enabled resource packs. Resource packs also carry textures and can be reloaded with F3+T.
 
 **Root directory naming:** the formerly reserved top-level `lore/` directory is now named `anchorui/` in the code. It is reserved for a possible standalone external JSON loader, but the current implementation does not load JSON from that folder. Anchor UI no longer creates the empty directory automatically on startup. No migration, rename check or old-directory scan is performed.
 
-Do not confuse the future optional game-root `anchorui/` directory with the existing `assets/<namespace>/lore/` path inside resource packs. The latter remains unchanged for compatibility with existing screens, HUD documents, templates, tests, and styles.
+Do not confuse the future optional game-root `anchorui/` directory with the existing `assets/<namespace>/anchorui/` path inside resource packs. The latter remains unchanged for compatibility with existing screens, HUD documents, templates, tests, and styles.
 
 ## Resource packs
 
-The bundled demo uses `assets/anchorui/lore/test/block.json` and `assets/anchorui/lore/test/anchors.json`. Layout styles live at `assets/<namespace>/lore/style/<name>.json` and are selected through `"style": "namespace:style/name"` (or `namespace:name`). Styles provide per-type `position`, `size`, `padding`, `text.color` and `background.color`. An element can override these settings, including individual fields nested inside objects.
+The bundled demo uses `assets/anchorui/anchorui/test/block.json` and `assets/anchorui/anchorui/test/anchors.json`. Layout styles live at `assets/<namespace>/anchorui/style/<name>.json` and are selected through `"style": "namespace:style/name"` (or `namespace:name`). Styles provide per-type `position`, `size`, `padding`, `text.color` and `background.color`. An element can override these settings, including individual fields nested inside objects.
 
 Two input formats are supported:
 
@@ -72,7 +72,7 @@ Java 21 and NeoForge 21.1 are required. Run `./gradlew build`; GitHub Actions ch
 
 Use `/anchorui test list` or `/anchorui test scene1` in-game to open the built-in client-only test harness. Fourteen scenes exercise anchors, relative chains, dimensions, styling, rich text, item model input, resizing, hidden frames, invalid references, and vanilla StringWidget text alignment and ellipsis. Navigate with the on-screen arrows; press **G** to toggle anchor outlines and **Esc** to close.
 
-See [docs/TEST_SCENES.md](docs/TEST_SCENES.md) for each command and expected result. The scenes are JSON resources under `assets/anchorui/lore/test/scenes`, so they use the same rendering path as ordinary lore screens.
+See [docs/TEST_SCENES.md](docs/TEST_SCENES.md) for each command and expected result. The scenes are JSON resources under `assets/anchorui/anchorui/test/scenes`, so they use the same rendering path as ordinary lore screens.
 
 ## Text widgets
 
@@ -109,9 +109,9 @@ Bad configuration is reported as a `WARN` with the widget type and ID; the probl
 
 ## Namespaced widget IDs and cross-mod references
 
-Widget `id` and `position.relativeTo` now accept `namespace:path`. Unqualified IDs are scoped to the **namespace of the screen resource** (for example, `"id": "header"` inside `assets/my_mod/lore/...` resolves to `my_mod:header`). `"relativeTo": "screen"` remains a special built-in target.
+Widget `id` and `position.relativeTo` now accept `namespace:path`. Unqualified IDs are scoped to the **namespace of the screen resource** (for example, `"id": "header"` inside `assets/my_mod/anchorui/...` resolves to `my_mod:header`). `"relativeTo": "screen"` remains a special built-in target.
 
-Anchor UI loads reusable widget definitions from **`assets/<namespace>/lore/widgets/<name>.json`** into a reload-safe catalog before it expands screen documents. The definition file's path determines its ID: `assets/librarymod/lore/widgets/header.json` exports `librarymod:header`. Other mods may opt into this definition using a screen's `"imports": ["librarymod:header"]` or `{"ref": "librarymod:header", "id": "consumer:copied_header"}` inside `entities`. `ref` supports deep-merging local JSON overrides.
+Anchor UI loads reusable widget definitions from **`assets/<namespace>/anchorui/widgets/<name>.json`** into a reload-safe catalog before it expands screen documents. The definition file's path determines its ID: `assets/librarymod/anchorui/widgets/header.json` exports `librarymod:header`. Other mods may opt into this definition using a screen's `"imports": ["librarymod:header"]` or `{"ref": "librarymod:header", "id": "consumer:copied_header"}` inside `entities`. `ref` supports deep-merging local JSON overrides.
 
 Within a screen, Anchor UI first declares all widget IDs in a per-screen `WidgetInstanceRegistry`, then creates them using the registered factories, applies styles and dimensions, and finally resolves all anchor relationships. Factories can inspect `context.widgets().definition(qualifiedId)`, and completed instances are exposed by `context.widgets().widget(qualifiedId)`. The registry is scoped to the currently open screen; importing is explicit, so unrelated widgets from other screens are not instantiated automatically.
 
@@ -119,7 +119,7 @@ See [Widget Namespaces and Imports](docs/WIDGET_REFERENCES.md) and test `/anchor
 
 ## In-game HUD support (NeoForge 1.21.1)
 
-Anchor UI also renders **in-game HUD documents** via a single NeoForge `RegisterGuiLayersEvent` layer ordered above vanilla chat. Add JSON files to `assets/<namespace>/lore/hud/<name>.json`. All non-test HUD documents are collected from loaded resource packs and mods, and their widgets are positioned in one shared `AnchorLayout`—including cross-mod `relativeTo` references, `imports` and `ref` templates. Widgets use the same registered factories and styles as regular screens.
+Anchor UI also renders **in-game HUD documents** via a single NeoForge `RegisterGuiLayersEvent` layer ordered above vanilla chat. Add JSON files to `assets/<namespace>/anchorui/hud/<name>.json`. All non-test HUD documents are collected from loaded resource packs and mods, and their widgets are positioned in one shared `AnchorLayout`—including cross-mod `relativeTo` references, `imports` and `ref` templates. Widgets use the same registered factories and styles as regular screens.
 
 The HUD is rendered without an open `Screen`. A HUD factory receives `WidgetContext.screen() == null` and should not depend on screen-only functions. HUD widgets are currently **display-only**: mouse/key interactions (including vanilla `Button` clicks) are reserved for future HUD editor work. F1 hides the HUD, and HUD rendering is suppressed when a normal game screen is open. Layout and widget instances are rebuilt when the GUI size, world or loaded resources change; they are not recreated every frame.
 

@@ -55,10 +55,10 @@ public class WidgetDocumentResolverTest {
 
     @Test
     public void resolvesCrossNamespaceTemplatesRegardlessOfRegistrationOrder() {
-        JsonObject document = resource("assets/anchorui/lore/test/scenes/scene14.json");
+        JsonObject document = resource("assets/anchorui/anchorui/test/scenes/scene14.json");
         Map<String, JsonObject> definitions = new LinkedHashMap<>();
-        definitions.put("anchorui_test:foreign_counter", resource("assets/anchorui_test/lore/widgets/foreign_counter.json"));
-        definitions.put("anchorui_test:foreign_header", resource("assets/anchorui_test/lore/widgets/foreign_header.json"));
+        definitions.put("anchorui_test:foreign_counter", resource("assets/anchorui_test/anchorui/widgets/foreign_counter.json"));
+        definitions.put("anchorui_test:foreign_header", resource("assets/anchorui_test/anchorui/widgets/foreign_header.json"));
         JsonObject expanded = WidgetDocumentResolver.resolve(document, "anchorui", definitions);
         var elements = expanded.getAsJsonArray("entities");
         assertEquals(4, elements.size());
@@ -100,10 +100,10 @@ public class WidgetDocumentResolverTest {
     @Test
     public void importedWidgetsCanAnchorAcrossNamespacesAndIgnoreJsonOrder() {
         Map<String, JsonObject> templates = Map.of(
-                "anchorui_test:foreign_header", resource("assets/anchorui_test/lore/widgets/foreign_header.json"),
-                "anchorui_test:foreign_counter", resource("assets/anchorui_test/lore/widgets/foreign_counter.json")
+                "anchorui_test:foreign_header", resource("assets/anchorui_test/anchorui/widgets/foreign_header.json"),
+                "anchorui_test:foreign_counter", resource("assets/anchorui_test/anchorui/widgets/foreign_counter.json")
         );
-        JsonObject expanded = WidgetDocumentResolver.resolve(resource("assets/anchorui/lore/test/scenes/scene14.json"), "anchorui", templates);
+        JsonObject expanded = WidgetDocumentResolver.resolve(resource("assets/anchorui/anchorui/test/scenes/scene14.json"), "anchorui", templates);
         List<AnchorLayout.Frame> frames = new ArrayList<>();
         for (var entry : expanded.getAsJsonArray("entities")) {
             JsonObject widget = entry.getAsJsonObject();

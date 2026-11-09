@@ -4,6 +4,7 @@ import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.KeyRegistry;
 import com.ludwici.anchorui.api.LoreEntity;
 import com.ludwici.anchorui.client.LoreLoader;
+import com.ludwici.anchorui.client.ScreenIds;
 import com.ludwici.anchorui.client.hud.AnchorHudManager;
 import com.ludwici.anchorui.client.hud.AnchorHudEditorScreen;
 import com.ludwici.anchorui.client.gui.ItemLoreScreen;
@@ -48,11 +49,11 @@ public final class AnchorUITestCommands {
                 .then(Commands.literal("edit").executes(context -> queueHudEditor()));
         var screens = Commands.literal("screen")
                 .then(Commands.literal("open")
-                        .then(Commands.argument("id", StringArgumentType.word())
+                        .then(Commands.argument("id", StringArgumentType.greedyString())
                                 .suggests((context, builder) -> {
                                     LoreLoader.INSTANCE.getData().keySet().stream()
                                             .filter(id -> id.getPath().startsWith("screens/"))
-                                            .map(ResourceLocation::toString).sorted().forEach(builder::suggest);
+                                            .map(ScreenIds::display).sorted().forEach(builder::suggest);
                                     return builder.buildFuture();
                                 })
                                 .executes(context -> queueScreen(StringArgumentType.getString(context, "id")))));
@@ -69,11 +70,11 @@ public final class AnchorUITestCommands {
     }
 
     private static int queueScreen(String rawId) {
-        ResourceLocation id = ResourceLocation.tryParse(rawId);
-        if (id == null || !rawId.contains(":") || !id.getPath().startsWith("screens/")) {
+        ResourceLocation id = ScreenIds.resolve(rawId);
+        if (id == null) {
             var player = Minecraft.getInstance().player;
             if (player != null) {
-                player.displayClientMessage(Component.literal("Anchor UI: screen id must be namespace:screens/name"), false);
+                player.displayClientMessage(Component.literal("Anchor UI: screen id must be namespace:name"), false);
             }
             return 0;
         }

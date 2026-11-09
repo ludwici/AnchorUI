@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.api.action.UiActionRegistry;
 import com.ludwici.anchorui.client.LoreLoader;
+import com.ludwici.anchorui.client.ScreenIds;
 import com.ludwici.anchorui.client.gui.ItemLoreScreen;
 import net.minecraft.resources.ResourceLocation;
 
@@ -18,9 +19,9 @@ public final class ClientUiActions {
                 throw new IllegalArgumentException("open_screen requires a string 'screen' resource id");
             }
             String rawId = screen.getAsString();
-            ResourceLocation id = ResourceLocation.tryParse(rawId);
-            if (id == null || !rawId.contains(":") || !id.getPath().startsWith("screens/")) {
-                throw new IllegalArgumentException("open_screen requires namespace:screens/name");
+            ResourceLocation id = ScreenIds.resolve(rawId);
+            if (id == null) {
+                throw new IllegalArgumentException("open_screen requires namespace:name");
             }
             return () -> {
                 if (context.screen() == null || context.minecraft().screen != context.screen()) {

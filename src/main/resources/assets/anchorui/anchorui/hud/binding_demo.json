@@ -1,0 +1,167 @@
+{
+  "testOnly": true,
+  "testGroup": "binding",
+  "style": "anchorui:style/default",
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:binding_title",
+      "text": "<b>DATA BINDINGS</b>",
+      "position": {
+        "point": "TOPRIGHT",
+        "anchor": "TOPRIGHT",
+        "relativeTo": "screen",
+        "x": -22,
+        "y": 47
+      },
+      "size": {
+        "width": 225,
+        "height": 20
+      },
+      "background": {
+        "color": "D02A415B"
+      },
+      "align": "center",
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:binding_greeting",
+      "text": "Player: {{anchorui:player.name}} | Lv {{anchorui:player.level}}",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "BOTTOMLEFT",
+        "relativeTo": "anchorui:binding_title",
+        "x": 0,
+        "y": 2
+      },
+      "size": {
+        "width": 225,
+        "height": 24
+      },
+      "background": {
+        "color": "BB263447"
+      },
+      "align": "center",
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:binding_dimension",
+      "text": {
+        "bind": "anchorui:world.dimension",
+        "fallback": "unknown dimension"
+      },
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "BOTTOMLEFT",
+        "relativeTo": "anchorui:binding_greeting",
+        "x": 0,
+        "y": 2
+      },
+      "size": {
+        "width": 225,
+        "height": 20
+      },
+      "align": "center",
+      "background": {
+        "color": "BB263447"
+      },
+      "color": "#BCE3F2"
+    },
+    {
+      "type": "anchorui:progress",
+      "id": "anchorui:binding_profile_health",
+      "value": {
+        "bind": "anchorui:player.profile",
+        "path": "health",
+        "fallback": 0
+      },
+      "max": {
+        "bind": "anchorui:player.profile",
+        "path": "maxHealth",
+        "fallback": 20
+      },
+      "showText": true,
+      "fillColor": "#C94C59",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "BOTTOMLEFT",
+        "relativeTo": "anchorui:binding_dimension",
+        "x": 0,
+        "y": 3
+      },
+      "size": {
+        "width": 225,
+        "height": 17
+      },
+      "padding": {
+        "left": 1,
+        "right": 1,
+        "top": 1,
+        "bottom": 1
+      },
+      "background": {
+        "color": "BB29323B"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:binding_sneak",
+      "text": "<b>SNEAKING</b> — boolean visibleWhen",
+      "visibleWhen": {
+        "bind": "anchorui:player.sneaking",
+        "fallback": false
+      },
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "BOTTOMLEFT",
+        "relativeTo": "anchorui:binding_profile_health",
+        "x": 0,
+        "y": 3
+      },
+      "size": {
+        "width": 225,
+        "height": 20
+      },
+      "background": {
+        "color": "DD466F48"
+      },
+      "align": "center",
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:data_list",
+      "id": "anchorui:binding_effects",
+      "items": {
+        "bind": "anchorui:player.effects",
+        "fallback": []
+      },
+      "itemPath": "name",
+      "emptyText": "No active effects",
+      "maxEntries": 8,
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "BOTTOMLEFT",
+        "relativeTo": "anchorui:binding_sneak",
+        "x": 0,
+        "y": 4
+      },
+      "size": {
+        "width": 225,
+        "height": 55
+      },
+      "background": {
+        "color": "C0283C4B"
+      },
+      "color": "#FFFFFF",
+      "padding": {
+        "left": 6,
+        "right": 6,
+        "top": 4,
+        "bottom": 4
+      }
+    }
+  ]
+}

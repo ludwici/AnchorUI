@@ -38,6 +38,7 @@ public final class AnchorUITestCommands {
 
         registerHudTest(test, "hud1");
         registerHudTest(test, "rpg");
+        registerHudTest(test, "binding");
 
         for (TestScene scene : TestScene.values()) {
             test.then(Commands.literal(scene.id()).executes(context -> queueScene(scene)));
@@ -122,7 +123,7 @@ public final class AnchorUITestCommands {
     private static int listScenes() {
         var player = Minecraft.getInstance().player;
         if (player != null) {
-            player.displayClientMessage(Component.literal("Anchor UI — /anchorui test <scene1..scene14>, hud1 or rpg"), false);
+            player.displayClientMessage(Component.literal("Anchor UI — /anchorui test <scene1..scene14>, hud1, rpg or binding"), false);
             for (TestScene scene : TestScene.values()) {
                 player.displayClientMessage(Component.literal("/anchorui test " + scene.id() + " — " + scene.title()), false);
             }

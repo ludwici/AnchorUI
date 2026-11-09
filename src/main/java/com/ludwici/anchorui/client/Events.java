@@ -3,6 +3,9 @@ package com.ludwici.anchorui.client;
 import com.ludwici.anchorui.api.WidgetTypeIds;
 import com.ludwici.anchorui.api.widget.AnchorWidgetRegistry;
 import com.ludwici.anchorui.client.gui.AnchoredTextWidget;
+import com.ludwici.anchorui.client.gui.BoundTextWidget;
+import com.ludwici.anchorui.client.gui.DataListWidget;
+import com.ludwici.anchorui.api.binding.BoundText;
 import com.ludwici.anchorui.client.gui.ItemLoreListWidget;
 import com.ludwici.anchorui.client.gui.ItemModelWidget;
 import com.ludwici.anchorui.client.gui.ProgressWidget;
@@ -32,7 +35,11 @@ public class Events {
             ClientUiActions.register();
             AnchorWidgetRegistry.register(WidgetTypeIds.BUTTON, JsonActionButton::create);
             AnchorWidgetRegistry.register(WidgetTypeIds.PROGRESS, (context, element, style) -> new ProgressWidget(context, element.settings, style));
-            AnchorWidgetRegistry.register(WidgetTypeIds.TEXT, (context, element, style) -> new AnchoredTextWidget(element.text, context.font(), style));
+            AnchorWidgetRegistry.register(WidgetTypeIds.DATA_LIST, (context, element, style) -> new DataListWidget(context, element.settings, style));
+            AnchorWidgetRegistry.register(WidgetTypeIds.TEXT, (context, element, style) -> {
+                BoundText binding = BoundText.parse(element.settings.get("text"));
+                return binding.isDynamic() ? new BoundTextWidget(context, binding, style) : new AnchoredTextWidget(element.text, context.font(), style);
+            });
             AnchorWidgetRegistry.register(WidgetTypeIds.MODEL, (context, element, style) -> new ItemModelWidget(context.resolveItem(element.path), element.scale, style));
             AnchorWidgetRegistry.register(WidgetTypeIds.LIST, (context, element, style) -> new ItemLoreListWidget(element.lore.isEmpty() ? context.entity().components : element.lore, context.font(), style));
             TestWidgetRegistration.register();

@@ -54,7 +54,7 @@ public class LoreEntity {
         public UiElement(JsonObject root) {
             type = WidgetTypeIds.parse(GsonHelper.getAsString(root, "type"));
             id = GsonHelper.getAsString(root, "id", "");
-            text = GsonHelper.getAsString(root, "text", "");
+            text = root.has("text") && root.get("text").isJsonPrimitive() && root.get("text").getAsJsonPrimitive().isString() ? root.get("text").getAsString() : "";
             path = GsonHelper.getAsString(root, "path", "");
             scale = GsonHelper.getAsFloat(root, "scale", 1.0F);
             settings = root.deepCopy();

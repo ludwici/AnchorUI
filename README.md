@@ -136,3 +136,13 @@ The editor persists client-specific position, anchor and visibility overrides by
 See [HUD editor and persistence](docs/HUD.md#hud-editor).
 
 The bundled HUD preview uses zero offsets between adjacent widgets, so their boundaries touch. Previously saved per-widget offsets can be cleared with **Reset** or **Reset all** in the editor.
+
+## Modpack authoring: dynamic data and dialogue screens
+
+**No Java mod required for UI configuration.** Create and enable a Minecraft 1.21.1 resource pack with `pack.mcmeta` and JSON under `assets/<namespace>/anchorui/`. The standard resource pack format for Minecraft 1.21.1 is `34`.
+
+The new built-in `anchorui:progress` widget supports numeric data bindings. A value may be a literal number or a `{"bind": "anchorui:player.health", "fallback": 0}` reference to a registered provider. Built-in client sources currently include `anchorui:player.health`, `anchorui:player.max_health`, `anchorui:player.food`, `anchorui:player.experience` and `anchorui:player.level`. Other mods can register numeric providers using `NumericDataRegistry.register`.
+
+For dialogue-style screens, `anchorui:button` accepts `onClick` actions. Currently allowed bundled actions are `anchorui:open_screen` and `anchorui:close_screen`. Open a resource-pack screen directly using `/anchorui screen open namespace:screens/name`. HUD widgets remain display-only; clickable buttons only work in normal `Screen` interfaces.
+
+The repo includes a **ready-to-copy resource pack** at [examples/resourcepack/AnchorUI-Starter](examples/resourcepack/AnchorUI-Starter). It contains a live RPG HUD and a two-page dialogue. See [Modpack Authoring Guide](docs/MODPACK_AUTHORING.md) for paths, JSON examples, installation and current safety limits. Quest actions and rewards will be connected through server-authorized data/actions in a later milestone.

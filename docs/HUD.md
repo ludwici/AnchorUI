@@ -218,3 +218,24 @@ User overrides in `config/anchorui/hud-layout.json` are applied in addition to r
 - Resize the game or change GUI Scale while HUD is visible to check anchor reflow.
 
 - In the editor, move a widget vertically to create `user offset: 0, 63`, scroll to that row and press its right-hand **R**. Verify the offset becomes `0, 0` without resetting its parent, attachment points or visibility. Reset parent, point, anchor and visibility individually and verify the other user overrides remain intact.
+
+## First dynamic HUD widget: `anchorui:progress`
+
+A resource pack author can now display a live health bar, hunger bar or other numeric meter without writing Java code. The built-in `anchorui:progress` uses the same size, padding, background, color and anchor fields as other widgets. The filled segment is set by `value / max` and clamped to the range 0–100%.
+
+```json
+{
+  "type": "anchorui:progress",
+  "id": "mypack:health",
+  "value": {"bind": "anchorui:player.health", "fallback": 0},
+  "max": {"bind": "anchorui:player.max_health", "fallback": 20},
+  "fillColor": "#D95565",
+  "showText": true,
+  "size": {"width": 180, "height": 16},
+  "background": {"color": "AA231E27"}
+}
+```
+
+Numeric values can also be literals, for example `"max": 20`. `fallback` is optional. The built-in data IDs are `anchorui:player.health`, `anchorui:player.max_health`, `anchorui:player.food`, `anchorui:player.experience` (0.0 to 1.0) and `anchorui:player.level`. Other mods can supply their own numeric providers.
+
+A bound progress bar reads the data when rendering but **does not recreate the widget or reparse the JSON every frame**. The bar is display-only on the gameplay HUD. For a visual test, use `/anchorui test hud1 on`, which also enables the bundled RPG status demo, or enable the standalone sample resource pack from `examples/resourcepack/AnchorUI-Starter`.

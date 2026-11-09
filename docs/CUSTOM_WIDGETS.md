@@ -135,3 +135,20 @@ When called from a HUD, `WidgetContext.screen()` returns `null` because no norma
 HUD widgets are currently visual only: the manager renders `AbstractWidget` with off-screen mouse coordinates, leaving click/hover/keyboard routing to the future HUD editor. Vanilla buttons can render but cannot be clicked on the ordinary game HUD.
 
 See [HUD.md](HUD.md).
+
+## 9. Numeric data bindings
+
+External mods may register numeric values for JSON-authored interfaces through `NumericDataRegistry`:
+
+```java
+NumericDataRegistry.register(
+    ResourceLocation.fromNamespaceAndPath("examplemod", "player.mana"),
+    context -> getClientManaValue(context.minecraft().player)
+);
+```
+
+Register during client setup before the HUD is created. The provider is a `NumericDataRegistry.Provider` and receives a `WidgetContext` at evaluation time. UI authors then use `{"bind": "examplemod:player.mana", "fallback": 0}` as a `value` or `max` in an `anchorui:progress` widget. Invalid or missing provider IDs reject the individual widget during creation; a non-finite runtime value or provider exception produces its declared fallback instead.
+
+The numeric registry is intentionally read-only from the JSON side. Client values are for display; any actions affecting server state must be implemented using a server-authorized integration. The initial implementation reads providers as part of widget rendering; no per-tick scanning or expensive JSON parsing is used.
+
+For normal `Screen` interfaces, a mod can also register custom action factories through `UiActionRegistry.register`. The bundled `anchorui:button` compiles its `onClick` object when the screen opens. Only explicitly registered actions can execute, with built-in support currently limited to `anchorui:open_screen` and `anchorui:close_screen`. No arbitrary shell commands or Java execution are enabled through JSON.

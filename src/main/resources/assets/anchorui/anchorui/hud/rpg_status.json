@@ -1,0 +1,85 @@
+{
+  "testOnly": true,
+  "style": "anchorui:style/default",
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:rpg_header",
+      "text": "<b>PLAYER STATUS</b>",
+      "position": {
+        "point": "BOTTOMLEFT",
+        "anchor": "BOTTOMLEFT",
+        "relativeTo": "screen",
+        "x": 18,
+        "y": -70
+      },
+      "size": {
+        "width": 180,
+        "height": 16
+      },
+      "align": "left",
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:progress",
+      "id": "anchorui:rpg_health",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "BOTTOMLEFT",
+        "relativeTo": "anchorui:rpg_header",
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "width": 180,
+        "height": 16
+      },
+      "padding": {
+        "left": 1,
+        "right": 1,
+        "top": 1,
+        "bottom": 1
+      },
+      "background": {
+        "color": "#AA231E27"
+      },
+      "fillColor": "#D95565",
+      "value": {
+        "bind": "anchorui:player.health",
+        "fallback": 0
+      },
+      "max": {
+        "bind": "anchorui:player.max_health",
+        "fallback": 20
+      },
+      "showText": true,
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:progress",
+      "id": "anchorui:rpg_food",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "BOTTOMLEFT",
+        "relativeTo": "anchorui:rpg_health",
+        "x": 0,
+        "y": 3
+      },
+      "size": {
+        "width": 180,
+        "height": 13
+      },
+      "background": {
+        "color": "#AA231E27"
+      },
+      "fillColor": "#D59D4A",
+      "value": {
+        "bind": "anchorui:player.food",
+        "fallback": 0
+      },
+      "max": 20,
+      "showText": true,
+      "color": "#FFFFFF"
+    }
+  ]
+}

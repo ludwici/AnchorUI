@@ -7,6 +7,7 @@ public final class WidgetTypeIds {
     public static final ResourceLocation TEXT = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "text");
     public static final ResourceLocation MODEL = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "model");
     public static final ResourceLocation LIST = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "list");
+    public static final ResourceLocation PROGRESS = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "progress");
 
     private WidgetTypeIds() {
     }

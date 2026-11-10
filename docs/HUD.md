@@ -183,6 +183,17 @@ The editor modifies client layout preferences only. It does not write into anoth
 
 
 
+### Magnetic alignment when dragging
+
+In the HUD editor (F8 or `/anchorui hud edit`), widgets now snap to nearby **visible** widgets while being dragged:
+
+- Snap threshold: **6 GUI pixels** independently for X and Y (based on the unsnapped cursor position).
+- Match left/top edges, right/bottom edges, centers, and opposite edges (to place two widgets immediately next to one another).
+- Cyan alignment guidelines appear only while snapping. Hold **Alt** while dragging for unrestricted pixel-precise placement.
+- Descendants anchored to the widget being dragged are ignored as snap targets, because they move together with their parent.
+- The magnet changes only the dragged widget's user offset; it does **not** silently change its `relativeTo`, `point`, or `anchor`.
+- Arrow-key nudging (1 px, or 10 px with Shift) stays precise and does not snap. Save/Cancel and the existing `hud-layout.json` format are unchanged.
+
 ### Movable, scrollable property inspector
 
 The editor's right-side panel has a narrow width (218 GUI pixels where space permits) and a smaller font for inspector text (83% scale). Drag the **panel's title bar** to reposition it. The panel's default height leaves the bottom-right corner of the game available for HUD selection. Panel position is a temporary UI state; widget layout changes are saved separately.

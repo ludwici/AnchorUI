@@ -16,6 +16,7 @@ public final class AnchorHudEditorScreen extends Screen {
     private static final int NORMAL_COLOR = 0xFF69D7D9;
     private static final int HIDDEN_COLOR = 0xFF9E9E9E;
     private static final int PARENT_COLOR = 0xFF8DF4AA;
+    private static final int SNAP_GUIDE_COLOR = 0xFF88F0D6;
     private static final int PANEL_WIDTH = 218;
     private static final int BUTTON_HEIGHT = 17;
     private static final int BUTTON_STEP = 20;
@@ -57,6 +58,8 @@ public final class AnchorHudEditorScreen extends Screen {
     private double dragStartY;
     private int startOffsetX;
     private int startOffsetY;
+    private HudSnap.Widget dragOrigin;
+    private HudSnap.Result snapResult;
     private int dragPanelX;
     private int dragPanelY;
     private Button resetButton;
@@ -75,6 +78,8 @@ public final class AnchorHudEditorScreen extends Screen {
         draggingWidget = false;
         draggingPanel = false;
         draggingScroll = false;
+        dragOrigin = null;
+        snapResult = null;
         controls.clear();
         if (!editorStarted) {
             manager.beginEditing();
@@ -241,6 +246,17 @@ public final class AnchorHudEditorScreen extends Screen {
             }
         }
 
+        if (draggingWidget && snapResult != null) {
+            Integer guideX = snapResult.guideX();
+            Integer guideY = snapResult.guideY();
+            if (guideX != null && guideX >= 0 && guideX < width) {
+                graphics.fill(guideX, 0, guideX + 1, height, SNAP_GUIDE_COLOR);
+            }
+            if (guideY != null && guideY >= 0 && guideY < height) {
+                graphics.fill(0, guideY, width, guideY + 1, SNAP_GUIDE_COLOR);
+            }
+        }
+
         if (selected != null && active == null) {
             selectWidget(null);
             choosingParent = false;
@@ -251,7 +267,7 @@ public final class AnchorHudEditorScreen extends Screen {
             graphics.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight, 0xE9121C29);
             graphics.fill(panelX, panelY, panelX + panelWidth, panelY + 20, 0xEE254057);
             graphics.drawString(font, "Anchor UI - HUD", panelX + 6, panelY + 6, 0xFFE5EEF5, false);
-            String hint = choosingParent ? "Select parent (empty = screen)" : "Drag header | Wheel: scroll | Tab: hide";
+            String hint = choosingParent ? "Select parent (empty = screen)" : "Snap: 6px | Alt: free move | Tab: hide";
             drawScaled(graphics, hint, panelX + 6, panelY + 22, 0xFFAAC1D4);
             renderInspector(graphics, active);
             graphics.fill(panelX + 3, actionsTop() - 3, panelX + panelWidth - 3, actionsTop() - 2, 0x88698DAB);
@@ -334,6 +350,7 @@ public final class AnchorHudEditorScreen extends Screen {
             appendLine(lines, "SELECT A WIDGET", 0xFFFFCF64);
             appendLine(lines, "Click any widget outline.", 0xFFE5EEF5);
             appendLine(lines, "Drag widgets to move.", 0xFFE5EEF5);
+            appendLine(lines, "Auto-align: 6 px (Alt: bypass)", 0xFFE5EEF5);
             appendLine(lines, "Arrows: 1 px / Shift: 10 px", 0xFFE5EEF5);
             appendLine(lines, "Ctrl+S: save / Esc: cancel", 0xFFE5EEF5);
         } else {
@@ -346,6 +363,7 @@ public final class AnchorHudEditorScreen extends Screen {
             var bounds = active.bounds();
             appendLine(lines, "screen: " + bounds.x() + ", " + bounds.y(), 0xFFE5EEF5);
             appendLine(lines, "size: " + bounds.width() + " x " + bounds.height(), 0xFFE5EEF5);
+            appendLine(lines, "Magnet: 6 px | hold Alt to bypass", 0xFF96AEBE);
             appendEditableLine(lines, "user offset: " + active.offset().x() + ", " + active.offset().y(), AnchorHudManager.EditableProperty.OFFSET, active);
             appendEditableLine(lines, "visible: " + active.visible(), AnchorHudManager.EditableProperty.VISIBILITY, active);
             if (!active.id().equals(inspectedId)) {
@@ -467,6 +485,9 @@ public final class AnchorHudEditorScreen extends Screen {
             dragStartY = mouseY;
             startOffsetX = clicked.offset().x();
             startOffsetY = clicked.offset().y();
+            var bounds = clicked.bounds();
+            dragOrigin = new HudSnap.Widget(clicked.id(), clicked.relativeTo(), bounds.x(), bounds.y(), bounds.width(), bounds.height(), clicked.visible());
+            snapResult = null;
             draggingWidget = true;
             status = "";
             return true;
@@ -488,8 +509,20 @@ public final class AnchorHudEditorScreen extends Screen {
             scrollTo(mouseY);
             return true;
         }
-        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && draggingWidget && selected != null && !choosingParent) {
-            manager.setPreviewOffset(selected, startOffsetX + (int) Math.round(mouseX - dragStartX), startOffsetY + (int) Math.round(mouseY - dragStartY));
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && draggingWidget && selected != null && dragOrigin != null && !choosingParent) {
+            int desiredX = dragOrigin.x() + (int) Math.round(mouseX - dragStartX);
+            int desiredY = dragOrigin.y() + (int) Math.round(mouseY - dragStartY);
+            if (hasAltDown()) {
+                snapResult = new HudSnap.Result(desiredX, desiredY, null, null);
+            } else {
+                List<HudSnap.Widget> widgets = new ArrayList<>();
+                for (AnchorHudManager.HudHandle handle : manager.getHandles()) {
+                    var bounds = handle.bounds();
+                    widgets.add(new HudSnap.Widget(handle.id(), handle.relativeTo(), bounds.x(), bounds.y(), bounds.width(), bounds.height(), handle.visible()));
+                }
+                snapResult = HudSnap.snap(dragOrigin, desiredX, desiredY, widgets);
+            }
+            manager.setPreviewOffset(selected, startOffsetX + snapResult.x() - dragOrigin.x(), startOffsetY + snapResult.y() - dragOrigin.y());
             return true;
         }
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
@@ -501,6 +534,8 @@ public final class AnchorHudEditorScreen extends Screen {
             draggingWidget = false;
             draggingPanel = false;
             draggingScroll = false;
+            dragOrigin = null;
+            snapResult = null;
             return true;
         }
         return super.mouseReleased(mouseX, mouseY, button);

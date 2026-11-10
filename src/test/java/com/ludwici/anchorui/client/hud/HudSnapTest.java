@@ -20,8 +20,8 @@ public class HudSnapTest {
         var result = HudSnap.snap(moving, 96, 496, List.of(moving, other));
         assertEquals(100, result.x());
         assertEquals(500, result.y());
-        assertEquals(100, result.guideX());
-        assertEquals(500, result.guideY());
+        assertEquals(100, result.guideX().intValue());
+        assertEquals(500, result.guideY().intValue());
     }
 
     @Test
@@ -31,11 +31,11 @@ public class HudSnapTest {
 
         var center = HudSnap.snap(moving, 117, 100, List.of(moving, target));
         assertEquals(120, center.x());
-        assertEquals(140, center.guideX());
+        assertEquals(140, center.guideX().intValue());
 
         var right = HudSnap.snap(moving, 141, 100, List.of(moving, target));
         assertEquals(140, right.x());
-        assertEquals(180, right.guideX());
+        assertEquals(180, right.guideX().intValue());
     }
 
     @Test
@@ -46,8 +46,8 @@ public class HudSnapTest {
         var result = HudSnap.snap(moving, 147, 310, List.of(moving, target));
         assertEquals(150, result.x());
         assertEquals(310, result.y());
-        assertEquals(150, result.guideX());
-        assertNull(result.guideY());
+        assertEquals(150, result.guideX().intValue());
+        assertNull(result.guideY().intValue());
     }
 
     @Test
@@ -58,8 +58,8 @@ public class HudSnapTest {
         var result = HudSnap.snap(moving, 90, 310, List.of(moving, target));
         assertEquals(90, result.x());
         assertEquals(310, result.y());
-        assertNull(result.guideX());
-        assertNull(result.guideY());
+        assertNull(result.guideX().intValue());
+        assertNull(result.guideY().intValue());
     }
 
     @Test
@@ -72,8 +72,8 @@ public class HudSnapTest {
         var result = HudSnap.snap(moving, 103, 503, List.of(moving, child, grandchild, hidden));
         assertEquals(103, result.x());
         assertEquals(503, result.y());
-        assertNull(result.guideX());
-        assertNull(result.guideY());
+        assertNull(result.guideX().intValue());
+        assertNull(result.guideY().intValue());
     }
 
     @Test

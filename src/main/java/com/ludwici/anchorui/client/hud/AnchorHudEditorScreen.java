@@ -627,9 +627,10 @@ public final class AnchorHudEditorScreen extends Screen {
             inspectorScroll = 0;
             return;
         }
-        AnchorLayout.Bounds viewport = new AnchorLayout.Bounds(panelX + 4, top, panelWidth - 8, bottom - top);
-        if (inspectorScrollBar == null || !inspectorScrollBar.matches(viewport, maxInspectorScroll, 23, 1.0)) {
-            inspectorScrollBar = new NativeContainerScrollPanel(minecraft, viewport, maxInspectorScroll, 23, 1.0, inspectorScroll);
+        AnchorLayout.Bounds viewport = new AnchorLayout.Bounds(panelX + 4, top, panelWidth - 7, bottom - top);
+        if (inspectorScrollBar == null || !inspectorScrollBar.matches(viewport, maxInspectorScroll, 23, 1.0, NativeContainerScrollPanel.HUD_INSPECTOR)) {
+            inspectorScrollBar = new NativeContainerScrollPanel(minecraft, viewport, maxInspectorScroll, 23, 1.0,
+                    inspectorScroll, NativeContainerScrollPanel.HUD_INSPECTOR);
         }
         inspectorScroll = inspectorScrollBar.logicalOffset();
     }

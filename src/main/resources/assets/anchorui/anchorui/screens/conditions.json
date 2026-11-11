@@ -1,0 +1,183 @@
+{
+  "style": "anchorui:style/default",
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:condition_demo_title",
+      "text": "<b>CONDITIONS DEMO</b>",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -96
+      },
+      "size": {
+        "width": 310,
+        "height": 28
+      },
+      "align": "center",
+      "background": {
+        "color": "E02C4860"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:condition_demo_stats",
+      "text": "Level: {{anchorui:player.level}} | Sneak to unlock second button",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "anchorui:condition_demo_title",
+        "y": 8
+      },
+      "size": {
+        "width": 310,
+        "height": 26
+      },
+      "align": "center",
+      "background": {
+        "color": "D0233448"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:condition_level_notice",
+      "text": "Level 5+ and not sneaking: condition ALL + NOT",
+      "visibleWhen": {
+        "all": [
+          {
+            "left": {
+              "bind": "anchorui:player.profile",
+              "path": "level",
+              "fallback": 0
+            },
+            "op": "gte",
+            "right": 5
+          },
+          {
+            "not": {
+              "bind": "anchorui:player.sneaking",
+              "fallback": false
+            }
+          }
+        ]
+      },
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "anchorui:condition_demo_stats",
+        "y": 5
+      },
+      "size": {
+        "width": 310,
+        "height": 24
+      },
+      "align": "center",
+      "background": {
+        "color": "E0406E58"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:condition_level_button",
+      "text": "Requires level 5 (close)",
+      "enabledWhen": {
+        "left": {
+          "bind": "anchorui:player.level",
+          "fallback": 0
+        },
+        "op": "gte",
+        "right": 5
+      },
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "anchorui:condition_demo_stats",
+        "y": 36
+      },
+      "size": {
+        "width": 230,
+        "height": 22
+      },
+      "onClick": {
+        "type": "anchorui:close_screen"
+      }
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:condition_sneak_button",
+      "text": "Sneaking OR creative (close)",
+      "enabledWhen": {
+        "any": [
+          {
+            "bind": "anchorui:player.sneaking",
+            "fallback": false
+          },
+          {
+            "bind": "anchorui:player.creative",
+            "fallback": false
+          }
+        ]
+      },
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "anchorui:condition_level_button",
+        "y": 7
+      },
+      "size": {
+        "width": 230,
+        "height": 22
+      },
+      "onClick": {
+        "type": "anchorui:close_screen"
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:condition_no_effects",
+      "text": "No active status effects (list empty)",
+      "visibleWhen": {
+        "left": {
+          "bind": "anchorui:player.effects",
+          "fallback": []
+        },
+        "op": "empty"
+      },
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "anchorui:condition_sneak_button",
+        "y": 8
+      },
+      "size": {
+        "width": 280,
+        "height": 21
+      },
+      "align": "center",
+      "color": "#B4EAE3"
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:condition_demo_exit",
+      "text": "Close",
+      "position": {
+        "point": "TOP",
+        "anchor": "BOTTOM",
+        "relativeTo": "anchorui:condition_sneak_button",
+        "y": 34
+      },
+      "size": {
+        "width": 115,
+        "height": 20
+      },
+      "onClick": {
+        "type": "anchorui:close_screen"
+      }
+    }
+  ]
+}

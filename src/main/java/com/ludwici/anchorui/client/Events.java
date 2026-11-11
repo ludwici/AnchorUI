@@ -8,6 +8,8 @@ import com.ludwici.anchorui.client.gui.DataListWidget;
 import com.ludwici.anchorui.api.binding.BoundText;
 import com.ludwici.anchorui.client.gui.ItemLoreListWidget;
 import com.ludwici.anchorui.client.gui.ItemModelWidget;
+import com.ludwici.anchorui.client.gui.ImageWidget;
+import com.ludwici.anchorui.client.gui.PanelWidget;
 import com.ludwici.anchorui.client.gui.ProgressWidget;
 import com.ludwici.anchorui.client.binding.MinecraftDataSources;
 import com.ludwici.anchorui.client.action.ClientUiActions;
@@ -41,6 +43,9 @@ public class Events {
                 return binding.isDynamic() ? new BoundTextWidget(context, binding, style) : new AnchoredTextWidget(element.text, context.font(), style);
             });
             AnchorWidgetRegistry.register(WidgetTypeIds.MODEL, (context, element, style) -> new ItemModelWidget(context.resolveItem(element.path), element.scale, style));
+            AnchorWidgetRegistry.register(WidgetTypeIds.IMAGE, (context, element, style) -> new ImageWidget(context, element.settings, style));
+            AnchorWidgetRegistry.register(WidgetTypeIds.PANEL, (context, element, style) -> new PanelWidget(element.settings, style));
+            AnchorWidgetRegistry.register(WidgetTypeIds.CONTAINER, (context, element, style) -> new PanelWidget(element.settings, style));
             AnchorWidgetRegistry.register(WidgetTypeIds.LIST, (context, element, style) -> new ItemLoreListWidget(element.lore.isEmpty() ? context.entity().components : element.lore, context.font(), style));
             TestWidgetRegistration.register();
         });

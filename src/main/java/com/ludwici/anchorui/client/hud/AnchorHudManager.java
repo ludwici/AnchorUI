@@ -5,11 +5,14 @@ import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.api.LoreEntity;
 import com.ludwici.anchorui.api.binding.BoundBoolean;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
+import com.ludwici.anchorui.api.layout.ContainerLayout;
+import com.ludwici.anchorui.api.layout.ContainerScroll;
 import com.ludwici.anchorui.api.layout.WidgetContainers;
 import com.ludwici.anchorui.api.layout.WidgetTransforms;
 import com.ludwici.anchorui.api.style.LoreStyle;
 import com.ludwici.anchorui.api.style.ElementAnchor;
 import com.ludwici.anchorui.api.style.PositionElement;
+import com.ludwici.anchorui.api.style.PaddingElement;
 import com.ludwici.anchorui.api.widget.AnchorWidgetRegistry;
 import com.ludwici.anchorui.api.widget.WidgetConfigException;
 import com.ludwici.anchorui.api.widget.WidgetContext;
@@ -61,7 +64,7 @@ public final class AnchorHudManager {
     private record Description(String id, LoreEntity entity, LoreEntity.UiElement element) {
     }
 
-    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, boolean baseVisible, WidgetContext context, BoundBoolean visibleWhen, String containerParent, boolean clipChildren, WidgetTransforms.Group group) {
+    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, boolean baseVisible, WidgetContext context, BoundBoolean visibleWhen, String containerParent, boolean clipChildren, WidgetTransforms.Group group, ContainerLayout.AutoSize autoSize, ContainerScroll.Config scroll) {
         private PositionElement effectivePosition(HudLayoutOffsets offsets) {
             HudLayoutOffsets.Offset delta = offsets.get(id);
             HudLayoutOffsets.AnchorOverride anchor = offsets.anchor(id);
@@ -85,6 +88,11 @@ public final class AnchorHudManager {
     private final Map<String, Boolean> visibilityScratch = new HashMap<>();
     private Map<String, AnchorLayout.Bounds> clipBounds = Map.of();
     private Map<String, WidgetTransforms.Transform> transforms = Map.of();
+    private Map<String, ContainerScroll.Limits> scrollLimits = Map.of();
+    private final Map<String, ContainerScroll.Offset> scrollOffsets = new HashMap<>();
+    private Map<String, String> containerParents = Map.of();
+    private Map<String, WidgetTransforms.Group> containerGroups = Map.of();
+    private Set<String> clippingContainers = Set.of();
     private final Set<String> renderFailures = new HashSet<>();
     private HudLayoutOffsets savedOffsets = new HudLayoutOffsets();
     private HudLayoutOffsets editingOffsets;
@@ -234,22 +242,77 @@ public final class AnchorHudManager {
         return vanillaHandles;
     }
 
-    private Map<String, AnchorLayout.Bounds> resolveBounds(HudLayoutOffsets offsets) {
-        return AnchorLayout.resolve(builtWidth, builtHeight, frames(offsets));
-    }
-
-    private List<AnchorLayout.Frame> frames(HudLayoutOffsets offsets) {
+    private ContainerLayout.Result resolveLayout(HudLayoutOffsets offsets, List<String> warnings) {
         List<AnchorLayout.Frame> frames = new ArrayList<>();
         if (!vanillaReferences.isEmpty()) {
             frames.addAll(VanillaHudGeometry.frames(vanillaReferences));
         }
+        Map<String, PaddingElement> containers = new LinkedHashMap<>();
+        Map<String, ContainerLayout.AutoSize> autoSizes = new LinkedHashMap<>();
+        Map<String, String> parents = new LinkedHashMap<>();
         for (PlacedWidget placed : widgets) {
             frames.add(placed.frame(offsets));
             if (placed.widget() instanceof com.ludwici.anchorui.client.gui.PanelWidget) {
-                frames.add(WidgetContainers.contentFrame(placed.id(), placed.widget().getWidth(), placed.widget().getHeight(), placed.style().padding));
+                containers.put(placed.id(), placed.style().padding);
+                if (placed.autoSize().enabled()) {
+                    autoSizes.put(placed.id(), placed.autoSize());
+                }
+            }
+            if (placed.containerParent() != null) {
+                parents.put(placed.id(), placed.containerParent());
             }
         }
-        return frames;
+        return ContainerLayout.resolve(builtWidth, builtHeight, frames, containers, autoSizes, parents,
+                warning -> {
+                    if (warnings != null) {
+                        warnings.add(warning);
+                    }
+                });
+    }
+
+    private Map<String, AnchorLayout.Bounds> resolveBounds(HudLayoutOffsets offsets) {
+        return resolveLayout(offsets, null).bounds();
+    }
+
+    private void updateScrolledTransforms() {
+        transforms = WidgetTransforms.resolve(layoutBounds, containerParents, containerGroups, scrollOffsets);
+        clipBounds = WidgetContainers.clips(layoutBounds, containerParents, clippingContainers, transforms);
+    }
+
+    public boolean scrollContentsAt(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (editingOffsets == null) {
+            return false;
+        }
+        for (int index = widgets.size() - 1; index >= 0; index--) {
+            PlacedWidget placed = widgets.get(index);
+            if (!placed.widget().visible || !placed.scroll().enabled()) {
+                continue;
+            }
+            AnchorLayout.Bounds clip = clipBounds.get(placed.id());
+            if (clip != null && !WidgetContainers.contains(clip, mouseX, mouseY)) {
+                continue;
+            }
+            AnchorLayout.Bounds content = layoutBounds.get(WidgetContainers.contentId(placed.id()));
+            if (content == null) {
+                continue;
+            }
+            WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+            if (!WidgetContainers.contains(transform.physical(content), mouseX, mouseY)) {
+                continue;
+            }
+            ContainerScroll.Limits limits = scrollLimits.get(placed.id());
+            if (limits == null) {
+                continue;
+            }
+            ContainerScroll.Offset old = scrollOffsets.getOrDefault(placed.id(), ContainerScroll.Offset.ZERO);
+            ContainerScroll.Offset next = ContainerScroll.move(old, limits, placed.scroll(), scrollX, scrollY);
+            if (!next.equals(old)) {
+                scrollOffsets.put(placed.id(), next);
+                updateScrolledTransforms();
+                return true;
+            }
+        }
+        return false;
     }
 
     private void applyVisibility() {
@@ -497,6 +560,8 @@ public final class AnchorHudManager {
         layoutBounds = Map.of();
         clipBounds = Map.of();
         transforms = Map.of();
+        scrollLimits = Map.of();
+        scrollOffsets.clear();
         renderFailures.clear();
 
         List<Description> declared = new ArrayList<>();
@@ -556,7 +621,13 @@ public final class AnchorHudManager {
                 String relativeTo = WidgetIds.reference(position.relativeTo, entity.namespace);
                 PositionElement anchored = new PositionElement(position.point, position.anchor, relativeTo, position.x, position.y);
                 registry.attach(definition.id(), widget);
-                created.add(new PlacedWidget(definition.id(), widget, style, anchored, widget.visible, context, BoundBoolean.parse(element.settings, "visibleWhen", true), WidgetContainers.parent(element.settings), widget instanceof com.ludwici.anchorui.client.gui.PanelWidget && WidgetContainers.clipChildren(element.settings), widget instanceof com.ludwici.anchorui.client.gui.PanelWidget ? WidgetContainers.group(element.settings) : null));
+                boolean panel = widget instanceof com.ludwici.anchorui.client.gui.PanelWidget;
+                created.add(new PlacedWidget(definition.id(), widget, style, anchored, widget.visible, context,
+                        BoundBoolean.parse(element.settings, "visibleWhen", true), WidgetContainers.parent(element.settings),
+                        panel && (WidgetContainers.clipChildren(element.settings) || style.scroll.enabled()),
+                        panel ? WidgetContainers.group(element.settings) : null,
+                        panel ? style.autoSize : ContainerLayout.AutoSize.NONE,
+                        panel ? style.scroll : ContainerScroll.Config.NONE));
             } catch (WidgetConfigException exception) {
                 warnings.add(exception.getMessage());
             } catch (RuntimeException exception) {
@@ -576,15 +647,12 @@ public final class AnchorHudManager {
         if (builtWidth <= 0 || builtHeight <= 0) {
             return;
         }
-        List<AnchorLayout.Frame> frames = frames(currentOffsets());
         try {
-            Map<String, AnchorLayout.Bounds> bounds = AnchorLayout.resolve(builtWidth, builtHeight, frames, warning -> {
-                if (warnings != null) {
-                    warnings.add(warning);
-                }
-            });
+            Map<String, AnchorLayout.Bounds> bounds = resolveLayout(currentOffsets(), warnings).bounds();
             for (PlacedWidget placed : widgets) {
                 AnchorLayout.Bounds frame = bounds.get(placed.id());
+                placed.widget().setWidth(frame.width());
+                placed.widget().setHeight(frame.height());
                 placed.widget().setPosition(frame.x(), frame.y());
             }
             layoutBounds = bounds;
@@ -602,14 +670,30 @@ public final class AnchorHudManager {
                     groups.put(placed.id(), placed.group());
                 }
             }
-            transforms = WidgetTransforms.resolve(bounds, parents, groups);
-            clipBounds = WidgetContainers.clips(bounds, parents, clippingContainers, transforms);
+            Map<String, ContainerScroll.Config> configurations = new LinkedHashMap<>();
+            for (PlacedWidget placed : widgets) {
+                if (placed.scroll().enabled()) {
+                    configurations.put(placed.id(), placed.scroll());
+                }
+            }
+            scrollLimits = ContainerScroll.measure(bounds, parents, configurations);
+            scrollOffsets.keySet().retainAll(scrollLimits.keySet());
+            for (var entry : scrollLimits.entrySet()) {
+                ContainerScroll.Offset previous = scrollOffsets.getOrDefault(entry.getKey(), ContainerScroll.Offset.ZERO);
+                scrollOffsets.put(entry.getKey(), entry.getValue().clamp(previous));
+            }
+            containerParents = Map.copyOf(parents);
+            containerGroups = Map.copyOf(groups);
+            this.clippingContainers = Set.copyOf(clippingContainers);
+            updateScrolledTransforms();
             applyVisibility();
         } catch (IllegalArgumentException exception) {
             AnchorUI.LOGGER.error("Anchor UI HUD layout rejected ({}x{}, {} widgets): {}", builtWidth, builtHeight, widgets.size(), exception.getMessage());
             layoutBounds = Map.of();
             clipBounds = Map.of();
             transforms = Map.of();
+            scrollLimits = Map.of();
+            scrollOffsets.clear();
             widgets = List.of();
             if (warnings != null) {
                 warnings.add("HUD layout rejected: " + exception.getMessage());
@@ -626,6 +710,11 @@ public final class AnchorHudManager {
         layoutBounds = Map.of();
         clipBounds = Map.of();
         transforms = Map.of();
+        scrollLimits = Map.of();
+        scrollOffsets.clear();
+        containerParents = Map.of();
+        containerGroups = Map.of();
+        clippingContainers = Set.of();
         vanillaReferences = Map.of();
         vanillaHandles = List.of();
         vanillaSnapshot = null;

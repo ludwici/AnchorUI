@@ -129,7 +129,7 @@ Open it with either:
 /anchorui hud edit
 ```
 
-or the **F8** key binding, configurable under Controls → Key Binds → Anchor UI.
+or the **F8** key binding, configurable under Controls → Key Binds → Anchor UI. F8 opens the HUD editor only when no screen is open; while an Anchor UI JSON screen is open, the same shortcut opens its [screen editor](SCREEN_EDITOR.md). Press F8 again inside an editor to save and close it.
 
 To edit widget placement:
 

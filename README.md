@@ -160,6 +160,10 @@ The repo includes a **ready-to-copy resource pack** at [examples/resourcepack/An
 
 Use `/anchorui test hud1 on` for anchoring/reference tests and `/anchorui test rpg on` for the live health/food RPG demo. They are independently toggled and default to off. For resource-pack screens, use `/anchorui screen open mypack:traveler`; the loader looks under `assets/mypack/anchorui/screens/traveler.json` automatically. Unquoted namespaced IDs (including `:`) work in the command. Screen button actions may likewise reference `"screen": "mypack:traveler_next"`.
 
+## Conditions: visibility and enabled states
+
+Anchor UI supports **compiled JSON Conditions** that extend the old boolean `visibleWhen` and add `enabledWhen` to any HUD or screen widget. Combine checks using `all`, `any`, `not`, compare bound numbers/strings and inspect lists via the existing namespaced data registry. Conditions compile when widgets load, use short-circuit evaluation, and do not create tick loops. Missing data cannot automatically enable an `enabledWhen`-guarded widget. Try `/anchorui screen open anchorui:conditions` or `/anchorui test conditions on`. See [Conditions](docs/CONDITIONS.md) for JSON examples, fallback behavior, comparison types and security notes.
+
 ## Typed Data Binding for modpack authors
 
 Anchor UI now supports **number, string, boolean, object and list bindings** through a shared namespaced registry. Built-in `anchorui:text` can display dynamic strings and `{{namespace:value}}` templates, `visibleWhen` conditionally shows any screen/HUD widget, `anchorui:data_list` renders arrays, and `anchorui:progress` can read numbers from nested objects with `path`. Existing `NumericDataRegistry` registrations remain compatible.

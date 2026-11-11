@@ -39,6 +39,29 @@ public final class PanelWidget extends AnchoredWidget {
         int innerWidth = width - border * 2;
         int innerHeight = height - border * 2;
         int innerRadius = Math.max(0, outerRadius - border);
+        if (outerRadius == 0) {
+            renderRectangle(graphics, border, width, height);
+        } else {
+            renderRounded(graphics, border, outerRadius, innerWidth, innerHeight, innerRadius, width, height);
+        }
+        if (texture != null) {
+            texture.render(graphics, getX(), getY(), width, height);
+        }
+    }
+
+    private void renderRectangle(GuiGraphics graphics, int border, int width, int height) {
+        int x = getX();
+        int y = getY();
+        if (border > 0 && (borderColor >>> 24) != 0) {
+            graphics.fill(x, y, x + width, y + height, borderColor);
+        }
+        if ((fillColor >>> 24) != 0) {
+            graphics.fill(x + border, y + border, x + width - border, y + height - border, fillColor);
+        }
+    }
+
+    private void renderRounded(GuiGraphics graphics, int border, int outerRadius, int innerWidth,
+                               int innerHeight, int innerRadius, int width, int height) {
         for (int row = 0; row < height; row++) {
             int outside = inset(row, height, outerRadius);
             int outerLeft = getX() + outside;
@@ -57,9 +80,6 @@ public final class PanelWidget extends AnchoredWidget {
                 draw(graphics, innerRight, getY() + row, outerRight, borderColor);
             }
             draw(graphics, innerLeft, getY() + row, innerRight, fillColor);
-        }
-        if (texture != null) {
-            texture.render(graphics, getX(), getY(), width, height);
         }
     }
 

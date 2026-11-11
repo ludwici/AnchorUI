@@ -36,6 +36,7 @@ The following is documented in the current repository and/or supported by the la
 - [x] Public widget registration, custom JSON fields, typed Java `record` + Mojang `Codec` configuration.
 - [x] In-game HUD documents from resource packs/mods in a shared anchor layout.
 - [x] HUD editor (F8 / `/anchorui hud edit`): drag, anchor/parent selection, hide, reset, inspect, and locally saved overrides.
+- [x] Context-sensitive F8 screen editor for Anchor UI JSON screens: visual dragging with snap, parent/point/anchor changes, hide/reset, scaled hitboxes, save/cancel per-screen overrides.
 - [x] Separate anchor-testing and RPG HUD demos: `/anchorui test hud1` and `/anchorui test rpg`.
 - [x] `anchorui:progress` (numeric binding) and resource-pack dialogue demo with `anchorui:button`.
 - [x] Resource-pack screen loading and `anchorui:open_screen` / `anchorui:close_screen` actions.
@@ -44,7 +45,7 @@ The following is documented in the current repository and/or supported by the la
 - [x] Binding test HUD/screen and starter resource pack examples.
 - [x] JSON test scenes `scene1`–`scene14`, tests/CI build setup.
 
-**Important distinctions:** `visibleWhen` is a single boolean-bound visibility rule, **not** a general conditional expression engine. Current dialogues demonstrate screen navigation, **not** complete branching conversation/quest state. Existing style/background handling is **not** equivalent to a general image widget or nested layout container.
+**Important distinctions:** `visibleWhen` is a single boolean-bound visibility rule, **not** a general conditional expression engine. Current dialogues demonstrate screen navigation, **not** complete branching conversation/quest state. Texture/image, panel, nested containers, opt-in clipping, nine-slice and basic group scaling are now implemented; auto-sizing, scrolling and full visual-style parity remain future work.
 
 See `README.md`, `docs/HUD.md`, `docs/DATA_BINDINGS.md`, `docs/MODPACK_AUTHORING.md`, `docs/WIDGET_REFERENCES.md`, and `docs/CUSTOM_WIDGETS.md` for implemented APIs. If a later code change contradicts this snapshot, update the checkboxes.
 
@@ -140,7 +141,7 @@ These were discussed during testing, and should remain in the QA backlog until e
 
 - **Excluded:** External Lore Loader, direct game-root content directory, arbitrary JSON-side Java/script execution, unapproved server mutations.
 - **Deferred:** character profile and skill-tree screens, full RPG/unique gameplay systems, standalone quest engine, broad 3D widget controls.
-- **Separate configuration:** player HUD positioning may be persisted to `config/anchorui/hud-layout.json`; this does **not** weaken the resource-pack-only decision for authored screens/definitions.
+- **Separate configuration:** player HUD positioning is persisted to `config/anchorui/hud-layout.json`, and screen-editor overrides are persisted per resource under `config/anchorui/screens/`; neither is an authored-content loader.
 - **Compatibility policy:** preserve existing JSON and Java integration APIs when adding new features where feasible; document intentional breaking changes.
 
 ## 6. Suggested order of work

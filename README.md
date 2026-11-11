@@ -119,6 +119,10 @@ Press **F8** with no screen open to edit the HUD. Press **F8** while an Anchor U
 
 See [Screen Editor](docs/SCREEN_EDITOR.md) for details, controls and the resource-aware `ItemLoreScreen` Java constructor.
 
+## Read-only vanilla HUD references
+
+Custom HUD widgets can now use the **25 vanilla HUD IDs** (the NeoForge 1.21.1 layer names) as anchor targets, for example `"relativeTo": "minecraft:hotbar"`. Their bounds are visible in the F8 HUD editor, and a list in the parent-picker includes inactive / temporary HUD anchors. These are purely positional references: vanilla HUDs remain unchanged. See [Vanilla HUD Anchors](docs/VANILLA_HUD_ANCHORS.md) for the full catalog and known geometry limitations. Test with `/anchorui test vanilla on`.
+
 ## In-game HUD support (NeoForge 1.21.1)
 
 Anchor UI also renders **in-game HUD documents** via a single NeoForge `RegisterGuiLayersEvent` layer ordered above vanilla chat. Add JSON files to `assets/<namespace>/anchorui/hud/<name>.json`. All non-test HUD documents are collected from loaded resource packs and mods, and their widgets are positioned in one shared `AnchorLayout`—including cross-mod `relativeTo` references, `imports` and `ref` templates. Widgets use the same registered factories and styles as regular screens.

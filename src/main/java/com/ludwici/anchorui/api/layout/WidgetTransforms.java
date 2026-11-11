@@ -53,18 +53,24 @@ public final class WidgetTransforms {
     }
 
     public static Map<String, Transform> resolve(Map<String, AnchorLayout.Bounds> layout, Map<String, String> parents, Map<String, Group> groups) {
+        return resolve(layout, parents, groups, Map.of());
+    }
+
+    public static Map<String, Transform> resolve(Map<String, AnchorLayout.Bounds> layout, Map<String, String> parents,
+                                                  Map<String, Group> groups, Map<String, ContainerScroll.Offset> scrollOffsets) {
         Map<String, Transform> resolved = new LinkedHashMap<>();
         Set<String> visiting = new HashSet<>();
         for (String id : layout.keySet()) {
             if (!"screen".equals(id) && !id.endsWith("/__content")) {
-                resolveOne(id, layout, parents, groups, resolved, visiting);
+                resolveOne(id, layout, parents, groups, scrollOffsets, resolved, visiting);
             }
         }
         return Map.copyOf(resolved);
     }
 
     private static Transform resolveOne(String id, Map<String, AnchorLayout.Bounds> layout, Map<String, String> parents,
-                                        Map<String, Group> groups, Map<String, Transform> resolved, Set<String> visiting) {
+                                        Map<String, Group> groups, Map<String, ContainerScroll.Offset> scrollOffsets,
+                                        Map<String, Transform> resolved, Set<String> visiting) {
         Transform existing = resolved.get(id);
         if (existing != null) {
             return existing;
@@ -73,7 +79,16 @@ public final class WidgetTransforms {
             throw new IllegalArgumentException("Circular UI container hierarchy: " + id);
         }
         String parent = parents.get(id);
-        Transform transform = parent == null ? IDENTITY : resolveOne(parent, layout, parents, groups, resolved, visiting);
+        Transform transform;
+        if (parent == null) {
+            transform = IDENTITY;
+        } else {
+            Transform parentTransform = resolveOne(parent, layout, parents, groups, scrollOffsets, resolved, visiting);
+            ContainerScroll.Offset scroll = scrollOffsets.getOrDefault(parent, ContainerScroll.Offset.ZERO);
+            transform = new Transform(parentTransform.scale(),
+                    parentTransform.translateX() - parentTransform.scale() * scroll.x(),
+                    parentTransform.translateY() - parentTransform.scale() * scroll.y());
+        }
         AnchorLayout.Bounds bounds = layout.get(id);
         if (bounds == null) {
             throw new IllegalArgumentException("Missing layout bounds for UI widget: " + id);

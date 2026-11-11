@@ -278,3 +278,9 @@ Use **[-] / [+]** in the Widgets header to collapse or reopen its panel. Click a
 
 The editor panels are drawn in a foreground render layer above the in-game HUD and its widget labels. This prevents HUD text and outlines from drawing over the editor's panel backgrounds.
 
+
+### Default list state and center magnet
+
+The Widgets panel initially appears as a collapsed **Widgets [+]** header. Click it to expand; use category headers to collapse individual namespaces. The properties inspector opens independently and remains fully usable while the list is collapsed.
+
+When dragging a custom HUD widget, the magnetic aligner also detects the **screen's horizontal and vertical centerlines** (the center of the widget snaps to these lines). Center snapping has the same 6 GUI-pixel threshold as widget-to-widget snapping and does not activate while holding Alt. The editor draws a guide at the corresponding screen midpoint.

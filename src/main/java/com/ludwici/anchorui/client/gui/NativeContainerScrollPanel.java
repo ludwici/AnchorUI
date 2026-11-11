@@ -44,6 +44,11 @@ public final class NativeContainerScrollPanel extends ScrollPanel {
         return Math.max(0, Math.min(logicalLimit, (int) Math.round(scrollDistance / scale)));
     }
 
+    public void setLogicalOffset(int offset) {
+        scrollDistance = Math.max(0, Math.min(contentHeight - viewport.height(),
+                (float) (Math.max(0, Math.min(logicalLimit, offset)) * scale)));
+    }
+
     public boolean isDraggingBar() {
         return dragging;
     }

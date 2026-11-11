@@ -2,6 +2,9 @@ package com.ludwici.anchorui.client.gui;
 
 import com.google.gson.JsonObject;
 import com.ludwici.anchorui.api.style.LoreStyle;
+import com.ludwici.anchorui.api.layout.RoundedPanelGeometry;
+
+import java.util.List;
 import com.ludwici.anchorui.api.widget.WidgetContext;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -13,6 +16,9 @@ public final class PanelWidget extends AnchoredWidget {
     private final int borderWidth;
     private final int radius;
     private final TextureRegion texture;
+    private int cachedWidth = -1;
+    private int cachedHeight = -1;
+    private List<RoundedPanelGeometry.Band> cachedBands = List.of();
 
     public PanelWidget(WidgetContext context, JsonObject settings, LoreStyle.Element style) {
         super(style.size.width > 0 ? style.size.width : 120, style.size.height > 0 ? style.size.height : 70, style);
@@ -36,13 +42,10 @@ public final class PanelWidget extends AnchoredWidget {
         }
         int border = Math.min(borderWidth, Math.min(width, height) / 2);
         int outerRadius = Math.min(radius, Math.min(width, height) / 2);
-        int innerWidth = width - border * 2;
-        int innerHeight = height - border * 2;
-        int innerRadius = Math.max(0, outerRadius - border);
         if (outerRadius == 0) {
             renderRectangle(graphics, border, width, height);
         } else {
-            renderRounded(graphics, border, outerRadius, innerWidth, innerHeight, innerRadius, width, height);
+            renderRounded(graphics, border, width, height);
         }
         if (texture != null) {
             texture.render(graphics, getX(), getY(), width, height);
@@ -60,43 +63,35 @@ public final class PanelWidget extends AnchoredWidget {
         }
     }
 
-    private void renderRounded(GuiGraphics graphics, int border, int outerRadius, int innerWidth,
-                               int innerHeight, int innerRadius, int width, int height) {
-        for (int row = 0; row < height; row++) {
-            int outside = inset(row, height, outerRadius);
-            int outerLeft = getX() + outside;
-            int outerRight = getX() + width - outside;
-            int innerRow = row - border;
-            boolean inside = innerWidth > 0 && innerHeight > 0 && innerRow >= 0 && innerRow < innerHeight;
-            if (!inside) {
-                draw(graphics, outerLeft, getY() + row, outerRight, border > 0 ? borderColor : fillColor);
+    private void renderRounded(GuiGraphics graphics, int border, int width, int height) {
+        if (width != cachedWidth || height != cachedHeight) {
+            cachedBands = RoundedPanelGeometry.bands(width, height, radius, borderWidth);
+            cachedWidth = width;
+            cachedHeight = height;
+        }
+
+        for (RoundedPanelGeometry.Band band : cachedBands) {
+            int outerLeft = getX() + band.outerInset();
+            int outerRight = getX() + width - band.outerInset();
+            int top = getY() + band.top();
+            int bottom = top + band.height();
+            if (!band.hasInterior()) {
+                draw(graphics, outerLeft, top, outerRight, bottom, border > 0 ? borderColor : fillColor);
                 continue;
             }
-            int insideInset = inset(innerRow, innerHeight, Math.min(innerRadius, Math.min(innerWidth, innerHeight) / 2));
-            int innerLeft = getX() + border + insideInset;
-            int innerRight = getX() + width - border - insideInset;
+            int innerLeft = getX() + border + band.innerInset();
+            int innerRight = getX() + width - border - band.innerInset();
             if (border > 0) {
-                draw(graphics, outerLeft, getY() + row, innerLeft, borderColor);
-                draw(graphics, innerRight, getY() + row, outerRight, borderColor);
+                draw(graphics, outerLeft, top, innerLeft, bottom, borderColor);
+                draw(graphics, innerRight, top, outerRight, bottom, borderColor);
             }
-            draw(graphics, innerLeft, getY() + row, innerRight, fillColor);
+            draw(graphics, innerLeft, top, innerRight, bottom, fillColor);
         }
     }
 
-    private static int inset(int row, int height, int radius) {
-        if (radius <= 0) {
-            return 0;
-        }
-        double distance = Math.max(radius - row - 0.5, row + 0.5 - (height - radius));
-        if (distance <= 0) {
-            return 0;
-        }
-        return (int) Math.ceil(radius - Math.sqrt(Math.max(0, radius * radius - distance * distance)));
-    }
-
-    private static void draw(GuiGraphics graphics, int x1, int y, int x2, int color) {
-        if (x2 > x1 && (color >>> 24) != 0) {
-            graphics.fill(x1, y, x2, y + 1, color);
+    private static void draw(GuiGraphics graphics, int x1, int y1, int x2, int y2, int color) {
+        if (x2 > x1 && y2 > y1 && (color >>> 24) != 0) {
+            graphics.fill(x1, y1, x2, y2, color);
         }
     }
 

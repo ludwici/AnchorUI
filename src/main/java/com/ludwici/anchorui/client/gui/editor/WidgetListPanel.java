@@ -47,7 +47,7 @@ public final class WidgetListPanel {
     private double dragStartX;
     private double dragStartY;
     private boolean dragging;
-    private boolean collapsed;
+    private boolean collapsed = true;
     private final Set<Integer> collapsedGroups = new HashSet<>();
     private boolean rowsDirty = true;
     private List<Entry> cachedEntries = List.of();

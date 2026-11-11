@@ -358,7 +358,7 @@ public class ItemLoreScreen extends Screen {
         try {
             List<AnchorLayout.Frame> frames = new ArrayList<>();
             for (PlacedWidget placed : created) {
-                frames.add(placed.frame());
+                frames.add(placed.frame(new HudLayoutOffsets()));
                 if (placed.widget() instanceof PanelWidget) {
                     frames.add(WidgetContainers.contentFrame(placed.id(), placed.widget().getWidth(), placed.widget().getHeight(), placed.style().padding));
                 }

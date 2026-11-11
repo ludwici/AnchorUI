@@ -56,9 +56,14 @@ public final class PanelWidget extends AnchoredWidget {
         int x = getX();
         int y = getY();
         if (border > 0 && (borderColor >>> 24) != 0) {
-            graphics.fill(x, y, x + width, y + height, borderColor);
+            graphics.fill(x, y, x + width, y + border, borderColor);
+            graphics.fill(x, y + height - border, x + width, y + height, borderColor);
+            if (height > 2 * border) {
+                graphics.fill(x, y + border, x + border, y + height - border, borderColor);
+                graphics.fill(x + width - border, y + border, x + width, y + height - border, borderColor);
+            }
         }
-        if ((fillColor >>> 24) != 0) {
+        if ((fillColor >>> 24) != 0 && width > 2 * border && height > 2 * border) {
             graphics.fill(x + border, y + border, x + width - border, y + height - border, fillColor);
         }
     }

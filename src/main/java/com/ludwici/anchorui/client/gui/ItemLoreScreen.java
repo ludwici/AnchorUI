@@ -1,6 +1,8 @@
 package com.ludwici.anchorui.client.gui;
 
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+import com.ludwici.anchorui.api.action.UiEventBindings;
 import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.KeyRegistry;
 import com.ludwici.anchorui.api.LoreEntity;
@@ -18,6 +20,7 @@ import com.ludwici.anchorui.api.style.PositionElement;
 import com.ludwici.anchorui.api.widget.AnchorWidgetRegistry;
 import com.ludwici.anchorui.api.widget.WidgetConfigException;
 import com.ludwici.anchorui.api.widget.WidgetContext;
+import com.ludwici.anchorui.api.widget.UiChangeSource;
 import com.ludwici.anchorui.api.widget.WidgetIds;
 import com.ludwici.anchorui.api.widget.WidgetInstanceRegistry;
 import com.ludwici.anchorui.client.LoreLoader;
@@ -71,6 +74,10 @@ public class ItemLoreScreen extends Screen {
     private String screenSaveError = "";
     private WidgetInstanceRegistry widgetRegistry = new WidgetInstanceRegistry();
     private List<PlacedWidget> placedWidgets = List.of();
+    private final Map<String, UiEventBindings> widgetEventBindings = new HashMap<>();
+    private final UiHoverTracker hoverTracker = new UiHoverTracker();
+    private UiEventBindings screenEventBindings;
+    private boolean lifecycleActive;
     private final Map<String, Boolean> visibilityScratch = new HashMap<>();
     private final Map<String, Boolean> enabledScratch = new HashMap<>();
     private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
@@ -432,8 +439,10 @@ public class ItemLoreScreen extends Screen {
         ContainerScroll.Offset previous = scrollOffsets.getOrDefault(id, ContainerScroll.Offset.ZERO);
         int position = panel.logicalOffset();
         if (position != previous.y()) {
-            scrollOffsets.put(id, new ContainerScroll.Offset(previous.x(), position));
+            ContainerScroll.Offset next = new ContainerScroll.Offset(previous.x(), position);
+            scrollOffsets.put(id, next);
             updateScrolledTransforms();
+            fireScrollChanged(id, next);
         }
     }
 
@@ -519,10 +528,57 @@ public class ItemLoreScreen extends Screen {
             if (!next.equals(old)) {
                 scrollOffsets.put(placed.id(), next);
                 updateScrolledTransforms();
+                fireScrollChanged(placed.id(), next);
                 return true;
             }
         }
         return false;
+    }
+
+    private void fireScrollChanged(String id, ContainerScroll.Offset next) {
+        if (minecraft.screen != this) {
+            return;
+        }
+        UiEventBindings events = widgetEventBindings.get(id);
+        if (events == null || !events.has("onChange")) {
+            return;
+        }
+        JsonObject value = new JsonObject();
+        value.addProperty("x", next.x());
+        value.addProperty("y", next.y());
+        events.fire("onChange", id, value);
+    }
+
+    private void updateHover(int mouseX, int mouseY) {
+        if (minecraft.screen != this) {
+            hoverTracker.reset();
+            return;
+        }
+        String candidate = null;
+        for (int index = placedWidgets.size() - 1; index >= 0; index--) {
+            PlacedWidget placed = placedWidgets.get(index);
+            if (!placed.widget().visible || !insideClip(placed, mouseX, mouseY)) {
+                continue;
+            }
+            AnchorLayout.Bounds frame = layoutBounds.get(placed.id());
+            if (frame == null) {
+                continue;
+            }
+            WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+            if (WidgetContainers.contains(transform.physical(frame), mouseX, mouseY)) {
+                candidate = placed.id();
+                break;
+            }
+        }
+        hoverTracker.update(candidate, (id, entered) -> {
+            if (minecraft.screen != this) {
+                return;
+            }
+            UiEventBindings events = widgetEventBindings.get(id);
+            if (events != null) {
+                events.fire(entered ? "onHoverEnter" : "onHoverLeave", id, JsonNull.INSTANCE);
+            }
+        });
     }
 
     private void renderScrollIndicators(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
@@ -548,6 +604,8 @@ public class ItemLoreScreen extends Screen {
         loadScreenOffsets();
         widgetRegistry = new WidgetInstanceRegistry();
         placedWidgets = List.of();
+        widgetEventBindings.clear();
+        hoverTracker.reset();
         layoutBounds = Map.of();
         clipBounds = Map.of();
         transforms = Map.of();
@@ -582,6 +640,20 @@ public class ItemLoreScreen extends Screen {
         }
 
         WidgetContext context = new WidgetContext(minecraft, this, item, loreEntity, widgetRegistry);
+        JsonObject screenSettings = new JsonObject();
+        if (loreEntity.onOpen != null) {
+            screenSettings.add("onOpen", loreEntity.onOpen);
+        }
+        if (loreEntity.onClose != null) {
+            screenSettings.add("onClose", loreEntity.onClose);
+        }
+        try {
+            screenEventBindings = UiEventBindings.compile(context, screenSettings, "onOpen", "onClose");
+        } catch (IllegalArgumentException exception) {
+            layoutError = "Invalid screen event: " + exception.getMessage();
+            AnchorUI.LOGGER.error("Anchor UI screen events rejected: {}", layoutError);
+            return;
+        }
         List<PlacedWidget> created = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
         for (DeclaredWidget definition : definitions) {
@@ -616,6 +688,14 @@ public class ItemLoreScreen extends Screen {
             addWidget(placed.widget());
         }
         updateConditionStates();
+        if (!lifecycleActive && minecraft.screen == this) {
+            lifecycleActive = true;
+            screenEventBindings.fire("onOpen", screenEventTarget(), JsonNull.INSTANCE);
+        }
+    }
+
+    private String screenEventTarget() {
+        return documentId == null ? loreEntity.namespace + ":screen" : documentId.toString();
     }
 
     private void declare(List<DeclaredWidget> definitions, LoreEntity.UiElement element, String legacyStyle) {
@@ -673,6 +753,15 @@ public class ItemLoreScreen extends Screen {
         PositionElement position = new PositionElement(p.point, p.anchor, relativeTo, p.x, p.y);
         BoundCondition visibleWhen = BoundCondition.parse(element.settings, "visibleWhen", true);
         BoundCondition enabledWhen = BoundCondition.parse(element.settings, "enabledWhen", true, false);
+        UiEventBindings events = UiEventBindings.compile(context, element.settings, "onHoverEnter", "onHoverLeave", "onChange");
+        if (widget instanceof UiChangeSource source) {
+            source.setChangeListener(value -> {
+                if (minecraft.screen == this && widget.visible && widget.active) {
+                    events.fire("onChange", id, value);
+                }
+            });
+        }
+        widgetEventBindings.put(id, events);
         widgetRegistry.attach(id, widget);
         boolean panel = widget instanceof PanelWidget;
         created.add(new PlacedWidget(id, widget, settings, position, context,
@@ -705,6 +794,10 @@ public class ItemLoreScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         updateConditionStates();
+        updateHover(mouseX, mouseY);
+        if (minecraft.screen != this) {
+            return;
+        }
 
         super.render(graphics, mouseX, mouseY, partialTick);
         for (PlacedWidget placed : placedWidgets) {
@@ -836,6 +929,20 @@ public class ItemLoreScreen extends Screen {
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    @Override
+    public void removed() {
+        if (lifecycleActive) {
+            lifecycleActive = false;
+            if (screenEventBindings != null) {
+                screenEventBindings.fire("onClose", screenEventTarget(), JsonNull.INSTANCE);
+            }
+        }
+        hoverTracker.reset();
+        draggedScrollPanel = null;
+        draggingWidget = null;
+        super.removed();
     }
 
     @Override

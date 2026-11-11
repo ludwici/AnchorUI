@@ -766,7 +766,7 @@ public final class AnchorHudEditorScreen extends Screen {
                     AnchorLayout.Bounds bounds = reference.bounds();
                     widgets.add(new HudSnap.Widget(reference.id(), "screen", bounds.x(), bounds.y(), bounds.width(), bounds.height(), reference.active()));
                 }
-                snapResult = HudSnap.snap(dragOrigin, desiredX, desiredY, widgets);
+                snapResult = HudSnap.snap(dragOrigin, desiredX, desiredY, widgets, width, height);
             }
             double parentScale = manager.dragScale(selected);
             manager.setPreviewOffset(selected, startOffsetX + (int) Math.round((snapResult.x() - dragOrigin.x()) / parentScale),

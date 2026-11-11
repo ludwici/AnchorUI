@@ -64,3 +64,10 @@ The HUD layout remains independent in `config/anchorui/hud-layout.json`.
 - Verify `scale`, `scaleOrigin`, `clipChildren`, and nested panels during movement.
 - Test invalid/circular parent choices, and test resizing / GUI Scale changes.
 - Open two different screens sharing a widget ID; their saved overrides must not affect each other.
+
+### Editor panels and clear preview
+
+The screen editor deliberately **does not blur the underlying world or interface**. The normal screen is rendered as a live preview, with the editor controls drawn above it at a separate render depth. This is editor-only behavior; ordinary UI screens keep their existing background treatment.
+
+The left **Widgets** panel can be collapsed with **[-]** in its header and reopened with **[+]**. Each namespace section (VANILLA / CURRENT / OTHER MODS) can be collapsed independently by clicking its heading. The right **Inspector** panel has its own **[-] / [+]** toggle. Both panels remain draggable, and **Tab** hides the editor chrome entirely. On narrow GUI scales the inspector starts collapsed when the two expanded panels would overlap; expanding one panel collapses the other as needed.
+

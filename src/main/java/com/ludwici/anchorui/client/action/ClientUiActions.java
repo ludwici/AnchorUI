@@ -32,7 +32,7 @@ public final class ClientUiActions {
                     AnchorUI.LOGGER.warn("Anchor UI screen '{}' is unavailable", id);
                     return;
                 }
-                context.minecraft().setScreen(new ItemLoreScreen(context.screen(), context.item(), doc));
+                context.minecraft().setScreen(new ItemLoreScreen(context.screen(), context.item(), doc, id));
             };
         });
 

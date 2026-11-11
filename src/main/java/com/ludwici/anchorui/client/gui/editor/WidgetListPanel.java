@@ -134,15 +134,15 @@ public final class WidgetListPanel {
                 int lineY = top + index * ROW_HEIGHT - scroll;
                 if (lineY + ROW_HEIGHT > top && lineY < bottom) {
                     if (row.heading()) {
-                        graphics.fill(x + 3, lineY, x + width - 4, lineY + rowHeight, 0xB1223244);
+                        graphics.fill(x + 3, lineY, x + width - 4, lineY + ROW_HEIGHT, 0xB1223244);
                         graphics.drawString(font, row.header(), x + 8, lineY + 4, color(row.group()), false);
                     } else {
                         Entry entry = row.entry();
                         boolean chosen = entry.id().equals(selected);
                         boolean hovering = mouseX >= x + 3 && mouseX < x + width - 4
-                                && mouseY >= Math.max(top, lineY) && mouseY < Math.min(bottom, lineY + rowHeight);
+                                && mouseY >= Math.max(top, lineY) && mouseY < Math.min(bottom, lineY + ROW_HEIGHT);
                         if (chosen || hovering) {
-                            graphics.fill(x + 3, lineY, x + width - 5, lineY + rowHeight,
+                            graphics.fill(x + 3, lineY, x + width - 5, lineY + ROW_HEIGHT,
                                     chosen ? 0xB04A4435 : 0x88405062);
                         }
                         int tint = chosen ? SELECTED_COLOR : entry.visible() ? color(row.group()) : 0xFF8993A1;

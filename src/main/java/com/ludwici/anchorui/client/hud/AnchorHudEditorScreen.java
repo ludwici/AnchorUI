@@ -405,8 +405,9 @@ public final class AnchorHudEditorScreen extends Screen {
             appendLine(lines, "VANILLA ANCHORS (click one):", VANILLA_COLOR);
             for (VanillaHudGeometry.Reference reference : manager.getVanillaHandles()) {
                 String suffix = reference.active() ? "" : " [inactive]";
-                lines.add(new InspectorLine(font.plainSubstrByWidth(reference.id() + suffix,
-                        Math.max(40, (int) ((panelWidth - 30) / INSPECTOR_SCALE))), 
+                String label = font.plainSubstrByWidth(reference.id() + suffix,
+                        Math.max(40, (int) ((panelWidth - 30) / INSPECTOR_SCALE)));
+                lines.add(new InspectorLine(Component.literal(label).getVisualOrderText(),
                         reference.active() ? VANILLA_COLOR : VANILLA_INACTIVE_COLOR, null, false, reference.id()));
             }
         }

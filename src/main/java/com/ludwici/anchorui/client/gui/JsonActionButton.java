@@ -12,9 +12,17 @@ public final class JsonActionButton {
     }
 
     public static Button create(WidgetContext context, LoreEntity.UiElement element, LoreStyle.Element style) {
-        Runnable action = UiActionRegistry.compile(context, element.settings.get("onClick"));
+        Runnable fallback = context.screen() instanceof ItemLoreScreen
+                ? () -> {}
+                : UiActionRegistry.compile(context, element.settings.get("onClick"));
         int width = style.size.width > 0 ? style.size.width : 120;
         int height = style.size.height > 0 ? style.size.height : 20;
-        return Button.builder(Component.literal(element.text), button -> action.run()).bounds(0, 0, width, height).build();
+        return Button.builder(Component.literal(element.text), button -> {
+            if (context.screen() instanceof ItemLoreScreen screen) {
+                screen.dispatchWidgetClick(button);
+            } else {
+                fallback.run();
+            }
+        }).bounds(0, 0, width, height).build();
     }
 }

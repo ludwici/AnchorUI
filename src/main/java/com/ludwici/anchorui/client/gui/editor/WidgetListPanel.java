@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 public final class WidgetListPanel {
     public record Entry(String id, boolean visible, boolean readOnly) {
@@ -24,8 +26,8 @@ public final class WidgetListPanel {
     private static final int FOOTER_HEIGHT = 17;
     private static final int ROW_HEIGHT = 17;
     private static final int GROUP_HEIGHT = ROW_HEIGHT;
-    private static final int PANEL_BACKGROUND = 0xEE121D2B;
-    private static final int HEADER_BACKGROUND = 0xEF29445B;
+    private static final int PANEL_BACKGROUND = 0xFF121D2B;
+    private static final int HEADER_BACKGROUND = 0xFF29445B;
     private static final int SELECTED_COLOR = 0xFFFFD37A;
     private static final int VANILLA_COLOR = 0xFFB5A5EF;
     private static final int OWN_COLOR = 0xFF75DCDB;
@@ -44,6 +46,9 @@ public final class WidgetListPanel {
     private double dragStartX;
     private double dragStartY;
     private boolean dragging;
+    private boolean collapsed;
+    private final Set<Integer> collapsedGroups = new HashSet<>();
+    private boolean rowsDirty = true;
     private List<Entry> cachedEntries = List.of();
     private List<Row> cachedRows = List.of();
 
@@ -61,19 +66,47 @@ public final class WidgetListPanel {
     }
 
     public boolean contains(double mouseX, double mouseY) {
-        return mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height;
+        return mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + visibleHeight();
     }
 
-    public boolean beginClick(double mouseX, double mouseY, int button) {
+    public boolean isCollapsed() {
+        return collapsed;
+    }
+
+    public boolean isGroupCollapsed(int group) {
+        return collapsedGroups.contains(group);
+    }
+
+    public boolean beginClick(double mouseX, double mouseY, int button, List<Entry> entries) {
         if (!contains(mouseX, mouseY)) {
             return false;
         }
-        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && mouseY < y + HEADER_HEIGHT) {
+        if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            return true;
+        }
+        if (mouseY < y + HEADER_HEIGHT) {
+            if (mouseX >= x + width - 27) {
+                collapsed = !collapsed;
+                dragging = false;
+                return true;
+            }
             dragging = true;
             startX = x;
             startY = y;
             dragStartX = mouseX;
             dragStartY = mouseY;
+            return true;
+        }
+
+        if (!collapsed && mouseY < y + height - FOOTER_HEIGHT) {
+            Row row = rowAt(mouseY, entries);
+            if (row != null && row.heading()) {
+                if (!collapsedGroups.add(row.group())) {
+                    collapsedGroups.remove(row.group());
+                }
+                rowsDirty = true;
+                scroll = Math.min(scroll, maxScroll(rows(entries)));
+            }
         }
         return true;
     }
@@ -96,7 +129,7 @@ public final class WidgetListPanel {
     }
 
     public boolean scroll(double mouseX, double mouseY, double scrollY, List<Entry> entries) {
-        if (!contains(mouseX, mouseY)) {
+        if (collapsed || !contains(mouseX, mouseY)) {
             return false;
         }
         int max = maxScroll(rows(entries));
@@ -109,19 +142,32 @@ public final class WidgetListPanel {
                 || mouseY >= y + height - FOOTER_HEIGHT) {
             return null;
         }
+        Row row = rowAt(mouseY, entries);
+        return row == null ? null : row.entry();
+    }
+
+    private int visibleHeight() {
+        return collapsed ? HEADER_HEIGHT : height;
+    }
+
+    private Row rowAt(double mouseY, List<Entry> entries) {
         int pointerY = (int) mouseY - y - HEADER_HEIGHT + scroll;
         int index = pointerY / ROW_HEIGHT;
-        List<Row> rows = rows(entries);
-        return pointerY >= 0 && index < rows.size() ? rows.get(index).entry() : null;
+        List<Row> visibleRows = rows(entries);
+        return pointerY >= 0 && index < visibleRows.size() ? visibleRows.get(index) : null;
     }
 
     public void render(GuiGraphics graphics, Font font, int mouseX, int mouseY,
                        List<Entry> entries, String selected, boolean choosingParent) {
         List<Row> rows = rows(entries);
         scroll = Math.min(scroll, maxScroll(rows));
-        graphics.fill(x, y, x + width, y + height, PANEL_BACKGROUND);
+        graphics.fill(x, y, x + width, y + visibleHeight(), PANEL_BACKGROUND);
         graphics.fill(x, y, x + width, y + HEADER_HEIGHT, HEADER_BACKGROUND);
         graphics.drawString(font, "Widgets (" + entries.size() + ")", x + 7, y + 7, 0xFFFFFFFF, false);
+        graphics.drawString(font, collapsed ? "[+]" : "[-]", x + width - 26, y + 7, 0xFFFFFFFF, false);
+        if (collapsed) {
+            return;
+        }
 
         int top = y + HEADER_HEIGHT;
         int bottom = y + height - FOOTER_HEIGHT;
@@ -134,8 +180,10 @@ public final class WidgetListPanel {
                 int lineY = top + index * ROW_HEIGHT - scroll;
                 if (lineY + ROW_HEIGHT > top && lineY < bottom) {
                     if (row.heading()) {
-                        graphics.fill(x + 3, lineY, x + width - 4, lineY + ROW_HEIGHT, 0xB1223244);
-                        graphics.drawString(font, row.header(), x + 8, lineY + 4, color(row.group()), false);
+                        graphics.fill(x + 3, lineY, x + width - 4, lineY + ROW_HEIGHT, 0xFF223244);
+                        String title = (collapsedGroups.contains(row.group()) ? "[+] " : "[-] ") + row.header();
+                        graphics.drawString(font, font.plainSubstrByWidth(title, width - 18),
+                                x + 8, lineY + 4, color(row.group()), false);
                     } else {
                         Entry entry = row.entry();
                         boolean chosen = entry.id().equals(selected);
@@ -176,7 +224,7 @@ public final class WidgetListPanel {
     }
 
     private List<Row> rows(List<Entry> entries) {
-        if (entries.equals(cachedEntries)) {
+        if (!rowsDirty && entries.equals(cachedEntries)) {
             return cachedRows;
         }
         Map<String, Entry> byId = new LinkedHashMap<>();
@@ -196,10 +244,13 @@ public final class WidgetListPanel {
                 result.add(new Row(null, group, heading));
                 previousGroup = group;
             }
-            result.add(new Row(byId.get(id), group, null));
+            if (!collapsedGroups.contains(group)) {
+                result.add(new Row(byId.get(id), group, null));
+            }
         }
         cachedEntries = List.copyOf(entries);
         cachedRows = List.copyOf(result);
+        rowsDirty = false;
         return cachedRows;
     }
 

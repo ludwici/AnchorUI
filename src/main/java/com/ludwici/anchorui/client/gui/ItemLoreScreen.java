@@ -131,6 +131,10 @@ public class ItemLoreScreen extends Screen {
         return editingScreenOffsets != null;
     }
 
+    public String editorNamespace() {
+        return documentId == null ? loreEntity.namespace : documentId.getNamespace();
+    }
+
     public String screenSaveError() {
         return screenSaveError;
     }

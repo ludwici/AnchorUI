@@ -24,6 +24,11 @@ Third-party callers using the original three-argument constructor can still prev
 
 ## Working with widgets
 
+A **draggable Widgets panel** on the left lists *only the widgets belonging to the currently open Anchor UI screen*. It does not include HUDs from other screens or the global vanilla HUD reference catalog. The entries are sorted: `minecraft:*` first if present in the document, then IDs whose namespace matches the open screen's resource namespace, then all other namespaces alphabetically. If the screen comes from `catelot:screens/profile`, for example, `catelot:*` entries appear ahead of other mods' widgets. Click an entry to select it in the editor and inspect its bounds; hidden widgets can be selected here too. Scroll the list with the mouse wheel, and drag its header to move it separately from the inspector.
+
+While **Parent** is active, clicking an ID in the list chooses that widget as the anchor target rather than selecting a different widget. Self references and circular dependencies remain rejected. Press **Tab** to temporarily hide both editor panels.
+
+
 1. Click any outlined widget to select it. Drag it to reposition the widget. A 6 GUI-pixel magnet helps align it with other visible widgets along X/Y; hold **Alt** to bypass snapping.
 2. Use arrow keys for one-pixel nudges (10 pixels with **Shift**).
 3. **Point** and **Anchor** cycle through the same nine anchor locations as the HUD editor.

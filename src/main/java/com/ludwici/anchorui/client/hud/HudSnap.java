@@ -20,13 +20,28 @@ public final class HudSnap {
     }
 
     public static Result snap(Widget moving, int desiredX, int desiredY, List<Widget> widgets) {
+        return snapInternal(moving, desiredX, desiredY, widgets, null, null);
+    }
+
+    public static Result snap(Widget moving, int desiredX, int desiredY, List<Widget> widgets,
+                              int screenWidth, int screenHeight) {
+        if (screenWidth <= 0 || screenHeight <= 0) {
+            throw new IllegalArgumentException("Screen dimensions must be positive");
+        }
+        return snapInternal(moving, desiredX, desiredY, widgets, screenWidth / 2, screenHeight / 2);
+    }
+
+    private static Result snapInternal(Widget moving, int desiredX, int desiredY, List<Widget> widgets,
+                                       Integer centerX, Integer centerY) {
         Map<String, Widget> byId = new HashMap<>();
         for (Widget widget : widgets) {
             byId.put(widget.id(), widget);
         }
 
-        Candidate horizontal = null;
-        Candidate vertical = null;
+        Candidate horizontal = centerX == null ? null
+                : closest(null, desiredX + moving.width() / 2, centerX);
+        Candidate vertical = centerY == null ? null
+                : closest(null, desiredY + moving.height() / 2, centerY);
         for (Widget other : widgets) {
             if (!other.visible() || other.width() <= 0 || other.height() <= 0 || other.id().equals(moving.id()) || follows(other, moving.id(), byId)) {
                 continue;

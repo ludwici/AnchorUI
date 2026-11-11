@@ -6,6 +6,7 @@ import com.ludwici.anchorui.api.LoreEntity;
 import com.ludwici.anchorui.api.binding.BoundBoolean;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.layout.WidgetContainers;
+import com.ludwici.anchorui.api.layout.WidgetTransforms;
 import com.ludwici.anchorui.api.style.LoreStyle;
 import com.ludwici.anchorui.api.style.ElementAnchor;
 import com.ludwici.anchorui.api.style.PositionElement;
@@ -60,7 +61,7 @@ public final class AnchorHudManager {
     private record Description(String id, LoreEntity entity, LoreEntity.UiElement element) {
     }
 
-    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, boolean baseVisible, WidgetContext context, BoundBoolean visibleWhen, String containerParent) {
+    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, boolean baseVisible, WidgetContext context, BoundBoolean visibleWhen, String containerParent, boolean clipChildren, WidgetTransforms.Group group) {
         private PositionElement effectivePosition(HudLayoutOffsets offsets) {
             HudLayoutOffsets.Offset delta = offsets.get(id);
             HudLayoutOffsets.AnchorOverride anchor = offsets.anchor(id);
@@ -79,6 +80,7 @@ public final class AnchorHudManager {
     private List<PlacedWidget> widgets = List.of();
     private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
     private Map<String, AnchorLayout.Bounds> clipBounds = Map.of();
+    private Map<String, WidgetTransforms.Transform> transforms = Map.of();
     private final Set<String> renderFailures = new HashSet<>();
     private HudLayoutOffsets savedOffsets = new HudLayoutOffsets();
     private HudLayoutOffsets editingOffsets;
@@ -336,6 +338,16 @@ public final class AnchorHudManager {
         return registry.definition(id).map(element -> element.settings.deepCopy()).orElse(null);
     }
 
+    public double dragScale(String id) {
+        WidgetTransforms.Transform transform = transforms.getOrDefault(id, WidgetTransforms.IDENTITY);
+        for (PlacedWidget placed : widgets) {
+            if (placed.id().equals(id)) {
+                return transform.scale() / (placed.group() == null ? 1.0 : placed.group().scale());
+            }
+        }
+        return 1.0;
+    }
+
     public List<HudHandle> getHandles() {
         List<HudHandle> result = new ArrayList<>();
         HudLayoutOffsets offsets = currentOffsets();
@@ -343,7 +355,8 @@ public final class AnchorHudManager {
             AnchorLayout.Bounds bounds = layoutBounds.get(placed.id());
             if (bounds != null && !renderFailures.contains(placed.id())) {
                 PositionElement effective = placed.effectivePosition(offsets);
-                result.add(new HudHandle(placed.id(), bounds, effective.relativeTo, effective.point, effective.anchor, offsets.get(placed.id()), placed.widget().visible, offsets.isHidden(placed.id()),
+                WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+                result.add(new HudHandle(placed.id(), transform.physical(bounds), effective.relativeTo, effective.point, effective.anchor, offsets.get(placed.id()), placed.widget().visible, offsets.isHidden(placed.id()),
                         placed.position().relativeTo, placed.position().point, placed.position().anchor, placed.baseVisible()));
             }
         }
@@ -425,6 +438,9 @@ public final class AnchorHudManager {
                 if (!(widget instanceof AnchoredWidget) && (color >>> 24) != 0) {
                     graphics.fill(widget.getX(), widget.getY(), widget.getRight(), widget.getBottom(), color);
                 }
+                WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+                graphics.pose().translate(transform.translateX(), transform.translateY(), 0);
+                graphics.pose().scale((float) transform.scale(), (float) transform.scale(), 1.0F);
                 widget.render(graphics, -1, -1, partialTick);
             } catch (RuntimeException exception) {
                 renderFailures.add(placed.id());
@@ -448,6 +464,7 @@ public final class AnchorHudManager {
         widgets = List.of();
         layoutBounds = Map.of();
         clipBounds = Map.of();
+        transforms = Map.of();
         renderFailures.clear();
 
         List<Description> declared = new ArrayList<>();
@@ -502,7 +519,7 @@ public final class AnchorHudManager {
                 String relativeTo = WidgetIds.reference(position.relativeTo, entity.namespace);
                 PositionElement anchored = new PositionElement(position.point, position.anchor, relativeTo, position.x, position.y);
                 registry.attach(definition.id(), widget);
-                created.add(new PlacedWidget(definition.id(), widget, style, anchored, widget.visible, context, BoundBoolean.parse(element.settings, "visibleWhen", true), WidgetContainers.parent(element.settings)));
+                created.add(new PlacedWidget(definition.id(), widget, style, anchored, widget.visible, context, BoundBoolean.parse(element.settings, "visibleWhen", true), WidgetContainers.parent(element.settings), widget instanceof com.ludwici.anchorui.client.gui.PanelWidget && WidgetContainers.clipChildren(element.settings), widget instanceof com.ludwici.anchorui.client.gui.PanelWidget ? WidgetContainers.group(element.settings) : null));
             } catch (WidgetConfigException exception) {
                 warnings.add(exception.getMessage());
             } catch (RuntimeException exception) {
@@ -535,17 +552,27 @@ public final class AnchorHudManager {
             }
             layoutBounds = bounds;
             Map<String, String> parents = new LinkedHashMap<>();
+            Map<String, WidgetTransforms.Group> groups = new LinkedHashMap<>();
+            Set<String> clippingContainers = new HashSet<>();
             for (PlacedWidget placed : widgets) {
                 if (placed.containerParent() != null) {
                     parents.put(placed.id(), placed.containerParent());
                 }
+                if (placed.clipChildren()) {
+                    clippingContainers.add(placed.id());
+                }
+                if (placed.group() != null) {
+                    groups.put(placed.id(), placed.group());
+                }
             }
-            clipBounds = WidgetContainers.clips(bounds, parents);
+            transforms = WidgetTransforms.resolve(bounds, parents, groups);
+            clipBounds = WidgetContainers.clips(bounds, parents, clippingContainers, transforms);
             applyVisibility();
         } catch (IllegalArgumentException exception) {
             AnchorUI.LOGGER.error("Anchor UI HUD layout rejected ({}x{}, {} widgets): {}", builtWidth, builtHeight, widgets.size(), exception.getMessage());
             layoutBounds = Map.of();
             clipBounds = Map.of();
+            transforms = Map.of();
             widgets = List.of();
             if (warnings != null) {
                 warnings.add("HUD layout rejected: " + exception.getMessage());

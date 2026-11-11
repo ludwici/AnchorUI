@@ -5,6 +5,7 @@ import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.api.LoreEntity;
 import com.ludwici.anchorui.api.binding.BoundBoolean;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
+import com.ludwici.anchorui.api.layout.WidgetContainers;
 import com.ludwici.anchorui.api.style.LoreStyle;
 import com.ludwici.anchorui.api.style.ElementAnchor;
 import com.ludwici.anchorui.api.style.PositionElement;
@@ -29,7 +30,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -57,7 +60,7 @@ public final class AnchorHudManager {
     private record Description(String id, LoreEntity entity, LoreEntity.UiElement element) {
     }
 
-    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, boolean baseVisible, WidgetContext context, BoundBoolean visibleWhen) {
+    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, boolean baseVisible, WidgetContext context, BoundBoolean visibleWhen, String containerParent) {
         private PositionElement effectivePosition(HudLayoutOffsets offsets) {
             HudLayoutOffsets.Offset delta = offsets.get(id);
             HudLayoutOffsets.AnchorOverride anchor = offsets.anchor(id);
@@ -75,6 +78,7 @@ public final class AnchorHudManager {
     private WidgetInstanceRegistry registry = new WidgetInstanceRegistry();
     private List<PlacedWidget> widgets = List.of();
     private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
+    private Map<String, AnchorLayout.Bounds> clipBounds = Map.of();
     private final Set<String> renderFailures = new HashSet<>();
     private HudLayoutOffsets savedOffsets = new HudLayoutOffsets();
     private HudLayoutOffsets editingOffsets;
@@ -217,13 +221,28 @@ public final class AnchorHudManager {
     }
 
     private Map<String, AnchorLayout.Bounds> resolveBounds(HudLayoutOffsets offsets) {
-        return AnchorLayout.resolve(builtWidth, builtHeight, widgets.stream().map(placed -> placed.frame(offsets)).toList());
+        return AnchorLayout.resolve(builtWidth, builtHeight, frames(offsets));
+    }
+
+    private List<AnchorLayout.Frame> frames(HudLayoutOffsets offsets) {
+        List<AnchorLayout.Frame> frames = new ArrayList<>();
+        for (PlacedWidget placed : widgets) {
+            frames.add(placed.frame(offsets));
+            if (placed.widget() instanceof com.ludwici.anchorui.client.gui.PanelWidget) {
+                frames.add(WidgetContainers.contentFrame(placed.id(), placed.widget().getWidth(), placed.widget().getHeight(), placed.style().padding));
+            }
+        }
+        return frames;
     }
 
     private void applyVisibility() {
         HudLayoutOffsets offsets = currentOffsets();
+        Map<String, Boolean> shown = new HashMap<>();
         for (PlacedWidget placed : widgets) {
-            placed.widget().visible = placed.baseVisible() && !offsets.isHidden(placed.id()) && placed.visibleWhen().get(placed.context());
+            boolean parentVisible = placed.containerParent() == null || shown.getOrDefault(placed.containerParent(), false);
+            boolean visible = parentVisible && placed.baseVisible() && !offsets.isHidden(placed.id()) && placed.visibleWhen().get(placed.context());
+            placed.widget().visible = visible;
+            shown.put(placed.id(), visible);
         }
     }
 
@@ -393,7 +412,14 @@ public final class AnchorHudManager {
             if (!widget.visible) {
                 continue;
             }
+            AnchorLayout.Bounds clip = clipBounds.get(placed.id());
+            if (clip != null && (clip.width() == 0 || clip.height() == 0)) {
+                continue;
+            }
             graphics.pose().pushPose();
+            if (clip != null) {
+                graphics.enableScissor(clip.x(), clip.y(), clip.x() + clip.width(), clip.y() + clip.height());
+            }
             try {
                 int color = placed.style().background.color;
                 if (!(widget instanceof AnchoredWidget) && (color >>> 24) != 0) {
@@ -404,6 +430,9 @@ public final class AnchorHudManager {
                 renderFailures.add(placed.id());
                 AnchorUI.LOGGER.error("Anchor UI HUD widget '{}' failed during rendering; disabled until rebuild", placed.id(), exception);
             } finally {
+                if (clip != null) {
+                    graphics.disableScissor();
+                }
                 graphics.pose().popPose();
             }
         }
@@ -418,6 +447,7 @@ public final class AnchorHudManager {
         registry = new WidgetInstanceRegistry();
         widgets = List.of();
         layoutBounds = Map.of();
+        clipBounds = Map.of();
         renderFailures.clear();
 
         List<Description> declared = new ArrayList<>();
@@ -472,7 +502,7 @@ public final class AnchorHudManager {
                 String relativeTo = WidgetIds.reference(position.relativeTo, entity.namespace);
                 PositionElement anchored = new PositionElement(position.point, position.anchor, relativeTo, position.x, position.y);
                 registry.attach(definition.id(), widget);
-                created.add(new PlacedWidget(definition.id(), widget, style, anchored, widget.visible, context, BoundBoolean.parse(element.settings, "visibleWhen", true)));
+                created.add(new PlacedWidget(definition.id(), widget, style, anchored, widget.visible, context, BoundBoolean.parse(element.settings, "visibleWhen", true), WidgetContainers.parent(element.settings)));
             } catch (WidgetConfigException exception) {
                 warnings.add(exception.getMessage());
             } catch (RuntimeException exception) {
@@ -492,7 +522,7 @@ public final class AnchorHudManager {
         if (builtWidth <= 0 || builtHeight <= 0) {
             return;
         }
-        List<AnchorLayout.Frame> frames = widgets.stream().map(placed -> placed.frame(currentOffsets())).toList();
+        List<AnchorLayout.Frame> frames = frames(currentOffsets());
         try {
             Map<String, AnchorLayout.Bounds> bounds = AnchorLayout.resolve(builtWidth, builtHeight, frames, warning -> {
                 if (warnings != null) {
@@ -504,10 +534,18 @@ public final class AnchorHudManager {
                 placed.widget().setPosition(frame.x(), frame.y());
             }
             layoutBounds = bounds;
+            Map<String, String> parents = new LinkedHashMap<>();
+            for (PlacedWidget placed : widgets) {
+                if (placed.containerParent() != null) {
+                    parents.put(placed.id(), placed.containerParent());
+                }
+            }
+            clipBounds = WidgetContainers.clips(bounds, parents);
             applyVisibility();
         } catch (IllegalArgumentException exception) {
             AnchorUI.LOGGER.error("Anchor UI HUD layout rejected ({}x{}, {} widgets): {}", builtWidth, builtHeight, widgets.size(), exception.getMessage());
             layoutBounds = Map.of();
+            clipBounds = Map.of();
             widgets = List.of();
             if (warnings != null) {
                 warnings.add("HUD layout rejected: " + exception.getMessage());

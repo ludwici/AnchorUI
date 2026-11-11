@@ -3,6 +3,7 @@ package com.ludwici.anchorui.api.widget;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.ludwici.anchorui.api.layout.WidgetContainers;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -25,7 +26,7 @@ public final class WidgetDocumentResolver {
         for (JsonElement value : imports) {
             String id = WidgetIds.id(value.getAsString(), namespace);
             try {
-                add(elements, template(id, templates, new ArrayList<>()));
+                addNested(elements, template(id, templates, new ArrayList<>()), namespace, templates, warningSink);
             } catch (UnknownWidgetDefinitionException exception) {
                 if (warningSink == null) {
                     throw exception;
@@ -65,7 +66,7 @@ public final class WidgetDocumentResolver {
                 }
             }
             output.addProperty("id", WidgetIds.id(output.get("id").getAsString(), namespace));
-            add(elements, output);
+            addNested(elements, output, namespace, templates, warningSink);
             index++;
         }
         JsonArray array = new JsonArray();
@@ -77,6 +78,52 @@ public final class WidgetDocumentResolver {
         }
         resolved.remove("imports");
         return resolved;
+    }
+
+    private static void addNested(Map<String, JsonObject> elements, JsonObject original, String namespace, Map<String, JsonObject> templates, Consumer<String> warningSink) {
+        JsonArray children = array(original, "children");
+        JsonObject parent = original.deepCopy();
+        parent.remove("children");
+        String id = parent.get("id").getAsString();
+        if (!children.isEmpty() && !WidgetContainers.supportsChildren(parent.get("type").getAsString())) {
+            throw new IllegalArgumentException("Widget '" + id + "' cannot contain children; use anchorui:panel or anchorui:container");
+        }
+        add(elements, parent);
+
+        int index = 0;
+        for (JsonElement raw : children) {
+            JsonObject child = raw.getAsJsonObject().deepCopy();
+            String childNamespace = WidgetIds.namespace(id);
+            boolean ownId = child.has("id") && !child.get("id").getAsString().isBlank();
+            if (child.has("ref")) {
+                String templateId = WidgetIds.id(child.get("ref").getAsString(), childNamespace);
+                child.remove("ref");
+                normalizePosition(child, childNamespace);
+                try {
+                    child = merge(template(templateId, templates, new ArrayList<>()), child);
+                } catch (UnknownWidgetDefinitionException exception) {
+                    if (warningSink == null) {
+                        throw exception;
+                    }
+                    warningSink.accept(exception.getMessage());
+                    index++;
+                    continue;
+                }
+            }
+            if (!ownId) {
+                child.addProperty("id", id.substring(id.indexOf(':') + 1) + "/child_" + index);
+            }
+            child.addProperty("id", WidgetIds.id(child.get("id").getAsString(), childNamespace));
+            normalizePosition(child, childNamespace);
+            JsonObject position = child.has("position") && child.get("position").isJsonObject() ? child.getAsJsonObject("position") : new JsonObject();
+            if (!position.has("relativeTo")) {
+                position.addProperty("relativeTo", WidgetContainers.contentId(id));
+            }
+            child.add("position", position);
+            child.addProperty(WidgetContainers.PARENT_FIELD, id);
+            addNested(elements, child, childNamespace, templates, warningSink);
+            index++;
+        }
     }
 
     public static final class UnknownWidgetDefinitionException extends IllegalArgumentException {

@@ -97,7 +97,7 @@ public final class AnchorUITestCommands {
             }
             return;
         }
-        minecraft.setScreen(new ItemLoreScreen(minecraft.screen, ItemStack.EMPTY, entity));
+        minecraft.setScreen(new ItemLoreScreen(minecraft.screen, ItemStack.EMPTY, entity, id));
     }
 
     private static int queueHudEditor() {

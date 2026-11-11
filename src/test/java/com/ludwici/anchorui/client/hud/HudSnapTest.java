@@ -77,6 +77,18 @@ public class HudSnapTest {
     }
 
     @Test
+    public void nestedContentAnchorsFollowTheirContainerForSnapping() {
+        var root = widget("mod:root", "screen", 10, 10, 120, 80);
+        var child = widget("mod:child", "mod:root/__content", 100, 50, 30, 20);
+        var grandchild = widget("mod:grand", "mod:child/__content", 210, 70, 30, 20);
+        var result = HudSnap.snap(root, 99, 49, List.of(root, child, grandchild));
+        assertEquals(99, result.x());
+        assertEquals(49, result.y());
+        assertNull(result.guideX());
+        assertNull(result.guideY());
+    }
+
+    @Test
     public void snapResultIsBasedOnRawMousePositionNotPreviousSnap() {
         var moving = widget("mod:moving", "screen", 10, 10, 40, 20);
         var target = widget("mod:target", "screen", 100, 200, 80, 20);

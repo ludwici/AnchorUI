@@ -745,7 +745,7 @@ public final class AnchorHudManager {
                 String relativeTo = WidgetIds.reference(position.relativeTo, entity.namespace);
                 PositionElement anchored = new PositionElement(position.point, position.anchor, relativeTo, position.x, position.y);
                 BoundCondition visibleWhen = BoundCondition.parse(element.settings, "visibleWhen", true);
-                BoundCondition enabledWhen = BoundCondition.parse(element.settings, "enabledWhen", true);
+                BoundCondition enabledWhen = BoundCondition.parse(element.settings, "enabledWhen", true, false);
                 registry.attach(definition.id(), widget);
                 boolean panel = widget instanceof com.ludwici.anchorui.client.gui.PanelWidget;
                 created.add(new PlacedWidget(definition.id(), widget, style, anchored,

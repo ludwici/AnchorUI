@@ -54,8 +54,8 @@ See `README.md`, `docs/HUD.md`, `docs/DATA_BINDINGS.md`, `docs/MODPACK_AUTHORING
 
 **Priority: high.** RPG HUD and dialogue authors need more than text, item models and progress bars.
 
-- [ ] Implement a first-class **texture/image widget** using namespaced textures from mod resources/resource packs. Clarify scaling, alignment, tint, clipping, and missing-resource behavior. An image field may already be parsed, but actual rendering must be implemented.
-- [ ] Introduce robust **panel/container** widgets, with child composition and predictable parent-relative positioning. Define how padding, content bounds, nested anchors, sizing, clipping and draw order interact.
+- [x] Implement a first-class **texture/image widget** with namespaced textures, scaling, UV cropping, tint, and alpha. Better missing-resource handling is still future work.
+- [x] Implement initial **panel/container** widgets, nested children, padding, content bounds, anchors, clipping, and parent-first draw order. Advanced sizing and layout policies are future work.
 - [ ] Unify widget visual styling: borders/frames, backgrounds, overlays and progress-bar style consistency. Specifically guard against the prior RPG HUD issue where the second bar did not receive the same border appearance as the first.
 - [ ] Verify rendering order when screens use blur, backgrounds, outlines, tooltips and widget content; avoid elements unexpectedly appearing beneath the blur.
 - [ ] Keep content and widgets reusable through `style`, `ref` and imports, rather than duplicating definitions.

@@ -67,7 +67,7 @@ public class ConditionResourceTest {
 
         assertFalse(condition.evaluate(values(Map.of("anchorui:player.level", JsonParser.parseString("4")))));
         assertTrue(condition.evaluate(values(Map.of("anchorui:player.level", JsonParser.parseString("5")))));
-        assertFalse(condition.evaluate(values(Map.of()));
+        assertFalse(condition.evaluate(values(Map.of())));
     }
 
     private ConditionExpression.Resolver values(Map<String, JsonElement> values) {

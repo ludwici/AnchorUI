@@ -64,6 +64,7 @@ public class ItemLoreScreen extends Screen {
     private String screenSaveError = "";
     private WidgetInstanceRegistry widgetRegistry = new WidgetInstanceRegistry();
     private List<PlacedWidget> placedWidgets = List.of();
+    private final Map<String, Boolean> visibilityScratch = new HashMap<>();
     private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
     private Map<String, AnchorLayout.Bounds> clipBounds = Map.of();
     private Map<String, WidgetTransforms.Transform> transforms = Map.of();
@@ -361,8 +362,9 @@ public class ItemLoreScreen extends Screen {
 
         try {
             List<AnchorLayout.Frame> frames = new ArrayList<>();
+            HudLayoutOffsets defaults = new HudLayoutOffsets();
             for (PlacedWidget placed : created) {
-                frames.add(placed.frame(new HudLayoutOffsets()));
+                frames.add(placed.frame(defaults));
                 if (placed.widget() instanceof PanelWidget) {
                     frames.add(WidgetContainers.contentFrame(placed.id(), placed.widget().getWidth(), placed.widget().getHeight(), placed.style().padding));
                 }
@@ -469,10 +471,12 @@ public class ItemLoreScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        Map<String, Boolean> visible = new HashMap<>();
+        visibilityScratch.clear();
+        Map<String, Boolean> visible = visibilityScratch;
+        HudLayoutOffsets overrides = currentScreenOffsets();
         for (PlacedWidget placed : placedWidgets) {
             boolean parentVisible = placed.containerParent() == null || visible.getOrDefault(placed.containerParent(), false);
-            boolean shown = parentVisible && placed.baseVisible() && !currentScreenOffsets().isHidden(placed.id()) && placed.visibleWhen().get(placed.context());
+            boolean shown = parentVisible && placed.baseVisible() && !overrides.isHidden(placed.id()) && placed.visibleWhen().get(placed.context());
             placed.widget().visible = shown;
             visible.put(placed.id(), shown);
         }

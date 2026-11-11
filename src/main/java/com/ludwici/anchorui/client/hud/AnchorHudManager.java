@@ -446,12 +446,11 @@ public final class AnchorHudManager {
             boolean parentEnabled = parent == null || enabledScratch.getOrDefault(parent, false);
             boolean visible = parentVisible && placed.baseVisible() && !offsets.isHidden(placed.id())
                     && placed.visibleWhen().get(placed.context());
-            boolean enabled = visible && parentEnabled && placed.baseActive()
-                    && placed.enabledWhen().get(placed.context());
+            boolean allowed = visible && parentEnabled && placed.enabledWhen().get(placed.context());
             placed.widget().visible = visible;
-            placed.widget().active = enabled;
+            placed.widget().active = allowed && placed.baseActive();
             visibilityScratch.put(placed.id(), visible);
-            enabledScratch.put(placed.id(), enabled);
+            enabledScratch.put(placed.id(), allowed);
         }
     }
 

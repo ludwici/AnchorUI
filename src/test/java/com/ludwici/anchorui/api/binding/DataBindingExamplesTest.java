@@ -47,6 +47,9 @@ public class DataBindingExamplesTest {
     public void dialogueScreenAndStarterPackUseBindings() throws IOException {
         JsonObject screen = resource("assets/anchorui/anchorui/screens/bindings.json");
         assertEquals("anchorui:player.name", screen.getAsJsonArray("entities").get(1).getAsJsonObject().getAsJsonObject("text").get("bind").getAsString());
+        assertEquals("anchorui:uppercase", screen.getAsJsonArray("entities").get(1).getAsJsonObject().getAsJsonObject("text").get("format").getAsString());
+        assertTrue(screen.getAsJsonArray("entities").get(2).getAsJsonObject().get("text").getAsString().contains("|anchorui:percent}}"));
+        assertEquals("anchorui:uppercase", screen.getAsJsonArray("entities").get(3).getAsJsonObject().get("itemFormat").getAsString());
         var starter = Path.of("examples/resourcepack/AnchorUI-Starter/assets/mypack/anchorui/screens/bindings.json");
         assertTrue(Files.isRegularFile(starter));
         JsonObject external = JsonParser.parseString(Files.readString(starter, StandardCharsets.UTF_8)).getAsJsonObject();

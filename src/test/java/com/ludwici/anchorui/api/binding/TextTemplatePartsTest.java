@@ -22,6 +22,16 @@ public class TextTemplatePartsTest {
     }
 
     @Test
+    public void parsesFormattersInTemplates() {
+        var parts = TextTemplateParts.parse("Mana {{rpg:stats#mana.current|rpg:mana}} XP {{rpg:exp|anchorui:percent}}");
+        assertEquals(4, parts.size());
+        assertEquals("rpg:stats", parts.get(1).source());
+        assertEquals("mana.current", parts.get(1).path());
+        assertEquals("rpg:mana", parts.get(1).format());
+        assertEquals("anchorui:percent", parts.get(3).format());
+    }
+
+    @Test
     public void preservesStaticTextWhenNoBindingIsPresent() {
         var parts = TextTemplateParts.parse("<i>Static only</i>");
         assertEquals(1, parts.size());

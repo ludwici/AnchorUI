@@ -33,6 +33,7 @@
       "id": "anchorui:binding_screen_name",
       "text": {
         "bind": "anchorui:player.name",
+        "format": "anchorui:uppercase",
         "fallback": "Unknown player"
       },
       "position": {
@@ -81,6 +82,7 @@
         "fallback": []
       },
       "itemPath": "name",
+      "itemFormat": "anchorui:uppercase",
       "emptyText": "No active status effects",
       "maxEntries": 10,
       "position": {

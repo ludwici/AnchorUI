@@ -2,7 +2,6 @@ package com.ludwici.anchorui.api.binding;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.ludwici.anchorui.api.widget.WidgetConfigDecoder;
 import com.ludwici.anchorui.api.widget.WidgetContext;
 import com.mojang.serialization.Codec;

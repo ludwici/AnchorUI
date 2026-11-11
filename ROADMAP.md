@@ -46,7 +46,7 @@ The following is documented in the current repository and/or supported by the la
 - [x] Binding test HUD/screen and starter resource pack examples.
 - [x] JSON test scenes `scene1`–`scene14`, tests/CI build setup.
 
-**Important distinctions:** `visibleWhen` is a single boolean-bound visibility rule, **not** a general conditional expression engine. Current dialogues demonstrate screen navigation, **not** complete branching conversation/quest state. Texture/image, panel, nested containers, opt-in clipping, nine-slice and basic group scaling are now implemented; auto-sizing, scrolling and full visual-style parity remain future work.
+**Important distinctions:** `visibleWhen` is a single boolean-bound visibility rule, **not** a general conditional expression engine. Current dialogues demonstrate screen navigation, **not** complete branching conversation/quest state. Texture/image, panel, nested containers, opt-in clipping, nine-slice and basic group scaling are implemented. Content-based container auto sizing and opt-in generic JSON scrolling are implemented; full flex/grid layout and visual-style parity remain future work.
 
 See `README.md`, `docs/HUD.md`, `docs/DATA_BINDINGS.md`, `docs/MODPACK_AUTHORING.md`, `docs/WIDGET_REFERENCES.md`, and `docs/CUSTOM_WIDGETS.md` for implemented APIs. If a later code change contradicts this snapshot, update the checkboxes.
 

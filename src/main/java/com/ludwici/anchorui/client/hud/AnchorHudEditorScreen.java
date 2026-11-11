@@ -316,6 +316,7 @@ public final class AnchorHudEditorScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         manager.renderEditorPreview(graphics, partialTick);
+        manager.renderScrollBars(graphics, mouseX, mouseY, partialTick);
         refreshFrameHandles();
         resetHitboxes.clear();
         vanillaParentHitboxes.clear();
@@ -696,6 +697,13 @@ public final class AnchorHudEditorScreen extends Screen {
             return true;
         }
 
+        if (manager.mouseClickedScrollBar(mouseX, mouseY, button)) {
+            draggingWidget = false;
+            dragOrigin = null;
+            snapResult = null;
+            return true;
+        }
+
         AnchorHudManager.HudHandle clicked = clickedHandle(mouseX, mouseY);
         VanillaHudGeometry.Reference vanilla = clicked == null ? clickedVanillaHandle(mouseX, mouseY) : null;
         if (choosingParent && selected != null) {
@@ -737,6 +745,9 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (manager.mouseDraggedScrollBar(mouseX, mouseY, button, dragX, dragY)) {
+            return true;
+        }
         if (widgetList.dragged(mouseX, mouseY, button)) {
             return true;
         }
@@ -778,6 +789,9 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (manager.mouseReleasedScrollBar(mouseX, mouseY, button)) {
+            return true;
+        }
         if (widgetList.released(button)) {
             return true;
         }

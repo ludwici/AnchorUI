@@ -23,7 +23,7 @@ public final class WidgetListPanel {
     private static final int HEADER_HEIGHT = 21;
     private static final int FOOTER_HEIGHT = 17;
     private static final int ROW_HEIGHT = 17;
-    private static final int GROUP_HEIGHT = 17;
+    private static final int GROUP_HEIGHT = ROW_HEIGHT;
     private static final int PANEL_BACKGROUND = 0xEE121D2B;
     private static final int HEADER_BACKGROUND = 0xEF29445B;
     private static final int SELECTED_COLOR = 0xFFFFD37A;
@@ -110,15 +110,9 @@ public final class WidgetListPanel {
             return null;
         }
         int pointerY = (int) mouseY - y - HEADER_HEIGHT + scroll;
-        int position = 0;
-        for (Row row : rows(entries)) {
-            int rowHeight = row.heading() ? GROUP_HEIGHT : ROW_HEIGHT;
-            if (pointerY >= position && pointerY < position + rowHeight) {
-                return row.entry();
-            }
-            position += rowHeight;
-        }
-        return null;
+        int index = pointerY / ROW_HEIGHT;
+        List<Row> rows = rows(entries);
+        return pointerY >= 0 && index < rows.size() ? rows.get(index).entry() : null;
     }
 
     public void render(GuiGraphics graphics, Font font, int mouseX, int mouseY,
@@ -133,10 +127,12 @@ public final class WidgetListPanel {
         int bottom = y + height - FOOTER_HEIGHT;
         graphics.enableScissor(x + 2, top, x + width - 3, bottom);
         try {
-            int lineY = top - scroll;
-            for (Row row : rows) {
-                int rowHeight = row.heading() ? GROUP_HEIGHT : ROW_HEIGHT;
-                if (lineY + rowHeight > top && lineY < bottom) {
+            int first = Math.max(0, scroll / ROW_HEIGHT);
+            int last = Math.min(rows.size(), (scroll + bottom - top) / ROW_HEIGHT + 2);
+            for (int index = first; index < last; index++) {
+                Row row = rows.get(index);
+                int lineY = top + index * ROW_HEIGHT - scroll;
+                if (lineY + ROW_HEIGHT > top && lineY < bottom) {
                     if (row.heading()) {
                         graphics.fill(x + 3, lineY, x + width - 4, lineY + rowHeight, 0xB1223244);
                         graphics.drawString(font, row.header(), x + 8, lineY + 4, color(row.group()), false);
@@ -155,7 +151,6 @@ public final class WidgetListPanel {
                         graphics.drawString(font, label, x + 15, lineY + 4, tint, false);
                     }
                 }
-                lineY += rowHeight;
             }
         } finally {
             graphics.disableScissor();
@@ -209,11 +204,7 @@ public final class WidgetListPanel {
     }
 
     private int contentHeight(List<Row> rows) {
-        int result = 0;
-        for (Row row : rows) {
-            result += row.heading() ? GROUP_HEIGHT : ROW_HEIGHT;
-        }
-        return result;
+        return rows.size() * ROW_HEIGHT;
     }
 
     private int maxScroll(List<Row> rows) {

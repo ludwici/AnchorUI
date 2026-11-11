@@ -71,6 +71,9 @@ neoForge {
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
+sourceSets.test.compileClasspath += sourceSets.main.compileClasspath
+sourceSets.test.runtimeClasspath += sourceSets.main.runtimeClasspath
+
 
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'

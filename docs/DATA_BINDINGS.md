@@ -87,7 +87,7 @@ Template substitutions use `{{namespace:source}}` or `{{namespace:source#object.
 }
 ```
 
-`visibleWhen` works with any widget, in HUDs and screens. When the value becomes false, the widget stops rendering but **keeps its layout bounds**, so anchored siblings do not jump around. Existing static `hidden` settings and player-controlled HUD visibility continue to apply: a binding cannot force an explicitly hidden widget to appear. This is a simple binding-based visibility switch, not yet a full conditional-expression system.
+`visibleWhen` and `enabledWhen` work with any widget in HUDs and screens. When visibility becomes false, the widget stops rendering but **keeps its layout bounds**, so anchored siblings do not jump around. When `enabledWhen` becomes false, the widget remains visible but cannot be clicked; buttons show their disabled appearance. Existing static `hidden` settings and player-controlled HUD visibility continue to apply. Conditions also support `all`, `any`, `not`, numeric/string/list comparisons and missing-value checks: see [Conditions](CONDITIONS.md).
 
 ### Lists and structured entries
 

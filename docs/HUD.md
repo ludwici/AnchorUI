@@ -44,6 +44,14 @@ A simple example:
 
 The `mymod:status` widget becomes part of the HUD automatically when the resource is loaded. HUD instances are recreated only when needed, such as after a resource reload, world change or GUI resize.
 
+## Vanilla Minecraft HUD anchors (read-only)
+
+Anchor UI now exposes all 25 NeoForge 1.21.1 vanilla HUD layer IDs as **read-only anchor references**, such as `minecraft:hotbar`, `minecraft:crosshair`, `minecraft:player_health`, and `minecraft:boss_overlay`. Custom resource-pack HUD widgets can use them in `position.relativeTo` just like any other element. The vanilla graphics are not moved or otherwise modified.
+
+F8 previews their logical bounds in purple (active-only by default). The `IDs` button switches between active / all / hidden reference rectangles. While picking a custom widget's parent, the inspector lists **every** vanilla ID for direct selection, including contextual HUD layers not currently drawn. Boundaries for variable-size vanilla elements are approximate; see the full catalog and caveats in [Vanilla HUD Anchors](VANILLA_HUD_ANCHORS.md).
+
+Try `/anchorui test vanilla on` to display bundled example widgets attached to the hotbar and crosshair. Disable with `/anchorui test vanilla off`.
+
 ## Cross-mod HUD anchors
 
 Suppose Mod A defines `moda:health` in `assets/moda/anchorui/hud/health.json`. Mod B can place a widget below it in `assets/modb/anchorui/hud/mana.json`:

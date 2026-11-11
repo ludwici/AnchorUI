@@ -44,6 +44,8 @@ public final class WidgetListPanel {
     private double dragStartX;
     private double dragStartY;
     private boolean dragging;
+    private List<Entry> cachedEntries = List.of();
+    private List<Row> cachedRows = List.of();
 
     public WidgetListPanel(String currentNamespace) {
         this.currentNamespace = currentNamespace;
@@ -179,6 +181,9 @@ public final class WidgetListPanel {
     }
 
     private List<Row> rows(List<Entry> entries) {
+        if (entries.equals(cachedEntries)) {
+            return cachedRows;
+        }
         Map<String, Entry> byId = new LinkedHashMap<>();
         for (Entry entry : entries) {
             byId.putIfAbsent(entry.id(), entry);
@@ -198,7 +203,9 @@ public final class WidgetListPanel {
             }
             result.add(new Row(byId.get(id), group, null));
         }
-        return result;
+        cachedEntries = List.copyOf(entries);
+        cachedRows = List.copyOf(result);
+        return cachedRows;
     }
 
     private int contentHeight(List<Row> rows) {

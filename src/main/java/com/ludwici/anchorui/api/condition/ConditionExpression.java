@@ -61,7 +61,7 @@ public final class ConditionExpression {
         private final Set<String> sources = new LinkedHashSet<>();
         private int nodes;
 
-        private Test condition(JsonElement json, boolean defaultValue, int depth) {
+        private Test condition(JsonElement json, boolean defaultValue, boolean missingBindingDefault, int depth) {
             limit(depth);
             if (json == null || json.isJsonNull()) {
                 return resolver -> defaultValue;
@@ -77,7 +77,7 @@ public final class ConditionExpression {
             if (object.has("bind")) {
                 requireKeys(object, "bind", "path", "fallback");
                 Operand operand = operand(json, depth + 1);
-                JsonElement fallback = object.has("fallback") ? object.get("fallback") : new JsonPrimitive(defaultValue);
+                JsonElement fallback = object.has("fallback") ? object.get("fallback") : new JsonPrimitive(missingBindingDefault);
                 if (!booleanValue(fallback)) {
                     throw new IllegalArgumentException("Boolean condition fallback must be true or false");
                 }
@@ -95,7 +95,7 @@ public final class ConditionExpression {
                     throw new IllegalArgumentException("Condition logic must contain exactly one of all, any or not");
                 }
                 if (object.has("not")) {
-                    Test child = condition(object.get("not"), false, depth + 1);
+                    Test child = condition(object.get("not"), false, false, depth + 1);
                     return resolver -> !child.evaluate(resolver);
                 }
                 String key = object.has("all") ? "all" : "any";
@@ -109,7 +109,7 @@ public final class ConditionExpression {
                 }
                 List<Test> children = new ArrayList<>(array.size());
                 for (JsonElement entry : array) {
-                    children.add(condition(entry, false, depth + 1));
+                    children.add(condition(entry, false, false, depth + 1));
                 }
                 List<Test> compiled = List.copyOf(children);
                 if ("all".equals(key)) {
@@ -210,8 +210,12 @@ public final class ConditionExpression {
     }
 
     public static ConditionExpression parse(JsonElement json, boolean defaultValue) {
+        return parse(json, defaultValue, defaultValue);
+    }
+
+    public static ConditionExpression parse(JsonElement json, boolean defaultValue, boolean missingBindingDefault) {
         Parser parser = new Parser();
-        Test expression = parser.condition(json, defaultValue, 0);
+        Test expression = parser.condition(json, defaultValue, missingBindingDefault, 0);
         return new ConditionExpression(expression, Set.copyOf(parser.sources));
     }
 

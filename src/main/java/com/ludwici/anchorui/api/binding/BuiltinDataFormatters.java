@@ -57,9 +57,9 @@ public final class BuiltinDataFormatters {
             divisor = 1000.0;
             suffix = "K";
         }
-        double scaled = number / divisor;
-        String text = Math.abs(scaled) >= 10 ? Long.toString(Math.round(scaled))
-                : String.format(Locale.ROOT, "%.1f", scaled).replaceAll("\\.0$", "");
+        double scaled = Math.round(number / divisor * 10.0) / 10.0;
+        String text = scaled == Math.rint(scaled) ? Long.toString(Math.round(scaled))
+                : String.format(Locale.ROOT, "%.1f", scaled);
         return text + suffix;
     }
 }

@@ -1,6 +1,7 @@
 package com.ludwici.anchorui.client.hud;
 
 import com.google.gson.JsonObject;
+import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.KeyRegistry;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphics;
@@ -19,6 +20,8 @@ public final class AnchorHudEditorScreen extends Screen {
     private static final int HIDDEN_COLOR = 0xFF9E9E9E;
     private static final int PARENT_COLOR = 0xFF8DF4AA;
     private static final int SNAP_GUIDE_COLOR = 0xFF88F0D6;
+    private static final int VANILLA_COLOR = 0xFFAE9CE9;
+    private static final int VANILLA_INACTIVE_COLOR = 0xFF6F6982;
     private static final int PANEL_WIDTH = 218;
     private static final int BUTTON_HEIGHT = 17;
     private static final int BUTTON_STEP = 20;
@@ -28,7 +31,13 @@ public final class AnchorHudEditorScreen extends Screen {
     private static final float INSPECTOR_SCALE = 0.83F;
     private static final int RESET_SIZE = 11;
 
-    private record InspectorLine(FormattedCharSequence text, int color, AnchorHudManager.EditableProperty reset, boolean modified) {
+    private record InspectorLine(FormattedCharSequence text, int color, AnchorHudManager.EditableProperty reset, boolean modified, String vanillaParent) {
+    }
+
+    private record VanillaParentHitbox(String id, int x, int y, int width, int height) {
+        private boolean contains(double mouseX, double mouseY) {
+            return mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height;
+        }
     }
 
     private record ResetHitbox(AnchorHudManager.EditableProperty property, int x, int y) {
@@ -40,6 +49,9 @@ public final class AnchorHudEditorScreen extends Screen {
     private final AnchorHudManager manager = AnchorHudManager.INSTANCE;
     private final List<Button> controls = new ArrayList<>();
     private final List<ResetHitbox> resetHitboxes = new ArrayList<>();
+    private final List<VanillaParentHitbox> vanillaParentHitboxes = new ArrayList<>();
+    private int vanillaViewMode = 1;
+    private String inspectedVanilla;
     private boolean editorStarted;
     private boolean compact;
     private boolean choosingParent;
@@ -70,6 +82,7 @@ public final class AnchorHudEditorScreen extends Screen {
     private Button anchorButton;
     private Button parentButton;
     private Button demoButton;
+    private Button vanillaButton;
 
     public AnchorHudEditorScreen() {
         super(Component.literal("Anchor UI HUD Editor"));
@@ -107,6 +120,15 @@ public final class AnchorHudEditorScreen extends Screen {
             choosingParent = false;
             status = manager.isTestEnabled() ? "Demo HUD enabled" : "Demo HUD disabled";
         }).bounds(panelX + panelWidth - 46, panelY + 3, 40, 16).build());
+
+        vanillaButton = addControl(Button.builder(Component.literal("Vanilla"), button -> {
+            vanillaViewMode = (vanillaViewMode + 1) % 3;
+            status = switch (vanillaViewMode) {
+                case 0 -> "Vanilla outlines hidden (references still work)";
+                case 1 -> "Vanilla: active HUD elements";
+                default -> "Vanilla: all 25 HUD references";
+            };
+        }).bounds(panelX + panelWidth - 114, panelY + 3, 62, 16).build());
 
         pointButton = addControl(Button.builder(Component.literal("Point >"), button -> {
             if (selected != null && manager.cyclePreviewPoint(selected)) {
@@ -181,20 +203,22 @@ public final class AnchorHudEditorScreen extends Screen {
         int right = left + half + 4;
         int top = actionsTop();
         demoButton.setPosition(panelX + panelWidth - 46, panelY + 3);
+        vanillaButton.setPosition(panelX + panelWidth - 114, panelY + 3);
         pointButton.setPosition(left, top);
         anchorButton.setPosition(right, top);
         parentButton.setPosition(left, top + BUTTON_STEP);
         hideButton.setPosition(right, top + BUTTON_STEP);
         resetButton.setPosition(left, top + BUTTON_STEP * 2);
-        controls.get(6).setPosition(right, top + BUTTON_STEP * 2);
-        controls.get(7).setPosition(left, top + BUTTON_STEP * 3);
-        controls.get(8).setPosition(right, top + BUTTON_STEP * 3);
+        controls.get(7).setPosition(right, top + BUTTON_STEP * 2);
+        controls.get(8).setPosition(left, top + BUTTON_STEP * 3);
+        controls.get(9).setPosition(right, top + BUTTON_STEP * 3);
     }
 
     private void selectWidget(String id) {
         if (id == null || !id.equals(selected)) {
             selected = id;
             inspectedId = null;
+            inspectedVanilla = null;
             sourceProperties = List.of();
             inspectorScroll = 0;
         }
@@ -220,7 +244,32 @@ public final class AnchorHudEditorScreen extends Screen {
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         manager.renderEditorPreview(graphics, partialTick);
         resetHitboxes.clear();
+        vanillaParentHitboxes.clear();
         List<AnchorHudManager.HudHandle> handles = manager.getHandles();
+        VanillaHudGeometry.Reference hoveredVanilla = clickedVanillaHandle(mouseX, mouseY);
+        if (vanillaViewMode != 0) {
+            for (VanillaHudGeometry.Reference reference : manager.getVanillaHandles()) {
+                if (vanillaViewMode == 1 && !reference.active()) {
+                    continue;
+                }
+                AnchorLayout.Bounds bounds = reference.bounds();
+                if (bounds.width() <= 0 || bounds.height() <= 0) {
+                    continue;
+                }
+                int color = reference.active() ? VANILLA_COLOR : VANILLA_INACTIVE_COLOR;
+                outline(graphics, bounds.x(), bounds.y(), bounds.width(), bounds.height(), color, 1);
+                if (hoveredVanilla != null && hoveredVanilla.id().equals(reference.id())) {
+                    String label = reference.id() + " (vanilla, read-only)";
+                    int labelWidth = Math.min(font.width(label) + 8, width - 12);
+                    int labelX = Math.max(2, Math.min(bounds.x(), width - labelWidth - 2));
+                    int labelY = Math.max(1, Math.min(bounds.y() - 12, height - 13));
+                    if (compact || !insidePanel(labelX, labelY)) {
+                        graphics.fill(labelX, labelY, labelX + labelWidth, labelY + 11, 0xDF171A27);
+                        graphics.drawString(font, font.plainSubstrByWidth(label, labelWidth - 6), labelX + 3, labelY + 1, color, false);
+                    }
+                }
+            }
+        }
         AnchorHudManager.HudHandle hovered = clickedHandle(mouseX, mouseY);
         AnchorHudManager.HudHandle active = null;
         for (AnchorHudManager.HudHandle handle : handles) {
@@ -269,7 +318,7 @@ public final class AnchorHudEditorScreen extends Screen {
             graphics.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight, 0xE9121C29);
             graphics.fill(panelX, panelY, panelX + panelWidth, panelY + 20, 0xEE254057);
             graphics.drawString(font, "Anchor UI - HUD", panelX + 6, panelY + 6, 0xFFE5EEF5, false);
-            String hint = choosingParent ? "Select parent (empty = screen)" : "Snap: 6px | Alt: free move | Tab: hide";
+            String hint = choosingParent ? "Choose a parent, or click a listed vanilla ID" : "Snap: 6px | Alt: free | Vanilla: read-only";
             drawScaled(graphics, hint, panelX + 6, panelY + 22, 0xFFAAC1D4);
             renderInspector(graphics, active);
             graphics.fill(panelX + 3, actionsTop() - 3, panelX + panelWidth - 3, actionsTop() - 2, 0x88698DAB);
@@ -283,6 +332,11 @@ public final class AnchorHudEditorScreen extends Screen {
         hideButton.setMessage(Component.literal(active != null && active.hiddenByUser() ? "Show" : "Hide"));
         parentButton.setMessage(Component.literal(choosingParent ? "Cancel parent" : "Pick parent"));
         demoButton.setMessage(Component.literal(manager.isTestEnabled() ? "Demo ON" : "Demo"));
+        vanillaButton.setMessage(Component.literal(switch (vanillaViewMode) {
+            case 0 -> "IDs OFF";
+            case 1 -> "IDs ON";
+            default -> "IDs ALL";
+        }));
         for (Button control : controls) {
             control.visible = !compact;
         }
@@ -312,6 +366,10 @@ public final class AnchorHudEditorScreen extends Screen {
                 graphics.pose().scale(INSPECTOR_SCALE, INSPECTOR_SCALE, 1.0F);
                 graphics.drawString(font, line.text(), 0, 0, line.color(), false);
                 graphics.pose().popPose();
+                if (line.vanillaParent() != null && y >= top && y + INSPECTOR_LINE_HEIGHT <= bottom) {
+                    vanillaParentHitboxes.add(new VanillaParentHitbox(line.vanillaParent(),
+                            panelX + 4, y, panelWidth - 8, INSPECTOR_LINE_HEIGHT));
+                }
                 if (line.reset() != null) {
                     int x = panelX + panelWidth - 21;
                     int buttonY = y;
@@ -344,11 +402,32 @@ public final class AnchorHudEditorScreen extends Screen {
             appendLine(lines, "Click another widget", 0xFFE5EEF5);
             appendLine(lines, "Click empty world: screen", 0xFFE5EEF5);
             appendLine(lines, "Esc: cancel selection", 0xFFE5EEF5);
+            appendLine(lines, "VANILLA ANCHORS (click one):", VANILLA_COLOR);
+            for (VanillaHudGeometry.Reference reference : manager.getVanillaHandles()) {
+                String suffix = reference.active() ? "" : " [inactive]";
+                lines.add(new InspectorLine(font.plainSubstrByWidth(reference.id() + suffix,
+                        Math.max(40, (int) ((panelWidth - 30) / INSPECTOR_SCALE))), 
+                        reference.active() ? VANILLA_COLOR : VANILLA_INACTIVE_COLOR, null, false, reference.id()));
+            }
         }
         if (!status.isEmpty()) {
             appendLine(lines, status, 0xFFFFCF64);
         }
-        if (active == null) {
+        if (active == null && inspectedVanilla != null) {
+            appendLine(lines, "VANILLA HUD (READ ONLY)", VANILLA_COLOR);
+            appendLine(lines, "id: " + inspectedVanilla, VANILLA_COLOR);
+            for (VanillaHudGeometry.Reference reference : manager.getVanillaHandles()) {
+                if (reference.id().equals(inspectedVanilla)) {
+                    AnchorLayout.Bounds bounds = reference.bounds();
+                    appendLine(lines, "position: " + bounds.x() + ", " + bounds.y(), 0xFFE5EEF5);
+                    appendLine(lines, "size: " + bounds.width() + " x " + bounds.height(), 0xFFE5EEF5);
+                    appendLine(lines, "active: " + reference.active(), 0xFFE5EEF5);
+                    break;
+                }
+            }
+            appendLine(lines, "Use as relativeTo on your widgets", 0xFFE5EEF5);
+            appendLine(lines, "Vanilla HUD remains unchanged", 0xFFE5EEF5);
+        } else if (active == null) {
             appendLine(lines, "SELECT A WIDGET", 0xFFFFCF64);
             appendLine(lines, "Click any widget outline.", 0xFFE5EEF5);
             appendLine(lines, "Drag widgets to move.", 0xFFE5EEF5);
@@ -394,7 +473,7 @@ public final class AnchorHudEditorScreen extends Screen {
         int availableWidth = Math.max(20, (int) ((panelWidth - reserved) / INSPECTOR_SCALE));
         boolean first = true;
         for (FormattedCharSequence part : font.split(Component.literal(value), availableWidth)) {
-            lines.add(new InspectorLine(part, color, first ? property : null, modified));
+            lines.add(new InspectorLine(part, color, first ? property : null, modified, null));
             first = false;
         }
     }
@@ -427,6 +506,31 @@ public final class AnchorHudEditorScreen extends Screen {
         return null;
     }
 
+    private VanillaHudGeometry.Reference clickedVanillaHandle(double mouseX, double mouseY) {
+        if (vanillaViewMode == 0) {
+            return null;
+        }
+        VanillaHudGeometry.Reference closest = null;
+        long bestArea = Long.MAX_VALUE;
+        for (VanillaHudGeometry.Reference reference : manager.getVanillaHandles()) {
+            if (vanillaViewMode == 1 && !reference.active()) {
+                continue;
+            }
+            AnchorLayout.Bounds bounds = reference.bounds();
+            long area = (long) bounds.width() * bounds.height();
+            if (area == 0 || area > (long) width * height / 2) {
+                continue;
+            }
+            if (mouseX >= bounds.x() && mouseX < bounds.x() + bounds.width()
+                    && mouseY >= bounds.y() && mouseY < bounds.y() + bounds.height()
+                    && area < bestArea) {
+                bestArea = area;
+                closest = reference;
+            }
+        }
+        return closest;
+    }
+
     private void scrollTo(double mouseY) {
         int top = inspectorTop();
         int available = Math.max(1, inspectorBottom() - top);
@@ -444,6 +548,20 @@ public final class AnchorHudEditorScreen extends Screen {
             return false;
         }
         if (!compact && insidePanel(mouseX, mouseY)) {
+            if (choosingParent && selected != null && insideInspector(mouseX, mouseY)) {
+                for (VanillaParentHitbox hitbox : vanillaParentHitboxes) {
+                    if (hitbox.contains(mouseX, mouseY)) {
+                        if (manager.setPreviewParent(selected, hitbox.id())) {
+                            choosingParent = false;
+                            status = "Parent set to " + hitbox.id();
+                            inspectorScroll = 0;
+                        } else {
+                            status = "Invalid parent: " + hitbox.id();
+                        }
+                        return true;
+                    }
+                }
+            }
             if (selected != null && insideInspector(mouseX, mouseY)) {
                 for (ResetHitbox hitbox : resetHitboxes) {
                     if (hitbox.contains(mouseX, mouseY) && manager.resetPreviewProperty(selected, hitbox.property())) {
@@ -466,8 +584,9 @@ public final class AnchorHudEditorScreen extends Screen {
         }
 
         AnchorHudManager.HudHandle clicked = clickedHandle(mouseX, mouseY);
+        VanillaHudGeometry.Reference vanilla = clicked == null ? clickedVanillaHandle(mouseX, mouseY) : null;
         if (choosingParent && selected != null) {
-            String parent = clicked == null ? "screen" : clicked.id();
+            String parent = clicked != null ? clicked.id() : vanilla != null ? vanilla.id() : "screen";
             if (selected.equals(parent)) {
                 status = "Choose another widget or empty world";
                 return true;
@@ -495,6 +614,11 @@ public final class AnchorHudEditorScreen extends Screen {
             return true;
         }
         selectWidget(null);
+        if (vanilla != null) {
+            inspectedVanilla = vanilla.id();
+            status = "Vanilla HUD anchor (read-only)";
+            return true;
+        }
         return false;
     }
 
@@ -521,6 +645,10 @@ public final class AnchorHudEditorScreen extends Screen {
                 for (AnchorHudManager.HudHandle handle : manager.getHandles()) {
                     var bounds = handle.bounds();
                     widgets.add(new HudSnap.Widget(handle.id(), handle.relativeTo(), bounds.x(), bounds.y(), bounds.width(), bounds.height(), handle.visible()));
+                }
+                for (VanillaHudGeometry.Reference reference : manager.getVanillaHandles()) {
+                    AnchorLayout.Bounds bounds = reference.bounds();
+                    widgets.add(new HudSnap.Widget(reference.id(), "screen", bounds.x(), bounds.y(), bounds.width(), bounds.height(), reference.active()));
                 }
                 snapResult = HudSnap.snap(dragOrigin, desiredX, desiredY, widgets);
             }

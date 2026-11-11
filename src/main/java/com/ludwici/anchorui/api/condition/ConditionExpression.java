@@ -32,7 +32,7 @@ public final class ConditionExpression {
     private enum Operator {
         EQ, NE, GT, GTE, LT, LTE, CONTAINS, STARTS_WITH, ENDS_WITH, IN, NOT_IN, EXISTS, IS_NULL, EMPTY;
 
-        private static Operator parse(String input) {
+        private static Operator builtin(String input) {
             return switch (input) {
                 case "eq" -> EQ;
                 case "ne" -> NE;
@@ -48,7 +48,7 @@ public final class ConditionExpression {
                 case "exists" -> EXISTS;
                 case "isNull" -> IS_NULL;
                 case "empty" -> EMPTY;
-                default -> throw new IllegalArgumentException("Unknown condition operator: " + input);
+                default -> null;
             };
         }
 
@@ -137,14 +137,37 @@ public final class ConditionExpression {
                     || !operatorValue.getAsJsonPrimitive().isString()) {
                 throw new IllegalArgumentException("Condition comparison requires a string 'op'");
             }
-            Operator operator = Operator.parse(operatorValue.getAsString());
-            if (!object.has("left") || (!operator.unary() && !object.has("right"))
-                    || (operator.unary() && object.has("right"))) {
-                throw new IllegalArgumentException("Invalid operands for condition operator: " + operatorValue.getAsString());
+            String operatorId = operatorValue.getAsString();
+            Operator builtin = Operator.builtin(operatorId);
+            ConditionOperationRegistry.Definition custom = null;
+            if (builtin == null) {
+                custom = ConditionOperationRegistry.find(operatorId)
+                        .orElseThrow(() -> new IllegalArgumentException("Unknown condition operator: " + operatorId
+                                + " (register a namespaced operation before loading the UI)"));
+            }
+            boolean unary = builtin != null ? builtin.unary() : custom.unary();
+            if (!object.has("left") || (!unary && !object.has("right"))
+                    || (unary && object.has("right"))) {
+                throw new IllegalArgumentException("Invalid operands for condition operator: " + operatorId);
             }
             Operand left = operand(object.get("left"), depth + 1);
-            Operand right = operator.unary() ? null : operand(object.get("right"), depth + 1);
-            return resolver -> compare(operator, left.resolve(resolver),
+            Operand right = unary ? null : operand(object.get("right"), depth + 1);
+            if (custom != null) {
+                ConditionOperationRegistry.Definition operation = custom;
+                return resolver -> {
+                    Value first = left.resolve(resolver);
+                    if (!first.valid() || first.element().isJsonNull()) {
+                        return false;
+                    }
+                    Value second = right == null ? null : right.resolve(resolver);
+                    if (second != null && (!second.valid() || second.element().isJsonNull())) {
+                        return false;
+                    }
+                    return operation.test(first.element(), second == null ? null : second.element());
+                };
+            }
+            Operator operation = builtin;
+            return resolver -> compare(operation, left.resolve(resolver),
                     right == null ? null : right.resolve(resolver));
         }
 

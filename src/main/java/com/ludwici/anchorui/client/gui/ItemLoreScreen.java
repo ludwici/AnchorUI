@@ -6,6 +6,7 @@ import com.ludwici.anchorui.api.LoreEntity;
 import com.ludwici.anchorui.api.binding.BoundBoolean;
 import com.ludwici.anchorui.api.WidgetTypeIds;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
+import com.ludwici.anchorui.api.layout.WidgetContainers;
 import com.ludwici.anchorui.api.style.LoreStyle;
 import com.ludwici.anchorui.api.style.PositionElement;
 import com.ludwici.anchorui.api.widget.AnchorWidgetRegistry;
@@ -23,6 +24,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +33,7 @@ public class ItemLoreScreen extends Screen {
     private record DeclaredWidget(String id, LoreEntity.UiElement element, String legacyStyle) {
     }
 
-    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, WidgetContext context, BoundBoolean visibleWhen, boolean baseVisible) {
+    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, WidgetContext context, BoundBoolean visibleWhen, boolean baseVisible, String containerParent) {
         private AnchorLayout.Frame frame() {
             return new AnchorLayout.Frame(id, position, widget.getWidth(), widget.getHeight());
         }
@@ -42,6 +45,7 @@ public class ItemLoreScreen extends Screen {
     private WidgetInstanceRegistry widgetRegistry = new WidgetInstanceRegistry();
     private List<PlacedWidget> placedWidgets = List.of();
     private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
+    private Map<String, AnchorLayout.Bounds> clipBounds = Map.of();
     private String layoutError;
     private List<String> layoutWarnings = List.of();
 
@@ -57,6 +61,7 @@ public class ItemLoreScreen extends Screen {
         widgetRegistry = new WidgetInstanceRegistry();
         placedWidgets = List.of();
         layoutBounds = Map.of();
+        clipBounds = Map.of();
         layoutError = null;
         layoutWarnings = List.of();
 
@@ -98,8 +103,21 @@ public class ItemLoreScreen extends Screen {
         }
 
         try {
-            List<AnchorLayout.Frame> frames = created.stream().map(PlacedWidget::frame).toList();
+            List<AnchorLayout.Frame> frames = new ArrayList<>();
+            for (PlacedWidget placed : created) {
+                frames.add(placed.frame());
+                if (placed.widget() instanceof PanelWidget) {
+                    frames.add(WidgetContainers.contentFrame(placed.id(), placed.widget().getWidth(), placed.widget().getHeight(), placed.style().padding));
+                }
+            }
             layoutBounds = AnchorLayout.resolve(width, height, frames, warnings::add);
+            Map<String, String> parents = new LinkedHashMap<>();
+            for (PlacedWidget placed : created) {
+                if (placed.containerParent() != null) {
+                    parents.put(placed.id(), placed.containerParent());
+                }
+            }
+            clipBounds = WidgetContainers.clips(layoutBounds, parents);
             for (PlacedWidget placed : created) {
                 AnchorLayout.Bounds bounds = layoutBounds.get(placed.id());
                 placed.widget().setPosition(bounds.x(), bounds.y());
@@ -118,7 +136,7 @@ public class ItemLoreScreen extends Screen {
         }
         placedWidgets = List.copyOf(created);
         for (PlacedWidget placed : created) {
-            addRenderableWidget(placed.widget());
+            addWidget(placed.widget());
         }
     }
 
@@ -176,20 +194,66 @@ public class ItemLoreScreen extends Screen {
         String relativeTo = WidgetIds.reference(p.relativeTo, loreEntity.namespace);
         PositionElement position = new PositionElement(p.point, p.anchor, relativeTo, p.x, p.y);
         widgetRegistry.attach(id, widget);
-        created.add(new PlacedWidget(id, widget, settings, position, context, BoundBoolean.parse(element.settings, "visibleWhen", true), widget.visible));
+        created.add(new PlacedWidget(id, widget, settings, position, context, BoundBoolean.parse(element.settings, "visibleWhen", true), widget.visible, WidgetContainers.parent(element.settings)));
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        Map<String, Boolean> visible = new HashMap<>();
+        for (PlacedWidget placed : placedWidgets) {
+            boolean parentVisible = placed.containerParent() == null || visible.getOrDefault(placed.containerParent(), false);
+            boolean shown = parentVisible && placed.baseVisible() && placed.visibleWhen().get(placed.context());
+            placed.widget().visible = shown;
+            visible.put(placed.id(), shown);
+        }
+
+        super.render(graphics, mouseX, mouseY, partialTick);
         for (PlacedWidget placed : placedWidgets) {
             AbstractWidget widget = placed.widget();
-            widget.visible = placed.baseVisible() && placed.visibleWhen().get(placed.context());
-            int color = placed.style().background.color;
-            if (widget.visible && !(widget instanceof AnchoredWidget) && (color >>> 24) != 0) {
-                graphics.fill(widget.getX(), widget.getY(), widget.getRight(), widget.getBottom(), color);
+            if (!widget.visible) {
+                continue;
+            }
+            AnchorLayout.Bounds clip = clipBounds.get(placed.id());
+            if (clip != null && (clip.width() == 0 || clip.height() == 0)) {
+                continue;
+            }
+            if (clip != null) {
+                graphics.enableScissor(clip.x(), clip.y(), clip.x() + clip.width(), clip.y() + clip.height());
+            }
+            try {
+                int color = placed.style().background.color;
+                if (!(widget instanceof AnchoredWidget) && (color >>> 24) != 0) {
+                    graphics.fill(widget.getX(), widget.getY(), widget.getRight(), widget.getBottom(), color);
+                }
+                int widgetMouseX = clip == null || WidgetContainers.contains(clip, mouseX, mouseY) ? mouseX : -1;
+                int widgetMouseY = widgetMouseX == -1 ? -1 : mouseY;
+                widget.render(graphics, widgetMouseX, widgetMouseY, partialTick);
+            } finally {
+                if (clip != null) {
+                    graphics.disableScissor();
+                }
             }
         }
-        super.render(graphics, mouseX, mouseY, partialTick);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        Map<AbstractWidget, Boolean> temporarilyInactive = new HashMap<>();
+        for (PlacedWidget placed : placedWidgets) {
+            AnchorLayout.Bounds clip = clipBounds.get(placed.id());
+            if (clip != null && !WidgetContainers.contains(clip, mouseX, mouseY)) {
+                AbstractWidget widget = placed.widget();
+                temporarilyInactive.put(widget, widget.active);
+                widget.active = false;
+            }
+        }
+        try {
+            return super.mouseClicked(mouseX, mouseY, button);
+        } finally {
+            for (var entry : temporarilyInactive.entrySet()) {
+                entry.getKey().active = entry.getValue();
+            }
+        }
     }
 
     protected final WidgetInstanceRegistry getWidgetRegistry() {

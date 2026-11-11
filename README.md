@@ -156,3 +156,7 @@ Run `/anchorui test binding on` to view a live data HUD, and `/anchorui screen o
 External mods can publish values through `DataValueRegistry.registerNumber`, `registerString`, `registerBoolean`, `registerObject` and `registerList`. `registerMutable` provides a publish-on-event cache without a tick loop.
 
 See [Typed Data Binding](docs/DATA_BINDINGS.md) for supported JSON syntax, data types, providers, paths, fallbacks and Java examples. Only resource packs are supported for standalone authoring; no direct game-root JSON loader is planned.
+
+## Textures, panels and nested containers
+
+New `anchorui:image`, `anchorui:panel` and `anchorui:container` types support resource-pack textures, framed backgrounds, and nested `children` using the existing anchoring system. Containers provide a padded content area and clip descendants to their available space. The same format works in HUD documents and regular screens. Open `/anchorui screen open anchorui:visual_demo` for a demo, and see [Visual Widgets](docs/VISUAL_WIDGETS.md) for JSON examples.

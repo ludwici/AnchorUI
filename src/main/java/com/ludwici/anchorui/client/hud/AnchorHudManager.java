@@ -20,6 +20,7 @@ import com.ludwici.anchorui.api.widget.WidgetIds;
 import com.ludwici.anchorui.api.widget.WidgetInstanceRegistry;
 import com.ludwici.anchorui.client.LoreLoader;
 import com.ludwici.anchorui.client.gui.AnchoredWidget;
+import com.ludwici.anchorui.client.gui.NativeContainerScrollPanel;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -90,6 +91,8 @@ public final class AnchorHudManager {
     private Map<String, WidgetTransforms.Transform> transforms = Map.of();
     private Map<String, ContainerScroll.Limits> scrollLimits = Map.of();
     private final Map<String, ContainerScroll.Offset> scrollOffsets = new HashMap<>();
+    private final Map<String, NativeContainerScrollPanel> nativeScrollPanels = new LinkedHashMap<>();
+    private NativeContainerScrollPanel draggedScrollPanel;
     private Map<String, String> containerParents = Map.of();
     private Map<String, WidgetTransforms.Group> containerGroups = Map.of();
     private Set<String> clippingContainers = Set.of();
@@ -277,6 +280,103 @@ public final class AnchorHudManager {
     private void updateScrolledTransforms() {
         transforms = WidgetTransforms.resolve(layoutBounds, containerParents, containerGroups, scrollOffsets);
         clipBounds = WidgetContainers.clips(layoutBounds, containerParents, clippingContainers, transforms);
+        refreshNativeScrollPanels();
+    }
+
+    private void refreshNativeScrollPanels() {
+        Map<String, NativeContainerScrollPanel> panels = new LinkedHashMap<>();
+        for (PlacedWidget placed : widgets) {
+            if (!placed.scroll().vertical()) {
+                continue;
+            }
+            ContainerScroll.Limits limits = scrollLimits.get(placed.id());
+            AnchorLayout.Bounds content = layoutBounds.get(WidgetContainers.contentId(placed.id()));
+            if (limits == null || limits.y() == 0 || content == null) {
+                continue;
+            }
+            WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+            AnchorLayout.Bounds viewport = transform.physical(content);
+            if (viewport.width() <= 6 || viewport.height() < 34) {
+                continue;
+            }
+            NativeContainerScrollPanel panel = nativeScrollPanels.get(placed.id());
+            if (panel == null || !panel.matches(viewport, limits.y(), placed.scroll().step(), transform.scale())) {
+                ContainerScroll.Offset offset = scrollOffsets.getOrDefault(placed.id(), ContainerScroll.Offset.ZERO);
+                panel = new NativeContainerScrollPanel(Minecraft.getInstance(), viewport, limits.y(),
+                        placed.scroll().step(), transform.scale(), offset.y());
+            }
+            panels.put(placed.id(), panel);
+        }
+        nativeScrollPanels.clear();
+        nativeScrollPanels.putAll(panels);
+    }
+
+    private void storeNativeOffset(String id, NativeContainerScrollPanel panel) {
+        ContainerScroll.Offset previous = scrollOffsets.getOrDefault(id, ContainerScroll.Offset.ZERO);
+        int position = panel.logicalOffset();
+        if (position != previous.y()) {
+            scrollOffsets.put(id, new ContainerScroll.Offset(previous.x(), position));
+            updateScrolledTransforms();
+        }
+    }
+
+    public boolean mouseClickedScrollBar(double mouseX, double mouseY, int button) {
+        if (editingOffsets == null) {
+            return false;
+        }
+        for (int index = widgets.size() - 1; index >= 0; index--) {
+            PlacedWidget placed = widgets.get(index);
+            NativeContainerScrollPanel panel = nativeScrollPanels.get(placed.id());
+            AnchorLayout.Bounds clip = clipBounds.get(placed.id());
+            if (panel != null && placed.widget().visible
+                    && (clip == null || WidgetContainers.contains(clip, mouseX, mouseY))
+                    && panel.mouseClicked(mouseX, mouseY, button)) {
+                draggedScrollPanel = panel;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean mouseDraggedScrollBar(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (draggedScrollPanel == null) {
+            return false;
+        }
+        NativeContainerScrollPanel panel = draggedScrollPanel;
+        if (!panel.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
+            return false;
+        }
+        for (var entry : nativeScrollPanels.entrySet()) {
+            if (entry.getValue() == panel) {
+                storeNativeOffset(entry.getKey(), panel);
+                break;
+            }
+        }
+        return true;
+    }
+
+    public boolean mouseReleasedScrollBar(double mouseX, double mouseY, int button) {
+        if (draggedScrollPanel == null) {
+            return false;
+        }
+        NativeContainerScrollPanel panel = draggedScrollPanel;
+        draggedScrollPanel = null;
+        return panel.mouseReleased(mouseX, mouseY, button);
+    }
+
+    public void renderScrollBars(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        if (editingOffsets == null) {
+            return;
+        }
+        for (PlacedWidget placed : widgets) {
+            if (!placed.widget().visible) {
+                continue;
+            }
+            NativeContainerScrollPanel panel = nativeScrollPanels.get(placed.id());
+            if (panel != null) {
+                panel.render(graphics, mouseX, mouseY, partialTick);
+            }
+        }
     }
 
     public boolean scrollContentsAt(double mouseX, double mouseY, double scrollX, double scrollY) {
@@ -304,8 +404,24 @@ public final class AnchorHudManager {
             if (limits == null) {
                 continue;
             }
+
             ContainerScroll.Offset old = scrollOffsets.getOrDefault(placed.id(), ContainerScroll.Offset.ZERO);
-            ContainerScroll.Offset next = ContainerScroll.move(old, limits, placed.scroll(), scrollX, scrollY);
+            NativeContainerScrollPanel panel = nativeScrollPanels.get(placed.id());
+            int nextY = old.y();
+            if (panel != null && scrollY != 0) {
+                panel.mouseScrolled(mouseX, mouseY, 0, scrollY);
+                nextY = panel.logicalOffset();
+            }
+            int nextX = old.x();
+            if (limits.x() > 0 && placed.scroll().horizontal()) {
+                double horizontalWheel = scrollX != 0 ? scrollX : !placed.scroll().vertical() ? scrollY : 0;
+                nextX = Math.max(0, Math.min(limits.x(),
+                        old.x() - (int) Math.round(horizontalWheel * placed.scroll().step())));
+            }
+            if (panel == null && placed.scroll().vertical()) {
+                nextY = ContainerScroll.move(old, limits, placed.scroll(), 0, scrollY).y();
+            }
+            ContainerScroll.Offset next = new ContainerScroll.Offset(nextX, nextY);
             if (!next.equals(old)) {
                 scrollOffsets.put(placed.id(), next);
                 updateScrolledTransforms();
@@ -562,6 +678,8 @@ public final class AnchorHudManager {
         transforms = Map.of();
         scrollLimits = Map.of();
         scrollOffsets.clear();
+        nativeScrollPanels.clear();
+        draggedScrollPanel = null;
         renderFailures.clear();
 
         List<Description> declared = new ArrayList<>();
@@ -694,6 +812,8 @@ public final class AnchorHudManager {
             transforms = Map.of();
             scrollLimits = Map.of();
             scrollOffsets.clear();
+            nativeScrollPanels.clear();
+            draggedScrollPanel = null;
             widgets = List.of();
             if (warnings != null) {
                 warnings.add("HUD layout rejected: " + exception.getMessage());
@@ -712,6 +832,8 @@ public final class AnchorHudManager {
         transforms = Map.of();
         scrollLimits = Map.of();
         scrollOffsets.clear();
+        nativeScrollPanels.clear();
+        draggedScrollPanel = null;
         containerParents = Map.of();
         containerGroups = Map.of();
         clippingContainers = Set.of();

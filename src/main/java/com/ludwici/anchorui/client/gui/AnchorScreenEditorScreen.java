@@ -32,6 +32,14 @@ public final class AnchorScreenEditorScreen extends Screen {
     private Button point;
     private Button anchor;
     private boolean pickingParent;
+    private boolean compact;
+    private boolean draggingPanel;
+    private int panelLeft = -1;
+    private int panelTop = 12;
+    private double panelStartX;
+    private double panelStartY;
+    private int panelDragLeft;
+    private int panelDragTop;
     private boolean dragging;
     private HudSnap.Widget dragOrigin;
     private HudSnap.Result snapped;
@@ -51,8 +59,13 @@ public final class AnchorScreenEditorScreen extends Screen {
             target.beginScreenEditing();
         }
         controls.clear();
+        if (panelLeft < 0) {
+            panelLeft = Math.max(2, width - WIDTH - 8);
+        }
+        panelLeft = Math.max(0, Math.min(panelLeft, width - WIDTH));
+        panelTop = Math.max(0, Math.min(panelTop, height - 245));
         int x = panelX();
-        int y = 12;
+        int y = panelTop;
         add(x + 7, y + 29, 100, "Save", button -> save());
         add(x + 114, y + 29, 100, "Cancel", button -> cancel());
         hide = add(x + 7, y + 53, 100, "Hide", button -> toggleHidden());
@@ -72,7 +85,13 @@ public final class AnchorScreenEditorScreen extends Screen {
     }
 
     private int panelX() {
-        return Math.max(2, width - WIDTH - 8);
+        return Math.max(0, panelLeft);
+    }
+
+    private void positionControls() {
+        for (int index = 0; index < controls.size(); index++) {
+            controls.get(index).setPosition(panelX() + 7 + (index % 2) * 107, panelTop + 29 + (index / 2) * 24);
+        }
     }
 
     private void updateControls() {
@@ -84,6 +103,9 @@ public final class AnchorScreenEditorScreen extends Screen {
         parent.active = hasSelection;
         hide.setMessage(Component.literal(hasSelection && selected.hiddenByUser() ? "Show" : "Hide"));
         parent.setMessage(Component.literal(pickingParent ? "Pick target..." : "Parent"));
+        for (Button button : controls) {
+            button.visible = !compact;
+        }
     }
 
     private void select(String id) {
@@ -196,12 +218,16 @@ public final class AnchorScreenEditorScreen extends Screen {
                 graphics.fill(0, snapped.guideY(), width, snapped.guideY() + 1, GUIDES);
             }
         }
+        if (compact) {
+            graphics.drawString(font, "Screen Editor (Tab: show panel, F8: save)", 8, 7, SELECTED, false);
+            return;
+        }
         int x = panelX();
-        int y = 12;
-        int panelHeight = Math.min(height - 20, 245);
+        int y = panelTop;
+        int panelHeight = Math.min(height - y, 245);
         graphics.fill(x, y, x + WIDTH, y + panelHeight, BACKGROUND);
         graphics.fill(x, y, x + WIDTH, y + 1, OUTLINE);
-        graphics.drawString(font, "Anchor UI - Screen Editor", x + 8, y + 9, 0xFFFFFFFF, false);
+        graphics.drawString(font, "Anchor UI - Screen Editor (drag)", x + 8, y + 9, 0xFFFFFFFF, false);
         if (selected == null) {
             graphics.drawString(font, "Click a widget to select it", x + 8, y + 135, 0xFFD9E7F1, false);
         } else {
@@ -247,7 +273,15 @@ public final class AnchorScreenEditorScreen extends Screen {
         if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             return false;
         }
-        if (mouseX >= panelX() && mouseX <= panelX() + WIDTH && mouseY <= 260) {
+        if (!compact && mouseX >= panelX() && mouseX <= panelX() + WIDTH
+                && mouseY >= panelTop && mouseY <= panelTop + 245) {
+            if (mouseY < panelTop + 27) {
+                draggingPanel = true;
+                panelStartX = mouseX;
+                panelStartY = mouseY;
+                panelDragLeft = panelLeft;
+                panelDragTop = panelTop;
+            }
             return true;
         }
         ItemLoreScreen.EditorHandle hit = hit(mouseX, mouseY);
@@ -278,6 +312,12 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (draggingPanel && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            panelLeft = Math.max(0, Math.min(width - WIDTH, panelDragLeft + (int) Math.round(mouseX - panelStartX)));
+            panelTop = Math.max(0, Math.min(height - 245, panelDragTop + (int) Math.round(mouseY - panelStartY)));
+            positionControls();
+            return true;
+        }
         if (!dragging || button != GLFW.GLFW_MOUSE_BUTTON_LEFT || selected == null || dragOrigin == null) {
             return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
         }
@@ -303,6 +343,10 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (draggingPanel && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            draggingPanel = false;
+            return true;
+        }
         if (dragging && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             dragging = false;
             snapped = null;
@@ -320,7 +364,27 @@ public final class AnchorScreenEditorScreen extends Screen {
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            if (pickingParent) {
+                pickingParent = false;
+                status = "";
+                updateControls();
+                return true;
+            }
             cancel();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_TAB) {
+            compact = !compact;
+            draggingPanel = false;
+            updateControls();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_S && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+            save();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_R && selected != null) {
+            reset();
             return true;
         }
         if (selected != null) {

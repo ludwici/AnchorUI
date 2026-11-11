@@ -97,6 +97,71 @@ For example, check whether a list is empty:
 }
 ```
 
+## Registering custom operations from Java
+
+Other mods can register their own namespaced operations and then use the same `op` field as any built-in comparison. Registration must happen **on the client**, before Anchor UI creates the HUD or screen (for NeoForge, use client setup and `event.enqueueWork`). A resource pack cannot register Java code; it may only reference an operation supplied by an installed mod.
+
+Example: register `mymod:custom_op`, a case-insensitive string-prefix check:
+
+```java
+import com.ludwici.anchorui.api.condition.ConditionOperationRegistry;
+import net.minecraft.resources.ResourceLocation;
+
+// Run on the client during mod initialization, before UI JSON is loaded.
+ConditionOperationRegistry.register(ResourceLocation.fromNamespaceAndPath("mymod", "custom_op"), (left, right) -> {
+    if (!left.isJsonPrimitive() || !right.isJsonPrimitive()
+            || !left.getAsJsonPrimitive().isString() || !right.getAsJsonPrimitive().isString()) {
+        return false;
+    }
+    String text = left.getAsString();
+    String prefix = right.getAsString();
+    return text.regionMatches(true, 0, prefix, 0, prefix.length());
+});
+```
+
+The resource-pack JSON can use it without a custom widget:
+
+```json
+{
+  "type": "anchorui:button",
+  "id": "mymod:custom_button",
+  "text": "Available to matching players",
+  "enabledWhen": {
+    "left": {"bind": "anchorui:player.name", "fallback": ""},
+    "op": "mymod:custom_op",
+    "right": "dev"
+  }
+}
+```
+
+Binary operations are registered using `ConditionOperationRegistry.register(ResourceLocation id, BiPredicate<JsonElement, JsonElement> operation)`. The callback receives the **resolved** JSON values of `left` and `right` (including explicit fallbacks). These are `JsonElement` values, not raw binding specifications; treat the supplied JSON as read-only.
+
+Unary operations use `registerUnary(ResourceLocation id, Predicate<JsonElement> operation)` and omit `right`:
+
+```java
+ConditionOperationRegistry.registerUnary(ResourceLocation.fromNamespaceAndPath("mymod", "is_positive"), value -> {
+    return value.isJsonPrimitive() && value.getAsJsonPrimitive().isNumber() && value.getAsDouble() > 0;
+});
+```
+
+```json
+{
+  "left": {"bind": "anchorui:player.health", "fallback": 0},
+  "op": "mymod:is_positive"
+}
+```
+
+Both methods also accept namespaced strings such as `"mymod:custom_op"`, but `ResourceLocation` is recommended for Java integration.
+
+Custom operations work anywhere Conditions are supported, including `visibleWhen`, `enabledWhen` and nested `all` / `any` / `not` expressions. Existing built-in operations (`eq`, `gte`, etc.) keep their **unchanged, unqualified names**.
+
+- IDs must be namespaced and valid (e.g. `mymod:custom_op`). Duplicate registration throws `IllegalStateException`.
+- Missing/JSON-null operands without a fallback make a custom comparison **false**, and the operation is not called. This holds for both unary and binary custom operations.
+- Wrong operand types are the Java operation's responsibility; return `false` when values are unsupported. For complicated access checks, prefer explicit typed data providers and fail-safe defaults.
+- Unknown `op` IDs, wrong operand arity, and malformed expressions fail during UI construction; only the affected widget is skipped with an error.
+- The operation is resolved **once when the JSON expression is compiled**. If it throws at runtime, the enclosing `BoundCondition` logs the exception once and evaluates to `false`; it does not crash the entire screen.
+- Operations should be lightweight and without side effects: Conditions are reevaluated during rendering and before relevant input. They are **client-side UI checks**, not server authorization.
+
 ## Fallbacks and failure behavior
 
 - Legacy `visibleWhen: true` and `visibleWhen: {"bind":"namespace:boolean","fallback":false}` continue to work.

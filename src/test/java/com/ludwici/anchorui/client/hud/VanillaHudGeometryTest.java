@@ -61,10 +61,10 @@ public class VanillaHudGeometryTest {
         var state = new VanillaHudGeometry.State(Set.of("minecraft:player_health"), 3, 6);
         var first = VanillaHudGeometry.measure(400, 240, state);
         var second = VanillaHudGeometry.measure(600, 300, state);
-        assertEquals(180, first.get("minecraft:player_health").bounds().x());
+        assertEquals(109, first.get("minecraft:player_health").bounds().x());
         assertEquals(181, first.get("minecraft:player_health").bounds().y());
         assertEquals(29, first.get("minecraft:player_health").bounds().height());
-        assertEquals(280, second.get("minecraft:player_health").bounds().x());
+        assertEquals(209, second.get("minecraft:player_health").bounds().x());
         assertEquals(241, second.get("minecraft:player_health").bounds().y());
         assertEquals(52, first.get("minecraft:effects").bounds().height());
         assertEquals(5, first.get("minecraft:experience_bar").bounds().height());

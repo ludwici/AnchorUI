@@ -7,6 +7,7 @@ import com.ludwici.anchorui.api.binding.BoundBoolean;
 import com.ludwici.anchorui.api.WidgetTypeIds;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.layout.WidgetContainers;
+import com.ludwici.anchorui.api.layout.WidgetTransforms;
 import com.ludwici.anchorui.api.style.LoreStyle;
 import com.ludwici.anchorui.api.style.PositionElement;
 import com.ludwici.anchorui.api.widget.AnchorWidgetRegistry;
@@ -24,7 +25,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +35,7 @@ public class ItemLoreScreen extends Screen {
     private record DeclaredWidget(String id, LoreEntity.UiElement element, String legacyStyle) {
     }
 
-    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, WidgetContext context, BoundBoolean visibleWhen, boolean baseVisible, String containerParent, boolean clipChildren) {
+    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, WidgetContext context, BoundBoolean visibleWhen, boolean baseVisible, String containerParent, boolean clipChildren, WidgetTransforms.Group group) {
         private AnchorLayout.Frame frame() {
             return new AnchorLayout.Frame(id, position, widget.getWidth(), widget.getHeight());
         }
@@ -48,6 +48,8 @@ public class ItemLoreScreen extends Screen {
     private List<PlacedWidget> placedWidgets = List.of();
     private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
     private Map<String, AnchorLayout.Bounds> clipBounds = Map.of();
+    private Map<String, WidgetTransforms.Transform> transforms = Map.of();
+    private PlacedWidget draggingWidget;
     private String layoutError;
     private List<String> layoutWarnings = List.of();
 
@@ -64,6 +66,8 @@ public class ItemLoreScreen extends Screen {
         placedWidgets = List.of();
         layoutBounds = Map.of();
         clipBounds = Map.of();
+        transforms = Map.of();
+        draggingWidget = null;
         layoutError = null;
         layoutWarnings = List.of();
 
@@ -114,6 +118,7 @@ public class ItemLoreScreen extends Screen {
             }
             layoutBounds = AnchorLayout.resolve(width, height, frames, warnings::add);
             Map<String, String> parents = new LinkedHashMap<>();
+            Map<String, WidgetTransforms.Group> groups = new LinkedHashMap<>();
             Set<String> clippingContainers = new HashSet<>();
             for (PlacedWidget placed : created) {
                 if (placed.containerParent() != null) {
@@ -122,8 +127,12 @@ public class ItemLoreScreen extends Screen {
                 if (placed.clipChildren()) {
                     clippingContainers.add(placed.id());
                 }
+                if (placed.group() != null) {
+                    groups.put(placed.id(), placed.group());
+                }
             }
-            clipBounds = WidgetContainers.clips(layoutBounds, parents, clippingContainers);
+            transforms = WidgetTransforms.resolve(layoutBounds, parents, groups);
+            clipBounds = WidgetContainers.clips(layoutBounds, parents, clippingContainers, transforms);
             for (PlacedWidget placed : created) {
                 AnchorLayout.Bounds bounds = layoutBounds.get(placed.id());
                 placed.widget().setPosition(bounds.x(), bounds.y());
@@ -200,7 +209,7 @@ public class ItemLoreScreen extends Screen {
         String relativeTo = WidgetIds.reference(p.relativeTo, loreEntity.namespace);
         PositionElement position = new PositionElement(p.point, p.anchor, relativeTo, p.x, p.y);
         widgetRegistry.attach(id, widget);
-        created.add(new PlacedWidget(id, widget, settings, position, context, BoundBoolean.parse(element.settings, "visibleWhen", true), widget.visible, WidgetContainers.parent(element.settings), widget instanceof PanelWidget && WidgetContainers.clipChildren(element.settings)));
+        created.add(new PlacedWidget(id, widget, settings, position, context, BoundBoolean.parse(element.settings, "visibleWhen", true), widget.visible, WidgetContainers.parent(element.settings), widget instanceof PanelWidget && WidgetContainers.clipChildren(element.settings), widget instanceof PanelWidget ? WidgetContainers.group(element.settings) : null));
     }
 
     @Override
@@ -231,9 +240,18 @@ public class ItemLoreScreen extends Screen {
                 if (!(widget instanceof AnchoredWidget) && (color >>> 24) != 0) {
                     graphics.fill(widget.getX(), widget.getY(), widget.getRight(), widget.getBottom(), color);
                 }
-                int widgetMouseX = clip == null || WidgetContainers.contains(clip, mouseX, mouseY) ? mouseX : -1;
-                int widgetMouseY = widgetMouseX == -1 ? -1 : mouseY;
-                widget.render(graphics, widgetMouseX, widgetMouseY, partialTick);
+                WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+                boolean mouseInside = clip == null || WidgetContainers.contains(clip, mouseX, mouseY);
+                int widgetMouseX = mouseInside ? (int) Math.floor(transform.inverseX(mouseX)) : Integer.MIN_VALUE;
+                int widgetMouseY = mouseInside ? (int) Math.floor(transform.inverseY(mouseY)) : Integer.MIN_VALUE;
+                graphics.pose().pushPose();
+                try {
+                    graphics.pose().translate(transform.translateX(), transform.translateY(), 0);
+                    graphics.pose().scale((float) transform.scale(), (float) transform.scale(), 1.0F);
+                    widget.render(graphics, widgetMouseX, widgetMouseY, partialTick);
+                } finally {
+                    graphics.pose().popPose();
+                }
             } finally {
                 if (clip != null) {
                     graphics.disableScissor();
@@ -244,22 +262,62 @@ public class ItemLoreScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        Map<AbstractWidget, Boolean> temporarilyInactive = new HashMap<>();
-        for (PlacedWidget placed : placedWidgets) {
-            AnchorLayout.Bounds clip = clipBounds.get(placed.id());
-            if (clip != null && !WidgetContainers.contains(clip, mouseX, mouseY)) {
-                AbstractWidget widget = placed.widget();
-                temporarilyInactive.put(widget, widget.active);
-                widget.active = false;
+        draggingWidget = null;
+        for (int index = placedWidgets.size() - 1; index >= 0; index--) {
+            PlacedWidget placed = placedWidgets.get(index);
+            AbstractWidget widget = placed.widget();
+            if (!widget.visible || !widget.active || !insideClip(placed, mouseX, mouseY)) {
+                continue;
+            }
+            WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+            if (widget.mouseClicked(transform.inverseX(mouseX), transform.inverseY(mouseY), button)) {
+                setFocused(widget);
+                draggingWidget = placed;
+                return true;
             }
         }
-        try {
-            return super.mouseClicked(mouseX, mouseY, button);
-        } finally {
-            for (var entry : temporarilyInactive.entrySet()) {
-                entry.getKey().active = entry.getValue();
+        return false;
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (draggingWidget == null) {
+            return false;
+        }
+        WidgetTransforms.Transform transform = transforms.getOrDefault(draggingWidget.id(), WidgetTransforms.IDENTITY);
+        return draggingWidget.widget().mouseDragged(transform.inverseX(mouseX), transform.inverseY(mouseY), button,
+                dragX / transform.scale(), dragY / transform.scale());
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (draggingWidget == null) {
+            return false;
+        }
+        PlacedWidget placed = draggingWidget;
+        draggingWidget = null;
+        WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+        return placed.widget().mouseReleased(transform.inverseX(mouseX), transform.inverseY(mouseY), button);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        for (int index = placedWidgets.size() - 1; index >= 0; index--) {
+            PlacedWidget placed = placedWidgets.get(index);
+            if (!placed.widget().visible || !insideClip(placed, mouseX, mouseY)) {
+                continue;
+            }
+            WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+            if (placed.widget().mouseScrolled(transform.inverseX(mouseX), transform.inverseY(mouseY), scrollX, scrollY)) {
+                return true;
             }
         }
+        return false;
+    }
+
+    private boolean insideClip(PlacedWidget placed, double mouseX, double mouseY) {
+        AnchorLayout.Bounds clip = clipBounds.get(placed.id());
+        return clip == null || WidgetContainers.contains(clip, mouseX, mouseY);
     }
 
     protected final WidgetInstanceRegistry getWidgetRegistry() {

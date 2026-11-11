@@ -24,12 +24,7 @@ public final class NineSlice {
             throw new IllegalArgumentException("Nine-slice requires a positive source center and nonnegative destination");
         }
         int destLeft = border(insets.left(), insets.right(), destWidth);
-        int destRight = destWidth - Math.min(destWidth, destLeft + Math.max(0, destWidth - insets.left() - insets.right()));
-        if (destWidth >= insets.left() + insets.right()) {
-            destRight = insets.right();
-        } else {
-            destRight = destWidth - destLeft;
-        }
+        int destRight = destWidth >= insets.left() + insets.right() ? insets.right() : destWidth - destLeft;
         int destTop = border(insets.top(), insets.bottom(), destHeight);
         int destBottom = destHeight >= insets.top() + insets.bottom() ? insets.bottom() : destHeight - destTop;
         int[] sx = {0, insets.left(), sourceWidth - insets.right()};

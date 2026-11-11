@@ -2,6 +2,7 @@ package com.ludwici.anchorui.client.gui;
 
 import com.google.gson.JsonObject;
 import com.ludwici.anchorui.api.style.LoreStyle;
+import com.ludwici.anchorui.api.widget.WidgetContext;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.util.GsonHelper;
@@ -11,8 +12,9 @@ public final class PanelWidget extends AnchoredWidget {
     private final int borderColor;
     private final int borderWidth;
     private final int radius;
+    private final TextureRegion texture;
 
-    public PanelWidget(JsonObject settings, LoreStyle.Element style) {
+    public PanelWidget(WidgetContext context, JsonObject settings, LoreStyle.Element style) {
         super(style.size.width > 0 ? style.size.width : 120, style.size.height > 0 ? style.size.height : 70, style);
         fillColor = settings.has("fillColor") ? WidgetColors.parse(GsonHelper.getAsString(settings, "fillColor")) : style.background.color;
         borderColor = WidgetColors.parse(GsonHelper.getAsString(settings, "borderColor", "#00000000"));
@@ -21,6 +23,7 @@ public final class PanelWidget extends AnchoredWidget {
         if (borderWidth < 0 || radius < 0) {
             throw new IllegalArgumentException("Panel borderWidth and radius must not be negative");
         }
+        texture = settings.has("texture") ? new TextureRegion(context, settings) : null;
         active = false;
     }
 
@@ -54,6 +57,9 @@ public final class PanelWidget extends AnchoredWidget {
                 draw(graphics, innerRight, getY() + row, outerRight, borderColor);
             }
             draw(graphics, innerLeft, getY() + row, innerRight, fillColor);
+        }
+        if (texture != null) {
+            texture.render(graphics, getX(), getY(), width, height);
         }
     }
 

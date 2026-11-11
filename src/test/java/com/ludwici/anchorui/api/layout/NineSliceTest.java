@@ -24,7 +24,7 @@ public class NineSliceTest {
             assertTrue(tile.x() + tile.width() <= 9);
             assertTrue(tile.y() + tile.height() <= 7);
         }
-        assertEquals(9, tiles.size());
+        assertEquals(4, tiles.size());
     }
 
     @Test

@@ -5,6 +5,7 @@ import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.style.ElementAnchor;
 import com.ludwici.anchorui.client.hud.HudLayoutOffsets;
 import com.ludwici.anchorui.client.hud.HudSnap;
+import com.ludwici.anchorui.client.gui.editor.WidgetListPanel;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -24,6 +25,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     private static final int GUIDES = 0xFF8DF0D3;
 
     private final ItemLoreScreen target;
+    private final WidgetListPanel widgetList;
     private final List<Button> controls = new ArrayList<>();
     private ItemLoreScreen.EditorHandle selected;
     private Button hide;
@@ -51,6 +53,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     public AnchorScreenEditorScreen(ItemLoreScreen target) {
         super(Component.literal("Anchor UI Screen Editor"));
         this.target = target;
+        this.widgetList = new WidgetListPanel(target.editorNamespace());
     }
 
     @Override
@@ -59,6 +62,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             target.beginScreenEditing();
         }
         controls.clear();
+        widgetList.resize(width, height);
         if (panelLeft < 0) {
             panelLeft = Math.max(2, width - WIDTH - 8);
         }
@@ -119,6 +123,33 @@ public final class AnchorScreenEditorScreen extends Screen {
             }
         }
         updateControls();
+    }
+
+    private List<WidgetListPanel.Entry> widgetEntries() {
+        List<WidgetListPanel.Entry> entries = new ArrayList<>();
+        for (ItemLoreScreen.EditorHandle handle : target.editorHandles()) {
+            entries.add(new WidgetListPanel.Entry(handle.id(), handle.visible(), false));
+        }
+        return entries;
+    }
+
+    private void selectFromList(WidgetListPanel.Entry entry) {
+        if (pickingParent && selected != null) {
+            if (target.editorAnchor(selected.id(), entry.id(), selected.point(), selected.anchor())) {
+                pickingParent = false;
+                status = "Parent set to " + entry.id();
+            } else {
+                status = "Invalid or circular parent: " + entry.id();
+            }
+            refreshSelection();
+            updateControls();
+            return;
+        }
+        select(entry.id());
+        status = "";
+        dragging = false;
+        dragOrigin = null;
+        snapped = null;
     }
 
     private ItemLoreScreen.EditorHandle hit(double x, double y) {
@@ -253,6 +284,8 @@ public final class AnchorScreenEditorScreen extends Screen {
             graphics.drawString(font, message, x + 8, y + 236, 0xFFFFD16B, false);
         }
         super.render(graphics, mouseX, mouseY, partialTick);
+        widgetList.render(graphics, font, mouseX, mouseY, widgetEntries(),
+                selected == null ? null : selected.id(), pickingParent);
     }
 
     private static void outline(GuiGraphics graphics, int x, int y, int width, int height, int color) {
@@ -267,6 +300,16 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (!compact && widgetList.contains(mouseX, mouseY)) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                WidgetListPanel.Entry entry = widgetList.entryAt(mouseX, mouseY, widgetEntries());
+                if (entry != null) {
+                    selectFromList(entry);
+                }
+            }
+            widgetList.beginClick(mouseX, mouseY, button);
+            return true;
+        }
         if (super.mouseClicked(mouseX, mouseY, button)) {
             return true;
         }
@@ -312,6 +355,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (widgetList.dragged(mouseX, mouseY, button)) {
+            return true;
+        }
         if (draggingPanel && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             panelLeft = Math.max(0, Math.min(width - WIDTH, panelDragLeft + (int) Math.round(mouseX - panelStartX)));
             panelTop = Math.max(0, Math.min(height - 245, panelDragTop + (int) Math.round(mouseY - panelStartY)));
@@ -343,6 +389,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (widgetList.released(button)) {
+            return true;
+        }
         if (draggingPanel && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             draggingPanel = false;
             return true;
@@ -355,6 +404,14 @@ public final class AnchorScreenEditorScreen extends Screen {
             return true;
         }
         return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (!compact && widgetList.scroll(mouseX, mouseY, scrollY, widgetEntries())) {
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     @Override

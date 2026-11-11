@@ -59,6 +59,7 @@ public final class AnchorHudEditorScreen extends Screen {
     private String inspectedVanilla;
     private boolean editorStarted;
     private boolean compact;
+    private boolean inspectorCollapsed;
     private boolean choosingParent;
     private boolean draggingWidget;
     private boolean draggingPanel;
@@ -182,6 +183,16 @@ public final class AnchorHudEditorScreen extends Screen {
         return panelY + panelHeight - FOOTER_HEIGHT;
     }
 
+    private int visiblePanelHeight() {
+        return inspectorCollapsed ? 20 : panelHeight;
+    }
+
+    private void toggleInspector() {
+        inspectorCollapsed = !inspectorCollapsed;
+        draggingPanel = false;
+        draggingScroll = false;
+    }
+
     private int inspectorTop() {
         return panelY + HEADER_HEIGHT;
     }
@@ -191,7 +202,7 @@ public final class AnchorHudEditorScreen extends Screen {
     }
 
     private boolean insidePanel(double x, double y) {
-        return x >= panelX && x < panelX + panelWidth && y >= panelY && y < panelY + panelHeight;
+        return x >= panelX && x < panelX + panelWidth && y >= panelY && y < panelY + visiblePanelHeight();
     }
 
     private boolean insideInspector(double x, double y) {
@@ -362,36 +373,46 @@ public final class AnchorHudEditorScreen extends Screen {
             draggingWidget = false;
         }
 
-        if (!compact) {
-            graphics.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight, 0xE9121C29);
-            graphics.fill(panelX, panelY, panelX + panelWidth, panelY + 20, 0xEE254057);
-            graphics.drawString(font, "Anchor UI - HUD", panelX + 6, panelY + 6, 0xFFE5EEF5, false);
-            String hint = choosingParent ? "Choose a parent, or click a listed vanilla ID" : "Snap: 6px | Alt: free | Vanilla: read-only";
-            drawScaled(graphics, hint, panelX + 6, panelY + 22, 0xFFAAC1D4);
-            renderInspector(graphics, active);
-            graphics.fill(panelX + 3, actionsTop() - 3, panelX + panelWidth - 3, actionsTop() - 2, 0x88698DAB);
-        }
+        graphics.pose().pushPose();
+        graphics.pose().translate(0.0F, 0.0F, 300.0F);
+        try {
+            if (!compact) {
+                graphics.fill(panelX, panelY, panelX + panelWidth, panelY + visiblePanelHeight(), 0xFF121C29);
+                graphics.fill(panelX, panelY, panelX + panelWidth, panelY + 20, 0xFF254057);
+                graphics.drawString(font, "HUD Editor", panelX + 6, panelY + 6, 0xFFE5EEF5, false);
+                graphics.drawString(font, inspectorCollapsed ? "[+]" : "[-]",
+                        panelX + panelWidth - 140, panelY + 6, 0xFFE5EEF5, false);
+                if (!inspectorCollapsed) {
+                    String hint = choosingParent ? "Choose a parent, or click a listed vanilla ID" : "Snap: 6px | Alt: free | Vanilla: read-only";
+                    drawScaled(graphics, hint, panelX + 6, panelY + 22, 0xFFAAC1D4);
+                    renderInspector(graphics, active);
+                    graphics.fill(panelX + 3, actionsTop() - 3, panelX + panelWidth - 3, actionsTop() - 2, 0x88698DAB);
+                }
+            }
 
-        resetButton.active = selected != null && !choosingParent;
-        hideButton.active = selected != null && !choosingParent;
-        pointButton.active = selected != null && !choosingParent;
-        anchorButton.active = selected != null && !choosingParent;
-        parentButton.active = selected != null;
-        hideButton.setMessage(Component.literal(active != null && active.hiddenByUser() ? "Show" : "Hide"));
-        parentButton.setMessage(Component.literal(choosingParent ? "Cancel parent" : "Pick parent"));
-        demoButton.setMessage(Component.literal(manager.isTestEnabled() ? "Demo ON" : "Demo"));
-        vanillaButton.setMessage(Component.literal(switch (vanillaViewMode) {
-            case 0 -> "IDs OFF";
-            case 1 -> "IDs ON";
-            default -> "IDs ALL";
-        }));
-        for (Button control : controls) {
-            control.visible = !compact;
-        }
-        super.render(graphics, mouseX, mouseY, partialTick);
-        if (!compact) {
-            widgetList.render(graphics, font, mouseX, mouseY, frameEntries,
-                    selected != null ? selected : inspectedVanilla, choosingParent);
+            resetButton.active = selected != null && !choosingParent;
+            hideButton.active = selected != null && !choosingParent;
+            pointButton.active = selected != null && !choosingParent;
+            anchorButton.active = selected != null && !choosingParent;
+            parentButton.active = selected != null;
+            hideButton.setMessage(Component.literal(active != null && active.hiddenByUser() ? "Show" : "Hide"));
+            parentButton.setMessage(Component.literal(choosingParent ? "Cancel parent" : "Pick parent"));
+            demoButton.setMessage(Component.literal(manager.isTestEnabled() ? "Demo ON" : "Demo"));
+            vanillaButton.setMessage(Component.literal(switch (vanillaViewMode) {
+                case 0 -> "IDs OFF";
+                case 1 -> "IDs ON";
+                default -> "IDs ALL";
+            }));
+            for (Button control : controls) {
+                control.visible = !compact && !inspectorCollapsed;
+            }
+            super.render(graphics, mouseX, mouseY, partialTick);
+            if (!compact) {
+                widgetList.render(graphics, font, mouseX, mouseY, frameEntries,
+                        selected != null ? selected : inspectedVanilla, choosingParent);
+            }
+        } finally {
+            graphics.pose().popPose();
         }
 
         if (handles.isEmpty()) {
@@ -594,6 +615,12 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (!compact && button == GLFW.GLFW_MOUSE_BUTTON_LEFT && insidePanel(mouseX, mouseY)
+                && mouseY < panelY + 20 && mouseX >= panelX + panelWidth - 144
+                && mouseX < panelX + panelWidth - 115) {
+            toggleInspector();
+            return true;
+        }
         if (!compact && widgetList.contains(mouseX, mouseY)) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 WidgetListPanel.Entry entry = widgetList.entryAt(mouseX, mouseY, frameEntries);
@@ -601,7 +628,7 @@ public final class AnchorHudEditorScreen extends Screen {
                     selectFromList(entry);
                 }
             }
-            widgetList.beginClick(mouseX, mouseY, button);
+            widgetList.beginClick(mouseX, mouseY, button, frameEntries);
             return true;
         }
         if (super.mouseClicked(mouseX, mouseY, button)) {

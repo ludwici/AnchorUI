@@ -1,0 +1,264 @@
+{
+  "entities": [
+    {
+      "type": "anchorui:container",
+      "id": "anchorui:auto_measure_demo",
+      "autoSize": "both",
+      "padding": {
+        "left": 12,
+        "right": 14,
+        "top": 11,
+        "bottom": 12
+      },
+      "fillColor": "#E92D4054",
+      "borderColor": "#FF8DD8BC",
+      "borderWidth": 2,
+      "radius": 6,
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": -106,
+        "y": 0
+      },
+      "children": [
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:auto_title",
+          "text": "Auto-sized container",
+          "size": {
+            "width": 150,
+            "height": 16
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:auto_description",
+          "text": "Fits child bounds + padding",
+          "position": {
+            "y": 25
+          },
+          "size": {
+            "width": 158,
+            "height": 14
+          }
+        },
+        {
+          "type": "anchorui:panel",
+          "id": "anchorui:auto_nested",
+          "autoSize": "both",
+          "padding": {
+            "left": 6,
+            "right": 6,
+            "top": 6,
+            "bottom": 6
+          },
+          "position": {
+            "y": 49
+          },
+          "fillColor": "#FF3A5A68",
+          "borderColor": "#FF6BA9C2",
+          "borderWidth": 1,
+          "children": [
+            {
+              "type": "anchorui:text",
+              "id": "anchorui:auto_nested_label",
+              "text": "Nested auto-sizing",
+              "size": {
+                "width": 126,
+                "height": 15
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "anchorui:panel",
+      "id": "anchorui:scroll_demo",
+      "size": {
+        "width": 187,
+        "height": 121
+      },
+      "padding": {
+        "left": 8,
+        "right": 8,
+        "top": 10,
+        "bottom": 8
+      },
+      "fillColor": "#EE223246",
+      "borderColor": "#FFD2A56A",
+      "borderWidth": 2,
+      "radius": 5,
+      "scroll": {
+        "axis": "vertical",
+        "step": 21
+      },
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 110,
+        "y": 0
+      },
+      "children": [
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:scroll_row_1",
+          "text": "Row 01 - scroll content",
+          "size": {
+            "width": 150,
+            "height": 14
+          },
+          "position": {
+            "x": 4,
+            "y": 0
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:scroll_row_2",
+          "text": "Row 02 - scroll content",
+          "size": {
+            "width": 150,
+            "height": 14
+          },
+          "position": {
+            "x": 4,
+            "y": 21
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:scroll_row_3",
+          "text": "Row 03 - scroll content",
+          "size": {
+            "width": 150,
+            "height": 14
+          },
+          "position": {
+            "x": 4,
+            "y": 42
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:scroll_row_4",
+          "text": "Row 04 - scroll content",
+          "size": {
+            "width": 150,
+            "height": 14
+          },
+          "position": {
+            "x": 4,
+            "y": 63
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:scroll_row_5",
+          "text": "Row 05 - scroll content",
+          "size": {
+            "width": 150,
+            "height": 14
+          },
+          "position": {
+            "x": 4,
+            "y": 84
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:scroll_row_6",
+          "text": "Row 06 - scroll content",
+          "size": {
+            "width": 150,
+            "height": 14
+          },
+          "position": {
+            "x": 4,
+            "y": 105
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:scroll_row_7",
+          "text": "Row 07 - scroll content",
+          "size": {
+            "width": 150,
+            "height": 14
+          },
+          "position": {
+            "x": 4,
+            "y": 126
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:scroll_row_8",
+          "text": "Row 08 - scroll content",
+          "size": {
+            "width": 150,
+            "height": 14
+          },
+          "position": {
+            "x": 4,
+            "y": 147
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:scroll_row_9",
+          "text": "Row 09 - scroll content",
+          "size": {
+            "width": 150,
+            "height": 14
+          },
+          "position": {
+            "x": 4,
+            "y": 168
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:scroll_row_10",
+          "text": "Row 10 - scroll content",
+          "size": {
+            "width": 150,
+            "height": 14
+          },
+          "position": {
+            "x": 4,
+            "y": 189
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:scroll_row_11",
+          "text": "Row 11 - scroll content",
+          "size": {
+            "width": 150,
+            "height": 14
+          },
+          "position": {
+            "x": 4,
+            "y": 210
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:scroll_row_12",
+          "text": "Row 12 - scroll content",
+          "size": {
+            "width": 150,
+            "height": 14
+          },
+          "position": {
+            "x": 4,
+            "y": 231
+          }
+        }
+      ]
+    }
+  ]
+}

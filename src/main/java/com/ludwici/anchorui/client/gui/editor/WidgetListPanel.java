@@ -1,5 +1,8 @@
 package com.ludwici.anchorui.client.gui.editor;
 
+import com.ludwici.anchorui.api.layout.AnchorLayout;
+import com.ludwici.anchorui.client.gui.NativeContainerScrollPanel;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -40,6 +43,8 @@ public final class WidgetListPanel {
     private int width = 214;
     private int height = 300;
     private int scroll;
+    private NativeContainerScrollPanel scrollBar;
+    private double previousScrollMouseY;
     private int viewportWidth;
     private int viewportHeight;
     private int startX;
@@ -77,6 +82,9 @@ public final class WidgetListPanel {
     public void setCollapsed(boolean value) {
         collapsed = value;
         dragging = false;
+        if (collapsed && scrollBar != null && scrollBar.isDraggingBar()) {
+            scrollBar.mouseReleased(0, 0, GLFW.GLFW_MOUSE_BUTTON_LEFT);
+        }
     }
 
     public boolean overlaps(int left, int top, int right, int bottom) {
@@ -96,8 +104,7 @@ public final class WidgetListPanel {
         }
         if (mouseY < y + HEADER_HEIGHT) {
             if (mouseX >= x + visibleWidth() - 27) {
-                collapsed = !collapsed;
-                dragging = false;
+                setCollapsed(!collapsed);
                 return true;
             }
             dragging = true;
@@ -109,19 +116,30 @@ public final class WidgetListPanel {
         }
 
         if (!collapsed && mouseY < y + height - FOOTER_HEIGHT) {
+            ensureScrollBar(rows(entries));
+            if (scrollBar != null && scrollBar.mouseClicked(mouseX, mouseY, button)) {
+                previousScrollMouseY = mouseY;
+                return true;
+            }
             Row row = rowAt(mouseY, entries);
             if (row != null && row.heading()) {
                 if (!collapsedGroups.add(row.group())) {
                     collapsedGroups.remove(row.group());
                 }
                 rowsDirty = true;
-                scroll = Math.min(scroll, maxScroll(rows(entries)));
+                ensureScrollBar(rows(entries));
             }
         }
         return true;
     }
 
     public boolean dragged(double mouseX, double mouseY, int button) {
+        if (scrollBar != null && scrollBar.isDraggingBar()) {
+            boolean moved = scrollBar.mouseDragged(mouseX, mouseY, button, 0, mouseY - previousScrollMouseY);
+            previousScrollMouseY = mouseY;
+            scroll = scrollBar.logicalOffset();
+            return moved;
+        }
         if (!dragging || button != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             return false;
         }
@@ -131,6 +149,11 @@ public final class WidgetListPanel {
     }
 
     public boolean released(int button) {
+        if (scrollBar != null && scrollBar.isDraggingBar()) {
+            scrollBar.mouseReleased(0, 0, button);
+            scroll = scrollBar.logicalOffset();
+            return true;
+        }
         if (!dragging || button != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             return false;
         }
@@ -142,8 +165,11 @@ public final class WidgetListPanel {
         if (collapsed || !contains(mouseX, mouseY)) {
             return false;
         }
-        int max = maxScroll(rows(entries));
-        scroll = Math.max(0, Math.min(max, scroll - (int) Math.round(scrollY * ROW_HEIGHT * 2)));
+        ensureScrollBar(rows(entries));
+        if (scrollBar != null) {
+            scrollBar.mouseScrolled(mouseX, mouseY, 0, scrollY);
+            scroll = scrollBar.logicalOffset();
+        }
         return true;
     }
 
@@ -165,6 +191,7 @@ public final class WidgetListPanel {
     }
 
     private Row rowAt(double mouseY, List<Entry> entries) {
+        ensureScrollBar(rows(entries));
         int pointerY = (int) mouseY - y - HEADER_HEIGHT + scroll;
         int index = pointerY / ROW_HEIGHT;
         List<Row> visibleRows = rows(entries);
@@ -174,7 +201,7 @@ public final class WidgetListPanel {
     public void render(GuiGraphics graphics, Font font, int mouseX, int mouseY,
                        List<Entry> entries, String selected, boolean choosingParent) {
         List<Row> rows = rows(entries);
-        scroll = Math.min(scroll, maxScroll(rows));
+        ensureScrollBar(rows);
         graphics.fill(x, y, x + visibleWidth(), y + visibleHeight(), PANEL_BACKGROUND);
         graphics.fill(x, y, x + visibleWidth(), y + HEADER_HEIGHT, HEADER_BACKGROUND);
         String title = collapsed ? "Widgets" : "Widgets (" + entries.size() + ")";
@@ -222,13 +249,8 @@ public final class WidgetListPanel {
         graphics.drawString(font, choosingParent ? "Click a parent ID" : "Click to select | Scroll",
                 x + 6, bottom + 5, 0xFFB7C8D6, false);
 
-        int totalHeight = contentHeight(rows);
-        if (totalHeight > bottom - top) {
-            int track = bottom - top;
-            int thumb = Math.max(10, track * track / totalHeight);
-            int thumbY = top + (track - thumb) * scroll / Math.max(1, totalHeight - track);
-            graphics.fill(x + width - 5, top, x + width - 3, bottom, 0xFF374756);
-            graphics.fill(x + width - 5, thumbY, x + width - 3, thumbY + thumb, 0xFF9FBDD0);
+        if (scrollBar != null) {
+            scrollBar.render(graphics, mouseX, mouseY, 0);
         }
 
         Entry hovered = entryAt(mouseX, mouseY, entries);
@@ -236,6 +258,23 @@ public final class WidgetListPanel {
             graphics.renderTooltip(font, Component.literal(hovered.id()
                     + (hovered.readOnly() ? " (read-only)" : "")), mouseX, mouseY);
         }
+    }
+
+    private void ensureScrollBar(List<Row> rows) {
+        int top = y + HEADER_HEIGHT;
+        int bottom = y + height - FOOTER_HEIGHT;
+        int max = maxScroll(rows);
+        if (max <= 0 || bottom - top < 34 || width <= 16) {
+            scrollBar = null;
+            scroll = 0;
+            return;
+        }
+        AnchorLayout.Bounds viewport = new AnchorLayout.Bounds(x + 3, top, width - 6, bottom - top);
+        if (scrollBar == null || !scrollBar.matches(viewport, max, ROW_HEIGHT * 2, 1.0)) {
+            scrollBar = new NativeContainerScrollPanel(Minecraft.getInstance(), viewport,
+                    max, ROW_HEIGHT * 2, 1.0, scroll);
+        }
+        scroll = scrollBar.logicalOffset();
     }
 
     private List<Row> rows(List<Entry> entries) {

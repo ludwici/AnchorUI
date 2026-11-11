@@ -106,14 +106,17 @@ public final class AnchorHudEditorScreen extends Screen {
         if (!editorStarted) {
             manager.beginEditing();
             editorStarted = true;
-            panelWidth = Math.min(PANEL_WIDTH, width - 12);
+            panelWidth = Math.min(PANEL_WIDTH, Math.max(150, width - 116));
             panelHeight = Math.min(350, Math.max(128, height - 80));
             panelX = width - panelWidth - 8;
             panelY = 8;
         } else {
-            panelWidth = Math.min(PANEL_WIDTH, width - 12);
+            panelWidth = Math.min(PANEL_WIDTH, Math.max(150, width - 116));
             panelHeight = Math.min(350, Math.max(128, height - 80));
             clampPanel();
+        }
+        if (!inspectorCollapsed && widgetList.overlaps(panelX, panelY, panelX + panelWidth, panelY + panelHeight)) {
+            inspectorCollapsed = true;
         }
         int left = panelX + 6;
         int innerWidth = panelWidth - 12;
@@ -187,7 +190,18 @@ public final class AnchorHudEditorScreen extends Screen {
         return inspectorCollapsed ? 20 : panelHeight;
     }
 
+    private int visiblePanelX() {
+        return inspectorCollapsed ? panelX + panelWidth - 104 : panelX;
+    }
+
+    private int visiblePanelWidth() {
+        return inspectorCollapsed ? 104 : panelWidth;
+    }
+
     private void toggleInspector() {
+        if (inspectorCollapsed && widgetList.overlaps(panelX, panelY, panelX + panelWidth, panelY + panelHeight)) {
+            widgetList.setCollapsed(true);
+        }
         inspectorCollapsed = !inspectorCollapsed;
         draggingPanel = false;
         draggingScroll = false;
@@ -202,7 +216,8 @@ public final class AnchorHudEditorScreen extends Screen {
     }
 
     private boolean insidePanel(double x, double y) {
-        return x >= panelX && x < panelX + panelWidth && y >= panelY && y < panelY + visiblePanelHeight();
+        return x >= visiblePanelX() && x < visiblePanelX() + visiblePanelWidth()
+                && y >= panelY && y < panelY + visiblePanelHeight();
     }
 
     private boolean insideInspector(double x, double y) {
@@ -377,11 +392,13 @@ public final class AnchorHudEditorScreen extends Screen {
         graphics.pose().translate(0.0F, 0.0F, 300.0F);
         try {
             if (!compact) {
-                graphics.fill(panelX, panelY, panelX + panelWidth, panelY + visiblePanelHeight(), 0xFF121C29);
-                graphics.fill(panelX, panelY, panelX + panelWidth, panelY + 20, 0xFF254057);
-                graphics.drawString(font, "HUD Editor", panelX + 6, panelY + 6, 0xFFE5EEF5, false);
+                graphics.fill(visiblePanelX(), panelY, visiblePanelX() + visiblePanelWidth(), panelY + visiblePanelHeight(), 0xFF121C29);
+                graphics.fill(visiblePanelX(), panelY, visiblePanelX() + visiblePanelWidth(), panelY + 20, 0xFF254057);
+                graphics.drawString(font, inspectorCollapsed ? "Inspector" : "HUD Editor",
+                        visiblePanelX() + 6, panelY + 6, 0xFFE5EEF5, false);
                 graphics.drawString(font, inspectorCollapsed ? "[+]" : "[-]",
-                        panelX + panelWidth - 140, panelY + 6, 0xFFE5EEF5, false);
+                        inspectorCollapsed ? visiblePanelX() + visiblePanelWidth() - 26 : panelX + panelWidth - 140,
+                        panelY + 6, 0xFFE5EEF5, false);
                 if (!inspectorCollapsed) {
                     String hint = choosingParent ? "Choose a parent, or click a listed vanilla ID" : "Snap: 6px | Alt: free | Vanilla: read-only";
                     drawScaled(graphics, hint, panelX + 6, panelY + 22, 0xFFAAC1D4);
@@ -616,8 +633,9 @@ public final class AnchorHudEditorScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!compact && button == GLFW.GLFW_MOUSE_BUTTON_LEFT && insidePanel(mouseX, mouseY)
-                && mouseY < panelY + 20 && mouseX >= panelX + panelWidth - 144
-                && mouseX < panelX + panelWidth - 115) {
+                && mouseY < panelY + 20
+                && (inspectorCollapsed || (mouseX >= panelX + panelWidth - 144
+                && mouseX < panelX + panelWidth - 115))) {
             toggleInspector();
             return true;
         }
@@ -628,7 +646,12 @@ public final class AnchorHudEditorScreen extends Screen {
                     selectFromList(entry);
                 }
             }
+            boolean wasCollapsed = widgetList.isCollapsed();
             widgetList.beginClick(mouseX, mouseY, button, frameEntries);
+            if (wasCollapsed && !widgetList.isCollapsed() && !inspectorCollapsed
+                    && widgetList.overlaps(panelX, panelY, panelX + panelWidth, panelY + panelHeight)) {
+                toggleInspector();
+            }
             return true;
         }
         if (super.mouseClicked(mouseX, mouseY, button)) {

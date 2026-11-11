@@ -8,6 +8,7 @@ import com.ludwici.anchorui.client.hud.HudInspectorProperties;
 import com.ludwici.anchorui.client.hud.HudLayoutOffsets;
 import com.google.gson.JsonObject;
 import com.ludwici.anchorui.client.hud.HudSnap;
+import com.ludwici.anchorui.client.gui.NativeContainerScrollPanel;
 import com.ludwici.anchorui.client.gui.editor.WidgetListPanel;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphics;
@@ -50,7 +51,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     private String inspectedId;
     private int inspectorScroll;
     private int maxInspectorScroll;
-    private boolean draggingInspectorScroll;
+    private NativeContainerScrollPanel inspectorScrollBar;
     private ItemLoreScreen.EditorHandle selected;
     private Button hide;
     private Button parent;
@@ -187,7 +188,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         if (id == null || !id.equals(inspectedId)) {
             inspectedId = null;
             sourceProperties = List.of();
-            inspectorScroll = 0;
+            resetInspectorScroll();
         }
         selected = null;
         if (id != null) {
@@ -387,6 +388,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         List<InspectorLine> lines = inspectorLines();
         maxInspectorScroll = Math.max(0, lines.size() * INSPECTOR_LINE_HEIGHT - (bottom - top));
         inspectorScroll = Math.max(0, Math.min(inspectorScroll, maxInspectorScroll));
+        updateInspectorScrollBar(top, bottom);
         graphics.enableScissor(panelX() + 4, top, panelX() + inspectorWidth - 4, bottom);
         try {
             int lineY = top - inspectorScroll;
@@ -414,13 +416,8 @@ public final class AnchorScreenEditorScreen extends Screen {
         } finally {
             graphics.disableScissor();
         }
-        if (maxInspectorScroll > 0) {
-            int trackX = panelX() + inspectorWidth - 5;
-            int trackHeight = bottom - top;
-            int thumbHeight = Math.max(9, trackHeight * trackHeight / (trackHeight + maxInspectorScroll));
-            int thumbTop = top + inspectorScroll * (trackHeight - thumbHeight) / maxInspectorScroll;
-            graphics.fill(trackX, top, trackX + 2, bottom, 0xFF465C6F);
-            graphics.fill(trackX, thumbTop, trackX + 2, thumbTop + thumbHeight, 0xFFD5DDEB);
+        if (inspectorScrollBar != null) {
+            inspectorScrollBar.render(graphics, 0, 0, 0);
         }
     }
 
@@ -474,10 +471,24 @@ public final class AnchorScreenEditorScreen extends Screen {
         }
     }
 
-    private void scrollInspector(double mouseY) {
-        int trackHeight = Math.max(1, inspectorBottom() - inspectorTop());
-        inspectorScroll = Math.max(0, Math.min(maxInspectorScroll,
-                (int) Math.round((mouseY - inspectorTop()) * (maxInspectorScroll + trackHeight) / trackHeight)));
+    private void updateInspectorScrollBar(int top, int bottom) {
+        if (maxInspectorScroll <= 0 || bottom - top < 34 || inspectorWidth < 20) {
+            inspectorScrollBar = null;
+            inspectorScroll = 0;
+            return;
+        }
+        AnchorLayout.Bounds viewport = new AnchorLayout.Bounds(panelX() + 4, top, inspectorWidth - 8, bottom - top);
+        if (inspectorScrollBar == null || !inspectorScrollBar.matches(viewport, maxInspectorScroll, 23, 1.0)) {
+            inspectorScrollBar = new NativeContainerScrollPanel(minecraft, viewport, maxInspectorScroll, 23, 1.0, inspectorScroll);
+        }
+        inspectorScroll = inspectorScrollBar.logicalOffset();
+    }
+
+    private void resetInspectorScroll() {
+        inspectorScroll = 0;
+        if (inspectorScrollBar != null) {
+            inspectorScrollBar.setLogicalOffset(0);
+        }
     }
 
     private static void outline(GuiGraphics graphics, int x, int y, int width, int height, int color) {
@@ -534,9 +545,8 @@ public final class AnchorScreenEditorScreen extends Screen {
                         return true;
                     }
                 }
-                if (mouseX >= panelX() + inspectorWidth - 10) {
-                    draggingInspectorScroll = true;
-                    scrollInspector(mouseY);
+                if (inspectorScrollBar != null) {
+                    inspectorScrollBar.mouseClicked(mouseX, mouseY, button);
                 }
             } else if (mouseY < panelTop + 27) {
                 draggingPanel = true;
@@ -581,11 +591,12 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (target.mouseDraggedScrollBar(mouseX, mouseY, button, dragX, dragY)) {
+        if (inspectorScrollBar != null && inspectorScrollBar.isDraggingBar()) {
+            inspectorScrollBar.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+            inspectorScroll = inspectorScrollBar.logicalOffset();
             return true;
         }
-        if (draggingInspectorScroll && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-            scrollInspector(mouseY);
+        if (target.mouseDraggedScrollBar(mouseX, mouseY, button, dragX, dragY)) {
             return true;
         }
         if (widgetList.dragged(mouseX, mouseY, button)) {
@@ -623,11 +634,12 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (target.mouseReleasedScrollBar(mouseX, mouseY, button)) {
+        if (inspectorScrollBar != null && inspectorScrollBar.isDraggingBar()) {
+            inspectorScrollBar.mouseReleased(mouseX, mouseY, button);
+            inspectorScroll = inspectorScrollBar.logicalOffset();
             return true;
         }
-        if (draggingInspectorScroll && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-            draggingInspectorScroll = false;
+        if (target.mouseReleasedScrollBar(mouseX, mouseY, button)) {
             return true;
         }
         if (widgetList.released(button)) {
@@ -653,8 +665,10 @@ public final class AnchorScreenEditorScreen extends Screen {
             return true;
         }
         if (insideInspector(mouseX, mouseY)) {
-            inspectorScroll = Math.max(0, Math.min(maxInspectorScroll,
-                    inspectorScroll - (int) Math.round(scrollY * 23)));
+            if (inspectorScrollBar != null) {
+                inspectorScrollBar.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+                inspectorScroll = inspectorScrollBar.logicalOffset();
+            }
             return true;
         }
         if (target.scrollContentsAt(mouseX, mouseY, scrollX, scrollY)) {

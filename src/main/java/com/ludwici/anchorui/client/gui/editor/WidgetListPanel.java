@@ -23,6 +23,7 @@ public final class WidgetListPanel {
     }
 
     private static final int HEADER_HEIGHT = 21;
+    private static final int COLLAPSED_WIDTH = 100;
     private static final int FOOTER_HEIGHT = 17;
     private static final int ROW_HEIGHT = 17;
     private static final int GROUP_HEIGHT = ROW_HEIGHT;
@@ -66,11 +67,20 @@ public final class WidgetListPanel {
     }
 
     public boolean contains(double mouseX, double mouseY) {
-        return mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + visibleHeight();
+        return mouseX >= x && mouseX < x + visibleWidth() && mouseY >= y && mouseY < y + visibleHeight();
     }
 
     public boolean isCollapsed() {
         return collapsed;
+    }
+
+    public void setCollapsed(boolean value) {
+        collapsed = value;
+        dragging = false;
+    }
+
+    public boolean overlaps(int left, int top, int right, int bottom) {
+        return x < right && x + visibleWidth() > left && y < bottom && y + visibleHeight() > top;
     }
 
     public boolean isGroupCollapsed(int group) {
@@ -85,7 +95,7 @@ public final class WidgetListPanel {
             return true;
         }
         if (mouseY < y + HEADER_HEIGHT) {
-            if (mouseX >= x + width - 27) {
+            if (mouseX >= x + visibleWidth() - 27) {
                 collapsed = !collapsed;
                 dragging = false;
                 return true;
@@ -150,6 +160,10 @@ public final class WidgetListPanel {
         return collapsed ? HEADER_HEIGHT : height;
     }
 
+    private int visibleWidth() {
+        return collapsed ? Math.min(COLLAPSED_WIDTH, width) : width;
+    }
+
     private Row rowAt(double mouseY, List<Entry> entries) {
         int pointerY = (int) mouseY - y - HEADER_HEIGHT + scroll;
         int index = pointerY / ROW_HEIGHT;
@@ -161,10 +175,11 @@ public final class WidgetListPanel {
                        List<Entry> entries, String selected, boolean choosingParent) {
         List<Row> rows = rows(entries);
         scroll = Math.min(scroll, maxScroll(rows));
-        graphics.fill(x, y, x + width, y + visibleHeight(), PANEL_BACKGROUND);
-        graphics.fill(x, y, x + width, y + HEADER_HEIGHT, HEADER_BACKGROUND);
-        graphics.drawString(font, "Widgets (" + entries.size() + ")", x + 7, y + 7, 0xFFFFFFFF, false);
-        graphics.drawString(font, collapsed ? "[+]" : "[-]", x + width - 26, y + 7, 0xFFFFFFFF, false);
+        graphics.fill(x, y, x + visibleWidth(), y + visibleHeight(), PANEL_BACKGROUND);
+        graphics.fill(x, y, x + visibleWidth(), y + HEADER_HEIGHT, HEADER_BACKGROUND);
+        String title = collapsed ? "Widgets" : "Widgets (" + entries.size() + ")";
+        graphics.drawString(font, title, x + 7, y + 7, 0xFFFFFFFF, false);
+        graphics.drawString(font, collapsed ? "[+]" : "[-]", x + visibleWidth() - 26, y + 7, 0xFFFFFFFF, false);
         if (collapsed) {
             return;
         }

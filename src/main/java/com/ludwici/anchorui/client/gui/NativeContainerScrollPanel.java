@@ -4,6 +4,8 @@ import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.mojang.blaze3d.vertex.Tesselator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.narration.NarratableEntry;
 import net.neoforged.neoforge.client.gui.widget.ScrollPanel;
 
 public final class NativeContainerScrollPanel extends ScrollPanel {
@@ -44,6 +46,15 @@ public final class NativeContainerScrollPanel extends ScrollPanel {
 
     public boolean isDraggingBar() {
         return dragging;
+    }
+
+    @Override
+    public NarratableEntry.NarrationPriority narrationPriority() {
+        return NarratableEntry.NarrationPriority.NONE;
+    }
+
+    @Override
+    public void updateNarration(NarrationElementOutput output) {
     }
 
     @Override

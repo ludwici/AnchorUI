@@ -645,6 +645,9 @@ public final class AnchorScreenEditorScreen extends Screen {
                     inspectorScroll - (int) Math.round(scrollY * 23)));
             return true;
         }
+        if (target.scrollContentsAt(mouseX, mouseY, scrollX, scrollY)) {
+            return true;
+        }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 

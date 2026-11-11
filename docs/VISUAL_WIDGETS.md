@@ -99,8 +99,65 @@ Panels support optional fill, borders, and rounded corners. If `fillColor` is om
 - The HUD editor treats containers as ordinary movable frames: dragging a parent automatically moves children anchored to its content frame.
 - To scale a panel/container **with its descendants as a single group**, set `"scale": 0.9` (range 0.1 to 4.0). `"scaleOrigin": "top_left"` is the default; `"scaleOrigin": "center"` scales around the panel's center, useful for a centered phone or dialogue window. Nested group scales multiply. Screen mouse hit-testing, dragging, scrolling, mouse-over and opt-in clips use the transformed coordinates. HUD editor hitboxes and mouse dragging account for group scaling, while JSON widget sizes remain in logical GUI pixels.
 
-These are **fixed-size layout containers**, not flex/grid/auto-sizing containers. True automatic responsive sizing, scroll containers, animations and transitions are future improvements. Group scaling affects visuals and interactive hitboxes, but does not change the logical size used by the outer anchor layout.
+## Automatic container sizing
+
+A `panel` or `container` can calculate its outer size from its **direct children** (including nested auto-sized containers) and its padding. The default remains fixed sizing, for compatibility with existing resource packs.
+
+```json
+{
+  "type": "anchorui:container",
+  "id": "mypack:auto_card",
+  "autoSize": "both",
+  "padding": {"left": 12, "right": 12, "top": 8, "bottom": 8},
+  "position": {"point": "CENTER", "anchor": "CENTER", "relativeTo": "screen"},
+  "children": [
+    {
+      "type": "anchorui:text",
+      "text": "Content sets the container width",
+      "size": {"width": 210, "height": 18}
+    },
+    {
+      "type": "anchorui:text",
+      "text": "The second row expands the height",
+      "position": {"y": 26},
+      "size": {"width": 210, "height": 18}
+    }
+  ]
+}
+```
+
+`autoSize` accepts `"width"`, `"height"`, `"both"`, `"none"`, `true`/`false`, or `{"width": true, "height": false}`. With one automatic axis, the other stays at the declared `size` (or the widget default). Nested auto-sized panels resolve from inside out, and normal anchors work on the resulting frame.
+
+Auto sizing measures the **declared widget bounds**, not the pixels occupied by dynamically rendered text or textures; for wrapped text, provide appropriate widget sizes. Children with positions tied to a parent's right, center or bottom edge **on an auto-sized axis** can cause circular sizing and are rejected if the layout cannot converge. This is content measurement, not flex/grid flow.
+
+## Scrollable container viewports
+
+A fixed-size `panel` or `container` can opt in to scrolling when its children extend beyond its content viewport:
+
+```json
+{
+  "type": "anchorui:panel",
+  "id": "mypack:scroll_area",
+  "size": {"width": 200, "height": 110},
+  "padding": {"left": 8, "right": 8, "top": 8, "bottom": 8},
+  "scroll": {"axis": "vertical", "step": 18},
+  "children": [
+    {"type": "anchorui:text", "text": "First", "size": {"width": 150, "height": 16}},
+    {"type": "anchorui:text", "text": "Last", "position": {"y": 180}, "size": {"width": 150, "height": 16}}
+  ]
+}
+```
+
+`scroll` defaults to off and may be `"vertical"`, `"horizontal"`, `"both"` or `{"axis":"vertical","step":18}` (step is 1–1024 GUI pixels). Wheel input is routed to the viewport under the pointer; scrolling stops at its computed content bounds. The selected scroll offsets move *descendants only*. Nested scaling, anchoring, scissor clipping, interaction hitboxes and scrollable descendants use the same transform hierarchy.
+
+**A scrolling container always clips its descendants** even when `clipChildren` is omitted, so off-screen elements do not render or receive clicks. Other containers still default to no clipping. Small scroll-position indicators appear when content overflows; dragging these indicators is not implemented. Input on a HUD (outside the HUD editor) cannot use the pointer/scroll wheel while playing, but the HUD editor can preview scrolling.
+
+Minecraft and NeoForge already provide `AbstractSelectionList`, `AbstractScrollWidget` and `ScrollPanel` for conventional lists/text scroll areas. Those remain the preferred components for specialized interactive list widgets. Anchor UI's generic JSON containers instead reuse Minecraft's `GuiGraphics` scissor/input routing and use a lightweight scroll transform adapter: the built-in scroll widgets do not directly support moving arbitrary anchored, nested and scaled JSON widget hierarchies.
+
+For a predictable viewport, prefer **fixed size on the scrollable axis**: if `autoSize: "height"` expands the viewport to fit its children, there is normally nothing left to scroll. Automatic sizing is not a replacement for a responsive flex/grid layout.
+
+Group scaling affects visuals and interactive hitboxes, but not the logical size used by the outer anchor layout. Full grid/flex auto layout, animations and transitions remain future work.
 
 ## Smoke tests
 
-Open `/anchorui screen open anchorui:visual_demo` for a bundled example with nested panels, 9-slice textured panel, group scaling, padding, nested panel and a bound progress bar. Check resizing, F3+T resource reload, and in-game HUD previews with F8.
+Open `/anchorui screen open anchorui:visual_demo` for the existing textured/nested UI example. Open `/anchorui screen open anchorui:auto_scroll_demo` for automatic sizing (including a nested panel) and a scrollable list of JSON text widgets. Try the mouse wheel over the right-hand viewport, hover or click its content, change GUI Scale and open F8 to inspect the widget positions. Check F3+T resource reload and in-game HUD previews with F8.

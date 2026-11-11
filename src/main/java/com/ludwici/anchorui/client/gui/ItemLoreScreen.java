@@ -75,6 +75,7 @@ public class ItemLoreScreen extends Screen {
     private WidgetInstanceRegistry widgetRegistry = new WidgetInstanceRegistry();
     private List<PlacedWidget> placedWidgets = List.of();
     private final Map<String, UiEventBindings> widgetEventBindings = new HashMap<>();
+    private final Set<String> selfDispatchingClicks = new HashSet<>();
     private final UiHoverTracker hoverTracker = new UiHoverTracker();
     private UiEventBindings screenEventBindings;
     private boolean lifecycleActive;
@@ -605,6 +606,7 @@ public class ItemLoreScreen extends Screen {
         widgetRegistry = new WidgetInstanceRegistry();
         placedWidgets = List.of();
         widgetEventBindings.clear();
+        selfDispatchingClicks.clear();
         hoverTracker.reset();
         layoutBounds = Map.of();
         clipBounds = Map.of();
@@ -753,7 +755,7 @@ public class ItemLoreScreen extends Screen {
         PositionElement position = new PositionElement(p.point, p.anchor, relativeTo, p.x, p.y);
         BoundCondition visibleWhen = BoundCondition.parse(element.settings, "visibleWhen", true);
         BoundCondition enabledWhen = BoundCondition.parse(element.settings, "enabledWhen", true, false);
-        UiEventBindings events = UiEventBindings.compile(context, element.settings, "onHoverEnter", "onHoverLeave", "onChange");
+        UiEventBindings events = UiEventBindings.compile(context, element.settings, "onClick", "onHoverEnter", "onHoverLeave", "onChange");
         if (widget instanceof UiChangeSource source) {
             source.setChangeListener(value -> {
                 if (minecraft.screen == this && widget.visible && widget.active) {
@@ -762,6 +764,9 @@ public class ItemLoreScreen extends Screen {
             });
         }
         widgetEventBindings.put(id, events);
+        if (element.type.equals(WidgetTypeIds.BUTTON)) {
+            selfDispatchingClicks.add(id);
+        }
         widgetRegistry.attach(id, widget);
         boolean panel = widget instanceof PanelWidget;
         created.add(new PlacedWidget(id, widget, settings, position, context,
@@ -838,6 +843,21 @@ public class ItemLoreScreen extends Screen {
         renderScrollIndicators(graphics, mouseX, mouseY, partialTick);
     }
 
+    void dispatchWidgetClick(AbstractWidget widget) {
+        if (minecraft.screen != this || !widget.visible || !widget.active) {
+            return;
+        }
+        for (PlacedWidget placed : placedWidgets) {
+            if (placed.widget() == widget) {
+                UiEventBindings events = widgetEventBindings.get(placed.id());
+                if (events != null) {
+                    events.fire("onClick", placed.id(), JsonNull.INSTANCE);
+                }
+                return;
+            }
+        }
+    }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         draggingWidget = null;
@@ -853,8 +873,16 @@ public class ItemLoreScreen extends Screen {
             }
             WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
             if (widget.mouseClicked(transform.inverseX(mouseX), transform.inverseY(mouseY), button)) {
-                setFocused(widget);
-                draggingWidget = placed;
+                if (minecraft.screen == this) {
+                    setFocused(widget);
+                    draggingWidget = placed;
+                    if (!selfDispatchingClicks.contains(placed.id())) {
+                        UiEventBindings events = widgetEventBindings.get(placed.id());
+                        if (events != null) {
+                            events.fire("onClick", placed.id(), JsonNull.INSTANCE);
+                        }
+                    }
+                }
                 return true;
             }
         }

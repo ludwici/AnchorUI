@@ -60,7 +60,7 @@ public final class AnchorHudManager {
     private record Description(String id, LoreEntity entity, LoreEntity.UiElement element) {
     }
 
-    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, boolean baseVisible, WidgetContext context, BoundBoolean visibleWhen, String containerParent) {
+    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, boolean baseVisible, WidgetContext context, BoundBoolean visibleWhen, String containerParent, boolean clipChildren) {
         private PositionElement effectivePosition(HudLayoutOffsets offsets) {
             HudLayoutOffsets.Offset delta = offsets.get(id);
             HudLayoutOffsets.AnchorOverride anchor = offsets.anchor(id);
@@ -502,7 +502,7 @@ public final class AnchorHudManager {
                 String relativeTo = WidgetIds.reference(position.relativeTo, entity.namespace);
                 PositionElement anchored = new PositionElement(position.point, position.anchor, relativeTo, position.x, position.y);
                 registry.attach(definition.id(), widget);
-                created.add(new PlacedWidget(definition.id(), widget, style, anchored, widget.visible, context, BoundBoolean.parse(element.settings, "visibleWhen", true), WidgetContainers.parent(element.settings)));
+                created.add(new PlacedWidget(definition.id(), widget, style, anchored, widget.visible, context, BoundBoolean.parse(element.settings, "visibleWhen", true), WidgetContainers.parent(element.settings), widget instanceof com.ludwici.anchorui.client.gui.PanelWidget && WidgetContainers.clipChildren(element.settings)));
             } catch (WidgetConfigException exception) {
                 warnings.add(exception.getMessage());
             } catch (RuntimeException exception) {
@@ -535,12 +535,16 @@ public final class AnchorHudManager {
             }
             layoutBounds = bounds;
             Map<String, String> parents = new LinkedHashMap<>();
+            Set<String> clippingContainers = new HashSet<>();
             for (PlacedWidget placed : widgets) {
                 if (placed.containerParent() != null) {
                     parents.put(placed.id(), placed.containerParent());
                 }
+                if (placed.clipChildren()) {
+                    clippingContainers.add(placed.id());
+                }
             }
-            clipBounds = WidgetContainers.clips(bounds, parents);
+            clipBounds = WidgetContainers.clips(bounds, parents, clippingContainers);
             applyVisibility();
         } catch (IllegalArgumentException exception) {
             AnchorUI.LOGGER.error("Anchor UI HUD layout rejected ({}x{}, {} widgets): {}", builtWidth, builtHeight, widgets.size(), exception.getMessage());

@@ -28,12 +28,14 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ItemLoreScreen extends Screen {
     private record DeclaredWidget(String id, LoreEntity.UiElement element, String legacyStyle) {
     }
 
-    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, WidgetContext context, BoundBoolean visibleWhen, boolean baseVisible, String containerParent) {
+    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, WidgetContext context, BoundBoolean visibleWhen, boolean baseVisible, String containerParent, boolean clipChildren) {
         private AnchorLayout.Frame frame() {
             return new AnchorLayout.Frame(id, position, widget.getWidth(), widget.getHeight());
         }
@@ -112,12 +114,16 @@ public class ItemLoreScreen extends Screen {
             }
             layoutBounds = AnchorLayout.resolve(width, height, frames, warnings::add);
             Map<String, String> parents = new LinkedHashMap<>();
+            Set<String> clippingContainers = new HashSet<>();
             for (PlacedWidget placed : created) {
                 if (placed.containerParent() != null) {
                     parents.put(placed.id(), placed.containerParent());
                 }
+                if (placed.clipChildren()) {
+                    clippingContainers.add(placed.id());
+                }
             }
-            clipBounds = WidgetContainers.clips(layoutBounds, parents);
+            clipBounds = WidgetContainers.clips(layoutBounds, parents, clippingContainers);
             for (PlacedWidget placed : created) {
                 AnchorLayout.Bounds bounds = layoutBounds.get(placed.id());
                 placed.widget().setPosition(bounds.x(), bounds.y());
@@ -194,7 +200,7 @@ public class ItemLoreScreen extends Screen {
         String relativeTo = WidgetIds.reference(p.relativeTo, loreEntity.namespace);
         PositionElement position = new PositionElement(p.point, p.anchor, relativeTo, p.x, p.y);
         widgetRegistry.attach(id, widget);
-        created.add(new PlacedWidget(id, widget, settings, position, context, BoundBoolean.parse(element.settings, "visibleWhen", true), widget.visible, WidgetContainers.parent(element.settings)));
+        created.add(new PlacedWidget(id, widget, settings, position, context, BoundBoolean.parse(element.settings, "visibleWhen", true), widget.visible, WidgetContainers.parent(element.settings), widget instanceof PanelWidget && WidgetContainers.clipChildren(element.settings)));
     }
 
     @Override

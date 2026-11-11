@@ -25,13 +25,31 @@ public class WidgetContainersTest {
     }
 
     @Test
+    public void doesNotClipWhenParentHasNotOptedIn() {
+        var bounds = Map.of("screen", new AnchorLayout.Bounds(0, 0, 300, 200),
+                "demo:outer/__content", new AnchorLayout.Bounds(10, 10, 30, 30));
+        var parents = Map.of("demo:child", "demo:outer");
+        assertTrue(WidgetContainers.clips(bounds, parents, java.util.Set.of()).isEmpty());
+    }
+
+    @Test
+    public void onlyOptedInAncestorsClipTheirDescendants() {
+        var bounds = Map.of("screen", new AnchorLayout.Bounds(0, 0, 300, 200),
+                "demo:outer/__content", new AnchorLayout.Bounds(10, 10, 30, 30),
+                "demo:inner/__content", new AnchorLayout.Bounds(15, 15, 100, 100));
+        var parents = Map.of("demo:inner", "demo:outer", "demo:leaf", "demo:inner");
+        var clips = WidgetContainers.clips(bounds, parents, java.util.Set.of("demo:outer"));
+        assertEquals(new AnchorLayout.Bounds(10, 10, 30, 30), clips.get("demo:leaf"));
+    }
+
+    @Test
     public void clipsNestedContentToAllAncestors() {
         Map<String, AnchorLayout.Bounds> bounds = new LinkedHashMap<>();
         bounds.put("screen", new AnchorLayout.Bounds(0, 0, 300, 200));
         bounds.put("demo:root/__content", new AnchorLayout.Bounds(20, 20, 200, 100));
         bounds.put("demo:child/__content", new AnchorLayout.Bounds(180, 40, 90, 120));
         Map<String, String> parents = Map.of("demo:child", "demo:root", "demo:leaf", "demo:child");
-        var clips = WidgetContainers.clips(bounds, parents);
+        var clips = WidgetContainers.clips(bounds, parents, java.util.Set.of("demo:root", "demo:child"));
         assertEquals(new AnchorLayout.Bounds(20, 20, 200, 100), clips.get("demo:child"));
         assertEquals(new AnchorLayout.Bounds(180, 40, 40, 80), clips.get("demo:leaf"));
         assertTrue(WidgetContainers.contains(clips.get("demo:leaf"), 190, 50));

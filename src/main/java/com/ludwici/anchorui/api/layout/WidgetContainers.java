@@ -7,6 +7,7 @@ import com.ludwici.anchorui.api.style.PositionElement;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 public final class WidgetContainers {
     public static final String PARENT_FIELD = "__anchorui_container_parent";
@@ -37,26 +38,34 @@ public final class WidgetContainers {
         return new AnchorLayout.Frame(contentId(id), position, innerWidth, innerHeight);
     }
 
-    public static Map<String, AnchorLayout.Bounds> clips(Map<String, AnchorLayout.Bounds> bounds, Map<String, String> parents) {
+    public static boolean clipChildren(JsonObject settings) {
+        return settings.has("clipChildren") && settings.get("clipChildren").getAsBoolean();
+    }
+
+    public static Map<String, AnchorLayout.Bounds> clips(Map<String, AnchorLayout.Bounds> bounds, Map<String, String> parents, Set<String> clippingContainers) {
         Map<String, AnchorLayout.Bounds> result = new LinkedHashMap<>();
         AnchorLayout.Bounds screen = bounds.get("screen");
         if (screen == null) {
             return Map.of();
         }
         for (String id : parents.keySet()) {
-            AnchorLayout.Bounds intersection = screen;
+            AnchorLayout.Bounds intersection = null;
             String parent = parents.get(id);
             int remaining = parents.size() + 1;
             while (parent != null && remaining-- > 0) {
-                AnchorLayout.Bounds content = bounds.get(contentId(parent));
-                if (content == null) {
-                    intersection = new AnchorLayout.Bounds(0, 0, 0, 0);
-                    break;
+                if (clippingContainers.contains(parent)) {
+                    AnchorLayout.Bounds content = bounds.get(contentId(parent));
+                    if (content == null) {
+                        intersection = new AnchorLayout.Bounds(0, 0, 0, 0);
+                        break;
+                    }
+                    intersection = intersection == null ? intersect(screen, content) : intersect(intersection, content);
                 }
-                intersection = intersect(intersection, content);
                 parent = parents.get(parent);
             }
-            result.put(id, intersection);
+            if (intersection != null) {
+                result.put(id, intersection);
+            }
         }
         return Map.copyOf(result);
     }

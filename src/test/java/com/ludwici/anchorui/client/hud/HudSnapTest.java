@@ -127,7 +127,7 @@ public class HudSnapTest {
     @Test
     public void centerMagnetTakesPriorityOverOtherEquidistantTargets() {
         var moving = widget("mod:moving", "screen", 0, 0, 40, 20);
-        var neighbor = widget("mod:neighbor", "screen", 195, 500, 40, 20);
+        var neighbor = widget("mod:neighbor", "screen", 196, 500, 40, 20);
 
         var result = HudSnap.snap(moving, 178, 40, List.of(moving, neighbor), 400, 200);
 

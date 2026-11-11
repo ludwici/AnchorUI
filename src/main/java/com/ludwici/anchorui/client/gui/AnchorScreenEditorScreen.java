@@ -445,7 +445,7 @@ public final class AnchorScreenEditorScreen extends Screen {
                 targets.add(new HudSnap.Widget(handle.id(), handle.relativeTo(), b.x(), b.y(),
                         b.width(), b.height(), handle.visible()));
             }
-            snapped = HudSnap.snap(dragOrigin, desiredX, desiredY, targets);
+            snapped = HudSnap.snap(dragOrigin, desiredX, desiredY, targets, width, height);
         }
         double scale = target.editorDragScale(selected.id());
         int nextX = startOffset.x() + (int) Math.round((snapped.x() - dragOrigin.x()) / scale);

@@ -75,6 +75,7 @@ See `README.md`, `docs/HUD.md`, `docs/DATA_BINDINGS.md`, `docs/MODPACK_AUTHORING
 - [x] Implement typed `eq` / `ne`, numeric comparisons, string/list checks, `exists`, `empty`, `isNull` and `all` / `any` / `not`. JSON schema is documented in `docs/CONDITIONS.md`.
 - [x] Preserve layout bounds for hidden widgets, respect typed fallbacks, detect malformed expressions, isolate per-widget errors, and guard provider failures.
 - [x] Compile expressions and resolve data providers when constructing widgets; short-circuit compound rules and read each source once per evaluation. No new tick loops.
+- [x] Support third-party Java registration of namespaced unary/binary operators via `ConditionOperationRegistry`, resolved during condition compilation and usable in `visibleWhen` / `enabledWhen`.
 - [ ] Add conditional content (`cases`), action guards and richer dialogue/quest choice predicates in a subsequent stage.
 - [ ] Decide on optional collapsed-space layout for conditionally hidden children and optional event-driven invalidation/caching of expensive conditions.
 

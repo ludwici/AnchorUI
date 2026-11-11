@@ -271,3 +271,10 @@ A bound progress bar reads the data when rendering but **does not recreate the w
 ## RPG bar consistency
 
 The bundled RPG health and food progress bars use the same 16-pixel height, `padding: {"left":1,"right":1,"top":1,"bottom":1}` and background color. That padding leaves a visible one-pixel border around each colored fill. The standalone starter resource pack uses matching progress-bar styling. The RPG test is enabled separately with `/anchorui test rpg on`.
+
+### Collapsible editor panels
+
+Use **[-] / [+]** in the Widgets header to collapse or reopen its panel. Click a namespace category heading to collapse or expand the entries in that category without removing or modifying widgets. The properties **Inspector** panel has a separate **[-] / [+]** toggle. Both are draggable, and **Tab** hides both panels. At narrow GUI scales, the inspector automatically starts collapsed if both panels would overlap; opening either panel collapses the conflicting one.
+
+The editor panels are drawn in a foreground render layer above the in-game HUD and its widget labels. This prevents HUD text and outlines from drawing over the editor's panel backgrounds.
+

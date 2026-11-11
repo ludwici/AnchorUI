@@ -43,6 +43,20 @@ public class WidgetContainersTest {
     }
 
     @Test
+    public void optedInClipUsesScaledContentBounds() {
+        var bounds = Map.of(
+                "screen", new AnchorLayout.Bounds(0, 0, 400, 200),
+                "demo:box", new AnchorLayout.Bounds(80, 40, 200, 100),
+                "demo:box/__content", new AnchorLayout.Bounds(90, 50, 180, 80),
+                "demo:leaf", new AnchorLayout.Bounds(90, 50, 30, 20));
+        var parents = Map.of("demo:leaf", "demo:box");
+        var transforms = WidgetTransforms.resolve(bounds, parents,
+                Map.of("demo:box", new WidgetTransforms.Group(0.5, false)));
+        var clips = WidgetContainers.clips(bounds, parents, java.util.Set.of("demo:box"), transforms);
+        assertEquals(new AnchorLayout.Bounds(85, 45, 90, 40), clips.get("demo:leaf"));
+    }
+
+    @Test
     public void clipsNestedContentToAllAncestors() {
         Map<String, AnchorLayout.Bounds> bounds = new LinkedHashMap<>();
         bounds.put("screen", new AnchorLayout.Bounds(0, 0, 300, 200));

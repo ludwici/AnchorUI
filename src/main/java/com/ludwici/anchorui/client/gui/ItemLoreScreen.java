@@ -441,7 +441,7 @@ public class ItemLoreScreen extends Screen {
         for (int index = placedWidgets.size() - 1; index >= 0; index--) {
             PlacedWidget placed = placedWidgets.get(index);
             NativeContainerScrollPanel panel = nativeScrollPanels.get(placed.id());
-            if (panel != null && placed.widget().visible && insideClip(placed, mouseX, mouseY)
+            if (panel != null && placed.widget().visible && placed.widget().active && insideClip(placed, mouseX, mouseY)
                     && panel.mouseClicked(mouseX, mouseY, button)) {
                 draggedScrollPanel = panel;
                 return true;
@@ -480,7 +480,7 @@ public class ItemLoreScreen extends Screen {
     public boolean scrollContentsAt(double mouseX, double mouseY, double scrollX, double scrollY) {
         for (int index = placedWidgets.size() - 1; index >= 0; index--) {
             PlacedWidget placed = placedWidgets.get(index);
-            if (!placed.widget().visible || !placed.scroll().enabled() || !insideClip(placed, mouseX, mouseY)) {
+            if (!placed.widget().visible || !placed.widget().active || !placed.scroll().enabled() || !insideClip(placed, mouseX, mouseY)) {
                 continue;
             }
             AnchorLayout.Bounds content = layoutBounds.get(WidgetContainers.contentId(placed.id()));
@@ -799,7 +799,7 @@ public class ItemLoreScreen extends Screen {
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         for (int index = placedWidgets.size() - 1; index >= 0; index--) {
             PlacedWidget placed = placedWidgets.get(index);
-            if (!placed.widget().visible || !insideClip(placed, mouseX, mouseY)) {
+            if (!placed.widget().visible || !placed.widget().active || !insideClip(placed, mouseX, mouseY)) {
                 continue;
             }
             WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);

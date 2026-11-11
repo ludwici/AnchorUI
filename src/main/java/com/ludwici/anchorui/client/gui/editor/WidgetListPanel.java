@@ -270,9 +270,9 @@ public final class WidgetListPanel {
             return;
         }
         AnchorLayout.Bounds viewport = new AnchorLayout.Bounds(x + 3, top, width - 6, bottom - top);
-        if (scrollBar == null || !scrollBar.matches(viewport, max, ROW_HEIGHT * 2, 1.0)) {
+        if (scrollBar == null || !scrollBar.matches(viewport, max, ROW_HEIGHT * 2, 1.0, NativeContainerScrollPanel.WIDGET_LIST)) {
             scrollBar = new NativeContainerScrollPanel(Minecraft.getInstance(), viewport,
-                    max, ROW_HEIGHT * 2, 1.0, scroll);
+                    max, ROW_HEIGHT * 2, 1.0, scroll, NativeContainerScrollPanel.WIDGET_LIST);
         }
         scroll = scrollBar.logicalOffset();
     }

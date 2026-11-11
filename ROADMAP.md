@@ -36,6 +36,7 @@ The following is documented in the current repository and/or supported by the la
 - [x] Public widget registration, custom JSON fields, typed Java `record` + Mojang `Codec` configuration.
 - [x] In-game HUD documents from resource packs/mods in a shared anchor layout.
 - [x] HUD editor (F8 / `/anchorui hud edit`): drag, anchor/parent selection, hide, reset, inspect, and locally saved overrides.
+- [x] Read-only vanilla HUD references: 25 NeoForge layer IDs, positional bounds, HUD editor outlines and parent selection, no vanilla manipulation.
 - [x] Context-sensitive F8 screen editor for Anchor UI JSON screens: visual dragging with snap, parent/point/anchor changes, hide/reset, scaled hitboxes, save/cancel per-screen overrides.
 - [x] Separate anchor-testing and RPG HUD demos: `/anchorui test hud1` and `/anchorui test rpg`.
 - [x] `anchorui:progress` (numeric binding) and resource-pack dialogue demo with `anchorui:button`.

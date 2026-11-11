@@ -53,7 +53,7 @@ Two input formats are supported:
 - The 1.21.1 format defines `title`, `item`, `scale`, `lore` and optional `style`. Built-in `title`, `model`, and `lore` frames use that style, and can refer to one another by id.
 - The 1.20.1 format defines `item` and `entities`, an array of elements with `type` (`anchorui:text`, `anchorui:model`, `anchorui:list`), optional `id`, and layout/style properties. A `list` can contain its own `lore` entries. Both formats can use the 1.21.1 rich-text parser for lore text.
 
-`size.width`/`height` of zero means auto-sizing for text and lore; models default to 128 by 128. JSON dimensions and offsets are scaled GUI pixels. A background color accepts `AARRGGBB`, `RRGGBB`, or an RGBA object. An image field is parsed for future texture rendering but is not yet drawn.
+`size.width`/`height` of zero means auto-sizing for text and lore; models default to 128 by 128. JSON dimensions and offsets are scaled GUI pixels. A background color accepts `AARRGGBB`, `RRGGBB`, or an RGBA object. Images can be rendered using `anchorui:image`; panels, nested containers, optional clipping and nine-slice textures are also supported. See [Visual Widgets](docs/VISUAL_WIDGETS.md).
 
 ## Programmatic layout
 
@@ -112,6 +112,12 @@ Anchor UI loads reusable widget definitions from **`assets/<namespace>/anchorui/
 Within a screen, Anchor UI first declares all widget IDs in a per-screen `WidgetInstanceRegistry`, then creates them using the registered factories, applies styles and dimensions, and finally resolves all anchor relationships. Factories can inspect `context.widgets().definition(qualifiedId)`, and completed instances are exposed by `context.widgets().widget(qualifiedId)`. The registry is scoped to the currently open screen; importing is explicit, so unrelated widgets from other screens are not instantiated automatically.
 
 See [Widget Namespaces and Imports](docs/WIDGET_REFERENCES.md) and test `/anchorui test scene14` for a working cross-namespace demonstration.
+
+## F8: HUD and screen layout editors (NeoForge 1.21.1)
+
+Press **F8** with no screen open to edit the HUD. Press **F8** while an Anchor UI screen is open to edit that screen's own widgets. Both editors support dragging, magnetic alignment, changing anchors and parents, hiding, resetting, and saving/cancelling local layouts. Screen overrides live separately per resource ID under `config/anchorui/screens/`; the HUD keeps using `config/anchorui/hud-layout.json`. The editors do not modify source resource pack JSON.
+
+See [Screen Editor](docs/SCREEN_EDITOR.md) for details, controls and the resource-aware `ItemLoreScreen` Java constructor.
 
 ## In-game HUD support (NeoForge 1.21.1)
 

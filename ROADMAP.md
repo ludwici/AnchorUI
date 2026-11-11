@@ -57,7 +57,8 @@ See `README.md`, `docs/HUD.md`, `docs/DATA_BINDINGS.md`, `docs/MODPACK_AUTHORING
 **Priority: high.** RPG HUD and dialogue authors need more than text, item models and progress bars.
 
 - [x] Implement a first-class **texture/image widget** with namespaced textures, scaling, UV cropping, tint, and alpha. Better missing-resource handling is still future work.
-- [x] Implement initial **panel/container** widgets, nested children, padding, content bounds, anchors, clipping, and parent-first draw order. Advanced sizing and layout policies are future work.
+- [x] Implement initial **panel/container** widgets, nested children, padding, content bounds, anchors, clipping, and parent-first draw order. More advanced layout policies remain future work.
+- [x] Add opt-in container `autoSize` (content bounds plus padding, nested sizing) and scroll viewports (vertical/horizontal/both) with existing Anchor UI transforms and Minecraft scissor/input primitives. Not a flex/grid or replacement for NeoForge's specialized `ScrollPanel`.
 - [ ] Unify widget visual styling: borders/frames, backgrounds, overlays and progress-bar style consistency. Specifically guard against the prior RPG HUD issue where the second bar did not receive the same border appearance as the first.
 - [ ] Verify rendering order when screens use blur, backgrounds, outlines, tooltips and widget content; avoid elements unexpectedly appearing beneath the blur.
 - [ ] Keep content and widgets reusable through `style`, `ref` and imports, rather than duplicating definitions.

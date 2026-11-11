@@ -1,6 +1,6 @@
 # Conditions (NeoForge 1.21.1)
 
-Anchor UI supports **compiled, declarative conditions** for HUD widgets and resource-pack screens. Conditions use the existing namespaced typed Data Binding providers: they do not execute arbitrary Java, introduce tick loops, or change server-side gameplay rules.
+Anchor UI supports **compiled, declarative conditions** for HUD widgets and resource-pack screens. Conditions use the existing namespaced typed Data Binding providers: resource-pack JSON cannot execute arbitrary Java, introduce tick loops, or change server-side gameplay rules. Trusted Java mods may register named operations that the JSON references.
 
 ## Widget properties
 

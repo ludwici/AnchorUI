@@ -162,7 +162,7 @@ Use `/anchorui test hud1 on` for anchoring/reference tests and `/anchorui test r
 
 ## Conditions: visibility and enabled states
 
-Anchor UI supports **compiled JSON Conditions** that extend the old boolean `visibleWhen` and add `enabledWhen` to any HUD or screen widget. Combine checks using `all`, `any`, `not`, compare bound numbers/strings and inspect lists via the existing namespaced data registry. Conditions compile when widgets load, use short-circuit evaluation, and do not create tick loops. Missing data cannot automatically enable an `enabledWhen`-guarded widget. Try `/anchorui screen open anchorui:conditions` or `/anchorui test conditions on`. See [Conditions](docs/CONDITIONS.md) for JSON examples, fallback behavior, comparison types and security notes.
+Anchor UI supports **compiled JSON Conditions** that extend the old boolean `visibleWhen` and add `enabledWhen` to any HUD or screen widget. Combine checks using `all`, `any`, `not`, compare bound numbers/strings and inspect lists via the existing namespaced data registry. Conditions compile when widgets load, use short-circuit evaluation, and do not create tick loops. Missing data cannot automatically enable an `enabledWhen`-guarded widget. Try `/anchorui screen open anchorui:conditions` or `/anchorui test conditions on`. Other mods can register binary or unary custom operators through `ConditionOperationRegistry.register(ResourceLocation, ...)` or `registerUnary(ResourceLocation, ...)`, then reference namespaced values like `"op": "mymod:custom_op"` in JSON. See [Conditions](docs/CONDITIONS.md) for examples, registration details, fallback behavior and security notes.
 
 ## Typed Data Binding for modpack authors
 

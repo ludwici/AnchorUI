@@ -3,7 +3,7 @@ package com.ludwici.anchorui.client.hud;
 import com.google.gson.JsonObject;
 import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.api.LoreEntity;
-import com.ludwici.anchorui.api.binding.BoundBoolean;
+import com.ludwici.anchorui.api.condition.BoundCondition;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.layout.ContainerLayout;
 import com.ludwici.anchorui.api.layout.ContainerScroll;
@@ -65,7 +65,11 @@ public final class AnchorHudManager {
     private record Description(String id, LoreEntity entity, LoreEntity.UiElement element) {
     }
 
-    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, boolean baseVisible, WidgetContext context, BoundBoolean visibleWhen, String containerParent, boolean clipChildren, WidgetTransforms.Group group, ContainerLayout.AutoSize autoSize, ContainerScroll.Config scroll) {
+    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position,
+                                boolean baseVisible, boolean baseActive, WidgetContext context,
+                                BoundCondition visibleWhen, BoundCondition enabledWhen, String containerParent,
+                                boolean clipChildren, WidgetTransforms.Group group, ContainerLayout.AutoSize autoSize,
+                                ContainerScroll.Config scroll) {
         private PositionElement effectivePosition(HudLayoutOffsets offsets) {
             HudLayoutOffsets.Offset delta = offsets.get(id);
             HudLayoutOffsets.AnchorOverride anchor = offsets.anchor(id);
@@ -437,8 +441,10 @@ public final class AnchorHudManager {
         Map<String, Boolean> shown = visibilityScratch;
         for (PlacedWidget placed : widgets) {
             boolean parentVisible = placed.containerParent() == null || shown.getOrDefault(placed.containerParent(), false);
-            boolean visible = parentVisible && placed.baseVisible() && !offsets.isHidden(placed.id()) && placed.visibleWhen().get(placed.context());
+            boolean visible = parentVisible && placed.baseVisible() && !offsets.isHidden(placed.id())
+                    && placed.visibleWhen().get(placed.context());
             placed.widget().visible = visible;
+            placed.widget().active = visible && placed.baseActive() && placed.enabledWhen().get(placed.context());
             shown.put(placed.id(), visible);
         }
     }
@@ -738,10 +744,13 @@ public final class AnchorHudManager {
                 PositionElement position = style.position;
                 String relativeTo = WidgetIds.reference(position.relativeTo, entity.namespace);
                 PositionElement anchored = new PositionElement(position.point, position.anchor, relativeTo, position.x, position.y);
+                BoundCondition visibleWhen = BoundCondition.parse(element.settings, "visibleWhen", true);
+                BoundCondition enabledWhen = BoundCondition.parse(element.settings, "enabledWhen", true);
                 registry.attach(definition.id(), widget);
                 boolean panel = widget instanceof com.ludwici.anchorui.client.gui.PanelWidget;
-                created.add(new PlacedWidget(definition.id(), widget, style, anchored, widget.visible, context,
-                        BoundBoolean.parse(element.settings, "visibleWhen", true), WidgetContainers.parent(element.settings),
+                created.add(new PlacedWidget(definition.id(), widget, style, anchored,
+                        widget.visible, widget.active, context, visibleWhen, enabledWhen,
+                        WidgetContainers.parent(element.settings),
                         panel && (WidgetContainers.clipChildren(element.settings) || style.scroll.enabled()),
                         panel ? WidgetContainers.group(element.settings) : null,
                         panel ? style.autoSize : ContainerLayout.AutoSize.NONE,

@@ -521,12 +521,6 @@ public final class AnchorScreenEditorScreen extends Screen {
         if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             return false;
         }
-        if (target.mouseClickedScrollBar(mouseX, mouseY, button)) {
-            dragging = false;
-            dragOrigin = null;
-            snapped = null;
-            return true;
-        }
         if (!compact && mouseX >= visiblePanelX()
                 && mouseX < visiblePanelX() + visiblePanelWidth()
                 && mouseY >= panelTop && mouseY < panelTop + (inspectorCollapsed ? 27 : expandedPanelHeight())) {
@@ -551,6 +545,12 @@ public final class AnchorScreenEditorScreen extends Screen {
                 panelDragLeft = panelLeft;
                 panelDragTop = panelTop;
             }
+            return true;
+        }
+        if (target.mouseClickedScrollBar(mouseX, mouseY, button)) {
+            dragging = false;
+            dragOrigin = null;
+            snapped = null;
             return true;
         }
         ItemLoreScreen.EditorHandle hit = hit(mouseX, mouseY);

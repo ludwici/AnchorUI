@@ -26,6 +26,8 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     private final ItemLoreScreen target;
     private final WidgetListPanel widgetList;
+    private List<ItemLoreScreen.EditorHandle> frameHandles = List.of();
+    private List<WidgetListPanel.Entry> frameEntries = List.of();
     private final List<Button> controls = new ArrayList<>();
     private ItemLoreScreen.EditorHandle selected;
     private Button hide;
@@ -125,12 +127,13 @@ public final class AnchorScreenEditorScreen extends Screen {
         updateControls();
     }
 
-    private List<WidgetListPanel.Entry> widgetEntries() {
-        List<WidgetListPanel.Entry> entries = new ArrayList<>();
-        for (ItemLoreScreen.EditorHandle handle : target.editorHandles()) {
+    private void refreshFrameHandles() {
+        frameHandles = target.editorHandles();
+        List<WidgetListPanel.Entry> entries = new ArrayList<>(frameHandles.size());
+        for (ItemLoreScreen.EditorHandle handle : frameHandles) {
             entries.add(new WidgetListPanel.Entry(handle.id(), handle.visible(), false));
         }
-        return entries;
+        frameEntries = List.copyOf(entries);
     }
 
     private void selectFromList(WidgetListPanel.Entry entry) {
@@ -153,7 +156,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     }
 
     private ItemLoreScreen.EditorHandle hit(double x, double y) {
-        List<ItemLoreScreen.EditorHandle> handles = target.editorHandles();
+        List<ItemLoreScreen.EditorHandle> handles = frameHandles;
         for (int i = handles.size() - 1; i >= 0; i--) {
             ItemLoreScreen.EditorHandle handle = handles.get(i);
             AnchorLayout.Bounds b = handle.bounds();
@@ -233,7 +236,8 @@ public final class AnchorScreenEditorScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         target.render(graphics, -1, -1, partialTick);
-        for (ItemLoreScreen.EditorHandle handle : target.editorHandles()) {
+        refreshFrameHandles();
+        for (ItemLoreScreen.EditorHandle handle : frameHandles) {
             AnchorLayout.Bounds b = handle.bounds();
             int color = selected != null && selected.id().equals(handle.id()) ? SELECTED : handle.visible() ? OUTLINE : HIDDEN;
             outline(graphics, b.x(), b.y(), b.width(), b.height(), color);
@@ -284,7 +288,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             graphics.drawString(font, message, x + 8, y + 236, 0xFFFFD16B, false);
         }
         super.render(graphics, mouseX, mouseY, partialTick);
-        widgetList.render(graphics, font, mouseX, mouseY, widgetEntries(),
+        widgetList.render(graphics, font, mouseX, mouseY, frameEntries,
                 selected == null ? null : selected.id(), pickingParent);
     }
 
@@ -302,7 +306,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!compact && widgetList.contains(mouseX, mouseY)) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                WidgetListPanel.Entry entry = widgetList.entryAt(mouseX, mouseY, widgetEntries());
+                WidgetListPanel.Entry entry = widgetList.entryAt(mouseX, mouseY, frameEntries);
                 if (entry != null) {
                     selectFromList(entry);
                 }
@@ -408,7 +412,7 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (!compact && widgetList.scroll(mouseX, mouseY, scrollY, widgetEntries())) {
+        if (!compact && widgetList.scroll(mouseX, mouseY, scrollY, frameEntries)) {
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);

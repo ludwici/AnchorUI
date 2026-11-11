@@ -95,7 +95,8 @@
               },
               "fillColor": "#FF63C9B5"
             }
-          ]
+          ],
+          "clipChildren": true
         },
         {
           "type": "anchorui:text",
@@ -108,7 +109,20 @@
             "height": 16
           }
         }
-      ]
+      ],
+      "scale": 0.9,
+      "scaleOrigin": "center",
+      "texture": "anchorui:textures/gui/nine_slice_panel.png",
+      "textureWidth": 48,
+      "textureHeight": 48,
+      "regionWidth": 48,
+      "regionHeight": 48,
+      "nineSlice": {
+        "left": 12,
+        "top": 12,
+        "right": 12,
+        "bottom": 12
+      }
     }
   ]
 }

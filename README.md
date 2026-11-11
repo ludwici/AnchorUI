@@ -173,3 +173,7 @@ See [Typed Data Binding](docs/DATA_BINDINGS.md) for supported JSON syntax, data 
 ## Textures, panels and nested containers
 
 New `anchorui:image`, `anchorui:panel` and `anchorui:container` types support resource-pack textures, framed backgrounds, and nested `children` using the existing anchoring system. Containers provide a padded content area and clip descendants to their available space. The same format works in HUD documents and regular screens. Open `/anchorui screen open anchorui:visual_demo` for a demo, and see [Visual Widgets](docs/VISUAL_WIDGETS.md) for JSON examples.
+
+## Performance
+
+HUD anchor geometry is now recomputed only when needed, panel/9-slice rendering reuses geometry, and the F8 widget lists cache sorting and render only their visible rows. Bound values remain responsive to gameplay updates. See [Performance notes](docs/PERFORMANCE.md) for details, profiling guidance and remaining opportunities.

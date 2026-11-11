@@ -71,3 +71,13 @@ The screen editor deliberately **does not blur the underlying world or interface
 
 The left **Widgets** panel can be collapsed with **[-]** in its header and reopened with **[+]**. Each namespace section (VANILLA / CURRENT / OTHER MODS) can be collapsed independently by clicking its heading. The right **Inspector** panel has its own **[-] / [+]** toggle. Both panels remain draggable, and **Tab** hides the editor chrome entirely. On narrow GUI scales the inspector starts collapsed when the two expanded panels would overlap; expanding one panel collapses the other as needed.
 
+
+### Widget properties and per-field reset
+
+The right-side Inspector now exposes the same detailed widget view as the HUD editor. Select a widget by clicking its outline or its entry in the Widgets list. The inspector shows its namespaced ID, current parent, point, anchor, screen bounds, user offset and visibility, followed by a scrollable **SOURCE JSON** section. Source JSON values remain read-only; changing authored resource-pack definitions is not part of the editor.
+
+For layout properties overridden from their authored defaults, an active **R** control appears beside the respective `parent`, `point`, `anchor`, `user offset`, or `visible` line. Click it to reset that property without discarding the other overrides. The existing Point, Anchor, Parent, Hide, Reset and Reset all buttons remain available. Scroll the inspector independently with the mouse wheel or drag its scrollbar. The properties and override markers update as widgets are moved.
+
+The **Widgets** list starts collapsed (a short header at the top left); click **[+]** to open it, then **[-]** to collapse it again. Its namespace sections retain their individual expanded/collapsed state.
+
+When dragging a widget, its **center** also magnetically aligns to the horizontal and vertical centerlines of the whole screen. Each axis snaps independently within the standard 6-GUI-pixel threshold. The same rule applies to the HUD editor; holding Alt disables all snapping. Alignment guides appear while the magnet is engaged.

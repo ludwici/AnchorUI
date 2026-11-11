@@ -1,11 +1,9 @@
 package com.ludwici.anchorui.api.layout;
 
 import com.google.gson.JsonObject;
-import com.ludwici.anchorui.api.WidgetTypeIds;
 import com.ludwici.anchorui.api.style.ElementAnchor;
 import com.ludwici.anchorui.api.style.PaddingElement;
 import com.ludwici.anchorui.api.style.PositionElement;
-import net.minecraft.resources.ResourceLocation;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -16,8 +14,9 @@ public final class WidgetContainers {
     private WidgetContainers() {
     }
 
-    public static boolean supportsChildren(ResourceLocation type) {
-        return WidgetTypeIds.PANEL.equals(type) || WidgetTypeIds.CONTAINER.equals(type);
+    public static boolean supportsChildren(String type) {
+        return "anchorui:panel".equals(type) || "anchorui:container".equals(type)
+                || "panel".equals(type) || "container".equals(type);
     }
 
     public static String contentId(String id) {

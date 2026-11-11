@@ -2,6 +2,7 @@ package com.ludwici.anchorui.client.gui;
 
 import com.google.gson.JsonObject;
 import com.ludwici.anchorui.AnchorUI;
+import com.ludwici.anchorui.KeyRegistry;
 import com.ludwici.anchorui.api.LoreEntity;
 import com.ludwici.anchorui.api.binding.BoundBoolean;
 import com.ludwici.anchorui.api.WidgetTypeIds;
@@ -9,6 +10,7 @@ import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.layout.WidgetContainers;
 import com.ludwici.anchorui.api.layout.WidgetTransforms;
 import com.ludwici.anchorui.api.style.LoreStyle;
+import com.ludwici.anchorui.api.style.ElementAnchor;
 import com.ludwici.anchorui.api.style.PositionElement;
 import com.ludwici.anchorui.api.widget.AnchorWidgetRegistry;
 import com.ludwici.anchorui.api.widget.WidgetConfigException;
@@ -16,6 +18,9 @@ import com.ludwici.anchorui.api.widget.WidgetContext;
 import com.ludwici.anchorui.api.widget.WidgetIds;
 import com.ludwici.anchorui.api.widget.WidgetInstanceRegistry;
 import com.ludwici.anchorui.client.LoreLoader;
+import com.ludwici.anchorui.client.hud.HudLayoutOffsets;
+import com.ludwici.anchorui.client.hud.HudLayoutStorage;
+import net.neoforged.fml.loading.FMLPaths;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -24,6 +29,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -37,14 +44,24 @@ public class ItemLoreScreen extends Screen {
     }
 
     private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, WidgetContext context, BoundBoolean visibleWhen, boolean baseVisible, String containerParent, boolean clipChildren, WidgetTransforms.Group group) {
-        private AnchorLayout.Frame frame() {
-            return new AnchorLayout.Frame(id, position, widget.getWidth(), widget.getHeight());
+        private AnchorLayout.Frame frame(HudLayoutOffsets offsets) {
+            HudLayoutOffsets.Offset delta = offsets.get(id);
+            HudLayoutOffsets.AnchorOverride anchor = offsets.anchor(id);
+            PositionElement effective = anchor == null
+                    ? new PositionElement(position.point, position.anchor, position.relativeTo, position.x + delta.x(), position.y + delta.y())
+                    : new PositionElement(anchor.point(), anchor.anchor(), anchor.relativeTo(), position.x + delta.x(), position.y + delta.y());
+            return new AnchorLayout.Frame(id, effective, widget.getWidth(), widget.getHeight());
         }
     }
 
     private final Screen previous;
     private final ItemStack item;
     private final LoreEntity loreEntity;
+    private final ResourceLocation documentId;
+    private HudLayoutOffsets savedScreenOffsets = new HudLayoutOffsets();
+    private HudLayoutOffsets editingScreenOffsets;
+    private boolean screenOffsetsLoaded;
+    private String screenSaveError = "";
     private WidgetInstanceRegistry widgetRegistry = new WidgetInstanceRegistry();
     private List<PlacedWidget> placedWidgets = List.of();
     private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
@@ -55,14 +72,243 @@ public class ItemLoreScreen extends Screen {
     private List<String> layoutWarnings = List.of();
 
     public ItemLoreScreen(Screen previous, ItemStack item, LoreEntity entity) {
+        this(previous, item, entity, null);
+    }
+
+    public ItemLoreScreen(Screen previous, ItemStack item, LoreEntity entity, ResourceLocation documentId) {
         super(Component.empty());
         this.previous = previous;
         this.item = item;
         this.loreEntity = entity;
+        this.documentId = documentId;
+    }
+
+    public record EditorHandle(String id, AnchorLayout.Bounds bounds, String relativeTo, ElementAnchor point,
+                               ElementAnchor anchor, HudLayoutOffsets.Offset offset, boolean visible, boolean hiddenByUser) {
+    }
+
+    private HudLayoutOffsets currentScreenOffsets() {
+        return editingScreenOffsets == null ? savedScreenOffsets : editingScreenOffsets;
+    }
+
+    private Path screenLayoutPath() {
+        if (documentId == null) {
+            return null;
+        }
+        Path root = FMLPaths.CONFIGDIR.get().resolve("anchorui").resolve("screens").resolve(documentId.getNamespace());
+        Path path = root.resolve(documentId.getPath() + ".json").normalize();
+        if (!path.startsWith(root.normalize())) {
+            throw new IllegalArgumentException("Invalid screen layout path: " + documentId);
+        }
+        return path;
+    }
+
+    private void loadScreenOffsets() {
+        if (screenOffsetsLoaded) {
+            return;
+        }
+        screenOffsetsLoaded = true;
+        Path path = screenLayoutPath();
+        if (path == null) {
+            return;
+        }
+        try {
+            savedScreenOffsets = HudLayoutStorage.load(path);
+        } catch (IOException | RuntimeException exception) {
+            AnchorUI.LOGGER.warn("Could not load screen layout for {}; using resource defaults", documentId, exception);
+            savedScreenOffsets = new HudLayoutOffsets();
+        }
+    }
+
+    public void beginScreenEditing() {
+        loadScreenOffsets();
+        if (editingScreenOffsets == null) {
+            editingScreenOffsets = savedScreenOffsets.copy();
+        }
+    }
+
+    public boolean isScreenEditing() {
+        return editingScreenOffsets != null;
+    }
+
+    public String screenSaveError() {
+        return screenSaveError;
+    }
+
+    public boolean saveScreenEditing() {
+        if (editingScreenOffsets == null) {
+            return true;
+        }
+        Path path = screenLayoutPath();
+        if (path == null) {
+            screenSaveError = "Screen needs a resource ID for saving";
+            return false;
+        }
+        try {
+            HudLayoutStorage.save(path, editingScreenOffsets);
+            savedScreenOffsets = editingScreenOffsets.copy();
+            editingScreenOffsets = null;
+            screenSaveError = "";
+            return true;
+        } catch (IOException | RuntimeException exception) {
+            screenSaveError = "Save failed: " + exception.getMessage();
+            AnchorUI.LOGGER.error("Could not save Anchor UI screen layout {}", documentId, exception);
+            return false;
+        }
+    }
+
+    public void cancelScreenEditing() {
+        if (editingScreenOffsets != null) {
+            editingScreenOffsets = null;
+            applyScreenOffsets(savedScreenOffsets);
+        }
+    }
+
+    public List<EditorHandle> editorHandles() {
+        List<EditorHandle> handles = new ArrayList<>();
+        HudLayoutOffsets offsets = currentScreenOffsets();
+        for (PlacedWidget placed : placedWidgets) {
+            AnchorLayout.Bounds bounds = layoutBounds.get(placed.id());
+            if (bounds == null) {
+                continue;
+            }
+            HudLayoutOffsets.AnchorOverride override = offsets.anchor(placed.id());
+            PositionElement p = placed.position();
+            String parent = override == null ? p.relativeTo : override.relativeTo();
+            ElementAnchor point = override == null ? p.point : override.point();
+            ElementAnchor anchor = override == null ? p.anchor : override.anchor();
+            WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+            handles.add(new EditorHandle(placed.id(), transform.physical(bounds), parent, point, anchor,
+                    offsets.get(placed.id()), placed.widget().visible, offsets.isHidden(placed.id())));
+        }
+        return List.copyOf(handles);
+    }
+
+    public double editorDragScale(String id) {
+        WidgetTransforms.Transform transform = transforms.getOrDefault(id, WidgetTransforms.IDENTITY);
+        for (PlacedWidget placed : placedWidgets) {
+            if (placed.id().equals(id)) {
+                return transform.scale() / (placed.group() == null ? 1.0 : placed.group().scale());
+            }
+        }
+        return 1.0;
+    }
+
+    public boolean editorOffset(String id, int x, int y) {
+        if (editingScreenOffsets == null || !layoutBounds.containsKey(id)) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingScreenOffsets.copy();
+        candidate.set(id, x, y);
+        return useCandidate(candidate);
+    }
+
+    public boolean editorHidden(String id, boolean hidden) {
+        if (editingScreenOffsets == null || !layoutBounds.containsKey(id)) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingScreenOffsets.copy();
+        candidate.setHidden(id, hidden);
+        return useCandidate(candidate);
+    }
+
+    public boolean editorAnchor(String id, String parent, ElementAnchor point, ElementAnchor anchor) {
+        if (editingScreenOffsets == null || !layoutBounds.containsKey(id) || id.equals(parent)
+                || (!"screen".equals(parent) && !layoutBounds.containsKey(parent))) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingScreenOffsets.copy();
+        PlacedWidget original = null;
+        for (PlacedWidget placed : placedWidgets) {
+            if (placed.id().equals(id)) {
+                original = placed;
+                break;
+            }
+        }
+        if (original == null) {
+            return false;
+        }
+        PositionElement p = original.position();
+        if (p.relativeTo.equals(parent) && p.point == point && p.anchor == anchor) {
+            candidate.clearAnchor(id);
+        } else {
+            candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(parent, point, anchor));
+        }
+        return useCandidate(candidate);
+    }
+
+    public boolean resetEditorWidget(String id) {
+        if (editingScreenOffsets == null) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingScreenOffsets.copy();
+        candidate.reset(id);
+        return useCandidate(candidate);
+    }
+
+    public boolean resetAllEditorWidgets() {
+        if (editingScreenOffsets == null) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingScreenOffsets.copy();
+        candidate.resetAll();
+        return useCandidate(candidate);
+    }
+
+    private boolean useCandidate(HudLayoutOffsets candidate) {
+        if (!applyScreenOffsets(candidate)) {
+            return false;
+        }
+        editingScreenOffsets = candidate;
+        return true;
+    }
+
+    private boolean applyScreenOffsets(HudLayoutOffsets offsets) {
+        if (placedWidgets.isEmpty()) {
+            return false;
+        }
+        try {
+            List<AnchorLayout.Frame> frames = new ArrayList<>();
+            for (PlacedWidget placed : placedWidgets) {
+                frames.add(placed.frame(offsets));
+                if (placed.widget() instanceof PanelWidget) {
+                    frames.add(WidgetContainers.contentFrame(placed.id(), placed.widget().getWidth(), placed.widget().getHeight(), placed.style().padding));
+                }
+            }
+            Map<String, AnchorLayout.Bounds> bounds = AnchorLayout.resolve(width, height, frames);
+            Map<String, String> parents = new LinkedHashMap<>();
+            Map<String, WidgetTransforms.Group> groups = new LinkedHashMap<>();
+            Set<String> clippingContainers = new HashSet<>();
+            for (PlacedWidget placed : placedWidgets) {
+                if (placed.containerParent() != null) {
+                    parents.put(placed.id(), placed.containerParent());
+                }
+                if (placed.clipChildren()) {
+                    clippingContainers.add(placed.id());
+                }
+                if (placed.group() != null) {
+                    groups.put(placed.id(), placed.group());
+                }
+            }
+            Map<String, WidgetTransforms.Transform> transforms = WidgetTransforms.resolve(bounds, parents, groups);
+            Map<String, AnchorLayout.Bounds> clips = WidgetContainers.clips(bounds, parents, clippingContainers, transforms);
+            for (PlacedWidget placed : placedWidgets) {
+                AnchorLayout.Bounds frame = bounds.get(placed.id());
+                placed.widget().setPosition(frame.x(), frame.y());
+            }
+            layoutBounds = bounds;
+            this.transforms = transforms;
+            clipBounds = clips;
+            return true;
+        } catch (IllegalArgumentException exception) {
+            AnchorUI.LOGGER.warn("Screen editor rejected invalid layout for {}: {}", documentId, exception.getMessage());
+            return false;
+        }
     }
 
     @Override
     protected void init() {
+        loadScreenOffsets();
         widgetRegistry = new WidgetInstanceRegistry();
         placedWidgets = List.of();
         layoutBounds = Map.of();
@@ -151,6 +397,10 @@ public class ItemLoreScreen extends Screen {
             return;
         }
         placedWidgets = List.copyOf(created);
+        if (!applyScreenOffsets(currentScreenOffsets()) && !currentScreenOffsets().sameAs(new HudLayoutOffsets())) {
+            AnchorUI.LOGGER.warn("Ignoring invalid saved screen offsets for {}", documentId);
+            applyScreenOffsets(new HudLayoutOffsets());
+        }
         for (PlacedWidget placed : created) {
             addWidget(placed.widget());
         }
@@ -218,7 +468,7 @@ public class ItemLoreScreen extends Screen {
         Map<String, Boolean> visible = new HashMap<>();
         for (PlacedWidget placed : placedWidgets) {
             boolean parentVisible = placed.containerParent() == null || visible.getOrDefault(placed.containerParent(), false);
-            boolean shown = parentVisible && placed.baseVisible() && placed.visibleWhen().get(placed.context());
+            boolean shown = parentVisible && placed.baseVisible() && !currentScreenOffsets().isHidden(placed.id()) && placed.visibleWhen().get(placed.context());
             placed.widget().visible = shown;
             visible.put(placed.id(), shown);
         }
@@ -349,6 +599,10 @@ public class ItemLoreScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (KeyRegistry.EDIT_HUD.isActiveAndMatches(InputConstants.getKey(keyCode, scanCode))) {
+            minecraft.setScreen(new AnchorScreenEditorScreen(this));
+            return true;
+        }
         if (minecraft.options.keyInventory.isActiveAndMatches(InputConstants.getKey(keyCode, scanCode))) {
             onClose();
             return true;

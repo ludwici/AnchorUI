@@ -77,6 +77,9 @@ public final class HudSnap {
                 return false;
             }
             parent = ancestor.relativeTo();
+            if (parent.endsWith("/__content")) {
+                parent = parent.substring(0, parent.length() - "/__content".length());
+            }
         }
         return false;
     }

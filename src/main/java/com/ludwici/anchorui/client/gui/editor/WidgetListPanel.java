@@ -196,8 +196,8 @@ public final class WidgetListPanel {
                 if (lineY + ROW_HEIGHT > top && lineY < bottom) {
                     if (row.heading()) {
                         graphics.fill(x + 3, lineY, x + width - 4, lineY + ROW_HEIGHT, 0xFF223244);
-                        String title = (collapsedGroups.contains(row.group()) ? "[+] " : "[-] ") + row.header();
-                        graphics.drawString(font, font.plainSubstrByWidth(title, width - 18),
+                        String groupTitle = (collapsedGroups.contains(row.group()) ? "[+] " : "[-] ") + row.header();
+                        graphics.drawString(font, font.plainSubstrByWidth(groupTitle, width - 18),
                                 x + 8, lineY + 4, color(row.group()), false);
                     } else {
                         Entry entry = row.entry();

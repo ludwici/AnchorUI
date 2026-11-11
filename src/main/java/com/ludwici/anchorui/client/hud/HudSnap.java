@@ -65,6 +65,9 @@ public final class HudSnap {
 
     private static boolean follows(Widget widget, String movingId, Map<String, Widget> byId) {
         String parent = widget.relativeTo();
+        if (parent.endsWith("/__content")) {
+            parent = parent.substring(0, parent.length() - "/__content".length());
+        }
         for (int i = 0; i < byId.size(); i++) {
             if (movingId.equals(parent)) {
                 return true;

@@ -72,6 +72,7 @@ public class ItemLoreScreen extends Screen {
     private WidgetInstanceRegistry widgetRegistry = new WidgetInstanceRegistry();
     private List<PlacedWidget> placedWidgets = List.of();
     private final Map<String, Boolean> visibilityScratch = new HashMap<>();
+    private final Map<String, Boolean> enabledScratch = new HashMap<>();
     private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
     private Map<String, AnchorLayout.Bounds> clipBounds = Map.of();
     private Map<String, WidgetTransforms.Transform> transforms = Map.of();
@@ -614,6 +615,7 @@ public class ItemLoreScreen extends Screen {
         for (PlacedWidget placed : created) {
             addWidget(placed.widget());
         }
+        updateConditionStates();
     }
 
     private void declare(List<DeclaredWidget> definitions, LoreEntity.UiElement element, String legacyStyle) {
@@ -681,19 +683,28 @@ public class ItemLoreScreen extends Screen {
                 panel ? settings.scroll : ContainerScroll.Config.NONE));
     }
 
-    @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    private void updateConditionStates() {
         visibilityScratch.clear();
-        Map<String, Boolean> visible = visibilityScratch;
+        enabledScratch.clear();
         HudLayoutOffsets overrides = currentScreenOffsets();
         for (PlacedWidget placed : placedWidgets) {
-            boolean parentVisible = placed.containerParent() == null || visible.getOrDefault(placed.containerParent(), false);
+            String parent = placed.containerParent();
+            boolean parentVisible = parent == null || visibilityScratch.getOrDefault(parent, false);
+            boolean parentEnabled = parent == null || enabledScratch.getOrDefault(parent, false);
             boolean shown = parentVisible && placed.baseVisible() && !overrides.isHidden(placed.id())
                     && placed.visibleWhen().get(placed.context());
+            boolean enabled = shown && parentEnabled && placed.baseActive()
+                    && placed.enabledWhen().get(placed.context());
             placed.widget().visible = shown;
-            placed.widget().active = shown && placed.baseActive() && placed.enabledWhen().get(placed.context());
-            visible.put(placed.id(), shown);
+            placed.widget().active = enabled;
+            visibilityScratch.put(placed.id(), shown);
+            enabledScratch.put(placed.id(), enabled);
         }
+    }
+
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        updateConditionStates();
 
         super.render(graphics, mouseX, mouseY, partialTick);
         for (PlacedWidget placed : placedWidgets) {
@@ -737,6 +748,7 @@ public class ItemLoreScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         draggingWidget = null;
+        updateConditionStates();
         if (mouseClickedScrollBar(mouseX, mouseY, button)) {
             return true;
         }

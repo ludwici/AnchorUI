@@ -94,7 +94,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             panelLeft = Math.max(2, width - inspectorWidth - 8);
         }
         panelLeft = Math.max(0, Math.min(panelLeft, width - inspectorWidth));
-        panelTop = Math.max(0, Math.min(panelTop, height - expandedPanelHeight()));
+        panelTop = Math.max(0, Math.min(panelTop, height - 155));
         if (!inspectorCollapsed && widgetList.overlaps(panelX(), panelTop,
                 panelX() + inspectorWidth, panelTop + expandedPanelHeight())) {
             inspectorCollapsed = true;
@@ -151,7 +151,7 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     private void toggleInspector() {
         if (inspectorCollapsed && widgetList.overlaps(panelX(), panelTop,
-                panelX() + inspectorWidth, panelTop + 245)) {
+                panelX() + inspectorWidth, panelTop + expandedPanelHeight())) {
             widgetList.setCollapsed(true);
         }
         inspectorCollapsed = !inspectorCollapsed;
@@ -352,7 +352,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         try {
             int x = visiblePanelX();
             int y = panelTop;
-            int panelHeight = inspectorCollapsed ? 27 : Math.min(height - y, 245);
+            int panelHeight = inspectorCollapsed ? 27 : expandedPanelHeight();
             graphics.fill(x, y, x + visiblePanelWidth(), y + panelHeight, BACKGROUND);
             graphics.fill(x, y, x + visiblePanelWidth(), y + 1, OUTLINE);
             graphics.drawString(font, inspectorCollapsed ? "Inspector" : "Screen Editor",
@@ -510,7 +510,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             widgetList.beginClick(mouseX, mouseY, button, frameEntries);
             if (wasCollapsed && !widgetList.isCollapsed() && !inspectorCollapsed
                     && widgetList.overlaps(panelX(), panelTop,
-                    panelX() + inspectorWidth, panelTop + 245)) {
+                    panelX() + inspectorWidth, panelTop + expandedPanelHeight())) {
                 toggleInspector();
             }
             return true;

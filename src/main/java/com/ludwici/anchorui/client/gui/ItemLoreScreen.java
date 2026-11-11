@@ -18,6 +18,7 @@ import com.ludwici.anchorui.api.widget.WidgetContext;
 import com.ludwici.anchorui.api.widget.WidgetIds;
 import com.ludwici.anchorui.api.widget.WidgetInstanceRegistry;
 import com.ludwici.anchorui.client.LoreLoader;
+import com.ludwici.anchorui.client.hud.AnchorHudManager;
 import com.ludwici.anchorui.client.hud.HudLayoutOffsets;
 import com.ludwici.anchorui.client.hud.HudLayoutStorage;
 import net.neoforged.fml.loading.FMLPaths;
@@ -85,7 +86,17 @@ public class ItemLoreScreen extends Screen {
     }
 
     public record EditorHandle(String id, AnchorLayout.Bounds bounds, String relativeTo, ElementAnchor point,
-                               ElementAnchor anchor, HudLayoutOffsets.Offset offset, boolean visible, boolean hiddenByUser) {
+                               ElementAnchor anchor, HudLayoutOffsets.Offset offset, boolean visible, boolean hiddenByUser,
+                               String defaultParent, ElementAnchor defaultPoint, ElementAnchor defaultAnchor) {
+        public boolean isModified(AnchorHudManager.EditableProperty property) {
+            return switch (property) {
+                case OFFSET -> !offset.equals(HudLayoutOffsets.Offset.ZERO);
+                case PARENT -> !relativeTo.equals(defaultParent);
+                case POINT -> point != defaultPoint;
+                case ANCHOR -> anchor != defaultAnchor;
+                case VISIBILITY -> hiddenByUser;
+            };
+        }
     }
 
     private HudLayoutOffsets currentScreenOffsets() {
@@ -184,7 +195,8 @@ public class ItemLoreScreen extends Screen {
             ElementAnchor anchor = override == null ? p.anchor : override.anchor();
             WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
             handles.add(new EditorHandle(placed.id(), transform.physical(bounds), parent, point, anchor,
-                    offsets.get(placed.id()), placed.widget().visible, offsets.isHidden(placed.id())));
+                    offsets.get(placed.id()), placed.widget().visible, offsets.isHidden(placed.id()),
+                    p.relativeTo, p.point, p.anchor));
         }
         return List.copyOf(handles);
     }
@@ -240,6 +252,33 @@ public class ItemLoreScreen extends Screen {
             candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(parent, point, anchor));
         }
         return useCandidate(candidate);
+    }
+
+    public JsonObject editorSourceSettings(String id) {
+        return widgetRegistry.definition(id).map(definition -> definition.settings.deepCopy()).orElse(null);
+    }
+
+    public boolean resetEditorProperty(String id, AnchorHudManager.EditableProperty property) {
+        if (editingScreenOffsets == null) {
+            return false;
+        }
+        EditorHandle current = null;
+        for (EditorHandle handle : editorHandles()) {
+            if (handle.id().equals(id)) {
+                current = handle;
+                break;
+            }
+        }
+        if (current == null) {
+            return false;
+        }
+        return switch (property) {
+            case OFFSET -> editorOffset(id, 0, 0);
+            case VISIBILITY -> editorHidden(id, false);
+            case PARENT -> editorAnchor(id, current.defaultParent(), current.point(), current.anchor());
+            case POINT -> editorAnchor(id, current.relativeTo(), current.defaultPoint(), current.anchor());
+            case ANCHOR -> editorAnchor(id, current.relativeTo(), current.point(), current.defaultAnchor());
+        };
     }
 
     public boolean resetEditorWidget(String id) {

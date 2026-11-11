@@ -6,6 +6,7 @@ import com.ludwici.anchorui.client.gui.AnchoredTextWidget;
 import com.ludwici.anchorui.client.gui.BoundTextWidget;
 import com.ludwici.anchorui.client.gui.DataListWidget;
 import com.ludwici.anchorui.api.binding.BoundText;
+import com.ludwici.anchorui.api.binding.BuiltinDataFormatters;
 import com.ludwici.anchorui.client.gui.ItemLoreListWidget;
 import com.ludwici.anchorui.client.gui.ItemModelWidget;
 import com.ludwici.anchorui.client.gui.ImageWidget;
@@ -34,6 +35,7 @@ public class Events {
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
             MinecraftDataSources.register();
+            BuiltinDataFormatters.register();
             ClientUiActions.register();
             AnchorWidgetRegistry.register(WidgetTypeIds.BUTTON, JsonActionButton::create);
             AnchorWidgetRegistry.register(WidgetTypeIds.PROGRESS, (context, element, style) -> new ProgressWidget(context, element.settings, style));

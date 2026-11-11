@@ -55,7 +55,7 @@
     {
       "type": "anchorui:text",
       "id": "anchorui:binding_screen_summary",
-      "text": "Level {{anchorui:player.profile#level}} | {{anchorui:world.dimension}}",
+      "text": "Lv {{anchorui:player.profile#level|anchorui:integer}} | XP {{anchorui:player.experience|anchorui:percent}}",
       "position": {
         "point": "TOP",
         "anchor": "BOTTOM",

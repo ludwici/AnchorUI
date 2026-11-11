@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ludwici.anchorui.api.binding.BoundData;
 import com.ludwici.anchorui.api.binding.DataBindingSpec;
+import com.ludwici.anchorui.api.binding.DataFormatterRegistry;
 import com.ludwici.anchorui.api.binding.DataValuePaths;
 import com.ludwici.anchorui.api.style.LoreStyle;
 import com.ludwici.anchorui.api.widget.WidgetContext;
@@ -23,6 +24,7 @@ public final class DataListWidget extends AnchoredWidget {
     private final WidgetContext context;
     private final BoundData items;
     private final List<String> itemPath;
+    private final DataFormatterRegistry.Formatter itemFormatter;
     private final String emptyText;
     private final int maxEntries;
     private final Font font;
@@ -36,6 +38,7 @@ public final class DataListWidget extends AnchoredWidget {
         this.font = context.font();
         this.items = BoundData.parse(settings, "items", new JsonArray(), DataBindingSpec.Kind.LIST);
         this.itemPath = DataValuePaths.tokens(GsonHelper.getAsString(settings, "itemPath", ""));
+        this.itemFormatter = DataFormatterRegistry.compile(settings.get("itemFormat"));
         this.emptyText = GsonHelper.getAsString(settings, "emptyText", "");
         this.maxEntries = GsonHelper.getAsInt(settings, "maxEntries", 12);
         if (maxEntries < 1 || maxEntries > 100) {
@@ -87,6 +90,13 @@ public final class DataListWidget extends AnchoredWidget {
         }
         for (int index = 0; index < count; index++) {
             JsonElement value = DataValuePaths.resolve(items.get(index), itemPath);
+            if (itemFormatter != null && value != null && !value.isJsonNull()) {
+                try {
+                    value = itemFormatter.format(value.deepCopy(), context);
+                } catch (RuntimeException exception) {
+                    value = null;
+                }
+            }
             String line = value == null || value.isJsonNull() ? "" : value.isJsonPrimitive() ? value.getAsString() : value.toString();
             content.addAll(font.split(Component.literal(line), width));
         }

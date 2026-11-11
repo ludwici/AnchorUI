@@ -43,6 +43,9 @@ public final class BoundText {
             JsonObject config = new JsonObject();
             config.addProperty("bind", part.source());
             config.addProperty("path", part.path());
+            if (!part.format().isEmpty()) {
+                config.addProperty("format", part.format());
+            }
             config.addProperty("fallback", "?");
             JsonObject root = new JsonObject();
             root.add("value", config);

@@ -6,9 +6,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class TextTemplateParts {
-    private static final Pattern PLACEHOLDER = Pattern.compile("\\{\\{([a-z0-9_.-]+:[a-z0-9_./-]+)(?:#([a-zA-Z0-9_.\\[\\]-]+))?\\}\\}");
+    private static final Pattern PLACEHOLDER = Pattern.compile("\\{\\{([a-z0-9_.-]+:[a-z0-9_./-]+)(?:#([a-zA-Z0-9_.\\[\\]-]+))?(?:\\|([a-z0-9_.-]+:[a-z0-9_./-]+))?\\}\\}");
 
-    public record Part(String text, String source, String path) {
+    public record Part(String text, String source, String path, String format) {
         public boolean dynamic() {
             return source != null;
         }
@@ -23,18 +23,18 @@ public final class TextTemplateParts {
         int start = 0;
         while (matcher.find()) {
             if (matcher.start() > start) {
-                result.add(new Part(template.substring(start, matcher.start()), null, ""));
+                result.add(new Part(template.substring(start, matcher.start()), null, "", ""));
             }
             String path = matcher.group(2) == null ? "" : matcher.group(2);
             DataValuePaths.validate(path);
-            result.add(new Part("", matcher.group(1), path));
+            result.add(new Part("", matcher.group(1), path, matcher.group(3) == null ? "" : matcher.group(3)));
             start = matcher.end();
             if (result.size() > 128) {
                 throw new IllegalArgumentException("Too many text binding placeholders");
             }
         }
         if (start < template.length() || result.isEmpty()) {
-            result.add(new Part(template.substring(start), null, ""));
+            result.add(new Part(template.substring(start), null, "", ""));
         }
         return List.copyOf(result);
     }

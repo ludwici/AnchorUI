@@ -79,6 +79,7 @@ public final class AnchorHudManager {
     private WidgetInstanceRegistry registry = new WidgetInstanceRegistry();
     private List<PlacedWidget> widgets = List.of();
     private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
+    private Map<String, VanillaHudGeometry.Reference> vanillaReferences = Map.of();
     private Map<String, AnchorLayout.Bounds> clipBounds = Map.of();
     private Map<String, WidgetTransforms.Transform> transforms = Map.of();
     private final Set<String> renderFailures = new HashSet<>();
@@ -135,7 +136,7 @@ public final class AnchorHudManager {
     }
 
     public void setPreviewOffset(String id, int x, int y) {
-        if (editingOffsets == null || !layoutBounds.containsKey(id)) {
+        if (editingOffsets == null || !isCustomWidget(id)) {
             return;
         }
         editingOffsets.set(id, x, y);
@@ -143,7 +144,7 @@ public final class AnchorHudManager {
     }
 
     public void togglePreviewHidden(String id) {
-        if (editingOffsets == null || !layoutBounds.containsKey(id)) {
+        if (editingOffsets == null || !isCustomWidget(id)) {
             return;
         }
         editingOffsets.setHidden(id, !editingOffsets.isHidden(id));
@@ -197,7 +198,7 @@ public final class AnchorHudManager {
         if (editingOffsets == null) {
             return false;
         }
-        if (!layoutBounds.containsKey(id)) {
+        if (!isCustomWidget(id)) {
             return false;
         }
         HudLayoutOffsets candidate = editingOffsets.copy();
@@ -222,12 +223,30 @@ public final class AnchorHudManager {
         return true;
     }
 
+    private boolean isCustomWidget(String id) {
+        return registry.definition(id).isPresent();
+    }
+
+    public List<VanillaHudGeometry.Reference> getVanillaHandles() {
+        List<VanillaHudGeometry.Reference> handles = new ArrayList<>();
+        for (String id : VanillaHudGeometry.IDS) {
+            VanillaHudGeometry.Reference reference = vanillaReferences.get(id);
+            if (reference != null) {
+                handles.add(reference);
+            }
+        }
+        return List.copyOf(handles);
+    }
+
     private Map<String, AnchorLayout.Bounds> resolveBounds(HudLayoutOffsets offsets) {
         return AnchorLayout.resolve(builtWidth, builtHeight, frames(offsets));
     }
 
     private List<AnchorLayout.Frame> frames(HudLayoutOffsets offsets) {
         List<AnchorLayout.Frame> frames = new ArrayList<>();
+        if (!vanillaReferences.isEmpty()) {
+            frames.addAll(VanillaHudGeometry.frames(vanillaReferences));
+        }
         for (PlacedWidget placed : widgets) {
             frames.add(placed.frame(offsets));
             if (placed.widget() instanceof com.ludwici.anchorui.client.gui.PanelWidget) {
@@ -249,7 +268,7 @@ public final class AnchorHudManager {
     }
 
     public boolean resetPreviewProperty(String id, EditableProperty property) {
-        if (editingOffsets == null || !layoutBounds.containsKey(id)) {
+        if (editingOffsets == null || !isCustomWidget(id)) {
             return false;
         }
         PlacedWidget placed = null;
@@ -289,7 +308,7 @@ public final class AnchorHudManager {
     }
 
     public void resetPreviewOffset(String id) {
-        if (editingOffsets != null) {
+        if (editingOffsets != null && isCustomWidget(id)) {
             editingOffsets.reset(id);
             relayout(null);
         }
@@ -387,9 +406,14 @@ public final class AnchorHudManager {
 
     private void prepare(Minecraft minecraft, int width, int height) {
         ensureStorageLoaded();
+        Map<String, VanillaHudGeometry.Reference> currentVanilla = VanillaHudAnchors.capture(minecraft, width, height);
+        boolean geometryChanged = !currentVanilla.equals(vanillaReferences);
+        vanillaReferences = currentVanilla;
         long revision = LoreLoader.INSTANCE.getRevision();
         if (builtRevision != revision || builtWidth != width || builtHeight != height || builtLevel != minecraft.level || !builtTestGroups.equals(enabledTestGroups)) {
             rebuild(minecraft, width, height, revision);
+        } else if (geometryChanged) {
+            relayout(null);
         }
     }
 
@@ -481,6 +505,11 @@ public final class AnchorHudManager {
                 String defaultId = element.type.getPath().replace('/', '_') + "_" + index;
                 try {
                     String id = WidgetIds.id(element.id.isBlank() ? defaultId : element.id, hud.entity().namespace);
+                    if (VanillaHudGeometry.reserved(id)) {
+                        warnings.add("HUD '" + source + "': reserved vanilla HUD reference id '" + id + "' cannot be declared as a widget");
+                        index++;
+                        continue;
+                    }
                     registry.declare(id, element);
                     declared.add(new Description(id, hud.entity(), element));
                 } catch (IllegalArgumentException exception) {

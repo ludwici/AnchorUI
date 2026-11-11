@@ -13,7 +13,7 @@ public class TestSceneScreen extends ItemLoreScreen {
     private boolean guides;
 
     public TestSceneScreen(TestScene scene, LoreEntity entity) {
-        super(null, ItemStack.EMPTY, entity);
+        super(null, ItemStack.EMPTY, entity, scene.resource());
         this.scene = scene;
     }
 

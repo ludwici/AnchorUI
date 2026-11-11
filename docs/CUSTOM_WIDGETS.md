@@ -151,4 +151,6 @@ Register during client setup before the HUD is created. The provider is a `Numer
 
 The numeric registry is intentionally read-only from the JSON side. Client values are for display; any actions affecting server state must be implemented using a server-authorized integration. The initial implementation reads providers as part of widget rendering; no per-tick scanning or expensive JSON parsing is used.
 
+Mods may also register reusable `DataFormatterRegistry` handlers, referenced by JSON text bindings, templates, `data_list.itemFormat`, and third-party widgets using `BoundData`. See [Data Formatters](FORMATTERS.md).
+
 For normal `Screen` interfaces, a mod can also register custom action factories through `UiActionRegistry.register`. The bundled `anchorui:button` compiles its `onClick` object when the screen opens. Only explicitly registered actions can execute, with built-in support currently limited to `anchorui:open_screen` and `anchorui:close_screen`. No arbitrary shell commands or Java execution are enabled through JSON.

@@ -72,6 +72,12 @@ Or an inline template with multiple data providers:
 
 Template substitutions use `{{namespace:source}}` or `{{namespace:source#object.path}}`. The placeholders are compiled when the widget is created, not reparsed every frame. Displayed content is updated only when the resolved text changes. Rich-text markup in the fixed template remains available; substituted values cannot inject formatting tags. For dynamically sized labels, set `size.width` and `size.height` explicitly so layout remains stable as data changes.
 
+### Formatted binding values
+
+Registered Java formatters can transform resolved values before their target binding type is checked. Use `"format": "namespace:formatter"` inside a binding object, or `{{anchorui:player.experience|anchorui:percent}}` in text templates. Lists also support `itemFormat` for each selected entry. Built-in options include `anchorui:integer`, `anchorui:percent`, `anchorui:compact` and `anchorui:uppercase`.
+
+See [Data Formatters](FORMATTERS.md) for Java registration, typed options and error handling.
+
 ### Boolean visibility
 
 ```json

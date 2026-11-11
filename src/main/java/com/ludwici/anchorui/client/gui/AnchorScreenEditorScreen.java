@@ -37,6 +37,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     private Button anchor;
     private boolean pickingParent;
     private boolean compact;
+    private boolean inspectorCollapsed;
     private boolean draggingPanel;
     private int panelLeft = -1;
     private int panelTop = 12;
@@ -110,7 +111,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         hide.setMessage(Component.literal(hasSelection && selected.hiddenByUser() ? "Show" : "Hide"));
         parent.setMessage(Component.literal(pickingParent ? "Pick target..." : "Parent"));
         for (Button button : controls) {
-            button.visible = !compact;
+            button.visible = !compact && !inspectorCollapsed;
         }
     }
 
@@ -257,13 +258,19 @@ public final class AnchorScreenEditorScreen extends Screen {
             graphics.drawString(font, "Screen Editor (Tab: show panel, F8: save)", 8, 7, SELECTED, false);
             return;
         }
-        int x = panelX();
-        int y = panelTop;
-        int panelHeight = Math.min(height - y, 245);
-        graphics.fill(x, y, x + WIDTH, y + panelHeight, BACKGROUND);
-        graphics.fill(x, y, x + WIDTH, y + 1, OUTLINE);
-        graphics.drawString(font, "Anchor UI - Screen Editor (drag)", x + 8, y + 9, 0xFFFFFFFF, false);
-        if (selected == null) {
+        graphics.pose().pushPose();
+        graphics.pose().translate(0.0F, 0.0F, 300.0F);
+        try {
+            int x = panelX();
+            int y = panelTop;
+            int panelHeight = inspectorCollapsed ? 27 : Math.min(height - y, 245);
+            graphics.fill(x, y, x + WIDTH, y + panelHeight, BACKGROUND);
+            graphics.fill(x, y, x + WIDTH, y + 1, OUTLINE);
+            graphics.drawString(font, "Screen Editor (drag)", x + 8, y + 9, 0xFFFFFFFF, false);
+            graphics.drawString(font, inspectorCollapsed ? "[+]" : "[-]", x + WIDTH - 27, y + 9,
+                    0xFFFFFFFF, false);
+            if (!inspectorCollapsed) {
+                if (selected == null) {
             graphics.drawString(font, "Click a widget to select it", x + 8, y + 135, 0xFFD9E7F1, false);
         } else {
             String id = selected.id();
@@ -283,13 +290,17 @@ public final class AnchorScreenEditorScreen extends Screen {
         }
         graphics.drawString(font, "Drag: magnet 6px  |  Alt: free", x + 8, y + 210, 0xFFACD9D9, false);
         graphics.drawString(font, "Arrows: 1px  |  Shift: 10px", x + 8, y + 223, 0xFFACD9D9, false);
-        if (!status.isEmpty()) {
-            String message = font.plainSubstrByWidth(status, WIDTH - 18);
-            graphics.drawString(font, message, x + 8, y + 236, 0xFFFFD16B, false);
+                if (!status.isEmpty()) {
+                    String message = font.plainSubstrByWidth(status, WIDTH - 18);
+                    graphics.drawString(font, message, x + 8, y + 236, 0xFFFFD16B, false);
+                }
+            }
+            super.render(graphics, mouseX, mouseY, partialTick);
+            widgetList.render(graphics, font, mouseX, mouseY, frameEntries,
+                    selected == null ? null : selected.id(), pickingParent);
+        } finally {
+            graphics.pose().popPose();
         }
-        super.render(graphics, mouseX, mouseY, partialTick);
-        widgetList.render(graphics, font, mouseX, mouseY, frameEntries,
-                selected == null ? null : selected.id(), pickingParent);
     }
 
     private static void outline(GuiGraphics graphics, int x, int y, int width, int height, int color) {
@@ -304,6 +315,14 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (!compact && button == GLFW.GLFW_MOUSE_BUTTON_LEFT
+                && mouseX >= panelX() + WIDTH - 30 && mouseX < panelX() + WIDTH
+                && mouseY >= panelTop && mouseY < panelTop + 27) {
+            inspectorCollapsed = !inspectorCollapsed;
+            draggingPanel = false;
+            updateControls();
+            return true;
+        }
         if (!compact && widgetList.contains(mouseX, mouseY)) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 WidgetListPanel.Entry entry = widgetList.entryAt(mouseX, mouseY, frameEntries);
@@ -311,7 +330,7 @@ public final class AnchorScreenEditorScreen extends Screen {
                     selectFromList(entry);
                 }
             }
-            widgetList.beginClick(mouseX, mouseY, button);
+            widgetList.beginClick(mouseX, mouseY, button, frameEntries);
             return true;
         }
         if (super.mouseClicked(mouseX, mouseY, button)) {
@@ -321,7 +340,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             return false;
         }
         if (!compact && mouseX >= panelX() && mouseX <= panelX() + WIDTH
-                && mouseY >= panelTop && mouseY <= panelTop + 245) {
+                && mouseY >= panelTop && mouseY < panelTop + (inspectorCollapsed ? 27 : 245)) {
             if (mouseY < panelTop + 27) {
                 draggingPanel = true;
                 panelStartX = mouseX;

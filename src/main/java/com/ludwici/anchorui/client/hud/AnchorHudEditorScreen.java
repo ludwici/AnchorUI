@@ -814,7 +814,6 @@ public final class AnchorHudEditorScreen extends Screen {
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && (draggingWidget || draggingPanel)) {
             draggingWidget = false;
             draggingPanel = false;
-            inspectorScrollBar = null;
             dragOrigin = null;
             snapResult = null;
             return true;

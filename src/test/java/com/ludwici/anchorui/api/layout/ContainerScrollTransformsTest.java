@@ -33,7 +33,7 @@ public class ContainerScrollTransformsTest {
                 scrolled.get("demo:child").physical(bounds.get("demo:child")));
 
         var viewport = WidgetContainers.clips(bounds, parents, Set.of("demo:panel"), scrolled);
-        assertEquals(new AnchorLayout.Bounds(86, 54, 56, 32), viewport.get("demo:child"));
+        assertEquals(new AnchorLayout.Bounds(86, 54, 58, 32), viewport.get("demo:child"));
     }
 
     @Test

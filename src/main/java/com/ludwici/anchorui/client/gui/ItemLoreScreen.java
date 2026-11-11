@@ -670,7 +670,7 @@ public class ItemLoreScreen extends Screen {
         String relativeTo = WidgetIds.reference(p.relativeTo, loreEntity.namespace);
         PositionElement position = new PositionElement(p.point, p.anchor, relativeTo, p.x, p.y);
         BoundCondition visibleWhen = BoundCondition.parse(element.settings, "visibleWhen", true);
-        BoundCondition enabledWhen = BoundCondition.parse(element.settings, "enabledWhen", true);
+        BoundCondition enabledWhen = BoundCondition.parse(element.settings, "enabledWhen", true, false);
         widgetRegistry.attach(id, widget);
         boolean panel = widget instanceof PanelWidget;
         created.add(new PlacedWidget(id, widget, settings, position, context,

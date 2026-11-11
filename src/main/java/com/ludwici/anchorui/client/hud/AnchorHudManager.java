@@ -333,7 +333,7 @@ public final class AnchorHudManager {
             PlacedWidget placed = widgets.get(index);
             NativeContainerScrollPanel panel = nativeScrollPanels.get(placed.id());
             AnchorLayout.Bounds clip = clipBounds.get(placed.id());
-            if (panel != null && placed.widget().visible
+            if (panel != null && placed.widget().visible && placed.widget().active
                     && (clip == null || WidgetContainers.contains(clip, mouseX, mouseY))
                     && panel.mouseClicked(mouseX, mouseY, button)) {
                 draggedScrollPanel = panel;
@@ -390,7 +390,7 @@ public final class AnchorHudManager {
         }
         for (int index = widgets.size() - 1; index >= 0; index--) {
             PlacedWidget placed = widgets.get(index);
-            if (!placed.widget().visible || !placed.scroll().enabled()) {
+            if (!placed.widget().visible || !placed.widget().active || !placed.scroll().enabled()) {
                 continue;
             }
             AnchorLayout.Bounds clip = clipBounds.get(placed.id());

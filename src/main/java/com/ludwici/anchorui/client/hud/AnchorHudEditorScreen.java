@@ -522,7 +522,9 @@ public final class AnchorHudEditorScreen extends Screen {
                 }
                 snapResult = HudSnap.snap(dragOrigin, desiredX, desiredY, widgets);
             }
-            manager.setPreviewOffset(selected, startOffsetX + snapResult.x() - dragOrigin.x(), startOffsetY + snapResult.y() - dragOrigin.y());
+            double parentScale = manager.dragScale(selected);
+            manager.setPreviewOffset(selected, startOffsetX + (int) Math.round((snapResult.x() - dragOrigin.x()) / parentScale),
+                    startOffsetY + (int) Math.round((snapResult.y() - dragOrigin.y()) / parentScale));
             return true;
         }
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);

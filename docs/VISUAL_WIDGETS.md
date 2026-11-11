@@ -27,6 +27,20 @@ The same widgets work in JSON screens and in HUD documents. Flat `entities` docu
 - `u`, `v`, `regionWidth`, and `regionHeight` select a source region. Invalid regions reject only that widget.
 - `size` scales the image; `padding` insets it without changing its external anchor.
 - `tint` accepts `#RRGGBB` or `#AARRGGBB` (white by default).
+- To keep corners and frame edges from stretching, add a `nineSlice` object with `left`, `top`, `right` and `bottom` source-pixel margins. The image is then drawn as nine regions: fixed corners, stretched edges and stretched center. Margins are relative to the selected UV rectangle, not the full atlas. They must leave at least one source pixel in the center. Small target sizes shrink the corner margins proportionally.
+
+```json
+{
+  "type": "anchorui:image",
+  "texture": "mypack:textures/gui/frame.png",
+  "textureWidth": 48,
+  "textureHeight": 48,
+  "size": {"width": 270, "height": 160},
+  "nineSlice": {"left": 12, "top": 12, "right": 12, "bottom": 12}
+}
+```
+
+`anchorui:panel` and `anchorui:container` may also specify `texture`, UV attributes and `nineSlice`. The image covers the panel body; tint and alpha apply to the texture, while `fillColor` and `borderColor` draw underneath it.
 
 ## Panels
 
@@ -83,9 +97,10 @@ Panels support optional fill, borders, and rounded corners. If `fillColor` is om
 - Children have normal namespaced IDs; an omitted ID is generated as `<parent path>/child_0`, etc. The internal content frame uses `<parent id>/__content`, which should not be declared as a widget ID.
 - Children can still explicitly specify a different `position.relativeTo` target; clipping applies only when an ancestor sets `clipChildren: true`.
 - The HUD editor treats containers as ordinary movable frames: dragging a parent automatically moves children anchored to its content frame.
+- To scale a panel/container **with its descendants as a single group**, set `"scale": 0.9` (range 0.1 to 4.0). `"scaleOrigin": "top_left"` is the default; `"scaleOrigin": "center"` scales around the panel's center, useful for a centered phone or dialogue window. Nested group scales multiply. Screen mouse hit-testing, dragging, scrolling, mouse-over and opt-in clips use the transformed coordinates. HUD editor hitboxes and mouse dragging account for group scaling, while JSON widget sizes remain in logical GUI pixels.
 
-These are **fixed-size layout containers**, not flex/grid/auto-sizing containers. Advanced layout, scroll containers, 9-slice textures, and animated transitions are separate future improvements.
+These are **fixed-size layout containers**, not flex/grid/auto-sizing containers. True automatic responsive sizing, scroll containers, animations and transitions are future improvements. Group scaling affects visuals and interactive hitboxes, but does not change the logical size used by the outer anchor layout.
 
 ## Smoke tests
 
-Open `/anchorui screen open anchorui:visual_demo` for a bundled example with nested panels, cropped source texture, padding and a bound progress bar. Check resizing, F3+T resource reload, and in-game HUD previews with F8.
+Open `/anchorui screen open anchorui:visual_demo` for a bundled example with nested panels, 9-slice textured panel, group scaling, padding, nested panel and a bound progress bar. Check resizing, F3+T resource reload, and in-game HUD previews with F8.

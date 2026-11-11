@@ -129,6 +129,13 @@ The HUD core covers JSON composition, read-only display and an optional player-f
 
 ## HUD editor
 
+The editor includes a **separate, draggable Widgets panel** listing every loaded HUD widget, including inactive vanilla reference IDs. Click any entry to select it in the inspector and highlight its on-screen bounds. Hidden custom widgets remain in the list and can be selected without clicking an invisible rectangle. Scroll the list independently of the inspector; drag its title bar to move it.
+
+List order is **vanilla `minecraft:*` IDs first**, then `anchorui:*` (the current HUD editor's mod ID), then other namespaces in alphabetical order. Purple vanilla items are read-only and can be inspected but cannot be moved or modified. While **Pick parent** is active, clicking any entry sets the selected custom widget's parent to that ID. The panel also lists vanilla references even if they are currently inactive.
+
+Pressing **Tab** temporarily hides both editor panels while keeping on-screen widget outlines visible.
+
+
 The HUD editor opens **above the world** and previews all currently loaded HUD widgets, including elements contributed by other mods. Unlike the normal HUD layer, the editor accepts mouse and keyboard input **for editing placement only**. The world remains fully sharp in the editor: vanilla screen background blurring and fullscreen dimming are intentionally disabled. Only the editor's own toolbar strips and widget-selection overlays are drawn.
 
 Open it with either:

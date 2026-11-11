@@ -19,6 +19,7 @@ public final class BoundCondition {
     private final Map<String, DataValueRegistry.Provider> providers;
     private final String property;
     private final Set<String> reportedFailures = new HashSet<>();
+    private final Map<String, JsonElement> valuesScratch = new HashMap<>();
 
     private BoundCondition(ConditionExpression expression, Map<String, DataValueRegistry.Provider> providers, String property) {
         this.expression = expression;
@@ -27,8 +28,14 @@ public final class BoundCondition {
     }
 
     public static BoundCondition parse(JsonObject json, String property, boolean defaultValue) {
+        return parse(json, property, defaultValue, defaultValue);
+    }
+
+    public static BoundCondition parse(JsonObject json, String property, boolean defaultValue,
+                                       boolean missingBindingFallback) {
         try {
-            ConditionExpression expression = ConditionExpression.parse(json.get(property), defaultValue);
+            ConditionExpression expression = ConditionExpression.parse(json.get(property), defaultValue,
+                    missingBindingFallback);
             Map<String, DataValueRegistry.Provider> providers = new HashMap<>();
             for (String source : expression.sources()) {
                 ResourceLocation id = ResourceLocation.tryParse(source);
@@ -45,6 +52,7 @@ public final class BoundCondition {
     }
 
     public boolean get(WidgetContext context) {
+        valuesScratch.clear();
         try {
             return expression.evaluate((source, path) -> read(context, source, path));
         } catch (RuntimeException exception) {
@@ -52,18 +60,27 @@ public final class BoundCondition {
                 AnchorUI.LOGGER.warn("Anchor UI condition '{}' failed to evaluate; treating as false", property, exception);
             }
             return false;
+        } finally {
+            valuesScratch.clear();
         }
     }
 
     private JsonElement read(WidgetContext context, String source, List<String> path) {
-        try {
-            return DataValuePaths.resolve(providers.get(source).read(context), path);
-        } catch (RuntimeException exception) {
-            if (reportedFailures.add(source)) {
-                AnchorUI.LOGGER.warn("Anchor UI condition '{}' data source '{}' failed; using fallback",
-                        property, source, exception);
+        JsonElement root = valuesScratch.get(source);
+        if (root == null) {
+            try {
+                root = providers.get(source).read(context);
+            } catch (RuntimeException exception) {
+                if (reportedFailures.add(source)) {
+                    AnchorUI.LOGGER.warn("Anchor UI condition '{}' data source '{}' failed; using fallback",
+                            property, source, exception);
+                }
             }
-            return null;
+            if (root == null) {
+                root = com.google.gson.JsonNull.INSTANCE;
+            }
+            valuesScratch.put(source, root);
         }
+        return DataValuePaths.resolve(root, path);
     }
 }

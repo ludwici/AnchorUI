@@ -41,12 +41,13 @@ The following is documented in the current repository and/or supported by the la
 - [x] Separate anchor-testing and RPG HUD demos: `/anchorui test hud1` and `/anchorui test rpg`.
 - [x] `anchorui:progress` (numeric binding) and resource-pack dialogue demo with `anchorui:button`.
 - [x] Resource-pack screen loading and `anchorui:open_screen` / `anchorui:close_screen` actions.
-- [x] Typed Data Binding: number, string, boolean, object, list; nested `path` and fallbacks; dynamic text/templates; `anchorui:data_list`; boolean `visibleWhen`.
+- [x] Typed Data Binding: number, string, boolean, object, list; nested `path` and fallbacks; dynamic text/templates and `anchorui:data_list`.
+- [x] Conditions stage 1–2: compiled Boolean/comparison expressions, `all` / `any` / `not`, typed comparisons and `visibleWhen` / `enabledWhen` for HUD and screens, including legacy visibility binding compatibility.
 - [x] Java data registrations via `DataValueRegistry`, including cached `registerMutable` / publish-on-change providers and backward compatibility with numeric providers.
 - [x] Binding test HUD/screen and starter resource pack examples.
 - [x] JSON test scenes `scene1`–`scene14`, tests/CI build setup.
 
-**Important distinctions:** `visibleWhen` is a single boolean-bound visibility rule, **not** a general conditional expression engine. Current dialogues demonstrate screen navigation, **not** complete branching conversation/quest state. Texture/image, panel, nested containers, opt-in clipping, nine-slice and basic group scaling are implemented. Content-based container auto sizing and opt-in generic JSON scrolling are implemented; full flex/grid layout and visual-style parity remain future work.
+**Important distinctions:** `visibleWhen` and `enabledWhen` now use the compiled Conditions engine, but conditional content (`cases`), action-level guards, and UI State remain unimplemented. Current dialogues demonstrate screen navigation, **not** complete branching conversation/quest state. Texture/image, panel, nested containers, opt-in clipping, nine-slice and basic group scaling are implemented. Content-based container auto sizing and opt-in generic JSON scrolling are implemented; full flex/grid layout and visual-style parity remain future work.
 
 See `README.md`, `docs/HUD.md`, `docs/DATA_BINDINGS.md`, `docs/MODPACK_AUTHORING.md`, `docs/WIDGET_REFERENCES.md`, and `docs/CUSTOM_WIDGETS.md` for implemented APIs. If a later code change contradicts this snapshot, update the checkboxes.
 
@@ -70,11 +71,12 @@ See `README.md`, `docs/HUD.md`, `docs/DATA_BINDINGS.md`, `docs/MODPACK_AUTHORING
 
 **Priority: high, after the necessary binding primitives.**
 
-- [ ] Add a general condition model for visibility/enabled states and conditional content. Go beyond the existing `visibleWhen` boolean binding.
-- [ ] Design safe comparison/composition rules: equality, numeric comparisons, negation, ALL/ANY logic and checks against structured bound data. Exact JSON syntax is **TBD**, not a committed schema.
-- [ ] Decide whether conditions should also control screen transitions/choices and whether conditional branches reserve their layout space (current `visibleWhen` does).
-- [ ] Respect missing-value fallbacks; detect malformed conditions with useful logs and isolate errors.
-- [ ] Reevaluate expensive conditions only when required; no JSON reparsing every frame.
+- [x] Add a general compiled condition model for visibility and enabled states, beyond the previous boolean-only `visibleWhen`.
+- [x] Implement typed `eq` / `ne`, numeric comparisons, string/list checks, `exists`, `empty`, `isNull` and `all` / `any` / `not`. JSON schema is documented in `docs/CONDITIONS.md`.
+- [x] Preserve layout bounds for hidden widgets, respect typed fallbacks, detect malformed expressions, isolate per-widget errors, and guard provider failures.
+- [x] Compile expressions and resolve data providers when constructing widgets; short-circuit compound rules and read each source once per evaluation. No new tick loops.
+- [ ] Add conditional content (`cases`), action guards and richer dialogue/quest choice predicates in a subsequent stage.
+- [ ] Decide on optional collapsed-space layout for conditionally hidden children and optional event-driven invalidation/caching of expensive conditions.
 
 **Acceptance:** A dialogue choice or quest detail can be enabled/hidden based on safe, declared client-side state and a mod-provided value.
 

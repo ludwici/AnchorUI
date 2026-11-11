@@ -115,6 +115,9 @@ See [Widget Namespaces and Imports](docs/WIDGET_REFERENCES.md) and test `/anchor
 
 ## F8: HUD and screen layout editors (NeoForge 1.21.1)
 
+Both editors now have a dedicated scrollable, draggable **Widgets** list alongside the properties inspector. HUD mode lists all custom HUD widgets and 25 vanilla read-only references; screen mode shows only the current screen's widgets. Entries are grouped in this order: vanilla `minecraft:*`, current editor namespace, then other namespaces alphabetically. Click an entry to select it or to choose an anchor parent. See [HUD editor](docs/HUD.md) and [Screen editor](docs/SCREEN_EDITOR.md).
+
+
 Press **F8** with no screen open to edit the HUD. Press **F8** while an Anchor UI screen is open to edit that screen's own widgets. Both editors support dragging, magnetic alignment, changing anchors and parents, hiding, resetting, and saving/cancelling local layouts. Screen overrides live separately per resource ID under `config/anchorui/screens/`; the HUD keeps using `config/anchorui/hud-layout.json`. The editors do not modify source resource pack JSON.
 
 See [Screen Editor](docs/SCREEN_EDITOR.md) for details, controls and the resource-aware `ItemLoreScreen` Java constructor.

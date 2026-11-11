@@ -10,6 +10,9 @@ public final class WidgetTypeIds {
     public static final ResourceLocation PROGRESS = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "progress");
     public static final ResourceLocation BUTTON = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "button");
     public static final ResourceLocation DATA_LIST = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "data_list");
+    public static final ResourceLocation IMAGE = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "image");
+    public static final ResourceLocation PANEL = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "panel");
+    public static final ResourceLocation CONTAINER = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "container");
 
     private WidgetTypeIds() {
     }

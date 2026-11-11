@@ -521,6 +521,12 @@ public final class AnchorScreenEditorScreen extends Screen {
         if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             return false;
         }
+        if (target.mouseClickedScrollBar(mouseX, mouseY, button)) {
+            dragging = false;
+            dragOrigin = null;
+            snapped = null;
+            return true;
+        }
         if (!compact && mouseX >= visiblePanelX()
                 && mouseX < visiblePanelX() + visiblePanelWidth()
                 && mouseY >= panelTop && mouseY < panelTop + (inspectorCollapsed ? 27 : expandedPanelHeight())) {
@@ -575,6 +581,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (target.mouseDraggedScrollBar(mouseX, mouseY, button, dragX, dragY)) {
+            return true;
+        }
         if (draggingInspectorScroll && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             scrollInspector(mouseY);
             return true;
@@ -614,6 +623,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (target.mouseReleasedScrollBar(mouseX, mouseY, button)) {
+            return true;
+        }
         if (draggingInspectorScroll && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             draggingInspectorScroll = false;
             return true;

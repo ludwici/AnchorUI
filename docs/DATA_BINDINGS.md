@@ -10,7 +10,7 @@ Bindings are registered by Java mods under namespaced IDs. Resource-pack authors
 | --- | --- |
 | Number | `anchorui:progress.value`, `max`; third-party widgets via `BoundData` |
 | String | `anchorui:text.text`, including interpolation templates |
-| Boolean | `visibleWhen` for any HUD or screen widget |
+| Boolean | `visibleWhen` and `enabledWhen` for any HUD or screen widget, including composite [Conditions](CONDITIONS.md) |
 | Object | Structured source with `path`, e.g. `health` on `player.profile` |
 | List | `anchorui:data_list.items`, selecting fields from each element |
 

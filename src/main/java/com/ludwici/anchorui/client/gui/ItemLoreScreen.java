@@ -451,7 +451,7 @@ public class ItemLoreScreen extends Screen {
         for (int index = placedWidgets.size() - 1; index >= 0; index--) {
             PlacedWidget placed = placedWidgets.get(index);
             NativeContainerScrollPanel panel = nativeScrollPanels.get(placed.id());
-            if (panel != null && placed.widget().visible && placed.widget().active && insideClip(placed, mouseX, mouseY)
+            if (panel != null && placed.widget().visible && enabledScratch.getOrDefault(placed.id(), false) && insideClip(placed, mouseX, mouseY)
                     && panel.mouseClicked(mouseX, mouseY, button)) {
                 draggedScrollPanel = panel;
                 return true;
@@ -490,7 +490,7 @@ public class ItemLoreScreen extends Screen {
     public boolean scrollContentsAt(double mouseX, double mouseY, double scrollX, double scrollY) {
         for (int index = placedWidgets.size() - 1; index >= 0; index--) {
             PlacedWidget placed = placedWidgets.get(index);
-            if (!placed.widget().visible || !placed.widget().active || !placed.scroll().enabled() || !insideClip(placed, mouseX, mouseY)) {
+            if (!placed.widget().visible || !enabledScratch.getOrDefault(placed.id(), false) || !placed.scroll().enabled() || !insideClip(placed, mouseX, mouseY)) {
                 continue;
             }
             AnchorLayout.Bounds content = layoutBounds.get(WidgetContainers.contentId(placed.id()));
@@ -787,12 +787,11 @@ public class ItemLoreScreen extends Screen {
             boolean parentEnabled = parent == null || enabledScratch.getOrDefault(parent, false);
             boolean shown = parentVisible && placed.baseVisible() && !overrides.isHidden(placed.id())
                     && placed.visibleWhen().get(placed.context());
-            boolean enabled = shown && parentEnabled && placed.baseActive()
-                    && placed.enabledWhen().get(placed.context());
+            boolean allowed = shown && parentEnabled && placed.enabledWhen().get(placed.context());
             placed.widget().visible = shown;
-            placed.widget().active = enabled;
+            placed.widget().active = allowed && placed.baseActive();
             visibilityScratch.put(placed.id(), shown);
-            enabledScratch.put(placed.id(), enabled);
+            enabledScratch.put(placed.id(), allowed);
         }
     }
 

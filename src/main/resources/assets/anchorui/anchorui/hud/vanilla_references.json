@@ -1,0 +1,45 @@
+{
+  "testOnly": true,
+  "testGroup": "vanilla",
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:vanilla_hotbar_label",
+      "text": "Vanilla: Hotbar",
+      "size": {
+        "width": 110,
+        "height": 16
+      },
+      "position": {
+        "point": "BOTTOM",
+        "anchor": "TOP",
+        "relativeTo": "minecraft:hotbar",
+        "x": 0,
+        "y": -4
+      },
+      "background": {
+        "color": "CC24374E"
+      },
+      "align": "center"
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:vanilla_crosshair_label",
+      "text": "Crosshair anchor",
+      "size": {
+        "width": 115,
+        "height": 16
+      },
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "TOPRIGHT",
+        "relativeTo": "minecraft:crosshair",
+        "x": 11,
+        "y": 0
+      },
+      "background": {
+        "color": "CC24374E"
+      }
+    }
+  ]
+}

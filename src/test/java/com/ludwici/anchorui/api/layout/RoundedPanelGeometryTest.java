@@ -34,6 +34,51 @@ public class RoundedPanelGeometryTest {
         }
     }
 
+
+    @Test
+    public void batchedBandsMatchPerRowRoundedGeometry() {
+        for (int width : new int[]{7, 12, 50, 280}) {
+            for (int height : new int[]{7, 10, 40, 180}) {
+                for (int radius : new int[]{0, 2, 8, 20}) {
+                    for (int border : new int[]{0, 1, 3}) {
+                        List<RoundedPanelGeometry.Band> bands = RoundedPanelGeometry.bands(width, height, radius, border);
+                        int actualBorder = Math.min(border, Math.min(width, height) / 2);
+                        int outerRadius = Math.min(radius, Math.min(width, height) / 2);
+                        int innerWidth = width - 2 * actualBorder;
+                        int innerHeight = height - 2 * actualBorder;
+                        int innerRadius = Math.max(0, outerRadius - actualBorder);
+                        innerRadius = Math.min(innerRadius, Math.min(innerWidth, innerHeight) / 2);
+                        int row = 0;
+                        for (RoundedPanelGeometry.Band band : bands) {
+                            assertEquals(row, band.top());
+                            for (int i = 0; i < band.height(); i++) {
+                                int innerRow = row - actualBorder;
+                                boolean inside = innerWidth > 0 && innerHeight > 0
+                                        && innerRow >= 0 && innerRow < innerHeight;
+                                assertEquals(inset(row, height, outerRadius), band.outerInset());
+                                assertEquals(inside, band.hasInterior());
+                                assertEquals(inside ? inset(innerRow, innerHeight, innerRadius) : 0, band.innerInset());
+                                row++;
+                            }
+                        }
+                        assertEquals(height, row);
+                    }
+                }
+            }
+        }
+    }
+
+    private static int inset(int row, int height, int radius) {
+        if (radius <= 0) {
+            return 0;
+        }
+        double distance = Math.max(radius - row - 0.5, row + 0.5 - (height - radius));
+        if (distance <= 0) {
+            return 0;
+        }
+        return (int) Math.ceil(radius - Math.sqrt(Math.max(0, radius * radius - distance * distance)));
+    }
+
     @Test
     public void rejectsInvalidSizesAndNegativeRadii() {
         assertThrows(IllegalArgumentException.class, () -> RoundedPanelGeometry.bands(0, 50, 5, 1));

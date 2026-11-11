@@ -1,6 +1,8 @@
 package com.ludwici.anchorui.client.hud;
 
 import com.google.gson.JsonObject;
+import com.ludwici.anchorui.KeyRegistry;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -554,6 +556,10 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (KeyRegistry.EDIT_HUD.isActiveAndMatches(InputConstants.getKey(keyCode, scanCode))) {
+            saveAndClose();
+            return true;
+        }
         if (keyCode == GLFW.GLFW_KEY_ESCAPE && choosingParent) {
             choosingParent = false;
             status = "Parent selection cancelled";

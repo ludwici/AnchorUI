@@ -9,8 +9,20 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.neoforged.neoforge.client.gui.widget.ScrollPanel;
 
 public final class NativeContainerScrollPanel extends ScrollPanel {
-    private static final int BAR_WIDTH = 6;
+    public record Style(int width, int trackColor, int thumbColor, int borderColor) {
+        public Style {
+            if (width < 1 || width > 16) {
+                throw new IllegalArgumentException("Scrollbar width must be between 1 and 16");
+            }
+        }
+    }
 
+    public static final Style CONTENT = new Style(6, 0x88415A70, 0xFFD5DFED, 0xFF9BACBE);
+    public static final Style WIDGET_LIST = new Style(2, 0xFF374756, 0xFF9FBDD0, 0xFF9FBDD0);
+    public static final Style HUD_INSPECTOR = new Style(2, 0x66465C6F, 0xFFD5DDEB, 0xFFD5DDEB);
+    public static final Style SCREEN_INSPECTOR = new Style(2, 0xFF465C6F, 0xFFD5DDEB, 0xFFD5DDEB);
+
+    private final Style style;
     private final AnchorLayout.Bounds viewport;
     private final int contentHeight;
     private final int logicalLimit;
@@ -20,11 +32,18 @@ public final class NativeContainerScrollPanel extends ScrollPanel {
 
     public NativeContainerScrollPanel(Minecraft minecraft, AnchorLayout.Bounds viewport, int logicalLimit,
                                       int wheelStep, double scale, int initialOffset) {
-        super(minecraft, viewport.width(), viewport.height(), viewport.y(), viewport.x(), 0, BAR_WIDTH,
-                0x88415A70, 0xFFD5DFED, 0xFF9BACBE);
-        if (viewport.width() <= BAR_WIDTH || viewport.height() < 8 || logicalLimit <= 0 || !Double.isFinite(scale) || scale <= 0) {
+        this(minecraft, viewport, logicalLimit, wheelStep, scale, initialOffset, CONTENT);
+    }
+
+    public NativeContainerScrollPanel(Minecraft minecraft, AnchorLayout.Bounds viewport, int logicalLimit,
+                                      int wheelStep, double scale, int initialOffset, Style style) {
+        super(minecraft, viewport.width(), viewport.height(), viewport.y(), viewport.x(), 0, style.width(),
+                style.trackColor(), style.thumbColor(), style.borderColor());
+        if (viewport.width() <= style.width() || viewport.height() < 34 || logicalLimit <= 0
+                || !Double.isFinite(scale) || scale <= 0) {
             throw new IllegalArgumentException("Invalid native scrollbar geometry or range");
         }
+        this.style = style;
         this.viewport = viewport;
         this.logicalLimit = logicalLimit;
         this.wheelStep = Math.max(1, (int) Math.round(wheelStep * scale));
@@ -35,9 +54,13 @@ public final class NativeContainerScrollPanel extends ScrollPanel {
     }
 
     public boolean matches(AnchorLayout.Bounds viewport, int logicalLimit, int wheelStep, double scale) {
+        return matches(viewport, logicalLimit, wheelStep, scale, CONTENT);
+    }
+
+    public boolean matches(AnchorLayout.Bounds viewport, int logicalLimit, int wheelStep, double scale, Style style) {
         return this.viewport.equals(viewport) && this.logicalLimit == logicalLimit
                 && this.wheelStep == Math.max(1, (int) Math.round(wheelStep * scale))
-                && Double.compare(this.scale, scale) == 0;
+                && Double.compare(this.scale, scale) == 0 && this.style.equals(style);
     }
 
     public int logicalOffset() {

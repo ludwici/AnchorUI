@@ -8,6 +8,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.GsonHelper;
 
+import java.util.List;
+
 public final class TextureRegion {
     private final ResourceLocation texture;
     private final int textureWidth;
@@ -18,6 +20,9 @@ public final class TextureRegion {
     private final int sourceHeight;
     private final int tint;
     private final NineSlice.Insets nineSlice;
+    private int cachedWidth = -1;
+    private int cachedHeight = -1;
+    private List<NineSlice.Tile> cachedTiles = List.of();
 
     public TextureRegion(WidgetContext context, JsonObject settings) {
         String path = GsonHelper.getAsString(settings, "texture", "");
@@ -67,7 +72,7 @@ public final class TextureRegion {
                 graphics.blit(texture, x, y, width, height, (float) u, (float) v,
                         sourceWidth, sourceHeight, textureWidth, textureHeight);
             } else {
-                for (NineSlice.Tile tile : NineSlice.tiles(width, height, sourceWidth, sourceHeight, nineSlice)) {
+                for (NineSlice.Tile tile : tiles(width, height)) {
                     graphics.blit(texture, x + tile.x(), y + tile.y(), tile.width(), tile.height(),
                             (float) (u + tile.u()), (float) (v + tile.v()),
                             tile.sourceWidth(), tile.sourceHeight(), textureWidth, textureHeight);
@@ -77,5 +82,13 @@ public final class TextureRegion {
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
             RenderSystem.disableBlend();
         }
+    }
+    private List<NineSlice.Tile> tiles(int width, int height) {
+        if (cachedWidth != width || cachedHeight != height) {
+            cachedTiles = NineSlice.tiles(width, height, sourceWidth, sourceHeight, nineSlice);
+            cachedWidth = width;
+            cachedHeight = height;
+        }
+        return cachedTiles;
     }
 }

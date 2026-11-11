@@ -44,3 +44,7 @@ Record per-frame CPU usage and allocation rate with a client profiler (for examp
 - A client-side integration test fixture for scaled hit targets, nested clipping, resource reloads and UI render ordering.
 
 The existing runtime contains no additional server tick loop for these optimizations.
+
+## Shared scrolling implementation
+
+Editor scrolling (HUD Inspector, Screen Inspector, Widgets list) and generic JSON vertical viewport scrolling share the same `NativeContainerScrollPanel` subclass of NeoForge's `ScrollPanel`. The implementation owns scroll-wheel delta handling, drag capture, scrollbar rendering and maximum scroll limits. The existing editors retain their custom content rendering, row virtualization, clipping and independent offsets; no duplicate thumb-position calculations or homemade drag formulas remain in those editors. Different visual scrollbar widths/colors are passed as style settings to the shared native adapter. The horizontal axis in a generic JSON `scroll: both` container remains a separate wheel-only path because NeoForge 1.21.1 `ScrollPanel` is vertical-only.

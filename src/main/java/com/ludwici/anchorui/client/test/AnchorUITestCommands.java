@@ -39,6 +39,7 @@ public final class AnchorUITestCommands {
         registerHudTest(test, "hud1");
         registerHudTest(test, "rpg");
         registerHudTest(test, "binding");
+        registerHudTest(test, "conditions");
         registerHudTest(test, "vanilla");
 
         for (TestScene scene : TestScene.values()) {

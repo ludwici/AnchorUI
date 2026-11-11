@@ -80,6 +80,9 @@ public final class AnchorHudManager {
     private List<PlacedWidget> widgets = List.of();
     private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
     private Map<String, VanillaHudGeometry.Reference> vanillaReferences = Map.of();
+    private List<VanillaHudGeometry.Reference> vanillaHandles = List.of();
+    private VanillaHudAnchors.Snapshot vanillaSnapshot;
+    private final Map<String, Boolean> visibilityScratch = new HashMap<>();
     private Map<String, AnchorLayout.Bounds> clipBounds = Map.of();
     private Map<String, WidgetTransforms.Transform> transforms = Map.of();
     private final Set<String> renderFailures = new HashSet<>();
@@ -228,14 +231,7 @@ public final class AnchorHudManager {
     }
 
     public List<VanillaHudGeometry.Reference> getVanillaHandles() {
-        List<VanillaHudGeometry.Reference> handles = new ArrayList<>();
-        for (String id : VanillaHudGeometry.IDS) {
-            VanillaHudGeometry.Reference reference = vanillaReferences.get(id);
-            if (reference != null) {
-                handles.add(reference);
-            }
-        }
-        return List.copyOf(handles);
+        return vanillaHandles;
     }
 
     private Map<String, AnchorLayout.Bounds> resolveBounds(HudLayoutOffsets offsets) {
@@ -258,7 +254,8 @@ public final class AnchorHudManager {
 
     private void applyVisibility() {
         HudLayoutOffsets offsets = currentOffsets();
-        Map<String, Boolean> shown = new HashMap<>();
+        visibilityScratch.clear();
+        Map<String, Boolean> shown = visibilityScratch;
         for (PlacedWidget placed : widgets) {
             boolean parentVisible = placed.containerParent() == null || shown.getOrDefault(placed.containerParent(), false);
             boolean visible = parentVisible && placed.baseVisible() && !offsets.isHidden(placed.id()) && placed.visibleWhen().get(placed.context());
@@ -406,9 +403,20 @@ public final class AnchorHudManager {
 
     private void prepare(Minecraft minecraft, int width, int height) {
         ensureStorageLoaded();
-        Map<String, VanillaHudGeometry.Reference> currentVanilla = VanillaHudAnchors.capture(minecraft, width, height);
-        boolean geometryChanged = !currentVanilla.equals(vanillaReferences);
-        vanillaReferences = currentVanilla;
+        VanillaHudAnchors.Snapshot snapshot = VanillaHudAnchors.snapshot(minecraft);
+        boolean geometryChanged = vanillaSnapshot == null
+                || snapshot.heartRows() != vanillaSnapshot.heartRows()
+                || snapshot.effectRows() != vanillaSnapshot.effectRows();
+        if (vanillaSnapshot == null || !snapshot.equals(vanillaSnapshot)
+                || builtWidth != width || builtHeight != height) {
+            vanillaReferences = VanillaHudAnchors.measure(snapshot, width, height);
+            List<VanillaHudGeometry.Reference> references = new ArrayList<>(VanillaHudGeometry.IDS.size());
+            for (String id : VanillaHudGeometry.IDS) {
+                references.add(vanillaReferences.get(id));
+            }
+            vanillaHandles = List.copyOf(references);
+            vanillaSnapshot = snapshot;
+        }
         long revision = LoreLoader.INSTANCE.getRevision();
         if (builtRevision != revision || builtWidth != width || builtHeight != height || builtLevel != minecraft.level || !builtTestGroups.equals(enabledTestGroups)) {
             rebuild(minecraft, width, height, revision);
@@ -616,6 +624,12 @@ public final class AnchorHudManager {
         builtHeight = -1;
         widgets = List.of();
         layoutBounds = Map.of();
+        clipBounds = Map.of();
+        transforms = Map.of();
+        vanillaReferences = Map.of();
+        vanillaHandles = List.of();
+        vanillaSnapshot = null;
+        visibilityScratch.clear();
         registry = new WidgetInstanceRegistry();
         renderFailures.clear();
     }

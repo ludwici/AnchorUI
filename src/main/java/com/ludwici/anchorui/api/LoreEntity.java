@@ -1,5 +1,6 @@
 package com.ludwici.anchorui.api;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.GsonHelper;
@@ -14,6 +15,8 @@ public class LoreEntity {
     public final String style;
     public final float scale;
     public final String namespace;
+    public final JsonElement onOpen;
+    public final JsonElement onClose;
     public final boolean hasExplicitWidgets;
     public final List<LoreComponent> components = new ArrayList<>();
     public final List<UiElement> entities = new ArrayList<>();
@@ -24,6 +27,8 @@ public class LoreEntity {
 
     public LoreEntity(JsonObject root, String namespace) {
         this.namespace = namespace;
+        onOpen = root.has("onOpen") ? root.get("onOpen").deepCopy() : null;
+        onClose = root.has("onClose") ? root.get("onClose").deepCopy() : null;
         this.hasExplicitWidgets = root.has("entities");
         title = GsonHelper.getAsString(root, "title", "");
         item = GsonHelper.getAsString(root, "item", "");

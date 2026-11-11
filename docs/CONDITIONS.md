@@ -21,17 +21,26 @@ Anchor UI supports **compiled, declarative conditions** for HUD widgets and reso
   "visibleWhen": {
     "all": [
       {
-        "left": {"bind": "anchorui:player.level", "fallback": 0},
+        "left": {
+          "bind": "anchorui:player.level",
+          "fallback": 0
+        },
         "op": "gte",
         "right": 10
       },
       {
-        "not": {"bind": "anchorui:player.sneaking", "fallback": false}
+        "not": {
+          "bind": "anchorui:player.sneaking",
+          "fallback": false
+        }
       }
     ]
   },
   "enabledWhen": {
-    "left": {"bind": "mypack:quest.status", "fallback": "locked"},
+    "left": {
+      "bind": "mypack:quest.status",
+      "fallback": "locked"
+    },
     "op": "eq",
     "right": "available"
   },
@@ -50,11 +59,26 @@ Each condition is either a JSON boolean, an existing boolean data binding, a log
 ```json
 {
   "any": [
-    {"bind": "anchorui:player.creative", "fallback": false},
+    {
+      "bind": "anchorui:player.creative",
+      "fallback": false
+    },
     {
       "all": [
-        {"left": {"bind": "anchorui:player.level", "fallback": 0}, "op": "gte", "right": 10},
-        {"not": {"bind": "anchorui:player.sneaking", "fallback": false}}
+        {
+          "left": {
+            "bind": "anchorui:player.level",
+            "fallback": 0
+          },
+          "op": "gte",
+          "right": 10
+        },
+        {
+          "not": {
+            "bind": "anchorui:player.sneaking",
+            "fallback": false
+          }
+        }
       ]
     }
   ]
@@ -80,7 +104,11 @@ Binary comparisons use `{"left": ..., "op": "...", "right": ...}`. Unary compari
 
 ```json
 {
-  "left": {"bind": "anchorui:player.profile", "path": "health", "fallback": 0},
+  "left": {
+    "bind": "anchorui:player.profile",
+    "path": "health",
+    "fallback": 0
+  },
   "op": "gt",
   "right": 10
 }
@@ -92,7 +120,10 @@ For example, check whether a list is empty:
 
 ```json
 {
-  "left": {"bind": "anchorui:player.effects", "fallback": []},
+  "left": {
+    "bind": "anchorui:player.effects",
+    "fallback": []
+  },
   "op": "empty"
 }
 ```
@@ -127,7 +158,10 @@ The resource-pack JSON can use it without a custom widget:
   "id": "mymod:custom_button",
   "text": "Available to matching players",
   "enabledWhen": {
-    "left": {"bind": "anchorui:player.name", "fallback": ""},
+    "left": {
+      "bind": "anchorui:player.name",
+      "fallback": ""
+    },
     "op": "mymod:custom_op",
     "right": "dev"
   }
@@ -146,7 +180,10 @@ ConditionOperationRegistry.registerUnary(ResourceLocation.fromNamespaceAndPath("
 
 ```json
 {
-  "left": {"bind": "anchorui:player.health", "fallback": 0},
+  "left": {
+    "bind": "anchorui:player.health",
+    "fallback": 0
+  },
   "op": "mymod:is_positive"
 }
 ```

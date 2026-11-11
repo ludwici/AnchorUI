@@ -3,7 +3,6 @@ package com.ludwici.anchorui.api.widget;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.ludwici.anchorui.api.WidgetTypeIds;
 import com.ludwici.anchorui.api.layout.WidgetContainers;
 
 import java.util.ArrayList;
@@ -86,7 +85,7 @@ public final class WidgetDocumentResolver {
         JsonObject parent = original.deepCopy();
         parent.remove("children");
         String id = parent.get("id").getAsString();
-        if (!children.isEmpty() && !WidgetContainers.supportsChildren(WidgetTypeIds.parse(parent.get("type").getAsString()))) {
+        if (!children.isEmpty() && !WidgetContainers.supportsChildren(parent.get("type").getAsString())) {
             throw new IllegalArgumentException("Widget '" + id + "' cannot contain children; use anchorui:panel or anchorui:container");
         }
         add(elements, parent);

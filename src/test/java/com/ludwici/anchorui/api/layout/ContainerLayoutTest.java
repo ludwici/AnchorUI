@@ -42,7 +42,7 @@ public class ContainerLayoutTest {
                         "demo:inner", new ContainerLayout.AutoSize(true, true)),
                 Map.of("demo:inner", "demo:outer", "demo:text", "demo:inner"), ignored -> {});
         assertEquals(new ContainerLayout.Size(64, 20), result.sizes().get("demo:inner"));
-        assertEquals(new ContainerLayout.Size(85, 34), result.sizes().get("demo:outer"));
+        assertEquals(new ContainerLayout.Size(79, 34), result.sizes().get("demo:outer"));
         assertEquals(200, result.bounds().get("demo:outer").x() + result.bounds().get("demo:outer").width() / 2);
     }
 

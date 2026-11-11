@@ -536,9 +536,6 @@ public class ItemLoreScreen extends Screen {
                 nativePanel.render(graphics, mouseX, mouseY, partialTick);
             }
 
-            if (limits.x() > 0 && nativePanel == null) {
-                continue;
-            }
         }
     }
 

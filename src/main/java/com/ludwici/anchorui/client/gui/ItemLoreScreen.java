@@ -7,9 +7,12 @@ import com.ludwici.anchorui.api.LoreEntity;
 import com.ludwici.anchorui.api.binding.BoundBoolean;
 import com.ludwici.anchorui.api.WidgetTypeIds;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
+import com.ludwici.anchorui.api.layout.ContainerLayout;
+import com.ludwici.anchorui.api.layout.ContainerScroll;
 import com.ludwici.anchorui.api.layout.WidgetContainers;
 import com.ludwici.anchorui.api.layout.WidgetTransforms;
 import com.ludwici.anchorui.api.style.LoreStyle;
+import com.ludwici.anchorui.api.style.PaddingElement;
 import com.ludwici.anchorui.api.style.ElementAnchor;
 import com.ludwici.anchorui.api.style.PositionElement;
 import com.ludwici.anchorui.api.widget.AnchorWidgetRegistry;
@@ -44,7 +47,7 @@ public class ItemLoreScreen extends Screen {
     private record DeclaredWidget(String id, LoreEntity.UiElement element, String legacyStyle) {
     }
 
-    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, WidgetContext context, BoundBoolean visibleWhen, boolean baseVisible, String containerParent, boolean clipChildren, WidgetTransforms.Group group) {
+    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, WidgetContext context, BoundBoolean visibleWhen, boolean baseVisible, String containerParent, boolean clipChildren, WidgetTransforms.Group group, ContainerLayout.AutoSize autoSize, ContainerScroll.Config scroll) {
         private AnchorLayout.Frame frame(HudLayoutOffsets offsets) {
             HudLayoutOffsets.Offset delta = offsets.get(id);
             HudLayoutOffsets.AnchorOverride anchor = offsets.anchor(id);
@@ -69,6 +72,12 @@ public class ItemLoreScreen extends Screen {
     private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
     private Map<String, AnchorLayout.Bounds> clipBounds = Map.of();
     private Map<String, WidgetTransforms.Transform> transforms = Map.of();
+    private Map<String, ContainerScroll.Limits> scrollLimits = Map.of();
+    private final Map<String, ContainerScroll.Offset> scrollOffsets = new HashMap<>();
+    private Map<String, String> containerParents = Map.of();
+    private Map<String, WidgetTransforms.Group> containerGroups = Map.of();
+    private Set<String> clippingContainers = Set.of();
+    private String lastLayoutFailure;
     private PlacedWidget draggingWidget;
     private String layoutError;
     private List<String> layoutWarnings = List.of();
@@ -308,45 +317,160 @@ public class ItemLoreScreen extends Screen {
     }
 
     private boolean applyScreenOffsets(HudLayoutOffsets offsets) {
+        return applyScreenOffsets(offsets, null);
+    }
+
+    private boolean applyScreenOffsets(HudLayoutOffsets offsets, List<String> warnings) {
         if (placedWidgets.isEmpty()) {
+            lastLayoutFailure = "No widgets available";
             return false;
         }
         try {
             List<AnchorLayout.Frame> frames = new ArrayList<>();
+            Map<String, PaddingElement> containers = new LinkedHashMap<>();
+            Map<String, ContainerLayout.AutoSize> autoSizes = new LinkedHashMap<>();
+            Map<String, String> parents = new LinkedHashMap<>();
+            Map<String, WidgetTransforms.Group> groups = new LinkedHashMap<>();
+            Map<String, ContainerScroll.Config> scrollConfigs = new LinkedHashMap<>();
+            Set<String> clipping = new HashSet<>();
             for (PlacedWidget placed : placedWidgets) {
                 frames.add(placed.frame(offsets));
                 if (placed.widget() instanceof PanelWidget) {
-                    frames.add(WidgetContainers.contentFrame(placed.id(), placed.widget().getWidth(), placed.widget().getHeight(), placed.style().padding));
+                    containers.put(placed.id(), placed.style().padding);
+                    if (placed.autoSize().enabled()) {
+                        autoSizes.put(placed.id(), placed.autoSize());
+                    }
+                    if (placed.scroll().enabled()) {
+                        scrollConfigs.put(placed.id(), placed.scroll());
+                    }
                 }
-            }
-            Map<String, AnchorLayout.Bounds> bounds = AnchorLayout.resolve(width, height, frames);
-            Map<String, String> parents = new LinkedHashMap<>();
-            Map<String, WidgetTransforms.Group> groups = new LinkedHashMap<>();
-            Set<String> clippingContainers = new HashSet<>();
-            for (PlacedWidget placed : placedWidgets) {
                 if (placed.containerParent() != null) {
                     parents.put(placed.id(), placed.containerParent());
                 }
                 if (placed.clipChildren()) {
-                    clippingContainers.add(placed.id());
+                    clipping.add(placed.id());
                 }
                 if (placed.group() != null) {
                     groups.put(placed.id(), placed.group());
                 }
             }
-            Map<String, WidgetTransforms.Transform> transforms = WidgetTransforms.resolve(bounds, parents, groups);
-            Map<String, AnchorLayout.Bounds> clips = WidgetContainers.clips(bounds, parents, clippingContainers, transforms);
+            ContainerLayout.Result result = ContainerLayout.resolve(width, height, frames, containers, autoSizes, parents,
+                    warning -> {
+                        if (warnings != null) {
+                            warnings.add(warning);
+                        }
+                    });
+            Map<String, AnchorLayout.Bounds> bounds = result.bounds();
+            Map<String, ContainerScroll.Limits> limits = ContainerScroll.measure(bounds, parents, scrollConfigs);
+            scrollOffsets.keySet().retainAll(limits.keySet());
+            for (var entry : limits.entrySet()) {
+                ContainerScroll.Offset previous = scrollOffsets.getOrDefault(entry.getKey(), ContainerScroll.Offset.ZERO);
+                scrollOffsets.put(entry.getKey(), entry.getValue().clamp(previous));
+            }
             for (PlacedWidget placed : placedWidgets) {
                 AnchorLayout.Bounds frame = bounds.get(placed.id());
+                placed.widget().setWidth(frame.width());
+                placed.widget().setHeight(frame.height());
                 placed.widget().setPosition(frame.x(), frame.y());
             }
             layoutBounds = bounds;
-            this.transforms = transforms;
-            clipBounds = clips;
+            scrollLimits = limits;
+            containerParents = Map.copyOf(parents);
+            containerGroups = Map.copyOf(groups);
+            clippingContainers = Set.copyOf(clipping);
+            updateScrolledTransforms();
+            lastLayoutFailure = null;
             return true;
         } catch (IllegalArgumentException exception) {
-            AnchorUI.LOGGER.warn("Screen editor rejected invalid layout for {}: {}", documentId, exception.getMessage());
+            lastLayoutFailure = exception.getMessage();
+            AnchorUI.LOGGER.warn("Invalid Anchor UI layout for {}: {}", documentId, lastLayoutFailure);
             return false;
+        }
+    }
+
+    private void updateScrolledTransforms() {
+        transforms = WidgetTransforms.resolve(layoutBounds, containerParents, containerGroups, scrollOffsets);
+        clipBounds = WidgetContainers.clips(layoutBounds, containerParents, clippingContainers, transforms);
+    }
+
+    public boolean scrollContentsAt(double mouseX, double mouseY, double scrollX, double scrollY) {
+        for (int index = placedWidgets.size() - 1; index >= 0; index--) {
+            PlacedWidget placed = placedWidgets.get(index);
+            if (!placed.widget().visible || !placed.scroll().enabled() || !insideClip(placed, mouseX, mouseY)) {
+                continue;
+            }
+            AnchorLayout.Bounds content = layoutBounds.get(WidgetContainers.contentId(placed.id()));
+            if (content == null) {
+                continue;
+            }
+            WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+            AnchorLayout.Bounds viewport = transform.physical(content);
+            if (!WidgetContainers.contains(viewport, mouseX, mouseY)) {
+                continue;
+            }
+            ContainerScroll.Limits limits = scrollLimits.get(placed.id());
+            if (limits == null) {
+                continue;
+            }
+            ContainerScroll.Offset old = scrollOffsets.getOrDefault(placed.id(), ContainerScroll.Offset.ZERO);
+            ContainerScroll.Offset next = ContainerScroll.move(old, limits, placed.scroll(), scrollX, scrollY);
+            if (!next.equals(old)) {
+                scrollOffsets.put(placed.id(), next);
+                updateScrolledTransforms();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void renderScrollIndicators(GuiGraphics graphics) {
+        for (PlacedWidget placed : placedWidgets) {
+            if (!placed.widget().visible || !placed.scroll().enabled()) {
+                continue;
+            }
+            ContainerScroll.Limits limits = scrollLimits.get(placed.id());
+            AnchorLayout.Bounds content = layoutBounds.get(WidgetContainers.contentId(placed.id()));
+            if (limits == null || content == null || (limits.x() == 0 && limits.y() == 0)) {
+                continue;
+            }
+            WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+            AnchorLayout.Bounds viewport = transform.physical(content);
+            AnchorLayout.Bounds clip = clipBounds.get(placed.id());
+            if (clip != null && (clip.width() == 0 || clip.height() == 0)) {
+                continue;
+            }
+            if (clip != null) {
+                graphics.enableScissor(clip.x(), clip.y(), clip.x() + clip.width(), clip.y() + clip.height());
+            }
+            try {
+                ContainerScroll.Offset offset = scrollOffsets.getOrDefault(placed.id(), ContainerScroll.Offset.ZERO);
+                if (limits.y() > 0 && viewport.height() > 4) {
+                    int track = viewport.height();
+                    int thumb = Math.max(7, (int) Math.round((double) track * content.height()
+                            / (content.height() + limits.y())));
+                    thumb = Math.min(track, thumb);
+                    int top = viewport.y() + (track - thumb) * offset.y() / limits.y();
+                    graphics.fill(viewport.x() + viewport.width() - 3, viewport.y(),
+                            viewport.x() + viewport.width() - 1, viewport.y() + viewport.height(), 0x88415A70);
+                    graphics.fill(viewport.x() + viewport.width() - 3, top,
+                            viewport.x() + viewport.width() - 1, top + thumb, 0xFFD5DFED);
+                }
+                if (limits.x() > 0 && viewport.width() > 4) {
+                    int track = viewport.width();
+                    int thumb = Math.max(7, (int) Math.round((double) track * content.width()
+                            / (content.width() + limits.x())));
+                    thumb = Math.min(track, thumb);
+                    int left = viewport.x() + (track - thumb) * offset.x() / limits.x();
+                    graphics.fill(viewport.x(), viewport.y() + viewport.height() - 3,
+                            viewport.x() + viewport.width(), viewport.y() + viewport.height() - 1, 0x88415A70);
+                    graphics.fill(left, viewport.y() + viewport.height() - 3,
+                            left + thumb, viewport.y() + viewport.height() - 1, 0xFFD5DFED);
+                }
+            } finally {
+                if (clip != null) {
+                    graphics.disableScissor();
+                }
+            }
         }
     }
 
@@ -358,6 +482,8 @@ public class ItemLoreScreen extends Screen {
         layoutBounds = Map.of();
         clipBounds = Map.of();
         transforms = Map.of();
+        scrollLimits = Map.of();
+        scrollOffsets.clear();
         draggingWidget = null;
         layoutError = null;
         layoutWarnings = List.of();
@@ -399,52 +525,21 @@ public class ItemLoreScreen extends Screen {
             }
         }
 
-        try {
-            List<AnchorLayout.Frame> frames = new ArrayList<>();
-            HudLayoutOffsets defaults = new HudLayoutOffsets();
-            for (PlacedWidget placed : created) {
-                frames.add(placed.frame(defaults));
-                if (placed.widget() instanceof PanelWidget) {
-                    frames.add(WidgetContainers.contentFrame(placed.id(), placed.widget().getWidth(), placed.widget().getHeight(), placed.style().padding));
-                }
+        placedWidgets = List.copyOf(created);
+        if (!applyScreenOffsets(currentScreenOffsets(), warnings)) {
+            if (currentScreenOffsets().sameAs(new HudLayoutOffsets()) || !applyScreenOffsets(new HudLayoutOffsets(), warnings)) {
+                layoutError = lastLayoutFailure;
+                AnchorUI.LOGGER.error("Anchor UI screen layout rejected ({}x{}): {}", width, height, layoutError);
+            } else {
+                AnchorUI.LOGGER.warn("Ignoring invalid saved screen layout for {}", documentId);
             }
-            layoutBounds = AnchorLayout.resolve(width, height, frames, warnings::add);
-            Map<String, String> parents = new LinkedHashMap<>();
-            Map<String, WidgetTransforms.Group> groups = new LinkedHashMap<>();
-            Set<String> clippingContainers = new HashSet<>();
-            for (PlacedWidget placed : created) {
-                if (placed.containerParent() != null) {
-                    parents.put(placed.id(), placed.containerParent());
-                }
-                if (placed.clipChildren()) {
-                    clippingContainers.add(placed.id());
-                }
-                if (placed.group() != null) {
-                    groups.put(placed.id(), placed.group());
-                }
-            }
-            transforms = WidgetTransforms.resolve(layoutBounds, parents, groups);
-            clipBounds = WidgetContainers.clips(layoutBounds, parents, clippingContainers, transforms);
-            for (PlacedWidget placed : created) {
-                AnchorLayout.Bounds bounds = layoutBounds.get(placed.id());
-                placed.widget().setPosition(bounds.x(), bounds.y());
-            }
-        } catch (IllegalArgumentException exception) {
-            layoutError = exception.getMessage();
-            AnchorUI.LOGGER.error("Anchor UI layout rejected ({}x{}, {} widgets): {}", width, height, created.size(), layoutError);
         }
-
         layoutWarnings = List.copyOf(warnings);
         for (String warning : warnings) {
             AnchorUI.LOGGER.warn("Anchor UI layout: {}", warning);
         }
         if (layoutError != null) {
             return;
-        }
-        placedWidgets = List.copyOf(created);
-        if (!applyScreenOffsets(currentScreenOffsets()) && !currentScreenOffsets().sameAs(new HudLayoutOffsets())) {
-            AnchorUI.LOGGER.warn("Ignoring invalid saved screen offsets for {}", documentId);
-            applyScreenOffsets(new HudLayoutOffsets());
         }
         for (PlacedWidget placed : created) {
             addWidget(placed.widget());
@@ -505,7 +600,13 @@ public class ItemLoreScreen extends Screen {
         String relativeTo = WidgetIds.reference(p.relativeTo, loreEntity.namespace);
         PositionElement position = new PositionElement(p.point, p.anchor, relativeTo, p.x, p.y);
         widgetRegistry.attach(id, widget);
-        created.add(new PlacedWidget(id, widget, settings, position, context, BoundBoolean.parse(element.settings, "visibleWhen", true), widget.visible, WidgetContainers.parent(element.settings), widget instanceof PanelWidget && WidgetContainers.clipChildren(element.settings), widget instanceof PanelWidget ? WidgetContainers.group(element.settings) : null));
+        boolean panel = widget instanceof PanelWidget;
+        created.add(new PlacedWidget(id, widget, settings, position, context, BoundBoolean.parse(element.settings, "visibleWhen", true),
+                widget.visible, WidgetContainers.parent(element.settings),
+                panel && (WidgetContainers.clipChildren(element.settings) || settings.scroll.enabled()),
+                panel ? WidgetContainers.group(element.settings) : null,
+                panel ? settings.autoSize : ContainerLayout.AutoSize.NONE,
+                panel ? settings.scroll : ContainerScroll.Config.NONE));
     }
 
     @Override
@@ -556,6 +657,7 @@ public class ItemLoreScreen extends Screen {
                 }
             }
         }
+        renderScrollIndicators(graphics);
     }
 
     @Override
@@ -606,11 +708,13 @@ public class ItemLoreScreen extends Screen {
                 continue;
             }
             WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
-            if (placed.widget().mouseScrolled(transform.inverseX(mouseX), transform.inverseY(mouseY), scrollX, scrollY)) {
+            AnchorLayout.Bounds frame = layoutBounds.get(placed.id());
+            if (frame != null && WidgetContainers.contains(transform.physical(frame), mouseX, mouseY)
+                    && placed.widget().mouseScrolled(transform.inverseX(mouseX), transform.inverseY(mouseY), scrollX, scrollY)) {
                 return true;
             }
         }
-        return false;
+        return scrollContentsAt(mouseX, mouseY, scrollX, scrollY);
     }
 
     private boolean insideClip(PlacedWidget placed, double mouseX, double mouseY) {

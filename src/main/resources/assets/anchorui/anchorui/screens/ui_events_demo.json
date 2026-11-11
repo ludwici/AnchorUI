@@ -1,0 +1,258 @@
+{
+  "style": "anchorui:style/default",
+  "onOpen": {
+    "type": "anchorui_test:event_notice"
+  },
+  "onClose": {
+    "type": "anchorui_test:event_notice"
+  },
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:event_title",
+      "text": "<b>UI EVENTS DEMO</b>",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -97
+      },
+      "size": {
+        "width": 260,
+        "height": 22
+      },
+      "align": "center",
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:event_hover",
+      "text": "Hover here: enter / leave",
+      "onHoverEnter": {
+        "type": "anchorui_test:event_notice"
+      },
+      "onHoverLeave": {
+        "type": "anchorui_test:event_notice"
+      },
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -67
+      },
+      "size": {
+        "width": 244,
+        "height": 22
+      },
+      "align": "center",
+      "background": {
+        "color": "#FF314B62"
+      },
+      "color": "#D6F1FF"
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:event_click",
+      "text": "Click: onClick",
+      "onClick": {
+        "type": "anchorui_test:event_notice"
+      },
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -36
+      },
+      "size": {
+        "width": 170,
+        "height": 20
+      }
+    },
+    {
+      "type": "anchorui:panel",
+      "id": "anchorui:event_scroll",
+      "onChange": {
+        "type": "anchorui_test:event_notice"
+      },
+      "scroll": {
+        "axis": "vertical",
+        "step": 20
+      },
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 34
+      },
+      "size": {
+        "width": 236,
+        "height": 89
+      },
+      "padding": {
+        "left": 8,
+        "right": 8,
+        "top": 7,
+        "bottom": 7
+      },
+      "fillColor": "#E023354A",
+      "borderColor": "#FFAEC9D9",
+      "borderWidth": 1,
+      "radius": 4,
+      "children": [
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:event_row_1",
+          "text": "Scrollable row 01",
+          "position": {
+            "x": 3,
+            "y": 0
+          },
+          "size": {
+            "width": 186,
+            "height": 16
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:event_row_2",
+          "text": "Scrollable row 02",
+          "position": {
+            "x": 3,
+            "y": 20
+          },
+          "size": {
+            "width": 186,
+            "height": 16
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:event_row_3",
+          "text": "Scrollable row 03",
+          "position": {
+            "x": 3,
+            "y": 40
+          },
+          "size": {
+            "width": 186,
+            "height": 16
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:event_row_4",
+          "text": "Scrollable row 04",
+          "position": {
+            "x": 3,
+            "y": 60
+          },
+          "size": {
+            "width": 186,
+            "height": 16
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:event_row_5",
+          "text": "Scrollable row 05",
+          "position": {
+            "x": 3,
+            "y": 80
+          },
+          "size": {
+            "width": 186,
+            "height": 16
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:event_row_6",
+          "text": "Scrollable row 06",
+          "position": {
+            "x": 3,
+            "y": 100
+          },
+          "size": {
+            "width": 186,
+            "height": 16
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:event_row_7",
+          "text": "Scrollable row 07",
+          "position": {
+            "x": 3,
+            "y": 120
+          },
+          "size": {
+            "width": 186,
+            "height": 16
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:event_row_8",
+          "text": "Scrollable row 08",
+          "position": {
+            "x": 3,
+            "y": 140
+          },
+          "size": {
+            "width": 186,
+            "height": 16
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:event_row_9",
+          "text": "Scrollable row 09",
+          "position": {
+            "x": 3,
+            "y": 160
+          },
+          "size": {
+            "width": 186,
+            "height": 16
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:event_row_10",
+          "text": "Scrollable row 10",
+          "position": {
+            "x": 3,
+            "y": 180
+          },
+          "size": {
+            "width": 186,
+            "height": 16
+          }
+        }
+      ]
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:event_close",
+      "text": "Close (onClose)",
+      "onClick": {
+        "type": "anchorui:close_screen"
+      },
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 99
+      },
+      "size": {
+        "width": 170,
+        "height": 20
+      }
+    }
+  ]
+}

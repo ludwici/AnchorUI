@@ -1,0 +1,126 @@
+{
+  "testOnly": true,
+  "testGroup": "conditions",
+  "style": "anchorui:style/default",
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:conditions_hud_title",
+      "text": "<b>CONDITIONS</b> | Lv {{anchorui:player.level}}",
+      "position": {
+        "point": "TOPRIGHT",
+        "anchor": "TOPRIGHT",
+        "relativeTo": "screen",
+        "x": -15,
+        "y": 50
+      },
+      "size": {
+        "width": 216,
+        "height": 24
+      },
+      "align": "center",
+      "background": {
+        "color": "D0263D56"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:conditions_hud_sneak",
+      "text": "Sneaking OR creative",
+      "visibleWhen": {
+        "any": [
+          {
+            "bind": "anchorui:player.sneaking",
+            "fallback": false
+          },
+          {
+            "bind": "anchorui:player.creative",
+            "fallback": false
+          }
+        ]
+      },
+      "position": {
+        "point": "TOPRIGHT",
+        "anchor": "BOTTOMRIGHT",
+        "relativeTo": "anchorui:conditions_hud_title",
+        "y": 5
+      },
+      "size": {
+        "width": 216,
+        "height": 20
+      },
+      "align": "center",
+      "background": {
+        "color": "CC426D50"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:conditions_hud_health",
+      "text": "HP above 10 and not sneaking",
+      "visibleWhen": {
+        "all": [
+          {
+            "left": {
+              "bind": "anchorui:player.profile",
+              "path": "health",
+              "fallback": 0
+            },
+            "op": "gt",
+            "right": 10
+          },
+          {
+            "not": {
+              "bind": "anchorui:player.sneaking",
+              "fallback": false
+            }
+          }
+        ]
+      },
+      "position": {
+        "point": "TOPRIGHT",
+        "anchor": "BOTTOMRIGHT",
+        "relativeTo": "anchorui:conditions_hud_sneak",
+        "y": 5
+      },
+      "size": {
+        "width": 216,
+        "height": 20
+      },
+      "align": "center",
+      "background": {
+        "color": "CC35627A"
+      },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:conditions_hud_effects",
+      "text": "No effects: empty-list condition",
+      "visibleWhen": {
+        "left": {
+          "bind": "anchorui:player.effects",
+          "fallback": []
+        },
+        "op": "empty"
+      },
+      "position": {
+        "point": "TOPRIGHT",
+        "anchor": "BOTTOMRIGHT",
+        "relativeTo": "anchorui:conditions_hud_health",
+        "y": 5
+      },
+      "size": {
+        "width": 216,
+        "height": 20
+      },
+      "align": "center",
+      "background": {
+        "color": "CC48556D"
+      },
+      "color": "#FFFFFF"
+    }
+  ]
+}

@@ -89,6 +89,53 @@ public class HudSnapTest {
     }
 
     @Test
+    public void snapsMovingWidgetCenterToScreenMidpointOnBothAxes() {
+        var moving = widget("mod:moving", "screen", 0, 0, 40, 20);
+
+        var result = HudSnap.snap(moving, 178, 91, List.of(moving), 400, 200);
+
+        assertEquals(180, result.x());
+        assertEquals(90, result.y());
+        assertEquals(200, result.guideX().intValue());
+        assertEquals(100, result.guideY().intValue());
+    }
+
+    @Test
+    public void screenCenterSnappingCanApplyToOneAxisOnly() {
+        var moving = widget("mod:moving", "screen", 0, 0, 40, 20);
+
+        var result = HudSnap.snap(moving, 184, 30, List.of(moving), 400, 200);
+
+        assertEquals(180, result.x());
+        assertEquals(30, result.y());
+        assertEquals(200, result.guideX().intValue());
+        assertNull(result.guideY());
+    }
+
+    @Test
+    public void screenCenterSnappingDoesNotActivateOutsideMagnetThreshold() {
+        var moving = widget("mod:moving", "screen", 0, 0, 40, 20);
+
+        var result = HudSnap.snap(moving, 171, 81, List.of(moving), 400, 200);
+
+        assertEquals(171, result.x());
+        assertEquals(81, result.y());
+        assertNull(result.guideX());
+        assertNull(result.guideY());
+    }
+
+    @Test
+    public void centerMagnetTakesPriorityOverOtherEquidistantTargets() {
+        var moving = widget("mod:moving", "screen", 0, 0, 40, 20);
+        var neighbor = widget("mod:neighbor", "screen", 195, 500, 40, 20);
+
+        var result = HudSnap.snap(moving, 178, 40, List.of(moving, neighbor), 400, 200);
+
+        assertEquals(180, result.x());
+        assertEquals(200, result.guideX().intValue());
+    }
+
+    @Test
     public void snapResultIsBasedOnRawMousePositionNotPreviousSnap() {
         var moving = widget("mod:moving", "screen", 10, 10, 40, 20);
         var target = widget("mod:target", "screen", 100, 200, 80, 20);

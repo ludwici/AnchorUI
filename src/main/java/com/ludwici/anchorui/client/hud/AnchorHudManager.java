@@ -91,6 +91,7 @@ public final class AnchorHudManager {
     private List<VanillaHudGeometry.Reference> vanillaHandles = List.of();
     private VanillaHudAnchors.Snapshot vanillaSnapshot;
     private final Map<String, Boolean> visibilityScratch = new HashMap<>();
+    private final Map<String, Boolean> enabledScratch = new HashMap<>();
     private Map<String, AnchorLayout.Bounds> clipBounds = Map.of();
     private Map<String, WidgetTransforms.Transform> transforms = Map.of();
     private Map<String, ContainerScroll.Limits> scrollLimits = Map.of();
@@ -438,14 +439,19 @@ public final class AnchorHudManager {
     private void applyVisibility() {
         HudLayoutOffsets offsets = currentOffsets();
         visibilityScratch.clear();
-        Map<String, Boolean> shown = visibilityScratch;
+        enabledScratch.clear();
         for (PlacedWidget placed : widgets) {
-            boolean parentVisible = placed.containerParent() == null || shown.getOrDefault(placed.containerParent(), false);
+            String parent = placed.containerParent();
+            boolean parentVisible = parent == null || visibilityScratch.getOrDefault(parent, false);
+            boolean parentEnabled = parent == null || enabledScratch.getOrDefault(parent, false);
             boolean visible = parentVisible && placed.baseVisible() && !offsets.isHidden(placed.id())
                     && placed.visibleWhen().get(placed.context());
+            boolean enabled = visible && parentEnabled && placed.baseActive()
+                    && placed.enabledWhen().get(placed.context());
             placed.widget().visible = visible;
-            placed.widget().active = visible && placed.baseActive() && placed.enabledWhen().get(placed.context());
-            shown.put(placed.id(), visible);
+            placed.widget().active = enabled;
+            visibilityScratch.put(placed.id(), visible);
+            enabledScratch.put(placed.id(), enabled);
         }
     }
 

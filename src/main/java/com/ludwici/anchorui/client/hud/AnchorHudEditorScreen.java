@@ -801,6 +801,9 @@ public final class AnchorHudEditorScreen extends Screen {
             inspectorScroll = Math.max(0, Math.min(maxInspectorScroll, inspectorScroll - (int) Math.round(scrollY * 23)));
             return true;
         }
+        if (manager.scrollContentsAt(mouseX, mouseY, scrollX, scrollY)) {
+            return true;
+        }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 

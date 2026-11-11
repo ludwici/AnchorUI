@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.KeyRegistry;
 import com.ludwici.anchorui.api.LoreEntity;
-import com.ludwici.anchorui.api.binding.BoundBoolean;
+import com.ludwici.anchorui.api.condition.BoundCondition;
 import com.ludwici.anchorui.api.WidgetTypeIds;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.layout.ContainerLayout;
@@ -47,7 +47,10 @@ public class ItemLoreScreen extends Screen {
     private record DeclaredWidget(String id, LoreEntity.UiElement element, String legacyStyle) {
     }
 
-    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, WidgetContext context, BoundBoolean visibleWhen, boolean baseVisible, String containerParent, boolean clipChildren, WidgetTransforms.Group group, ContainerLayout.AutoSize autoSize, ContainerScroll.Config scroll) {
+    private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, WidgetContext context,
+                                BoundCondition visibleWhen, BoundCondition enabledWhen, boolean baseVisible, boolean baseActive,
+                                String containerParent, boolean clipChildren, WidgetTransforms.Group group,
+                                ContainerLayout.AutoSize autoSize, ContainerScroll.Config scroll) {
         private AnchorLayout.Frame frame(HudLayoutOffsets offsets) {
             HudLayoutOffsets.Offset delta = offsets.get(id);
             HudLayoutOffsets.AnchorOverride anchor = offsets.anchor(id);
@@ -666,10 +669,12 @@ public class ItemLoreScreen extends Screen {
         PositionElement p = settings.position;
         String relativeTo = WidgetIds.reference(p.relativeTo, loreEntity.namespace);
         PositionElement position = new PositionElement(p.point, p.anchor, relativeTo, p.x, p.y);
+        BoundCondition visibleWhen = BoundCondition.parse(element.settings, "visibleWhen", true);
+        BoundCondition enabledWhen = BoundCondition.parse(element.settings, "enabledWhen", true);
         widgetRegistry.attach(id, widget);
         boolean panel = widget instanceof PanelWidget;
-        created.add(new PlacedWidget(id, widget, settings, position, context, BoundBoolean.parse(element.settings, "visibleWhen", true),
-                widget.visible, WidgetContainers.parent(element.settings),
+        created.add(new PlacedWidget(id, widget, settings, position, context,
+                visibleWhen, enabledWhen, widget.visible, widget.active, WidgetContainers.parent(element.settings),
                 panel && (WidgetContainers.clipChildren(element.settings) || settings.scroll.enabled()),
                 panel ? WidgetContainers.group(element.settings) : null,
                 panel ? settings.autoSize : ContainerLayout.AutoSize.NONE,
@@ -683,8 +688,10 @@ public class ItemLoreScreen extends Screen {
         HudLayoutOffsets overrides = currentScreenOffsets();
         for (PlacedWidget placed : placedWidgets) {
             boolean parentVisible = placed.containerParent() == null || visible.getOrDefault(placed.containerParent(), false);
-            boolean shown = parentVisible && placed.baseVisible() && !overrides.isHidden(placed.id()) && placed.visibleWhen().get(placed.context());
+            boolean shown = parentVisible && placed.baseVisible() && !overrides.isHidden(placed.id())
+                    && placed.visibleWhen().get(placed.context());
             placed.widget().visible = shown;
+            placed.widget().active = shown && placed.baseActive() && placed.enabledWhen().get(placed.context());
             visible.put(placed.id(), shown);
         }
 

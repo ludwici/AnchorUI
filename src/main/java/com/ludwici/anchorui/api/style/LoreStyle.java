@@ -6,6 +6,8 @@ import net.minecraft.util.GsonHelper;
 import net.minecraft.resources.ResourceLocation;
 
 import com.ludwici.anchorui.AnchorUI;
+import com.ludwici.anchorui.api.layout.ContainerLayout;
+import com.ludwici.anchorui.api.layout.ContainerScroll;
 
 import java.util.Locale;
 
@@ -62,6 +64,8 @@ public class LoreStyle {
         public final String textAlign;
         public final boolean textWrap;
         public final boolean hidden;
+        public final ContainerLayout.AutoSize autoSize;
+        public final ContainerScroll.Config scroll;
 
         public Element(JsonObject root) {
             position = new PositionElement(GsonHelper.getAsJsonObject(root, "position", new JsonObject()));
@@ -77,6 +81,8 @@ public class LoreStyle {
             textAlign = GsonHelper.getAsString(root, "align", GsonHelper.getAsString(text, "align", "left")).toLowerCase(Locale.ROOT);
             textWrap = GsonHelper.getAsBoolean(root, "wrap", GsonHelper.getAsBoolean(text, "wrap", false));
             hidden = GsonHelper.getAsBoolean(root, "hidden", false);
+            autoSize = ContainerLayout.AutoSize.parse(root);
+            scroll = ContainerScroll.Config.parse(root);
         }
     }
 }

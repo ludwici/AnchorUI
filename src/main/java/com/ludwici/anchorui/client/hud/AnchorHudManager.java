@@ -665,10 +665,15 @@ public final class AnchorHudManager {
         HudLayoutOffsets previous = editingOffsets;
         editingOffsets = candidate;
         rebuild(Minecraft.getInstance(), builtWidth, builtHeight, builtRevision);
-        if (registry.widget(id).isEmpty()) {
+        try {
+            if (registry.widget(id).isEmpty()) {
+                throw new IllegalArgumentException("Edited widget could not be created");
+            }
+            resolveLayout(candidate, null);
+        } catch (RuntimeException exception) {
             editingOffsets = previous;
             rebuild(Minecraft.getInstance(), builtWidth, builtHeight, builtRevision);
-            lastSaveError = "Invalid widget appearance";
+            lastSaveError = "Invalid widget appearance: " + exception.getMessage();
             return false;
         }
         lastSaveError = null;

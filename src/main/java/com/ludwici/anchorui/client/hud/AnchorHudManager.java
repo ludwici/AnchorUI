@@ -741,6 +741,8 @@ public final class AnchorHudManager {
         registry = new WidgetInstanceRegistry();
         widgets = List.of();
         layoutBounds = Map.of();
+        collapsingLayoutParents = Set.of();
+        collapsedLayoutHidden = Set.of();
         clipBounds = Map.of();
         transforms = Map.of();
         scrollLimits = Map.of();
@@ -878,6 +880,8 @@ public final class AnchorHudManager {
         } catch (IllegalArgumentException exception) {
             AnchorUI.LOGGER.error("Anchor UI HUD layout rejected ({}x{}, {} widgets): {}", builtWidth, builtHeight, widgets.size(), exception.getMessage());
             layoutBounds = Map.of();
+            collapsingLayoutParents = Set.of();
+            collapsedLayoutHidden = Set.of();
             clipBounds = Map.of();
             transforms = Map.of();
             scrollLimits = Map.of();

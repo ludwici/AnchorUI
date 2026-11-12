@@ -16,6 +16,7 @@ import com.ludwici.anchorui.api.binding.DataBindingSpec;
 import com.ludwici.anchorui.api.WidgetTypeIds;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.layout.ContainerLayout;
+import com.ludwici.anchorui.api.layout.StackLayout;
 import com.ludwici.anchorui.api.layout.ContainerScroll;
 import com.ludwici.anchorui.api.layout.WidgetContainers;
 import com.ludwici.anchorui.api.layout.WidgetTransforms;
@@ -70,14 +71,14 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, WidgetContext context,
                                 BoundCondition visibleWhen, BoundCondition enabledWhen, boolean baseVisible, boolean baseActive,
                                 String containerParent, boolean clipChildren, WidgetTransforms.Group group,
-                                ContainerLayout.AutoSize autoSize, ContainerScroll.Config scroll) {
+                                ContainerLayout.AutoSize autoSize, ContainerScroll.Config scroll, int preferredWidth, int preferredHeight) {
         private AnchorLayout.Frame frame(HudLayoutOffsets offsets) {
             HudLayoutOffsets.Offset delta = offsets.get(id);
             HudLayoutOffsets.AnchorOverride anchor = offsets.anchor(id);
             PositionElement effective = anchor == null
                     ? new PositionElement(position.point, position.anchor, position.relativeTo, position.x + delta.x(), position.y + delta.y())
                     : new PositionElement(anchor.point(), anchor.anchor(), anchor.relativeTo(), position.x + delta.x(), position.y + delta.y());
-            return new AnchorLayout.Frame(id, effective, widget.getWidth(), widget.getHeight());
+            return new AnchorLayout.Frame(id, effective, preferredWidth, preferredHeight);
         }
     }
 
@@ -102,6 +103,8 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     private final Map<String, Boolean> visibilityScratch = new HashMap<>();
     private final Map<String, Boolean> enabledScratch = new HashMap<>();
     private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
+    private Set<String> collapsingLayoutParents = Set.of();
+    private Set<String> collapsedLayoutHidden = Set.of();
     private Map<String, AnchorLayout.Bounds> clipBounds = Map.of();
     private Map<String, WidgetTransforms.Transform> transforms = Map.of();
     private Map<String, ContainerScroll.Limits> scrollLimits = Map.of();
@@ -369,7 +372,10 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             List<AnchorLayout.Frame> frames = new ArrayList<>();
             Map<String, PaddingElement> containers = new LinkedHashMap<>();
             Map<String, ContainerLayout.AutoSize> autoSizes = new LinkedHashMap<>();
+            Map<String, StackLayout.Config> stackLayouts = new LinkedHashMap<>();
             Map<String, String> parents = new LinkedHashMap<>();
+            Set<String> manual = new HashSet<>();
+            Set<String> hidden = new HashSet<>();
             Map<String, WidgetTransforms.Group> groups = new LinkedHashMap<>();
             Map<String, ContainerScroll.Config> scrollConfigs = new LinkedHashMap<>();
             Set<String> clipping = new HashSet<>();
@@ -377,6 +383,10 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 frames.add(placed.frame(offsets));
                 if (placed.widget() instanceof PanelWidget) {
                     containers.put(placed.id(), placed.style().padding);
+                    StackLayout.Config stack = StackLayout.Config.parse(placed.style().resolvedSettings);
+                    if (stack != null) {
+                        stackLayouts.put(placed.id(), stack);
+                    }
                     if (placed.autoSize().enabled()) {
                         autoSizes.put(placed.id(), placed.autoSize());
                     }
@@ -387,6 +397,13 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 if (placed.containerParent() != null) {
                     parents.put(placed.id(), placed.containerParent());
                 }
+                if (placed.style().resolvedSettings.has("layoutItem")
+                        && !placed.style().resolvedSettings.get("layoutItem").getAsBoolean()) {
+                    manual.add(placed.id());
+                }
+                if (!placed.widget().visible) {
+                    hidden.add(placed.id());
+                }
                 if (placed.clipChildren()) {
                     clipping.add(placed.id());
                 }
@@ -395,7 +412,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 }
             }
             ContainerLayout.Result result = ContainerLayout.resolve(width, height, frames, containers, autoSizes, parents,
-                    warning -> {
+                    stackLayouts, hidden, manual, warning -> {
                         if (warnings != null) {
                             warnings.add(warning);
                         }
@@ -418,6 +435,14 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             containerParents = Map.copyOf(parents);
             containerGroups = Map.copyOf(groups);
             clippingContainers = Set.copyOf(clipping);
+            Set<String> collapsing = new HashSet<>();
+            for (var entry : stackLayouts.entrySet()) {
+                if (entry.getValue().collapseHidden()) {
+                    collapsing.add(entry.getKey());
+                }
+            }
+            collapsingLayoutParents = Set.copyOf(collapsing);
+            collapsedLayoutHidden = relevantLayoutHidden(hidden, parents, collapsingLayoutParents);
             updateScrolledTransforms();
             lastLayoutFailure = null;
             return true;
@@ -671,6 +696,8 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         clipBounds = Map.of();
         transforms = Map.of();
         scrollLimits = Map.of();
+        collapsingLayoutParents = Set.of();
+        collapsedLayoutHidden = Set.of();
         scrollOffsets.clear();
         nativeScrollPanels.clear();
         draggedScrollPanel = null;
@@ -773,7 +800,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                             retainedWidget.context(), retainedWidget.visibleWhen(), retainedWidget.enabledWhen(),
                             retainedWidget.baseVisible(), retainedWidget.baseActive(), retainedWidget.containerParent(),
                             retainedWidget.clipChildren(), retainedWidget.group(), retainedWidget.autoSize(),
-                            retainedWidget.scroll()));
+                            retainedWidget.scroll(), retainedWidget.preferredWidth(), retainedWidget.preferredHeight()));
                 } else {
                     WidgetContext widgetContext = rowContext == null ? context : context.withItemContext(rowContext);
                     createWidget(widgetContext, definition.id(), element, style, created, warnings);
@@ -882,7 +909,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 panel && (WidgetContainers.clipChildren(element.settings) || settings.scroll.enabled()),
                 panel ? WidgetContainers.group(element.settings) : null,
                 panel ? settings.autoSize : ContainerLayout.AutoSize.NONE,
-                panel ? settings.scroll : ContainerScroll.Config.NONE));
+                panel ? settings.scroll : ContainerScroll.Config.NONE, widget.getWidth(), widget.getHeight()));
     }
 
     private void bindChangeListener(AbstractWidget widget, UiEventBindings events, String id) {
@@ -910,6 +937,34 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             placed.widget().active = allowed && placed.baseActive();
             visibilityScratch.put(placed.id(), shown);
             enabledScratch.put(placed.id(), allowed);
+        }
+        relayoutCollapsedChildrenIfNeeded();
+    }
+
+    private static Set<String> relevantLayoutHidden(Set<String> hidden, Map<String, String> parents,
+                                                     Set<String> collapsingParents) {
+        Set<String> result = new HashSet<>();
+        for (var entry : parents.entrySet()) {
+            if (collapsingParents.contains(entry.getValue()) && hidden.contains(entry.getKey())) {
+                result.add(entry.getKey());
+            }
+        }
+        return Set.copyOf(result);
+    }
+
+    private void relayoutCollapsedChildrenIfNeeded() {
+        if (collapsingLayoutParents.isEmpty()) {
+            return;
+        }
+        Set<String> hidden = new HashSet<>();
+        for (PlacedWidget placed : placedWidgets) {
+            if (!placed.widget().visible) {
+                hidden.add(placed.id());
+            }
+        }
+        Set<String> relevant = relevantLayoutHidden(hidden, containerParents, collapsingLayoutParents);
+        if (!relevant.equals(collapsedLayoutHidden)) {
+            applyScreenOffsets(currentScreenOffsets());
         }
     }
 

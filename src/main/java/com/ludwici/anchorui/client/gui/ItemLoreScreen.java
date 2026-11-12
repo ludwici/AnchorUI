@@ -19,6 +19,7 @@ import com.ludwici.anchorui.api.layout.ContainerLayout;
 import com.ludwici.anchorui.api.layout.StackLayout;
 import com.ludwici.anchorui.api.layout.ContainerAutoLayout;
 import com.ludwici.anchorui.client.gui.editor.LayoutInspectorControls;
+import com.ludwici.anchorui.client.gui.editor.WidgetListPanel;
 import com.ludwici.anchorui.api.layout.ContainerScroll;
 import com.ludwici.anchorui.api.layout.WidgetContainers;
 import com.ludwici.anchorui.api.layout.WidgetTransforms;
@@ -253,6 +254,17 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                     p.relativeTo, p.point, p.anchor));
         }
         return List.copyOf(handles);
+    }
+
+    public List<WidgetListPanel.Entry> editorWidgetEntries() {
+        List<WidgetListPanel.Entry> entries = new ArrayList<>();
+        for (PlacedWidget placed : placedWidgets) {
+            String type = widgetRegistry.definition(placed.id())
+                    .map(definition -> definition.type.toString()).orElse("");
+            entries.add(new WidgetListPanel.Entry(placed.id(), placed.widget().visible, false,
+                    type, placed.containerParent()));
+        }
+        return List.copyOf(entries);
     }
 
     public double editorDragScale(String id) {

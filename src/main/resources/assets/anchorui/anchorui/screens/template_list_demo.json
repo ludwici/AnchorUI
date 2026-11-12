@@ -55,29 +55,7 @@
         "width": 236,
         "height": 110
       },
-      "template": {
-        "type": "anchorui:button",
-        "text": {
-          "item": "title"
-        },
-        "enabledWhen": {
-          "left": {
-            "item": "level"
-          },
-          "op": "lte",
-          "right": 5
-        },
-        "onClick": {
-          "type": "anchorui_test:accept_quest",
-          "quest": {
-            "item": "id"
-          }
-        },
-        "size": {
-          "width": 198,
-          "height": 22
-        }
-      }
+      "template": "anchorui:quest_row"
     },
     {
       "type": "anchorui:button",

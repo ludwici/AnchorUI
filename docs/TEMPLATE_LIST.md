@@ -278,7 +278,9 @@ The **template** may be a panel/container with nested **children**, or it can re
 
 Without a custom layout, rows are positioned vertically relative to the list's content area, with step rowHeight + gap. If the root template does not specify size.height, it defaults to rowHeight. Duplicate keys and invalid configuration cause a descriptive error on screen initialization. If **key** is absent, the row index is used.
 
-The list source is checked for changes during screen rendering. Only when the array changes is the screen's generated widget tree rebuilt; scroll offsets are clamped and preserved, and focus is restored by ID where possible. Keys give stable widget **IDs**, but a changed list still recreates widgets. Custom widgets holding local internal state should store important state outside themselves if it must survive data updates. Rebuilding the list does not repeat the screen's onOpen event.
+The list source is checked for changes during screen rendering. When the array changes, AnchorUI reconciles widget instances by their stable IDs. Widgets with unchanged JSON definitions and unchanged item contexts (including the item index) keep their existing instances, listeners and local widget state. New or changed rows are instantiated, and removed rows disappear. Reordering a row changes its `item.index()` and therefore recreates that row so its Java context and event callbacks remain accurate. For stable IDs across data changes, configure **key** rather than relying on array indices.
+
+AnchorUI still recalculates layout and clipping for the screen after a list update. Scroll offsets are clamped and preserved, and focus is restored by ID where possible. The screen's `onOpen` event is not repeated. Keep persistent gameplay or cross-row state outside widget instances, because modified and moved rows are recreated.
 
 ## Java Item Context and event payloads
 

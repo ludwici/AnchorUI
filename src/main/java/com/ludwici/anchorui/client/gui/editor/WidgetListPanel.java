@@ -358,6 +358,18 @@ public final class WidgetListPanel {
         if (type.endsWith(":image") || type.endsWith(":texture")) {
             return "[I] ";
         }
+        if (type.endsWith(":template_list") || type.endsWith(":data_list")) {
+            return "[L] ";
+        }
+        if (type.endsWith(":checkbox") || type.endsWith(":switch")) {
+            return "[C] ";
+        }
+        if (type.endsWith(":select") || type.endsWith(":tabs")) {
+            return "[S] ";
+        }
+        if (type.endsWith(":item") || type.endsWith(":model")) {
+            return "[M] ";
+        }
         return "";
     }
 

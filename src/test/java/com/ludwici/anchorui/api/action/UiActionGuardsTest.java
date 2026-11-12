@@ -4,6 +4,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.ludwici.anchorui.api.binding.DataValueRegistry;
+import com.ludwici.anchorui.api.widget.TemplateListExpander;
+import java.util.List;
+import java.util.Map;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.resources.ResourceLocation;
@@ -98,4 +101,34 @@ public class UiActionGuardsTest {
                 {"type":"action_guard_tests:counter","when":true}
                 """)) != null);
     }
+    @Test
+    public void repeatedRowActionsEvaluateSubstitutedItemConditions() {
+        AtomicInteger count = new AtomicInteger();
+        UiActionRegistry.register(id("repeated"), (context, arguments) -> count::incrementAndGet);
+        JsonObject list = object("""
+                {
+                  "key": "id",
+                  "template": {
+                    "type": "anchorui:button",
+                    "onClick": {
+                      "type": "action_guard_tests:repeated",
+                      "when": {
+                        "left": {"item": "level"},
+                        "op": "gte",
+                        "right": 10
+                      }
+                    }
+                  }
+                }
+                """);
+        List<TemplateListExpander.Entry> rows = TemplateListExpander.expand(list,
+                JsonParser.parseString("""
+                        [{"id":"starter","level":3},{"id":"expert","level":15}]
+                        """).getAsJsonArray(), "action_guard_tests:rows", Map.of());
+        for (TemplateListExpander.Entry row : rows) {
+            UiActionRegistry.compile(null, row.settings().get("onClick")).run();
+        }
+        assertEquals(1, count.get());
+    }
+
 }

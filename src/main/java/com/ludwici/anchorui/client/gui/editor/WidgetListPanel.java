@@ -311,14 +311,18 @@ public final class WidgetListPanel {
             return cachedRows;
         }
         Map<String, Entry> byId = new LinkedHashMap<>();
+        Map<String, String> parents = new LinkedHashMap<>();
         for (Entry entry : entries) {
             byId.putIfAbsent(entry.id(), entry);
+            if (entry.containerParent() != null) {
+                parents.put(entry.id(), entry.containerParent());
+            }
         }
-        List<String> sorted = EditorWidgetOrder.sorted(byId.keySet(), currentNamespace);
         List<Row> result = new ArrayList<>();
         int previousGroup = -1;
-        for (String id : sorted) {
-            int group = EditorWidgetOrder.group(id, currentNamespace);
+        for (EditorWidgetOrder.Node node : EditorWidgetOrder.hierarchy(byId.keySet(),
+                currentNamespace, parents, collapsedContainers)) {
+            int group = EditorWidgetOrder.group(node.id(), currentNamespace);
             if (group != previousGroup) {
                 String heading = switch (group) {
                     case 0 -> "VANILLA";
@@ -328,73 +332,14 @@ public final class WidgetListPanel {
                 result.add(new Row(null, group, heading, 0, false));
                 previousGroup = group;
             }
-            if (collapsedGroups.contains(group)) {
-                continue;
-            }
-            Entry entry = byId.get(id);
-            if (entry.containerParent() != null && byId.containsKey(entry.containerParent())
-                    && EditorWidgetOrder.group(entry.containerParent(), currentNamespace) == group) {
-                continue;
-            }
-            appendHierarchy(result, entry, group, 0, byId, sorted, new HashSet<>());
-        }
-        Set<String> seen = new HashSet<>();
-        for (Row row : result) {
-            if (row.entry() != null) {
-                seen.add(row.entry().id());
-            }
-        }
-        for (String id : sorted) {
-            int group = EditorWidgetOrder.group(id, currentNamespace);
-            if (!collapsedGroups.contains(group) && !seen.contains(id)
-                    && !isUnderCollapsedParent(byId.get(id), byId)) {
-                appendHierarchy(result, byId.get(id), group, 0, byId, sorted, seen);
+            if (!collapsedGroups.contains(group)) {
+                result.add(new Row(byId.get(node.id()), group, null, node.depth(), node.hasChildren()));
             }
         }
         cachedEntries = List.copyOf(entries);
         cachedRows = List.copyOf(result);
         rowsDirty = false;
         return cachedRows;
-    }
-
-    private void appendHierarchy(List<Row> rows, Entry entry, int group, int depth,
-                                 Map<String, Entry> byId, List<String> ordered, Set<String> seen) {
-        if (!seen.add(entry.id())) {
-            return;
-        }
-        boolean hasChildren = false;
-        for (String candidate : ordered) {
-            Entry child = byId.get(candidate);
-            if (entry.id().equals(child.containerParent())
-                    && EditorWidgetOrder.group(child.id(), currentNamespace) == group) {
-                hasChildren = true;
-                break;
-            }
-        }
-        rows.add(new Row(entry, group, null, depth, hasChildren));
-        if (collapsedContainers.contains(entry.id()) || depth >= 12) {
-            return;
-        }
-        for (String candidate : ordered) {
-            Entry child = byId.get(candidate);
-            if (entry.id().equals(child.containerParent())
-                    && EditorWidgetOrder.group(child.id(), currentNamespace) == group) {
-                appendHierarchy(rows, child, group, depth + 1, byId, ordered, seen);
-            }
-        }
-    }
-
-    private boolean isUnderCollapsedParent(Entry entry, Map<String, Entry> byId) {
-        Set<String> visited = new HashSet<>();
-        String parent = entry.containerParent();
-        while (parent != null && visited.add(parent)) {
-            if (collapsedContainers.contains(parent)) {
-                return true;
-            }
-            Entry ancestor = byId.get(parent);
-            parent = ancestor == null ? null : ancestor.containerParent();
-        }
-        return false;
     }
 
     private static String widgetPrefix(String type) {

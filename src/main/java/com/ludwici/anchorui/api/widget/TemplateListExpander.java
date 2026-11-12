@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ludwici.anchorui.api.binding.DataValuePaths;
 import com.ludwici.anchorui.api.layout.WidgetContainers;
+import com.ludwici.anchorui.api.layout.TemplateListLayoutRegistry;
 import net.minecraft.util.GsonHelper;
 
 import java.nio.charset.StandardCharsets;
@@ -68,6 +69,7 @@ public final class TemplateListExpander {
         if (maxEntries < 1 || maxEntries > MAX_ITEMS) {
             throw new IllegalArgumentException("template_list maxEntries must be 1.." + MAX_ITEMS);
         }
+        TemplateListLayoutRegistry.Layout layout = TemplateListLayoutRegistry.compile(config, rowHeight, gap);
 
         String keyPath = GsonHelper.getAsString(config, "key", "");
         List<String> keyTokens = DataValuePaths.tokens(keyPath);
@@ -115,19 +117,21 @@ public final class TemplateListExpander {
                 JsonObject position = widget.has("position") && widget.get("position").isJsonObject()
                         ? widget.getAsJsonObject("position") : new JsonObject();
                 if (widgetIndex == 0) {
+                    TemplateListLayoutRegistry.Cell cell = layout.place(index);
                     position.addProperty("relativeTo", WidgetContainers.contentId(listId));
+                    int offsetX = GsonHelper.getAsInt(position, "x", 0);
                     int offsetY = GsonHelper.getAsInt(position, "y", 0);
-                    long y = (long) index * (rowHeight + gap) + offsetY;
-                    if (y > Integer.MAX_VALUE || y < Integer.MIN_VALUE) {
-                        throw new IllegalArgumentException("template_list row position exceeds integer bounds");
-                    }
-                    position.addProperty("y", (int) y);
+                    position.addProperty("x", addCoordinate(cell.x(), offsetX));
+                    position.addProperty("y", addCoordinate(cell.y(), offsetY));
                     if (!widget.has("size") || !widget.get("size").isJsonObject()) {
                         widget.add("size", new JsonObject());
                     }
                     JsonObject sizeObject = widget.getAsJsonObject("size");
-                    if (!sizeObject.has("height")) {
-                        sizeObject.addProperty("height", rowHeight);
+                    if (cell.width() > 0) {
+                        sizeObject.addProperty("width", cell.width());
+                    }
+                    if (!sizeObject.has("height") || cell.width() > 0) {
+                        sizeObject.addProperty("height", cell.height());
                     }
                     widget.addProperty(WidgetContainers.PARENT_FIELD, listId);
                 } else {
@@ -145,6 +149,14 @@ public final class TemplateListExpander {
             }
         }
         return List.copyOf(result);
+    }
+
+    private static int addCoordinate(int coordinate, int offset) {
+        long result = (long) coordinate + offset;
+        if (result > Integer.MAX_VALUE || result < Integer.MIN_VALUE) {
+            throw new IllegalArgumentException("Template list coordinate exceeds integer bounds");
+        }
+        return (int) result;
     }
 
     private static String remap(String reference, Map<String, String> ids) {

@@ -18,6 +18,7 @@ import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.layout.ContainerLayout;
 import com.ludwici.anchorui.api.layout.StackLayout;
 import com.ludwici.anchorui.api.layout.ContainerAutoLayout;
+import com.ludwici.anchorui.client.gui.editor.LayoutInspectorControls;
 import com.ludwici.anchorui.api.layout.ContainerScroll;
 import com.ludwici.anchorui.api.layout.WidgetContainers;
 import com.ludwici.anchorui.api.layout.WidgetTransforms;
@@ -311,6 +312,34 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         return widgetRegistry.definition(id).map(definition -> definition.settings.deepCopy()).orElse(null);
     }
 
+    public List<LayoutInspectorControls.Control> editorLayoutControls(String id) {
+        HudLayoutOffsets offsets = currentScreenOffsets();
+        for (PlacedWidget placed : placedWidgets) {
+            if (placed.id().equals(id)) {
+                return LayoutInspectorControls.describe(id, placed.style().resolvedSettings, offsets);
+            }
+        }
+        return List.of();
+    }
+
+    public boolean editorAdjustLayout(String id, LayoutInspectorControls.Control control, int direction) {
+        if (editingScreenOffsets == null || !layoutBounds.containsKey(id)) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingScreenOffsets.copy();
+        candidate.setSettingOverride(id, control.section(), control.field(), LayoutInspectorControls.stepped(control, direction));
+        return useCandidate(candidate);
+    }
+
+    public boolean editorResetLayout(String id, LayoutInspectorControls.Control control) {
+        if (editingScreenOffsets == null || !layoutBounds.containsKey(id)) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingScreenOffsets.copy();
+        candidate.clearSettingOverride(id, control.section(), control.field());
+        return useCandidate(candidate);
+    }
+
     public boolean resetEditorProperty(String id, AnchorHudManager.EditableProperty property) {
         if (editingScreenOffsets == null) {
             return false;
@@ -385,7 +414,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 frames.add(placed.frame(offsets));
                 if (placed.widget() instanceof PanelWidget) {
                     containers.put(placed.id(), placed.style().padding);
-                    JsonObject layoutSettings = placed.style().resolvedSettings;
+                    JsonObject layoutSettings = offsets.effectiveSettings(placed.id(), placed.style().resolvedSettings);
                     ContainerAutoLayout stack = layoutSettings.has("type")
                             && WidgetContainers.supportsChildren(layoutSettings.get("type").getAsString())
                             ? ContainerAutoLayout.parse(layoutSettings) : null;
@@ -402,7 +431,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 if (placed.containerParent() != null) {
                     parents.put(placed.id(), placed.containerParent());
                 }
-                StackLayout.Rules rules = StackLayout.Rules.parse(placed.style().resolvedSettings);
+                StackLayout.Rules rules = StackLayout.Rules.parse(offsets.effectiveSettings(placed.id(), placed.style().resolvedSettings));
                 itemRules.put(placed.id(), rules);
                 if (!rules.managed()) {
                     manual.add(placed.id());

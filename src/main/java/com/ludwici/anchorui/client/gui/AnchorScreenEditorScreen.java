@@ -214,7 +214,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         hide.setMessage(Component.literal(hasSelection && selected.hiddenByUser() ? "Show" : "Hide"));
         parent.setMessage(Component.literal(pickingParent ? "Pick target..." : "Parent"));
         for (Button button : controls) {
-            button.visible = !compact && !inspectorCollapsed;
+            button.visible = !compact && !inspectorCollapsed && editingAppearance == null;
         }
     }
 
@@ -513,6 +513,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         appearanceCancel.visible = true;
         appearanceInput.setFocused(true);
         setFocused(appearanceInput);
+        updateControls();
     }
 
     private void closeAppearanceInput() {
@@ -525,6 +526,9 @@ public final class AnchorScreenEditorScreen extends Screen {
         if (appearanceApply != null) {
             appearanceApply.visible = false;
             appearanceCancel.visible = false;
+        }
+        if (hide != null) {
+            updateControls();
         }
     }
 

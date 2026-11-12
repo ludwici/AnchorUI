@@ -9,6 +9,10 @@ public final class WidgetTypeIds {
     public static final ResourceLocation LIST = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "list");
     public static final ResourceLocation PROGRESS = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "progress");
     public static final ResourceLocation BUTTON = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "button");
+    public static final ResourceLocation CHECKBOX = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "checkbox");
+    public static final ResourceLocation SWITCH = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "switch");
+    public static final ResourceLocation SELECT = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "select");
+    public static final ResourceLocation TABS = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "tabs");
     public static final ResourceLocation DATA_LIST = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "data_list");
     public static final ResourceLocation TEMPLATE_LIST = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "template_list");
     public static final ResourceLocation IMAGE = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "image");

@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.ludwici.anchorui.api.style.ElementAnchor;
 import com.ludwici.anchorui.api.widget.WidgetIds;
 import com.ludwici.anchorui.api.widget.WidgetEditorRegistry;
+import com.ludwici.anchorui.client.gui.editor.AppearanceInspectorControls;
 import com.ludwici.anchorui.api.WidgetTypeIds;
 
 import java.util.Collections;
@@ -107,6 +108,12 @@ public final class HudLayoutOffsets {
             if (field == null) {
                 continue;
             }
+            JsonElement validated;
+            try {
+                validated = AppearanceInspectorControls.parse(field, entry.getValue().getAsString());
+            } catch (RuntimeException exception) {
+                continue;
+            }
             String[] segments = entry.getKey().split("\\.");
             JsonObject parent = result;
             for (int index = 0; index < segments.length - 1; index++) {
@@ -116,7 +123,7 @@ public final class HudLayoutOffsets {
                 }
                 parent = parent.getAsJsonObject(segment);
             }
-            parent.add(segments[segments.length - 1], entry.getValue().deepCopy());
+            parent.add(segments[segments.length - 1], validated);
         }
         return result;
     }

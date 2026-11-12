@@ -798,6 +798,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             clearWidgets();
             widgetRegistry.clear();
         } else {
+            clearWidgets();
             widgetRegistry = new WidgetInstanceRegistry();
         }
         loadScreenOffsets();

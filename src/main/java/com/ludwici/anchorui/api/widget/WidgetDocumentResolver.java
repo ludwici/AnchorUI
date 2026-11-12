@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ludwici.anchorui.api.layout.WidgetContainers;
+import com.ludwici.anchorui.api.condition.ConditionExpression;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -81,6 +82,15 @@ public final class WidgetDocumentResolver {
     }
 
     private static void addNested(Map<String, JsonObject> elements, JsonObject original, String namespace, Map<String, JsonObject> templates, Consumer<String> warningSink) {
+        addNested(elements, original, namespace, templates, warningSink, 0);
+    }
+
+    private static void addNested(Map<String, JsonObject> elements, JsonObject original, String namespace,
+                                  Map<String, JsonObject> templates, Consumer<String> warningSink, int caseDepth) {
+        if ("anchorui:cases".equals(original.get("type").getAsString())) {
+            expandCases(elements, original, templates, warningSink, caseDepth);
+            return;
+        }
         JsonArray children = array(original, "children");
         JsonObject parent = original.deepCopy();
         parent.remove("children");
@@ -121,9 +131,129 @@ public final class WidgetDocumentResolver {
             }
             child.add("position", position);
             child.addProperty(WidgetContainers.PARENT_FIELD, id);
-            addNested(elements, child, childNamespace, templates, warningSink);
+            addNested(elements, child, childNamespace, templates, warningSink, caseDepth);
             index++;
         }
+    }
+
+    private static void expandCases(Map<String, JsonObject> elements, JsonObject original,
+                                    Map<String, JsonObject> templates, Consumer<String> warningSink, int caseDepth) {
+        String id = original.get("id").getAsString();
+        if (caseDepth >= 8) {
+            throw new IllegalArgumentException("Conditional widget nesting exceeds 8 at " + id);
+        }
+        if (original.has("children")) {
+            throw new IllegalArgumentException("Conditional widget '" + id + "' must put children inside a case widget");
+        }
+        JsonArray choices = array(original, "cases");
+        if (choices.isEmpty() || choices.size() > 16) {
+            throw new IllegalArgumentException("Conditional widget '" + id + "' requires 1..16 cases");
+        }
+        JsonObject base = original.deepCopy();
+        base.remove("type");
+        base.remove("cases");
+        base.remove("otherwise");
+        List<JsonElement> prior = new ArrayList<>();
+        for (int index = 0; index < choices.size(); index++) {
+            JsonElement choiceElement = choices.get(index);
+            if (!choiceElement.isJsonObject()) {
+                throw new IllegalArgumentException("Case " + index + " of '" + id + "' must be an object");
+            }
+            JsonObject choice = choiceElement.getAsJsonObject();
+            if (!choice.has("when") || choice.get("when").isJsonNull()) {
+                throw new IllegalArgumentException("Case " + index + " of '" + id + "' requires a condition in 'when'");
+            }
+            if (!choice.has("widget") || !choice.get("widget").isJsonObject()) {
+                throw new IllegalArgumentException("Case " + index + " of '" + id + "' requires a widget object");
+            }
+            JsonElement when = choice.get("when").deepCopy();
+            ConditionExpression.parse(when, false, false);
+            JsonElement selector = exclusiveCase(prior, when);
+            addCaseBranch(elements, base, choice.getAsJsonObject("widget"), selector,
+                    id + "/case_" + index, templates, warningSink, caseDepth + 1);
+            prior.add(when);
+        }
+        if (original.has("otherwise")) {
+            JsonElement fallback = original.get("otherwise");
+            if (!fallback.isJsonObject()) {
+                throw new IllegalArgumentException("Conditional widget '" + id + "' requires an object in 'otherwise'");
+            }
+            addCaseBranch(elements, base, fallback.getAsJsonObject(), excludePrior(prior),
+                    id + "/otherwise", templates, warningSink, caseDepth + 1);
+        }
+    }
+
+    private static void addCaseBranch(Map<String, JsonObject> elements, JsonObject base, JsonObject rawWidget,
+                                      JsonElement selector, String id, Map<String, JsonObject> templates,
+                                      Consumer<String> warningSink, int caseDepth) {
+        String namespace = WidgetIds.namespace(id);
+        JsonObject templateWidget = new JsonObject();
+        JsonObject widget = rawWidget.deepCopy();
+        if (widget.has("ref")) {
+            String reference = WidgetIds.id(widget.get("ref").getAsString(), namespace);
+            widget.remove("ref");
+            try {
+                templateWidget = template(reference, templates, new ArrayList<>());
+            } catch (UnknownWidgetDefinitionException exception) {
+                if (warningSink == null) {
+                    throw exception;
+                }
+                warningSink.accept(exception.getMessage());
+                return;
+            }
+        }
+        JsonObject output = merge(merge(templateWidget, base), widget);
+        output.addProperty("id", id);
+        output.remove("ref");
+        output.add("visibleWhen", conjunction(base.get("visibleWhen"), templateWidget.get("visibleWhen"),
+                widget.get("visibleWhen"), selector));
+        if (base.has("enabledWhen") && (templateWidget.has("enabledWhen") || widget.has("enabledWhen"))) {
+            output.add("enabledWhen", conjunction(base.get("enabledWhen"), templateWidget.get("enabledWhen"),
+                    widget.get("enabledWhen")));
+        }
+        if (!output.has("type") || !output.get("type").isJsonPrimitive()) {
+            throw new IllegalArgumentException("Conditional widget branch '" + id + "' requires 'type' or 'ref'");
+        }
+        normalizePosition(output, namespace);
+        addNested(elements, output, namespace, templates, warningSink, caseDepth);
+    }
+
+    private static JsonElement exclusiveCase(List<JsonElement> prior, JsonElement condition) {
+        if (prior.isEmpty()) {
+            return condition.deepCopy();
+        }
+        return conjunction(excludePrior(prior), condition);
+    }
+
+    private static JsonElement excludePrior(List<JsonElement> prior) {
+        JsonObject not = new JsonObject();
+        if (prior.size() == 1) {
+            not.add("not", prior.getFirst().deepCopy());
+        } else {
+            JsonArray any = new JsonArray();
+            for (JsonElement condition : prior) {
+                any.add(condition.deepCopy());
+            }
+            JsonObject group = new JsonObject();
+            group.add("any", any);
+            not.add("not", group);
+        }
+        return not;
+    }
+
+    private static JsonElement conjunction(JsonElement... values) {
+        JsonArray all = new JsonArray();
+        for (JsonElement value : values) {
+            if (value != null && !value.isJsonNull()) {
+                all.add(value.deepCopy());
+            }
+        }
+        if (all.size() == 1) {
+            return all.get(0).deepCopy();
+        }
+        JsonObject group = new JsonObject();
+        group.add("all", all);
+        return group;
     }
 
     public static final class UnknownWidgetDefinitionException extends IllegalArgumentException {

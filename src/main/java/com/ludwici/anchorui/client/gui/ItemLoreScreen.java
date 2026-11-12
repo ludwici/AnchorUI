@@ -5,6 +5,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.ludwici.anchorui.api.action.UiEventBindings;
+import com.ludwici.anchorui.api.state.UiLocalState;
+import com.ludwici.anchorui.api.state.UiStateHost;
 import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.KeyRegistry;
 import com.ludwici.anchorui.api.LoreEntity;
@@ -52,7 +54,7 @@ import java.util.Map;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ItemLoreScreen extends Screen {
+public class ItemLoreScreen extends Screen implements UiStateHost {
     private record DeclaredWidget(String id, LoreEntity.UiElement element, String legacyStyle) {
     }
 
@@ -77,6 +79,7 @@ public class ItemLoreScreen extends Screen {
     private final ItemStack item;
     private final LoreEntity loreEntity;
     private final ResourceLocation documentId;
+    private final UiLocalState uiState;
     private HudLayoutOffsets savedScreenOffsets = new HudLayoutOffsets();
     private HudLayoutOffsets editingScreenOffsets;
     private boolean screenOffsetsLoaded;
@@ -117,6 +120,12 @@ public class ItemLoreScreen extends Screen {
         this.item = item;
         this.loreEntity = entity;
         this.documentId = documentId;
+        this.uiState = new UiLocalState(entity.initialState);
+    }
+
+    @Override
+    public UiLocalState uiState() {
+        return uiState;
     }
 
     public record EditorHandle(String id, AnchorLayout.Bounds bounds, String relativeTo, ElementAnchor point,

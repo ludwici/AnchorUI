@@ -1,0 +1,222 @@
+{
+  "style": "anchorui:style/default",
+  "state": {
+    "tab": "skills",
+    "expanded": false
+  },
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:state_title",
+      "text": "<b>LOCAL UI STATE DEMO</b>",
+      "align": "center",
+      "color": "#FFFFFFFF",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -108
+      },
+      "size": {
+        "width": 260,
+        "height": 22
+      }
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:tab_skills",
+      "text": "Skills",
+      "onClick": {
+        "type": "anchorui:set_state",
+        "key": "tab",
+        "value": "skills"
+      },
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": -64,
+        "y": -68
+      },
+      "size": {
+        "width": 114,
+        "height": 20
+      }
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:tab_inventory",
+      "text": "Inventory",
+      "onClick": {
+        "type": "anchorui:set_state",
+        "key": "tab",
+        "value": "inventory"
+      },
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 64,
+        "y": -68
+      },
+      "size": {
+        "width": 114,
+        "height": 20
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:current_tab",
+      "text": "Selected tab: {{anchorui:ui.state#tab}}",
+      "align": "center",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -36
+      },
+      "size": {
+        "width": 260,
+        "height": 20
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:skills_text",
+      "text": "Skills tab is selected",
+      "align": "center",
+      "visibleWhen": {
+        "left": {
+          "bind": "anchorui:ui.state",
+          "path": "tab",
+          "fallback": ""
+        },
+        "op": "eq",
+        "right": "skills"
+      },
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -8
+      },
+      "size": {
+        "width": 230,
+        "height": 22
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:inventory_text",
+      "text": "Inventory tab is selected",
+      "align": "center",
+      "visibleWhen": {
+        "left": {
+          "bind": "anchorui:ui.state",
+          "path": "tab",
+          "fallback": ""
+        },
+        "op": "eq",
+        "right": "inventory"
+      },
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -8
+      },
+      "size": {
+        "width": 230,
+        "height": 22
+      }
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:toggle_details",
+      "text": "Toggle details",
+      "onClick": {
+        "type": "anchorui:toggle_state",
+        "key": "expanded"
+      },
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 24
+      },
+      "size": {
+        "width": 170,
+        "height": 20
+      }
+    },
+    {
+      "type": "anchorui:panel",
+      "id": "anchorui:details_panel",
+      "text": "",
+      "fillColor": "#E023354A",
+      "borderColor": "#FFAEC9D9",
+      "borderWidth": 1,
+      "radius": 3,
+      "visibleWhen": {
+        "bind": "anchorui:ui.state",
+        "path": "expanded",
+        "fallback": false
+      },
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 62
+      },
+      "size": {
+        "width": 232,
+        "height": 38
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:details_text",
+      "text": "Details are expanded",
+      "align": "center",
+      "visibleWhen": {
+        "bind": "anchorui:ui.state",
+        "path": "expanded",
+        "fallback": false
+      },
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 62
+      },
+      "size": {
+        "width": 220,
+        "height": 20
+      }
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:state_close",
+      "text": "Close",
+      "onClick": "anchorui:close_screen",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 106
+      },
+      "size": {
+        "width": 130,
+        "height": 20
+      }
+    }
+  ]
+}

@@ -33,6 +33,10 @@
         {
           "value": "details",
           "label": "Details"
+        },
+        {
+          "value": "other",
+          "label": "Other"
         }
       ],
       "position": {
@@ -93,7 +97,15 @@
           }
         },
         {
-          "when": true,
+          "when": {
+            "left": {
+              "bind": "anchorui:ui.state",
+              "path": "view",
+              "fallback": ""
+            },
+            "op": "eq",
+            "right": "overview"
+          },
           "widget": {
             "type": "anchorui:panel",
             "fillColor": "#D5273830",
@@ -117,7 +129,7 @@
       ],
       "otherwise": {
         "type": "anchorui:text",
-        "text": "No matching view"
+        "text": "No matching view (fallback)"
       }
     },
     {

@@ -64,6 +64,114 @@ The method shown is supplied by your mod. It should return an array such as:
 
 Each row becomes a regular widget. The two buttons share one registered Java action but have their own text and quest ID. The condition also receives the current row's level.
 
+## Referencing a template by ID
+
+Instead of repeating a row widget object inside each list, set `template` to a **namespaced template ID**:
+
+```json
+{
+  "type": "anchorui:template_list",
+  "id": "mymod:quests",
+  "items": {
+    "bind": "mymod:quests.available",
+    "fallback": []
+  },
+  "key": "id",
+  "template": "mymod:quest_row",
+  "size": {
+    "width": 220,
+    "height": 120
+  }
+}
+```
+
+There are two ways to provide the referenced `mymod:quest_row` definition.
+
+### Resource-pack file
+
+Create **`assets/mymod/anchorui/templates/quest_row.json`**:
+
+```json
+{
+  "type": "anchorui:button",
+  "text": {
+    "item": "title"
+  },
+  "onClick": {
+    "type": "mymod:accept_quest",
+    "quest": {
+      "item": "id"
+    }
+  },
+  "size": {
+    "width": 200,
+    "height": 24
+  }
+}
+```
+
+The template can be shared between screens and between mods. Relative IDs in nested child definitions are resolved using the definition namespace; the current list still gives every generated row a unique instance ID. A template can contain nested `children`, inherit another definition using `ref`, and use data from the current row in text, Conditions, and action arguments. Item substitutions work **inside the external definition**, including nested children and inherited fields.
+
+The pre-existing `assets/<namespace>/anchorui/widgets/<name>.json` definitions are also available by ID as templates. The dedicated `templates/` directory is recommended for list row templates. If `widgets/` and `templates/` declare the same ID, `templates/` wins with a warning.
+
+### Java registration
+
+Other mods can register a named template directly from Java using `WidgetTemplateRegistry`, without supplying a JSON template file:
+
+```java
+ResourceLocation id = ResourceLocation.fromNamespaceAndPath("mymod", "quest_row");
+JsonObject definition = new JsonObject();
+definition.addProperty("type", "anchorui:button");
+
+JsonObject title = new JsonObject();
+title.addProperty("item", "title");
+definition.add("text", title);
+
+JsonObject action = new JsonObject();
+action.addProperty("type", "mymod:accept_quest");
+JsonObject quest = new JsonObject();
+quest.addProperty("item", "id");
+action.add("quest", quest);
+definition.add("onClick", action);
+
+WidgetTemplateRegistry.register(id, definition);
+```
+
+Register on the client during `FMLClientSetupEvent.enqueueWork` before the screen is opened. AnchorUI takes a copy of the supplied `JsonObject`, so subsequent changes to your original object cannot mutate the registered definition.
+
+For Java code that builds the definition on demand, use `WidgetTemplateRegistry.register(id, () -> createQuestRowTemplate())`. Your method must return a `JsonObject` containing `type` or `ref`. The factory is invoked when a list expands or rebuilds, not every render frame. The Java provider must be installed for the template to be available; JSON cannot execute arbitrary Java.
+
+**Resource-pack definitions take precedence** over Java registrations with the same ID, allowing packs to replace a Java-provided default. Re-registering a Java template with the same ID is rejected.
+
+### Compatibility
+
+All three forms are supported:
+
+```json
+{
+  "template": "mymod:quest_row"
+}
+```
+
+```json
+{
+  "template": {
+    "ref": "mymod:quest_row"
+  }
+}
+```
+
+```json
+{
+  "template": {
+    "type": "anchorui:button",
+    "text": "Inline row"
+  }
+}
+```
+
+A missing template ID is reported as an error when building the screen. As before, a template must ultimately resolve to a registered widget type, and the existing per-widget error handling applies to invalid widget configuration.
+
 ## Item references inside the template
 
 A JSON object with only the **item** path substitutes that field as a value of its original type (string, number, boolean, object, or list). Optional **fallback** supplies a replacement for a missing path.
@@ -86,7 +194,7 @@ The **template** may be a panel/container with nested **children**, or it can re
 | Property | Meaning |
 | --- | --- |
 | items | A list Data Binding or literal JSON array |
-| template | Single widget JSON template, optionally with nested children |
+| template | Inline widget JSON object or named template ID (resource pack or Java) |
 | key | Path to unique string/number within every entry; recommended for live updates |
 | rowHeight | Height/placement step of a row; default 22 |
 | gap | Vertical spacing; default 2 |
@@ -128,4 +236,4 @@ The networking helper is an example you implement in your mod. All quest updates
 
     /anchorui screen open anchorui:template_list_demo
 
-The screen contains quest buttons and a **Reorder / add quest** button that updates the registered mutable data source. Clicking a generated button prints the selected quest in chat; the dragon quest is disabled by a row condition. Add, remove and reorder rows without closing the screen. Ordinary HUD overlays remain noninteractive; the interactive template-list implementation currently targets **screens**.
+The first screen uses a file-backed template ID and the second uses a Java-registered template ID. Both contain quest buttons and a **Reorder / add quest** button that updates the registered mutable data source. Clicking a generated button prints the selected quest in chat; the dragon quest is disabled by a row condition. Add, remove and reorder rows without closing the screen. Ordinary HUD overlays remain noninteractive; the interactive template-list implementation currently targets **screens**.

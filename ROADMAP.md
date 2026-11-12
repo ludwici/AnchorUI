@@ -46,12 +46,12 @@ The completed functionality above does **not** imply finished visual consistency
 
 ### Stage 1 — Generic conditional content and guarded actions
 
-**Priority: next.** Extend the existing Conditions engine, not a domain-specific conversation or quest system.
+**Status: core delivered; follow-up layout behavior and in-client QA remain.** Extend the existing Conditions engine, not a domain-specific conversation or quest system.
 
-- [ ] Design declarative `cases` / conditional variants to choose widget content or a referenced template from compiled Conditions.
-- [ ] Add reusable action-level guards evaluated when the event fires, including disabled/false paths and clear diagnostics.
-- [ ] Keep the schema compact, typed and compatible with existing `visibleWhen` / `enabledWhen` behavior.
-- [ ] Cover nested widgets, local UI state, template rows, missing data, malformed conditions and short-circuit evaluation in tests.
+- [x] Implement `anchorui:cases` for first-match widget/template selection, including a fallback and compiled Conditions.
+- [x] Add `when` action-level guards evaluated at event time; invalid expressions fail validation and unavailable data fails closed.
+- [x] Keep both features compatible with existing `visibleWhen` / `enabledWhen`, UI State, named templates and resource packs.
+- [x] Add unit tests for nested widgets, template rows, first-match selection, missing/malformed conditions and live guard updates. In-game QA is still pending.
 - [ ] Define an opt-in policy for whether hidden children keep or collapse their layout space; coordinate with Stage 2.
 
 **Done when:** a JSON UI can select content and safely gate a generic action without implementing its own widget or scripting logic.
@@ -121,6 +121,7 @@ The completed functionality above does **not** imply finished visual consistency
 - [ ] Verify background blur, popups, outlines and tooltips render in the correct order.
 - [ ] Verify texture replacement, broken resource paths, reloads and multiple GUI scales.
 - [ ] Verify moved keyed list widgets keep correct focus, click handlers, index-sensitive custom widgets and scroll positions in-game. Unit tests and CI already cover the underlying reconciliation.
+- [ ] In-game check: toggle cases using Local UI State, verify fallback and nested child clipping, and exercise an action guard with the bundled demo.
 - [x] Separate test/anchor and RPG HUD toggles.
 - [x] Namespaced screen commands without showing the internal `screens/` path.
 - [ ] 3D model `scene4` off-screen positioning: **deferred**, not a release blocker.
@@ -136,7 +137,7 @@ The completed functionality above does **not** imply finished visual consistency
 
 ## 6. Recommended next sequence
 
-1. **`cases` and guarded actions** (generic Conditions extension).
+1. **In-game verification of `cases` and guarded actions**, plus the remaining collapsed-space policy decision.
 2. **Row/column container layout**, with an opt-in collapsed-visibility policy.
 3. **Visual consistency and interaction QA** (especially progress bars, textures and blur).
 4. **Screen lifecycle polish and optional state handoff**.

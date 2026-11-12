@@ -154,3 +154,48 @@ The numeric registry is intentionally read-only from the JSON side. Client value
 Mods may also register reusable `DataFormatterRegistry` handlers, referenced by JSON text bindings, templates, `data_list.itemFormat`, and third-party widgets using `BoundData`. See [Data Formatters](FORMATTERS.md).
 
 For normal `Screen` interfaces, a mod can also register custom action factories through `UiActionRegistry.register`. The bundled `anchorui:button` compiles its `onClick` object when the screen opens. Only explicitly registered actions can execute, with built-in support currently limited to `anchorui:open_screen` and `anchorui:close_screen`. No arbitrary shell commands or Java execution are enabled through JSON.
+
+## 10. Поля визуального F8-редактора (Java API)
+
+AnchorUI предоставляет **явную регистрацию редактируемых полей** для пользовательского виджета. Это отдельная возможность: `AnchorWidgetRegistry` регистрирует фабрику и необязательный `Codec`, а `WidgetEditorRegistry` сообщает F8-редакторам, какие параметры разрешено изменять.
+
+```java
+ResourceLocation badge = ResourceLocation.fromNamespaceAndPath("mymod", "badge");
+
+WidgetEditorRegistry.register(badge, List.of(
+        WidgetEditorRegistry.Field.text("caption", "Caption", "Badge"),
+        WidgetEditorRegistry.Field.color("fillColor", "Fill color", "#FF334455"),
+        WidgetEditorRegistry.Field.texture("texture", "Background texture"),
+        WidgetEditorRegistry.Field.integer("size.width", "Width", 120, 1, 800, 10),
+        WidgetEditorRegistry.Field.number("opacity", "Opacity", 1.0, 0.0, 1.0, 0.1),
+        WidgetEditorRegistry.Field.bool("showBadge", "Show badge", true),
+        WidgetEditorRegistry.Field.choice("align", "Alignment", "left", "left", "center", "right")
+));
+```
+
+Импорты: `com.ludwici.anchorui.api.widget.WidgetEditorRegistry`, `net.minecraft.resources.ResourceLocation`, `java.util.List`. Вызывайте регистрацию на клиенте при инициализации мода, **до** открытия экранов/редактора. Каждый тип регистрируется один раз.
+
+- `Field.text` и `Field.texture` открывают текстовое поле ввода (`E`), цвета принимают `#RRGGBB` или `#AARRGGBB`.
+- `Field.integer` и `Field.number` изменяются кнопками `-`/`+` в указанных границах; `Field.bool` переключает значение; `Field.choice` выбирает один из зарегистрированных вариантов.
+- Путь свойства может указывать вложенное поле, например `size.width` или `textures.background.normal`. Редактор меняет **только** зарегистрированные поля. Поля `type`, `id`, `position.*`, `onClick` и другие системные настройки нельзя регистрировать для визуального редактирования.
+- При редактировании создаётся новый экземпляр изменённого виджета, так что конструктор и `Codec` увидят новое значение. Экранный `UiLocalState` сохраняется. Неверные параметры отклоняются, предпросмотр возвращается к предыдущему состоянию.
+- Настройки сохраняются **на клиенте** в обычном файле layout overrides (под ключом `appearance`). Изменения не записываются в ресурсы мода, не меняют серверную логику и не позволяют JSON выполнять произвольный Java-код.
+- Это регистрация схемы редактирования, **не** новая система сериализации виджетов. Набор параметров исходного `Codec` остаётся источником истины для их декодирования.
+
+```json
+{
+  "version": 1,
+  "offsets": {
+    "mymod:badge_0": {
+      "appearance": {
+        "caption": "New title",
+        "fillColor": "#FF223344",
+        "size.width": 160
+      }
+    }
+  }
+}
+```
+
+Кнопка `R` сбрасывает только выбранное визуальное поле; `Reset` полностью сбрасывает overrides выбранного экземпляра.
+

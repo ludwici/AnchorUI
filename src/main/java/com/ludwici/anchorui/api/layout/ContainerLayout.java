@@ -63,7 +63,16 @@ public final class ContainerLayout {
 
     public static Result resolve(int screenWidth, int screenHeight, Collection<AnchorLayout.Frame> frames,
                                  Map<String, PaddingElement> containers, Map<String, AutoSize> autoSizes,
-                                 Map<String, String> parents, Map<String, StackLayout.Config> layouts,
+                                 Map<String, String> parents, Map<String, ? extends ContainerAutoLayout> layouts,
+                                 Set<String> hidden, Set<String> unmanaged, Consumer<String> warnings) {
+        return resolve(screenWidth, screenHeight, frames, containers, autoSizes, parents,
+                layouts, Map.of(), hidden, unmanaged, warnings);
+    }
+
+    public static Result resolve(int screenWidth, int screenHeight, Collection<AnchorLayout.Frame> frames,
+                                 Map<String, PaddingElement> containers, Map<String, AutoSize> autoSizes,
+                                 Map<String, String> parents, Map<String, ? extends ContainerAutoLayout> layouts,
+                                 Map<String, StackLayout.Rules> itemRules,
                                  Set<String> hidden, Set<String> unmanaged, Consumer<String> warnings) {
         Map<String, AnchorLayout.Frame> definitions = new LinkedHashMap<>();
         for (AnchorLayout.Frame frame : frames) {
@@ -112,9 +121,9 @@ public final class ContainerLayout {
             Map<String, Size> intrinsic = new LinkedHashMap<>();
             for (var entry : layouts.entrySet()) {
                 String container = entry.getKey();
-                StackLayout.Config layout = entry.getValue();
+                ContainerAutoLayout layout = entry.getValue();
                 PaddingElement padding = containers.get(container);
-                Size outer = sizes.get(container);
+                AnchorLayout.Frame outer = effective.get(container);
                 int availableWidth = Math.max(0, outer.width() - padding.left - padding.right);
                 int availableHeight = Math.max(0, outer.height() - padding.top - padding.bottom);
                 List<StackLayout.Item> items = new ArrayList<>();
@@ -129,14 +138,17 @@ public final class ContainerLayout {
                             || position.point != ElementAnchor.TOPLEFT || position.anchor != ElementAnchor.TOPLEFT) {
                         continue;
                     }
-                    items.add(new StackLayout.Item(childId, child.width(), child.height(), position.x, position.y));
+                    StackLayout.Rules rules = itemRules.getOrDefault(childId, StackLayout.Rules.DEFAULT);
+                    if (!rules.managed()) {
+                        continue;
+                    }
+                    items.add(new StackLayout.Item(childId, child.width(), child.height(), position.x, position.y, rules));
                 }
-                intrinsic.put(container, StackLayout.intrinsic(layout, items));
                 AutoSize auto = autoSizes.getOrDefault(container, AutoSize.NONE);
-                boolean stretchCross = layout.axis() == StackLayout.Axis.ROW ? !auto.height() : !auto.width();
-                Map<String, StackLayout.Placement> placements =
-                        StackLayout.arrange(layout, availableWidth, availableHeight, items, stretchCross);
-                for (var positioned : placements.entrySet()) {
+                ContainerAutoLayout.Arrangement arrangement =
+                        layout.arrange(availableWidth, availableHeight, items, auto.width(), auto.height());
+                intrinsic.put(container, arrangement.intrinsic());
+                for (var positioned : arrangement.placements().entrySet()) {
                     StackLayout.Placement p = positioned.getValue();
                     String childId = positioned.getKey();
                     var position = new com.ludwici.anchorui.api.style.PositionElement(
@@ -171,9 +183,9 @@ public final class ContainerLayout {
                 int contentWidth = 1;
                 int contentHeight = 1;
                 for (String childId : children.getOrDefault(id, List.of())) {
-                    StackLayout.Config stack = layouts.get(id);
+                    ContainerAutoLayout automatic = layouts.get(id);
                     if (managed.contains(childId)
-                            || (stack != null && stack.collapseHidden() && hidden.contains(childId))) {
+                            || (automatic != null && automatic.collapseHidden() && hidden.contains(childId))) {
                         continue;
                     }
                     AnchorLayout.Bounds child = resolved.get(childId);

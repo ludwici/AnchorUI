@@ -1,22 +1,39 @@
-# Anchor UI – Product direction
+# AnchorUI — Product Direction (NeoForge 1.21.1)
 
-Anchor UI should let Minecraft modpack creators build useful HUDs and game screens through JSON resource packs without needing to write a separate Java mod. Custom Java widget factories remain available to extend the built-in capabilities.
+See [the canonical roadmap](../ROADMAP.md) for completed items, detailed priorities and acceptance criteria. Status last reviewed **2026-11-12**.
 
-## Current priorities
+## Framework mission
 
-- **RPG-style HUDs:** typed data bindings (numbers, strings, booleans, objects and lists), namespaced data formatters, nested paths, live text, progress and data-list widgets are implemented. Compiled `visibleWhen` and `enabledWhen` Conditions support boolean logic and typed comparisons. Screen UI Events (`onOpen`, `onClose`, `onHoverEnter`, `onHoverLeave`, `onClick`, `onChange`) are implemented with registered client actions. Interactive JSON `anchorui:template_list` widgets repeat rows from list bindings with scoped Item Context and action payloads, and can reference reusable templates by ID from resource-pack `templates/` files or Java `WidgetTemplateRegistry` registrations. Grid placement for Template Lists (including custom Java layout algorithms) and per-screen Local UI State with set/toggle actions and data bindings are implemented. Built-in screen controls (checkbox, switch, select and tabs) bind to Local UI State, emit onChange events, and support resource-pack texture skins with per-state sprites, nine-slice and shared style inheritance. Next: richer conditional content and more granular row reconciliation.
-- **Dialogue and quest interfaces:** JSON buttons, client-only `open_screen` / `close_screen` actions and screen/widget UI Events are implemented, together with a standalone two-page dialogue resource pack. Next: portraits, dialogue state and server-authorized quests/rewards.
-- **JSON authoring with resource packs:** all built-in resources and the reload listener now use `assets/<namespace>/anchorui/`. An installable starter resource pack is included under `examples/resourcepack/`. Resource packs are the sole supported no-Java distribution method. No separate game-root loader is planned.
+AnchorUI provides reusable, JSON-driven tools for assembling Minecraft HUDs and interactive screens. Resource packs supply UI documents, templates, styles and textures; Java mods register custom widgets, data, actions, conditions and layouts. It remains a **UI framework**, not a gameplay or narrative engine.
 
-## Deferred, not ruled out
+**Not part of AnchorUI's roadmap:** a dialogue system (NPC conversations, branching dialogue graphs, dialogue progression/history and narrative rules) or a quest engine (objectives, rewards and persistence). These should be separate mods built on AnchorUI. Existing quest-like list data and simple two-page screen demos remain tests of generic UI primitives, not features to turn into a dialogue or quest subsystem.
 
-- Character/profile and skill-tree screens.
-- More elaborate custom game systems using dedicated server-side features.
+## Already implemented
 
-## Architecture guardrails
+- [x] Nine-point anchors, nested panels, padding, clipping, auto sizing, scrolling, images, textures, borders, rounded corners and nine-slice.
+- [x] HUD and screen editors with saving, snapping, parent selection, reset and read-only vanilla HUD anchors.
+- [x] Typed Data Bindings, formatted text, nested paths, Java `DataValueRegistry` and mutable/push-style providers.
+- [x] Compiled `visibleWhen`/`enabledWhen` Conditions with typed operations and Java-registered operators.
+- [x] Screen events, Java action registration and typed action arguments.
+- [x] Per-screen Local UI State, `set_state`/`toggle_state`, data bindings, checkbox, switch, select and tabs controls.
+- [x] Textured control skins with per-state sprites, shared styles, UV selection and nine-slice.
+- [x] `anchorui:template_list` with per-row Item Context, resource-pack/Java named templates, grids, custom Java layouts, stable keyed IDs and selective widget retention on reorder.
+- [x] Standard resource-pack content under `assets/<namespace>/anchorui/`, test scenes and CI.
 
-- Preserve compatibility with existing `assets/<namespace>/anchorui/` resources.
-- Keep JSON declarative and avoid arbitrary script execution.
-- Reuse the same widget registry, layout system and validation for HUD and screens.
-- Prefer event-driven changes to dynamic values; avoid recreating every widget per frame.
-- Keep game-changing actions server-authoritative, while visual UI remains client-side.
+## Next priorities
+
+1. **Generic conditional content and action guards:** reusable `cases`/variant selection; evaluate action predicates at interaction time; validate errors and integration with Local UI State and Template Lists.
+2. **Automatic layouts:** general row/column/flow layout for containers, spacing/alignment, optional wrap and flexible sizing; opt-in layout-space collapse for hidden elements.
+3. **Style and input fidelity:** consistent progress-bar/widget frames, texture/style inheritance, blur/render order, missing-asset errors, resource reload and keyboard/focus behavior.
+4. **Lifecycle and navigation:** optional general-purpose screen-state handoff, predictable focus and reopen behavior; no dialogue-specific state machine.
+5. **Declarative animations:** generic fade/slide/transition effects that respect transforms, clipping and input.
+6. **Ongoing quality:** API stabilization, dirty/invalidation-aware data and layout performance, automated/client QA, GitBook documentation and future supported-branch CI.
+
+## Guardrails
+
+- Resource packs are the only no-Java content distribution method; **no External Lore Loader**.
+- JSON remains declarative; Java integrations may extend registries but JSON cannot execute arbitrary Java or scripts.
+- Reuse a common layout/registry/validation model for HUDs and screens.
+- Do not rebuild unchanged widget instances unnecessarily or add server tick loops merely to watch UI data.
+- The integrating mod/server validates any gameplay-affecting action.
+- Keep backwards compatibility for existing authored UI where feasible and document intentional changes.

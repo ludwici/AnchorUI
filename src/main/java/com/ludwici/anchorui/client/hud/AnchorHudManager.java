@@ -6,6 +6,7 @@ import com.ludwici.anchorui.api.LoreEntity;
 import com.ludwici.anchorui.api.condition.BoundCondition;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.layout.ContainerLayout;
+import com.ludwici.anchorui.api.layout.StackLayout;
 import com.ludwici.anchorui.api.layout.ContainerScroll;
 import com.ludwici.anchorui.api.layout.WidgetContainers;
 import com.ludwici.anchorui.api.layout.WidgetTransforms;
@@ -69,7 +70,7 @@ public final class AnchorHudManager {
                                 boolean baseVisible, boolean baseActive, WidgetContext context,
                                 BoundCondition visibleWhen, BoundCondition enabledWhen, String containerParent,
                                 boolean clipChildren, WidgetTransforms.Group group, ContainerLayout.AutoSize autoSize,
-                                ContainerScroll.Config scroll) {
+                                ContainerScroll.Config scroll, int preferredWidth, int preferredHeight) {
         private PositionElement effectivePosition(HudLayoutOffsets offsets) {
             HudLayoutOffsets.Offset delta = offsets.get(id);
             HudLayoutOffsets.AnchorOverride anchor = offsets.anchor(id);
@@ -80,13 +81,15 @@ public final class AnchorHudManager {
         }
 
         private AnchorLayout.Frame frame(HudLayoutOffsets offsets) {
-            return new AnchorLayout.Frame(id, effectivePosition(offsets), widget.getWidth(), widget.getHeight());
+            return new AnchorLayout.Frame(id, effectivePosition(offsets), preferredWidth, preferredHeight);
         }
     }
 
     private WidgetInstanceRegistry registry = new WidgetInstanceRegistry();
     private List<PlacedWidget> widgets = List.of();
     private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
+    private Set<String> collapsingLayoutParents = Set.of();
+    private Set<String> collapsedLayoutHidden = Set.of();
     private Map<String, VanillaHudGeometry.Reference> vanillaReferences = Map.of();
     private List<VanillaHudGeometry.Reference> vanillaHandles = List.of();
     private VanillaHudAnchors.Snapshot vanillaSnapshot;
@@ -257,11 +260,21 @@ public final class AnchorHudManager {
         }
         Map<String, PaddingElement> containers = new LinkedHashMap<>();
         Map<String, ContainerLayout.AutoSize> autoSizes = new LinkedHashMap<>();
+        Map<String, StackLayout.Config> stackLayouts = new LinkedHashMap<>();
         Map<String, String> parents = new LinkedHashMap<>();
+        Set<String> hidden = new HashSet<>();
+        Set<String> manual = new HashSet<>();
         for (PlacedWidget placed : widgets) {
             frames.add(placed.frame(offsets));
             if (placed.widget() instanceof com.ludwici.anchorui.client.gui.PanelWidget) {
                 containers.put(placed.id(), placed.style().padding);
+                var layoutSettings = placed.style().resolvedSettings;
+                StackLayout.Config stack = layoutSettings.has("type")
+                        && WidgetContainers.supportsChildren(layoutSettings.get("type").getAsString())
+                        ? StackLayout.Config.parse(layoutSettings) : null;
+                if (stack != null) {
+                    stackLayouts.put(placed.id(), stack);
+                }
                 if (placed.autoSize().enabled()) {
                     autoSizes.put(placed.id(), placed.autoSize());
                 }
@@ -269,13 +282,53 @@ public final class AnchorHudManager {
             if (placed.containerParent() != null) {
                 parents.put(placed.id(), placed.containerParent());
             }
+            if (placed.style().resolvedSettings.has("layoutItem")
+                    && !placed.style().resolvedSettings.get("layoutItem").getAsBoolean()) {
+                manual.add(placed.id());
+            }
+            if (!placed.widget().visible) {
+                hidden.add(placed.id());
+            }
         }
+        Set<String> collapsing = new HashSet<>();
+        for (var entry : stackLayouts.entrySet()) {
+            if (entry.getValue().collapseHidden()) {
+                collapsing.add(entry.getKey());
+            }
+        }
+        collapsingLayoutParents = Set.copyOf(collapsing);
+        collapsedLayoutHidden = relevantLayoutHidden(hidden, parents, collapsingLayoutParents);
         return ContainerLayout.resolve(builtWidth, builtHeight, frames, containers, autoSizes, parents,
-                warning -> {
+                stackLayouts, hidden, manual, warning -> {
                     if (warnings != null) {
                         warnings.add(warning);
                     }
                 });
+    }
+
+    private static Set<String> relevantLayoutHidden(Set<String> hidden, Map<String, String> parents,
+                                                     Set<String> collapsingParents) {
+        Set<String> result = new HashSet<>();
+        for (var entry : parents.entrySet()) {
+            if (collapsingParents.contains(entry.getValue()) && hidden.contains(entry.getKey())) {
+                result.add(entry.getKey());
+            }
+        }
+        return Set.copyOf(result);
+    }
+
+    private Set<String> currentLayoutHidden() {
+        Set<String> hidden = new HashSet<>();
+        Map<String, String> parents = new LinkedHashMap<>();
+        for (PlacedWidget placed : widgets) {
+            if (placed.containerParent() != null) {
+                parents.put(placed.id(), placed.containerParent());
+            }
+            if (!placed.widget().visible) {
+                hidden.add(placed.id());
+            }
+        }
+        return relevantLayoutHidden(hidden, parents, collapsingLayoutParents);
     }
 
     private Map<String, AnchorLayout.Bounds> resolveBounds(HudLayoutOffsets offsets) {
@@ -639,6 +692,9 @@ public final class AnchorHudManager {
 
     private void renderWidgets(GuiGraphics graphics, float partialTick) {
         applyVisibility();
+        if (!collapsingLayoutParents.isEmpty() && !currentLayoutHidden().equals(collapsedLayoutHidden)) {
+            relayout(null);
+        }
         for (PlacedWidget placed : widgets) {
             if (renderFailures.contains(placed.id())) {
                 continue;
@@ -759,7 +815,7 @@ public final class AnchorHudManager {
                         panel && (WidgetContainers.clipChildren(element.settings) || style.scroll.enabled()),
                         panel ? WidgetContainers.group(element.settings) : null,
                         panel ? style.autoSize : ContainerLayout.AutoSize.NONE,
-                        panel ? style.scroll : ContainerScroll.Config.NONE));
+                        panel ? style.scroll : ContainerScroll.Config.NONE, widget.getWidth(), widget.getHeight()));
             } catch (WidgetConfigException exception) {
                 warnings.add(exception.getMessage());
             } catch (RuntimeException exception) {

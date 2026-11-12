@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.KeyRegistry;
 import com.ludwici.anchorui.client.gui.editor.WidgetListPanel;
+import com.ludwici.anchorui.client.gui.editor.LayoutInspectorControls;
 import com.ludwici.anchorui.client.gui.NativeContainerScrollPanel;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphics;
@@ -33,7 +34,18 @@ public final class AnchorHudEditorScreen extends Screen {
     private static final float INSPECTOR_SCALE = 0.83F;
     private static final int RESET_SIZE = 11;
 
-    private record InspectorLine(FormattedCharSequence text, int color, AnchorHudManager.EditableProperty reset, boolean modified, String vanillaParent) {
+    private record InspectorLine(FormattedCharSequence text, int color, AnchorHudManager.EditableProperty reset,
+                                 boolean modified, String vanillaParent, LayoutInspectorControls.Control layoutControl) {
+        private InspectorLine(FormattedCharSequence text, int color, AnchorHudManager.EditableProperty reset,
+                              boolean modified, String vanillaParent) {
+            this(text, color, reset, modified, vanillaParent, null);
+        }
+    }
+
+    private record LayoutHitbox(LayoutInspectorControls.Control control, int direction, int x, int y) {
+        private boolean contains(double mouseX, double mouseY) {
+            return mouseX >= x && mouseX < x + 14 && mouseY >= y && mouseY < y + RESET_SIZE;
+        }
     }
 
     private record VanillaParentHitbox(String id, int x, int y, int width, int height) {
@@ -55,6 +67,7 @@ public final class AnchorHudEditorScreen extends Screen {
     private List<WidgetListPanel.Entry> frameEntries = List.of();
     private final List<Button> controls = new ArrayList<>();
     private final List<ResetHitbox> resetHitboxes = new ArrayList<>();
+    private final List<LayoutHitbox> layoutHitboxes = new ArrayList<>();
     private final List<VanillaParentHitbox> vanillaParentHitboxes = new ArrayList<>();
     private int vanillaViewMode = 1;
     private String inspectedVanilla;
@@ -320,6 +333,7 @@ public final class AnchorHudEditorScreen extends Screen {
         manager.renderScrollBars(graphics, mouseX, mouseY, partialTick);
         refreshFrameHandles();
         resetHitboxes.clear();
+        layoutHitboxes.clear();
         vanillaParentHitboxes.clear();
         List<AnchorHudManager.HudHandle> handles = frameHandles;
         VanillaHudGeometry.Reference hoveredVanilla = clickedVanillaHandle(mouseX, mouseY);
@@ -464,6 +478,9 @@ public final class AnchorHudEditorScreen extends Screen {
                     vanillaParentHitboxes.add(new VanillaParentHitbox(line.vanillaParent(),
                             panelX + 4, y, panelWidth - 8, INSPECTOR_LINE_HEIGHT));
                 }
+                if (line.layoutControl() != null) {
+                    drawLayoutControl(graphics, line.layoutControl(), y, top, bottom);
+                }
                 if (line.reset() != null) {
                     int x = panelX + panelWidth - 21;
                     int buttonY = y;
@@ -481,6 +498,28 @@ public final class AnchorHudEditorScreen extends Screen {
         graphics.disableScissor();
         if (inspectorScrollBar != null) {
             inspectorScrollBar.render(graphics, 0, 0, 0);
+        }
+    }
+
+    private void drawLayoutControl(GuiGraphics graphics, LayoutInspectorControls.Control control,
+                                   int lineY, int top, int bottom) {
+        int first = panelX + panelWidth - 79;
+        int next = panelX + panelWidth - 61;
+        int reset = panelX + panelWidth - 24;
+        graphics.fill(first, lineY, first + 14, lineY + RESET_SIZE, 0xFF40566A);
+        graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF40566A);
+        graphics.drawString(font, "-", first + 4, lineY + 1, 0xFFE5EEF5, false);
+        graphics.drawString(font, "+", next + 3, lineY + 1, 0xFFE5EEF5, false);
+        graphics.fill(reset, lineY, reset + 14, lineY + RESET_SIZE,
+                control.modified() ? 0xFF3D6273 : 0xFF40505D);
+        graphics.drawString(font, "R", reset + 3, lineY + 1,
+                control.modified() ? 0xFFECF8FF : 0xFF80919E, false);
+        if (lineY >= top && lineY + RESET_SIZE <= bottom) {
+            layoutHitboxes.add(new LayoutHitbox(control, -1, first, lineY));
+            layoutHitboxes.add(new LayoutHitbox(control, 1, next, lineY));
+            if (control.modified()) {
+                layoutHitboxes.add(new LayoutHitbox(control, 0, reset, lineY));
+            }
         }
     }
 
@@ -537,6 +576,19 @@ public final class AnchorHudEditorScreen extends Screen {
             appendLine(lines, "Magnet: 6 px | hold Alt to bypass", 0xFF96AEBE);
             appendEditableLine(lines, "user offset: " + active.offset().x() + ", " + active.offset().y(), AnchorHudManager.EditableProperty.OFFSET, active);
             appendEditableLine(lines, "visible: " + active.visible(), AnchorHudManager.EditableProperty.VISIBILITY, active);
+            List<LayoutInspectorControls.Control> layoutControls = manager.getLayoutControls(active.id());
+            if (!layoutControls.isEmpty()) {
+                appendLine(lines, "COMPONENT / LAYOUT", 0xFFFFCF64);
+                appendLine(lines, "- / + adjust | R reset", 0xFF96AEBE);
+                for (LayoutInspectorControls.Control control : layoutControls) {
+                    String label = control.label() + ": " + control.value();
+                    int available = Math.max(38, (int) ((panelWidth - 98) / INSPECTOR_SCALE));
+                    String clipped = font.plainSubstrByWidth(label, available);
+                    lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(),
+                            control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null,
+                            control.modified(), null, control));
+                }
+            }
             if (!active.id().equals(inspectedId)) {
                 JsonObject settings = manager.getWidgetSettings(active.id());
                 sourceProperties = HudInspectorProperties.flatten(settings);
@@ -688,6 +740,15 @@ public final class AnchorHudEditorScreen extends Screen {
                 }
             }
             if (selected != null && insideInspector(mouseX, mouseY)) {
+                for (LayoutHitbox hitbox : layoutHitboxes) {
+                    if (hitbox.contains(mouseX, mouseY)) {
+                        boolean changed = hitbox.direction() == 0
+                                ? manager.resetPreviewLayout(selected, hitbox.control())
+                                : manager.adjustPreviewLayout(selected, hitbox.control(), hitbox.direction());
+                        status = changed ? "" : "Invalid layout value or constraints";
+                        return true;
+                    }
+                }
                 for (ResetHitbox hitbox : resetHitboxes) {
                     if (hitbox.contains(mouseX, mouseY) && manager.resetPreviewProperty(selected, hitbox.property())) {
                         status = "Restored " + hitbox.property().name().toLowerCase(java.util.Locale.ROOT) + " to default";

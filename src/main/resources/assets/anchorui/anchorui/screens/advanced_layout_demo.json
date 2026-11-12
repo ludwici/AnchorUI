@@ -1,0 +1,265 @@
+{
+  "state": {
+    "showLast": true
+  },
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "title",
+      "text": "Advanced container layout: flex / wrap / grid",
+      "position": {
+        "relativeTo": "screen",
+        "x": 32,
+        "y": 20
+      },
+      "size": {
+        "width": 370,
+        "height": 20
+      }
+    },
+    {
+      "type": "anchorui:switch",
+      "id": "toggle",
+      "stateKey": "showLast",
+      "text": "Show optional grid item",
+      "position": {
+        "relativeTo": "screen",
+        "x": 32,
+        "y": 45
+      },
+      "size": {
+        "width": 260,
+        "height": 22
+      }
+    },
+    {
+      "type": "anchorui:panel",
+      "id": "flex_row",
+      "position": {
+        "relativeTo": "screen",
+        "x": 32,
+        "y": 82
+      },
+      "size": {
+        "width": 346,
+        "height": 51
+      },
+      "padding": {
+        "left": 8,
+        "right": 8,
+        "top": 8,
+        "bottom": 8
+      },
+      "borderColor": "#FF97B6D2",
+      "fillColor": "#C8203142",
+      "borderWidth": 1,
+      "layout": {
+        "type": "row",
+        "gap": 7,
+        "align": "center"
+      },
+      "children": [
+        {
+          "type": "anchorui:button",
+          "id": "fixed",
+          "text": "Fixed",
+          "size": {
+            "width": 70,
+            "height": 22
+          }
+        },
+        {
+          "type": "anchorui:button",
+          "id": "grow1",
+          "text": "Grow 1",
+          "size": {
+            "width": 60,
+            "height": 22
+          },
+          "layoutItem": {
+            "grow": 1,
+            "minWidth": 55
+          }
+        },
+        {
+          "type": "anchorui:button",
+          "id": "grow2",
+          "text": "Grow 2",
+          "size": {
+            "width": 60,
+            "height": 22
+          },
+          "layoutItem": {
+            "grow": 2,
+            "shrink": 1,
+            "minWidth": 45
+          }
+        }
+      ]
+    },
+    {
+      "type": "anchorui:panel",
+      "id": "wrap_row",
+      "position": {
+        "relativeTo": "screen",
+        "x": 32,
+        "y": 148
+      },
+      "size": {
+        "width": 228,
+        "height": 88
+      },
+      "padding": {
+        "left": 8,
+        "right": 8,
+        "top": 8,
+        "bottom": 8
+      },
+      "borderColor": "#FFC6AF85",
+      "fillColor": "#C8352D21",
+      "borderWidth": 1,
+      "layout": {
+        "type": "row",
+        "gap": 6,
+        "lineGap": 8,
+        "wrap": true
+      },
+      "children": [
+        {
+          "type": "anchorui:button",
+          "id": "wrap1",
+          "text": "Wrap A",
+          "size": {
+            "width": 68,
+            "height": 22
+          }
+        },
+        {
+          "type": "anchorui:button",
+          "id": "wrap2",
+          "text": "Wrap B",
+          "size": {
+            "width": 68,
+            "height": 22
+          }
+        },
+        {
+          "type": "anchorui:button",
+          "id": "wrap3",
+          "text": "Wrap C",
+          "size": {
+            "width": 68,
+            "height": 22
+          }
+        },
+        {
+          "type": "anchorui:button",
+          "id": "wrap4",
+          "text": "Wrap D",
+          "size": {
+            "width": 68,
+            "height": 22
+          }
+        }
+      ]
+    },
+    {
+      "type": "anchorui:panel",
+      "id": "grid",
+      "position": {
+        "relativeTo": "screen",
+        "x": 32,
+        "y": 252
+      },
+      "size": {
+        "width": 346,
+        "height": 40
+      },
+      "autoSize": "height",
+      "padding": {
+        "left": 8,
+        "right": 8,
+        "top": 8,
+        "bottom": 8
+      },
+      "fillColor": "#C820352C",
+      "borderColor": "#FF8CC5A1",
+      "borderWidth": 1,
+      "layout": {
+        "type": "grid",
+        "columns": 3,
+        "columnGap": 7,
+        "rowGap": 7,
+        "justifyItems": "stretch",
+        "alignItems": "center",
+        "collapseHidden": true
+      },
+      "children": [
+        {
+          "type": "anchorui:button",
+          "id": "cell1",
+          "text": "Cell 1",
+          "size": {
+            "width": 75,
+            "height": 22
+          }
+        },
+        {
+          "type": "anchorui:button",
+          "id": "cell2",
+          "text": "Cell 2",
+          "size": {
+            "width": 75,
+            "height": 22
+          }
+        },
+        {
+          "type": "anchorui:button",
+          "id": "cell3",
+          "text": "Cell 3",
+          "size": {
+            "width": 75,
+            "height": 22
+          }
+        },
+        {
+          "type": "anchorui:button",
+          "id": "cell4",
+          "text": "Cell 4",
+          "size": {
+            "width": 75,
+            "height": 22
+          }
+        },
+        {
+          "type": "anchorui:button",
+          "id": "cell5",
+          "text": "Cell 5",
+          "size": {
+            "width": 75,
+            "height": 22
+          },
+          "visibleWhen": {
+            "bind": "anchorui:ui.state",
+            "path": "showLast",
+            "fallback": true
+          }
+        }
+      ]
+    },
+    {
+      "type": "anchorui:text",
+      "id": "hint",
+      "text": "Resize GUI scale or toggle the switch to test grid reflow.",
+      "position": {
+        "relativeTo": "screen",
+        "x": 32,
+        "y": 375
+      },
+      "size": {
+        "width": 380,
+        "height": 20
+      }
+    }
+  ]
+}

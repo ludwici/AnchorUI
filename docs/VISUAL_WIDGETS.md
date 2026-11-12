@@ -101,9 +101,11 @@ Panels support optional fill, borders, and rounded corners. If `fillColor` is om
 - The HUD editor treats containers as ordinary movable frames: dragging a parent automatically moves children anchored to its content frame.
 - To scale a panel/container **with its descendants as a single group**, set `"scale": 0.9` (range 0.1 to 4.0). `"scaleOrigin": "top_left"` is the default; `"scaleOrigin": "center"` scales around the panel's center, useful for a centered phone or dialogue window. Nested group scales multiply. Screen mouse hit-testing, dragging, scrolling, mouse-over and opt-in clips use the transformed coordinates. HUD editor hitboxes and mouse dragging account for group scaling, while JSON widget sizes remain in logical GUI pixels.
 
-## Automatic row and column layouts
+## Automatic container layouts: row, column and grid
 
-A normal `anchorui:panel` or `anchorui:container` can lay out its direct children automatically. This is opt-in; existing manually anchored documents are unchanged.
+A normal `anchorui:panel` or `anchorui:container` can arrange its direct children without manually setting every x/y coordinate. This is **opt-in**: documents without `layout` keep their existing anchor positions. Children retain normal namespaced IDs, style references, data bindings and events. These layouts work in HUDs and interactive screens.
+
+### Rows and columns
 
 ```json
 {
@@ -116,36 +118,103 @@ A normal `anchorui:panel` or `anchorui:container` can lay out its direct childre
     "type": "row",
     "gap": 8,
     "align": "center",
-    "justify": "space_between",
+    "justify": "start",
     "collapseHidden": true
   },
   "children": [
-    {"type": "anchorui:button", "text": "A", "size": {"width": 70, "height": 20}},
-    {"type": "anchorui:button", "text": "B", "size": {"width": 70, "height": 20}},
-    {"type": "anchorui:button", "text": "C", "size": {"width": 70, "height": 20}}
+    {"type": "anchorui:button", "text": "Fixed", "size": {"width": 70, "height": 20}},
+    {
+      "type": "anchorui:button",
+      "text": "Flexible",
+      "size": {"width": 70, "height": 20},
+      "layoutItem": {"grow": 1, "shrink": 1, "minWidth": 40}
+    }
   ]
 }
 ```
 
-- `layout.type`: `row` (left to right) or `column` (top to bottom); accepts `"row"` or `"column"` as shorthand for the full `layout` object.
-- `gap`: space between consecutive participating children, from 0 to 4096 GUI pixels, default 0.
-- `align`: cross-axis alignment `start` (default), `center`, `end`, or `stretch`. With a fixed cross-axis container size, `stretch` expands participating children to the padded content width (for `column`) or height (for `row`). If the container is auto-sized along that axis, the children's preferred dimensions are retained.
-- `justify`: main-axis alignment `start` (default), `center`, `end`, or `space_between`. Any available extra space is distributed; content larger than the container overflows, for use with clipping/scrolling.
-- `collapseHidden`: default `false`. When `true`, an invisible child is removed from the automatic layout, and following children shift without having to recreate any widget. Visible state includes `visibleWhen`, parent visibility and local F8 editor overrides. Changing a visibility condition triggers a layout recalculation only if the set of collapsed children changed.
-- `autoSize` works with `row` and `column`: the main axis is measured from the sum of participating children and gaps; the cross axis from the largest child plus padding. Nested auto-sized containers converge through the existing layout resolver.
-- Children participate when they belong structurally to the container, anchor with `TOPLEFT` to its `/__content` frame, and do not declare `"layoutItem": false`. All other children retain manual anchoring. Use `"layoutItem": false` to leave a particular child at its explicit anchored position.
-- Child `position.x` and `position.y` remain **local nudges** in addition to their computed row/column position. F8 offset overrides still apply to these children. An explicit reference to another frame or a non-`TOPLEFT` anchor opts the child out of automatic placement.
-- `layout` is used on ordinary panels/containers only. The pre-existing `template_list.layout` (vertical/grid/custom) has a separate schema and remains unchanged. An automatic row/column is not a full flexbox, wrap or generic grid system; those remain potential later extensions.
+| Property | Meaning |
+| --- | --- |
+| `layout.type` | `row` (horizontal) or `column` (vertical); `"row"` and `"column"` also work as shorthand |
+| `gap` | Distance between children along the main axis, 0–4096 GUI px |
+| `align` | Cross-axis alignment: `start` (default), `center`, `end`, `stretch` |
+| `justify` | Main-axis alignment: `start` (default), `center`, `end`, `space_between` |
+| `wrap` | When true, move overflowing children into the next row (or column); default false |
+| `lineGap` | Distance between wrapped rows/columns, defaulting to `gap` |
+| `collapseHidden` | Remove invisible children from the flow and close their gaps; default false |
 
-Nested panels may each choose their own row/column orientation. Scrolling, clipping and group scale continue to use the shared computed frames. Existing `visibleWhen` and `anchorui:cases` can control collapsed children, but `collapseHidden` is **opt-in** to avoid changing older layouts.
+Children can opt into flex-like sizing through `layoutItem`:
 
-### Try the live layout demo
+```json
+{
+  "layoutItem": {
+    "grow": 2,
+    "shrink": 1,
+    "minWidth": 40,
+    "maxWidth": 180,
+    "minHeight": 16,
+    "maxHeight": 50
+  }
+}
+```
+
+- `grow` distributes *extra* room along the main axis by relative weight; `shrink` distributes a *deficit*, constrained by minimum size. `grow` and `shrink` both default to **0**, preserving the existing behavior unless explicitly requested.
+- Values for `grow`/`shrink` must be finite and between 0–1000; the dimension constraints are GUI pixels in the 0–16384 range. A maximum cannot be smaller than its minimum.
+- The main axis is width for `row` and height for `column`. The opposite axis uses `align`. When `align: stretch`, the cross axis fills the available line/container dimension subject to the child limits.
+- With `wrap: true`, flex distribution happens separately within each wrapped line. Wrapping uses the preferred/clamped sizes; flex shrinking does not replace the wrap decision. **Wrapping is disabled if the parent is auto-sized along the main axis**, because no fixed wrapping limit exists.
+- `autoSize` and padding continue to work. An auto-sized main axis uses intrinsic child sizes instead of distributing artificial free space; a fixed main axis and auto-sized cross axis can grow as lines wrap.
+- `justify: space_between` distributes any remaining space between elements after flex sizing.
+
+### Standalone grid for panels and containers
+
+Grid is now available **outside** `anchorui:template_list`:
+
+```json
+{
+  "type": "anchorui:panel",
+  "size": {"width": 310, "height": 130},
+  "padding": {"left": 8, "right": 8, "top": 6, "bottom": 6},
+  "layout": {
+    "type": "grid",
+    "columns": 3,
+    "columnGap": 6,
+    "rowGap": 8,
+    "justifyItems": "stretch",
+    "alignItems": "center",
+    "collapseHidden": true
+  },
+  "children": [
+    {"type": "anchorui:button", "text": "A", "size": {"width": 70, "height": 22}},
+    {"type": "anchorui:button", "text": "B", "size": {"width": 70, "height": 22}},
+    {"type": "anchorui:button", "text": "C", "size": {"width": 70, "height": 22}}
+  ]
+}
+```
+
+- `columns`: 1–256, default 1. Elements fill each row left-to-right and then wrap to the next row. If there are fewer elements than configured columns, only occupied columns are laid out.
+- `columnGap` and `rowGap`: independent gaps (0–4096); `gap` provides both defaults.
+- `cellWidth` and `cellHeight`: optional fixed sizes. Without `cellWidth`, a fixed-width container divides its padded width evenly between columns; an auto-width container sizes each column to its widest child. Without `cellHeight`, each row is as tall as its tallest child.
+- `justifyItems`: horizontal placement *within* a cell, and `alignItems`: vertical placement. Both accept `start`, `center`, `end`, `stretch` and default to `start`.
+- `collapseHidden`: a hidden child does not occupy a grid cell; later children fill the vacated position. The grid height can shrink with `autoSize`.
+- Width/height constraints in `layoutItem` also apply to grid children. Flex `grow`/`shrink` are reserved for row/column stacks, not the grid.
+- The `layout` shorthand `"grid"` is supported, defaulting to one column.
+
+### Composition and compatibility
+
+Only direct children structurally belonging to the container and anchored `TOPLEFT` to its `/__content` frame take part in automatic placement. Use `"layoutItem": false` to keep a child at an explicit anchor or anchor it to a different target; `position.x/y` on participating children are additive *local nudges*, not absolute positions.
+
+All variants reuse the existing AnchorUI scrolling, clipping, scale transforms, focus/hitboxes and F8 layout overrides. `visibleWhen` and `anchorui:cases` can control hidden children. Layout is recalculated when the participating hidden set changes, not on every ordinary frame.
+
+**This is a general panel/container grid**, not the older `template_list.layout` grid, which retains its independent layout settings and Java extension API. Neither implementation currently provides a complete CSS Flexbox/Grid engine (e.g., grid spans, implicit named areas or arbitrary CSS sizing).
+
+### Test screens
 
 ```text
 /anchorui screen open anchorui:stack_layout_demo
+/anchorui screen open anchorui:advanced_layout_demo
 ```
 
-Toggle **Hide middle widgets**. The row should redistribute space between its remaining buttons, while the column's footer moves upward and its auto-sized panel shrinks. Turn it off to restore the original arrangement. You can open F8 to inspect the resulting frame bounds.
+The first demonstrates basic row/column layouts and visibility collapse. The second demonstrates weighted flex sizing, multiple wrapped lines, and a three-column grid that reflows when you toggle a switch. Test different GUI scales and inspect the frames via F8.
 
 ## Automatic container sizing
 

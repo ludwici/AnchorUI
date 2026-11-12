@@ -11,6 +11,7 @@ AnchorUI provides reusable, JSON-driven tools for assembling Minecraft HUDs and 
 ## Already implemented
 
 - [x] Nine-point anchors, nested panels, padding, clipping, auto sizing, scrolling, images, textures, borders, rounded corners and nine-slice.
+- [x] Opt-in automatic row and column layouts on ordinary containers, with alignment, gap, distribution, stretch, reactive hidden-child collapse and stable preferred widget sizes.
 - [x] HUD and screen editors with saving, snapping, parent selection, reset and read-only vanilla HUD anchors.
 - [x] Typed Data Bindings, formatted text, nested paths, Java `DataValueRegistry` and mutable/push-style providers.
 - [x] Compiled `visibleWhen`/`enabledWhen` Conditions with typed operations and Java-registered operators.
@@ -23,7 +24,7 @@ AnchorUI provides reusable, JSON-driven tools for assembling Minecraft HUDs and 
 ## Next priorities
 
 1. **Conditional content and action guards — core implemented:** `anchorui:cases` and action-time `when` now support compiled Conditions, named templates and Template Lists. Remaining work is client QA and the future hidden-space collapse policy.
-2. **Automatic layouts:** general row/column/flow layout for containers, spacing/alignment, optional wrap and flexible sizing; opt-in layout-space collapse for hidden elements.
+2. **Automatic layouts — row/column delivered:** `panel` and `container` now support `row`/`column`, `gap`, `align`, `justify`, `collapseHidden`, nested auto sizing and manual-anchor opt-out. Next: in-game QA, flexible grow/shrink, wrapping and general-purpose grid.
 3. **Style and input fidelity:** consistent progress-bar/widget frames, texture/style inheritance, blur/render order, missing-asset errors, resource reload and keyboard/focus behavior.
 4. **Lifecycle and navigation:** optional general-purpose screen-state handoff, predictable focus and reopen behavior; no dialogue-specific state machine.
 5. **Declarative animations:** generic fade/slide/transition effects that respect transforms, clipping and input.

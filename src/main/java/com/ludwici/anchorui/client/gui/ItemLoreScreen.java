@@ -558,7 +558,7 @@ public class ItemLoreScreen extends Screen {
         JsonObject value = new JsonObject();
         value.addProperty("x", next.x());
         value.addProperty("y", next.y());
-        events.fire("onChange", id, value);
+        events.fire("onChange", id, value, itemPayload(id));
     }
 
     private void updateHover(int mouseX, int mouseY) {

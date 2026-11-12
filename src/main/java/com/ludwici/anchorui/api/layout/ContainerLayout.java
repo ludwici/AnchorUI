@@ -166,7 +166,9 @@ public final class ContainerLayout {
                 int contentWidth = 1;
                 int contentHeight = 1;
                 for (String childId : children.getOrDefault(id, List.of())) {
-                    if (managed.contains(childId)) {
+                    StackLayout.Config stack = layouts.get(id);
+                    if (managed.contains(childId)
+                            || (stack != null && stack.collapseHidden() && hidden.contains(childId))) {
                         continue;
                     }
                     AnchorLayout.Bounds child = resolved.get(childId);

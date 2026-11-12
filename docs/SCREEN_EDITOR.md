@@ -24,7 +24,7 @@ Third-party callers using the original three-argument constructor can still prev
 
 ## Working with widgets
 
-A **draggable Widgets panel** on the left lists *only the widgets belonging to the currently open Anchor UI screen*. It does not include HUDs from other screens or the global vanilla HUD reference catalog. The entries are sorted: `minecraft:*` first if present in the document, then IDs whose namespace matches the open screen's resource namespace, then all other namespaces alphabetically. If the screen comes from `catelot:screens/profile`, for example, `catelot:*` entries appear ahead of other mods' widgets. Click an entry to select it in the editor and inspect its bounds; hidden widgets can be selected here too. Scroll the list with the mouse wheel, and drag its header to move it separately from the inspector.
+A **draggable Widgets panel** on the left lists *only the widgets belonging to the currently open Anchor UI screen*. It does not include HUDs from other screens or the global vanilla HUD reference catalog. The entries are grouped: `minecraft:*` first if present, then the screen's namespace, then other namespaces. **Children now appear indented under their structural container** with type markers for panels, buttons, text, progress and image widgets. Click a container's disclosure arrow to collapse or expand its descendants, or click its name to select it. When the child belongs to another namespace it remains in that namespace's group. Hover any widget to see its full ID and type. Hidden widgets stay selectable from the list. Scroll the list with the mouse wheel and drag its header independently of the inspector.
 
 While **Parent** is active, clicking an ID in the list chooses that widget as the anchor target rather than selecting a different widget. Self references and circular dependencies remain rejected. Press **Tab** to temporarily hide both editor panels.
 
@@ -51,7 +51,7 @@ For resource `anchorui:screens/visual_demo`, the editor writes:
 
 Another screen, such as `anchorui:screens/dialogue_intro`, has its **own** file and independent overrides. Test scenes use their corresponding `anchorui:test/scenes/...` paths.
 
-The file uses the same override schema as `hud-layout.json`, including the namespaced widget ID, `x`/`y` deltas, `relativeTo`, `point`, `anchor`, and optional `hidden`. Neither the original resource pack JSON nor the server's data is modified. Unchanged fields continue to use resource defaults, and the saved deltas are reapplied on the next screen opening or resize.
+The file uses the same override schema as `hud-layout.json`, including the namespaced widget ID, `x`/`y` deltas, `relativeTo`, `point`, `anchor`, optional `hidden`, and **optional `layout` / `layoutItem` property overrides**. Neither the original resource pack JSON nor the server's data is modified. Unchanged fields continue to use resource defaults, and the saved deltas are reapplied on the next screen opening or resize.
 
 The HUD layout remains independent in `config/anchorui/hud-layout.json`.
 
@@ -81,6 +81,20 @@ For layout properties overridden from their authored defaults, an active **R** c
 The **Widgets** list starts collapsed (a short header at the top left); click **[+]** to open it, then **[-]** to collapse it again. Its namespace sections retain their individual expanded/collapsed state.
 
 When dragging a widget, its **center** also magnetically aligns to the horizontal and vertical centerlines of the whole screen. Each axis snaps independently within the standard 6-GUI-pixel threshold. The same rule applies to the HUD editor; holding Alt disables all snapping. Alignment guides appear while the magnet is engaged.
+
+### Editing the actual AnchorUI layout components
+
+Selecting a `panel` or `container` now shows a **COMPONENT / LAYOUT** section above the read-only source JSON. It includes a `Layout` selector (`none`, `row`, `column`, `grid`) and the options appropriate to that layout: gaps, alignment, distribution, wrapping, column count, cell dimensions and hidden-child collapse.
+
+Selecting a structural child of a container shows `Auto item` (participating in the automatic layout), flex `Grow` / `Shrink`, and the child's minimum/maximum width and height. These generic properties work for ordinary built-in and third-party widgets without replacing their Java factories. A manually anchored child can keep its explicit anchor, and `Auto item: false` excludes it from the automatic flow.
+
+Click **-** or **+** on the right of a property to adjust it (or cycle through supported values), and **R** to reset that *one* field to the source/style default. Highlighted fields have saved local overrides. The layout is validated before it replaces the preview; invalid combinations are rejected instead of destroying the widget tree.
+
+Changes affect the live layout and hitboxes immediately. **Save** persists layout overrides for this screen; **Cancel** discards them. Existing screen files and the `config/anchorui/hud-layout.json` HUD file are kept separate. You do not need to edit a mod's built-in JSON to try a new layout.
+
+The editor still treats arbitrary widget-specific configuration (text, textures, Java `Codec` fields, and gameplay handlers) as **read-only source JSON**; it does not yet provide a generic authoring IDE for every component.
+
+Try this with `/anchorui screen open anchorui:advanced_layout_demo`, then **F8**. Switch a panel from `row` to `grid`, alter its columns, try a child's `grow`, and confirm **Save** and **Cancel** behave independently. Test against `stack_layout_demo` and `conditional_content_demo` for hidden children and cases.
 
 ### Shared native scrollbar implementation
 

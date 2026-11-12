@@ -40,6 +40,78 @@ The `UiEvent` record exposes `name()`, `targetId()`, and `value()`. Widget IDs a
 
 Both the old and new actions compile once at screen construction. Duplicate registrations fail immediately. Unknown IDs and malformed event actions are rejected at screen/widget creation. Runtime action failures are logged once per event binding and do not crash the screen.
 
+## Short action syntax
+
+For actions that need no arguments, the event value can be a **namespaced string**. These forms are equivalent:
+
+```json
+{
+  "onClick": "mymod:accept_quest",
+  "onHoverEnter": "mymod:show_hint"
+}
+```
+
+{
+  "onClick": {
+    "type": "mymod:accept_quest"
+  },
+  "onHoverEnter": {
+    "type": "mymod:show_hint"
+  }
+}
+```
+
+Use the object form when the Java action needs configurable fields. This applies to all supported event fields, including screen-level `onOpen` and `onClose`. Existing JSON action objects and `UiActionRegistry.register` factories keep working unchanged.
+
+## Java: declare typed action arguments with Codec
+
+A mod defines **its own argument names and types** using a Java `record` plus a Minecraft `Codec<T>`. For example, this quest action accepts one required field (`quest`) and two optional fields (`amount`, `silent`):
+
+```java
+public record QuestArguments(String quest, int amount, boolean silent) {
+    public static final Codec<QuestArguments> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            Codec.STRING.fieldOf("quest").forGetter(QuestArguments::quest),
+            Codec.INT.optionalFieldOf("amount", 1).forGetter(QuestArguments::amount),
+            Codec.BOOL.optionalFieldOf("silent", false).forGetter(QuestArguments::silent)
+    ).apply(instance, QuestArguments::new));
+}
+```
+
+Use the overload of the action registry that accepts the codec:
+
+```java
+UiActionRegistry.registerEvent(
+    ResourceLocation.fromNamespaceAndPath("mymod", "accept_quest"),
+    QuestArguments.CODEC,
+    (context, arguments) -> event -> {
+        if ("onClick".equals(event.name())) {
+            MyModNetworking.requestQuestFromServer(arguments.quest(), arguments.amount(), arguments.silent());
+        }
+    }
+);
+```
+
+Here `MyModNetworking.requestQuestFromServer` is an illustrative method **you implement in your mod**, not an AnchorUI method. It should send a request to your mod's server handler, where quest eligibility and rewards must be validated. Register the action on the client before JSON screens are loaded.
+
+Then the resource pack can supply exactly those fields:
+
+```json
+{
+  "onClick": {
+    "type": "mymod:accept_quest",
+    "quest": "mymod:first_quest",
+    "amount": 2,
+    "silent": true
+  }
+}
+```
+
+Java receives `arguments.quest()`, `arguments.amount()` and `arguments.silent()` as typed values. If `amount` and `silent` are omitted, they default to `1` and `false`. An absent `quest` or a wrong argument type causes a descriptive error when compiling the screen action. To support additional arguments, add fields to the record and its codec. Use `Codec` validation for ranges, allowed values and other constraints, or nested codecs for nested JSON configuration.
+
+The framework removes the reserved `type` field before decoding arguments. Ordinary `Codec` object decoders ignore unrelated fields by default; if rejecting unknown argument names is important, implement explicit strict validation in your own configuration decoder. Do not use `type` as a custom argument name.
+
+`UiActionRegistry.register(id, codec, (context, arguments) -> Runnable)` is also available for actions that do not need `UiEvent` metadata. Existing raw-JSON `register(id, Factory)` and `registerEvent(id, EventFactory)` remain supported when custom parsing is preferable. A string-only action supplies no custom arguments, so actions with required fields must use the object form.
+
 ## JSON screen and widget actions
 
 ```json

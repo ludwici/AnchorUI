@@ -2,6 +2,7 @@ package com.ludwici.anchorui.api.action;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.ludwici.anchorui.api.condition.BoundCondition;
 import com.ludwici.anchorui.api.widget.WidgetConfigDecoder;
 import com.ludwici.anchorui.api.widget.WidgetContext;
 import com.mojang.serialization.Codec;
@@ -117,6 +118,14 @@ public final class UiActionRegistry {
         if (factory == null) {
             throw new IllegalArgumentException("Unknown UI action type: " + id);
         }
-        return Objects.requireNonNull(factory.create(context, object), "Event action factory returned null: " + id);
+        BoundCondition guard = object.has("when") ? BoundCondition.parse(object, "when", false, false) : null;
+        object.remove("when");
+        Consumer<UiEvent> action = Objects.requireNonNull(factory.create(context, object),
+                "Event action factory returned null: " + id);
+        return guard == null ? action : event -> {
+            if (guard.get(context)) {
+                action.accept(event);
+            }
+        };
     }
 }

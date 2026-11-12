@@ -211,16 +211,85 @@ Custom operations work anywhere Conditions are supported, including `visibleWhen
 
 The compiled condition **does not reparse JSON on each frame**. Data providers are looked up once when a widget is initialized, a given source is read at most once per condition evaluation, and `all` / `any` short-circuit. Existing render-driven live updates and the push-style `DataValueRegistry.registerMutable` providers work without a new tick loop.
 
-## Security and planned extensions
+## Conditional widget content: `anchorui:cases`
 
-A condition is a **client-side presentation decision**, never authorization to grant items, accept a quest, spend currency or modify server data. Any gameplay-modifying action must be validated by the responsible server-side mod.
+Use the declarative `anchorui:cases` pseudo-widget when an interface should show **one of several complete widgets** based on existing Conditions. It is expanded during document loading into ordinary, individually anchored widgets. The first matching `when` wins, and an optional `otherwise` is shown only if no condition matches.
 
-This milestone implements **conditions on widget visibility and enabled state**. Conditional text/style branches (`cases`), action-level guards (`when`), local UI State and flow-based dialogue choices are **not yet implemented**. They can be built on the compiled condition model in subsequent stages.
+```json
+{
+  "type": "anchorui:cases",
+  "id": "mypack:status",
+  "position": {
+    "point": "TOPLEFT",
+    "anchor": "TOPLEFT",
+    "relativeTo": "screen",
+    "x": 20,
+    "y": 60
+  },
+  "cases": [
+    {
+      "when": {
+        "left": {"bind": "mypack:player.status", "fallback": ""},
+        "op": "eq",
+        "right": "ready"
+      },
+      "widget": {
+        "type": "anchorui:text",
+        "text": "Ready"
+      }
+    },
+    {
+      "when": true,
+      "widget": {
+        "type": "anchorui:text",
+        "text": "Waiting"
+      }
+    }
+  ]
+}
+```
+
+The fallback `otherwise` is unnecessary above because the final case matches everything. To add a fallback, remove that unconditional case and add `"otherwise": {"type": "anchorui:text", "text": "Unknown"}`.
+
+- Each entry requires a `when` condition and `widget` object. There must be **1–16 cases**. An optional `otherwise` must be a widget object.
+- The `widget` object accepts `type` or `ref`, including registered templates, and can contain normal nested `children` when it is a panel/container.
+- Common positioning, size and style fields can be declared on the `anchorui:cases` wrapper; each case widget can override them.
+- Generated IDs are `mypack:status/case_0`, `mypack:status/case_1`, etc., and `mypack:status/otherwise`. The wrapper itself is not an instantiated widget or an anchor target.
+- All alternatives are created once and use compiled `visibleWhen` conditions, so UI State or data changes can change the selected alternative without rebuilding the screen.
+- Invisible alternatives retain their layout space, and child visibility follows their parent as usual. Collapsed-space layouts are a separate future feature.
+- Conditional widgets work in resource-pack screens and HUDs, and within `template_list` rows (including row-level alternative templates). Nested case blocks are limited to 8 levels.
+
+## Action-level conditions: `when`
+
+The same Condition expression can be added to any object-form registered UI action:
+
+```json
+{
+  "type": "anchorui:button",
+  "text": "Run action when permitted",
+  "onClick": {
+    "type": "mymod:run_action",
+    "when": {
+      "bind": "mymod:can_act",
+      "fallback": false
+    }
+  }
+}
+```
+
+The action's `when` is compiled once but **evaluated when the event fires**. When false or unavailable, the action is skipped. It applies to click, change, hover, and screen lifecycle events. This is different from `enabledWhen`, which changes widget interactivity/appearance. The reserved `when` field is removed before passing arguments to the registered Java action or its Codec. Action guards do not bypass UI visibility or Minecraft permissions.
+
+## Security and remaining extensions
+
+Conditions and action guards are **client-side presentation decisions**, never authorization to grant items, spend currency or modify world/server data. The integrating server-side mod must validate all protected operations.
+
+The current `cases` feature selects **whole widgets**, not individual text fragments or style properties within a single mutable widget instance. Conditional layout-space collapse, more advanced automatic layout and fine-grained condition invalidation remain planned. A general-purpose stateful interface is supported; NPC dialogue/quest engines are intentionally outside AnchorUI's framework scope.
 
 ## In-game demos
 
 ```text
 /anchorui screen open anchorui:conditions
+/anchorui screen open anchorui:conditional_content_demo
 /anchorui test conditions on
 /anchorui test conditions off
 ```

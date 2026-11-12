@@ -183,6 +183,9 @@ public final class StateControlWidget extends AbstractButton implements UiChange
 
     @Override
     protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        if (!active) {
+            popupOpen = false;
+        }
         int x = getX();
         int y = getY();
         int height = getHeight();
@@ -260,14 +263,27 @@ public final class StateControlWidget extends AbstractButton implements UiChange
     }
 
     private int shownOptionCount() {
-        return Math.min(options.size(), MAX_VISIBLE_OPTIONS);
+        int below = Math.max(0, context.screen().height - getBottom() - 2);
+        int above = Math.max(0, getY() - 2);
+        int availableRows = Math.max(1, (Math.max(below, above) - 2) / POPUP_ROW_HEIGHT);
+        return Math.min(options.size(), Math.min(MAX_VISIBLE_OPTIONS, availableRows));
     }
 
     private int popupY() {
         int popupHeight = shownOptionCount() * POPUP_ROW_HEIGHT + 2;
-        int screenHeight = context.screen().height;
-        return getBottom() + popupHeight > screenHeight && getY() >= popupHeight
-                ? getY() - popupHeight : getBottom();
+        int below = Math.max(0, context.screen().height - getBottom() - 2);
+        int above = Math.max(0, getY() - 2);
+        return below < popupHeight && above > below ? getY() - popupHeight : getBottom();
+    }
+
+    @Override
+    public boolean containsPopup(double mouseX, double mouseY) {
+        if (!isPopupOpen()) {
+            return false;
+        }
+        int top = popupY();
+        return mouseX >= getX() && mouseX < getRight()
+                && mouseY >= top && mouseY < top + shownOptionCount() * POPUP_ROW_HEIGHT + 2;
     }
 
     @Override
@@ -280,11 +296,10 @@ public final class StateControlWidget extends AbstractButton implements UiChange
         if (!isPopupOpen()) {
             return false;
         }
-        int top = popupY();
-        int bottom = top + shownOptionCount() * POPUP_ROW_HEIGHT + 2;
-        if (mouseX < getX() || mouseX >= getRight() || mouseY < top || mouseY >= bottom) {
+        if (!containsPopup(mouseX, mouseY)) {
             return false;
         }
+        int top = popupY();
         if (button == 0) {
             int index = scrollStart + (int) Math.max(0, (mouseY - top - 1) / POPUP_ROW_HEIGHT);
             select(Math.min(index, options.size() - 1));
@@ -296,8 +311,7 @@ public final class StateControlWidget extends AbstractButton implements UiChange
 
     @Override
     public boolean mouseScrolledPopup(double mouseX, double mouseY, double scrollY) {
-        if (!isPopupOpen() || mouseX < getX() || mouseX >= getRight()
-                || mouseY < popupY() || mouseY >= popupY() + shownOptionCount() * POPUP_ROW_HEIGHT + 2) {
+        if (!containsPopup(mouseX, mouseY)) {
             return false;
         }
         scrollStart = Math.max(0, Math.min(options.size() - shownOptionCount(),

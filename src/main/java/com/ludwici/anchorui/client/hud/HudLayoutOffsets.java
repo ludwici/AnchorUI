@@ -1,5 +1,6 @@
 package com.ludwici.anchorui.client.hud;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ludwici.anchorui.api.style.ElementAnchor;
 import com.ludwici.anchorui.api.widget.WidgetIds;
@@ -28,6 +29,7 @@ public final class HudLayoutOffsets {
     private final Map<String, Offset> offsets = new LinkedHashMap<>();
     private final Map<String, AnchorOverride> anchors = new LinkedHashMap<>();
     private final Set<String> hidden = new TreeSet<>();
+    private final Map<String, JsonObject> componentSettings = new LinkedHashMap<>();
 
     public Offset get(String id) {
         return offsets.getOrDefault(id, Offset.ZERO);
@@ -40,6 +42,71 @@ public final class HudLayoutOffsets {
     public boolean isHidden(String id) {
         return hidden.contains(id);
     }
+
+    public JsonElement settingOverride(String id, String section, String property) {
+        JsonObject overrides = componentSettings.get(id);
+        if (overrides == null || !overrides.has(section) || !overrides.get(section).isJsonObject()) {
+            return null;
+        }
+        JsonElement value = overrides.getAsJsonObject(section).get(property);
+        return value == null ? null : value.deepCopy();
+    }
+
+    public void setSettingOverride(String id, String section, String property, JsonElement value) {
+        if (!"layout".equals(section) && !"layoutItem".equals(section)) {
+            throw new IllegalArgumentException("Unsupported editor override section: " + section);
+        }
+        if (value == null || value.isJsonNull() || !value.isJsonPrimitive()) {
+            throw new IllegalArgumentException("Editor component overrides must be primitive values");
+        }
+        String qualified = WidgetIds.id(id, "anchorui");
+        JsonObject overrides = componentSettings.computeIfAbsent(qualified, ignored -> new JsonObject());
+        JsonObject values = overrides.has(section) ? overrides.getAsJsonObject(section) : new JsonObject();
+        values.add(property, value.deepCopy());
+        overrides.add(section, values);
+    }
+
+    public void clearSettingOverride(String id, String section, String property) {
+        JsonObject overrides = componentSettings.get(id);
+        if (overrides == null || !overrides.has(section)) {
+            return;
+        }
+        JsonObject values = overrides.getAsJsonObject(section);
+        values.remove(property);
+        if (values.isEmpty()) {
+            overrides.remove(section);
+        }
+        if (overrides.isEmpty()) {
+            componentSettings.remove(id);
+        }
+    }
+
+    public JsonObject effectiveSettings(String id, JsonObject base) {
+        JsonObject result = base.deepCopy();
+        JsonObject overrides = componentSettings.get(id);
+        if (overrides == null) {
+            return result;
+        }
+        for (var entry : overrides.entrySet()) {
+            JsonObject section = new JsonObject();
+            JsonElement existing = result.get(entry.getKey());
+            if (existing != null && existing.isJsonObject()) {
+                section = existing.getAsJsonObject().deepCopy();
+            } else if (existing != null && existing.isJsonPrimitive()) {
+                if ("layout".equals(entry.getKey()) && existing.getAsJsonPrimitive().isString()) {
+                    section.add("type", existing.deepCopy());
+                } else if ("layoutItem".equals(entry.getKey()) && existing.getAsJsonPrimitive().isBoolean()) {
+                    section.add("enabled", existing.deepCopy());
+                }
+            }
+            for (var property : entry.getValue().getAsJsonObject().entrySet()) {
+                section.add(property.getKey(), property.getValue().deepCopy());
+            }
+            result.add(entry.getKey(), section);
+        }
+        return result;
+    }
+
 
     public void set(String id, int x, int y) {
         String qualified = WidgetIds.id(id, "anchorui");
@@ -71,12 +138,14 @@ public final class HudLayoutOffsets {
         offsets.remove(id);
         anchors.remove(id);
         hidden.remove(id);
+        componentSettings.remove(id);
     }
 
     public void resetAll() {
         offsets.clear();
         anchors.clear();
         hidden.clear();
+        componentSettings.clear();
     }
 
     public Map<String, Offset> entries() {
@@ -88,11 +157,15 @@ public final class HudLayoutOffsets {
         result.offsets.putAll(offsets);
         result.anchors.putAll(anchors);
         result.hidden.addAll(hidden);
+        for (var entry : componentSettings.entrySet()) {
+            result.componentSettings.put(entry.getKey(), entry.getValue().deepCopy());
+        }
         return result;
     }
 
     public boolean sameAs(HudLayoutOffsets other) {
-        return offsets.equals(other.offsets) && anchors.equals(other.anchors) && hidden.equals(other.hidden);
+        return offsets.equals(other.offsets) && anchors.equals(other.anchors) && hidden.equals(other.hidden)
+                && componentSettings.equals(other.componentSettings);
     }
 
     public JsonObject toJson() {
@@ -103,6 +176,7 @@ public final class HudLayoutOffsets {
         ids.addAll(offsets.keySet());
         ids.addAll(anchors.keySet());
         ids.addAll(hidden);
+        ids.addAll(componentSettings.keySet());
         for (String id : ids) {
             JsonObject value = new JsonObject();
             Offset offset = get(id);
@@ -118,6 +192,12 @@ public final class HudLayoutOffsets {
             }
             if (hidden.contains(id)) {
                 value.addProperty("hidden", true);
+            }
+            JsonObject component = componentSettings.get(id);
+            if (component != null) {
+                for (var override : component.entrySet()) {
+                    value.add(override.getKey(), override.getValue().deepCopy());
+                }
             }
             values.add(id, value);
         }
@@ -148,6 +228,16 @@ public final class HudLayoutOffsets {
             }
             if (value.has("hidden")) {
                 result.setHidden(id, value.get("hidden").getAsBoolean());
+            }
+            for (String section : new String[]{"layout", "layoutItem"}) {
+                if (value.has(section)) {
+                    if (!value.get(section).isJsonObject()) {
+                        throw new IllegalArgumentException("Editor override '" + section + "' must be an object");
+                    }
+                    for (var property : value.getAsJsonObject(section).entrySet()) {
+                        result.setSettingOverride(id, section, property.getKey(), property.getValue());
+                    }
+                }
             }
         }
         return result;

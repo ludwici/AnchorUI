@@ -116,7 +116,7 @@ public final class TemplateListExpander {
 
                 JsonObject position = widget.has("position") && widget.get("position").isJsonObject()
                         ? widget.getAsJsonObject("position") : new JsonObject();
-                if (widgetIndex == 0) {
+                if (widgetIndex == 0 || !widget.has(WidgetContainers.PARENT_FIELD)) {
                     TemplateListLayoutRegistry.Cell cell = layout.place(index);
                     position.addProperty("relativeTo", WidgetContainers.contentId(listId));
                     int offsetX = GsonHelper.getAsInt(position, "x", 0);

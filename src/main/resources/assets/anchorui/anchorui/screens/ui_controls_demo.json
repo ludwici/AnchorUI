@@ -1,0 +1,250 @@
+{
+  "style": "anchorui:style/default",
+  "state": {
+    "tab": "skills",
+    "showDetails": true,
+    "notifications": false,
+    "difficulty": "normal"
+  },
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:controls_heading",
+      "text": "<b>INTERACTIVE CONTROLS</b>",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -111
+      },
+      "size": {
+        "width": 300,
+        "height": 20
+      },
+      "align": "center",
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:tabs",
+      "id": "anchorui:controls_tabs",
+      "text": "",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -82
+      },
+      "size": {
+        "width": 284,
+        "height": 24
+      },
+      "stateKey": "tab",
+      "options": [
+        {
+          "value": "skills",
+          "label": "Skills"
+        },
+        {
+          "value": "inventory",
+          "label": "Inventory"
+        },
+        {
+          "value": "quests",
+          "label": "Quests"
+        }
+      ],
+      "onChange": "anchorui_test:event_notice"
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:controls_skills",
+      "text": "Skills tab - {{anchorui:ui.state#tab}}",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -52
+      },
+      "size": {
+        "width": 275,
+        "height": 20
+      },
+      "align": "center",
+      "visibleWhen": {
+        "left": {
+          "bind": "anchorui:ui.state",
+          "path": "tab",
+          "fallback": ""
+        },
+        "op": "eq",
+        "right": "skills"
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:controls_inventory",
+      "text": "Inventory tab - {{anchorui:ui.state#tab}}",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -52
+      },
+      "size": {
+        "width": 275,
+        "height": 20
+      },
+      "align": "center",
+      "visibleWhen": {
+        "left": {
+          "bind": "anchorui:ui.state",
+          "path": "tab",
+          "fallback": ""
+        },
+        "op": "eq",
+        "right": "inventory"
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:controls_quests",
+      "text": "Quests tab - {{anchorui:ui.state#tab}}",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -52
+      },
+      "size": {
+        "width": 275,
+        "height": 20
+      },
+      "align": "center",
+      "visibleWhen": {
+        "left": {
+          "bind": "anchorui:ui.state",
+          "path": "tab",
+          "fallback": ""
+        },
+        "op": "eq",
+        "right": "quests"
+      }
+    },
+    {
+      "type": "anchorui:checkbox",
+      "id": "anchorui:controls_details",
+      "text": "Show details",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -23
+      },
+      "size": {
+        "width": 238,
+        "height": 22
+      },
+      "stateKey": "showDetails",
+      "onChange": "anchorui_test:event_notice"
+    },
+    {
+      "type": "anchorui:switch",
+      "id": "anchorui:controls_notifications",
+      "text": "Notifications",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 6
+      },
+      "size": {
+        "width": 238,
+        "height": 22
+      },
+      "stateKey": "notifications",
+      "onChange": "anchorui_test:event_notice"
+    },
+    {
+      "type": "anchorui:select",
+      "id": "anchorui:controls_difficulty",
+      "text": "Difficulty",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 35
+      },
+      "size": {
+        "width": 238,
+        "height": 22
+      },
+      "stateKey": "difficulty",
+      "options": [
+        {
+          "value": "easy",
+          "label": "Easy"
+        },
+        {
+          "value": "normal",
+          "label": "Normal"
+        },
+        {
+          "value": "hard",
+          "label": "Hard"
+        },
+        {
+          "value": "expert",
+          "label": "Expert"
+        }
+      ],
+      "onChange": "anchorui_test:event_notice"
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:controls_selection",
+      "text": "Difficulty: {{anchorui:ui.state#difficulty}}",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 66
+      },
+      "size": {
+        "width": 275,
+        "height": 20
+      },
+      "align": "center",
+      "visibleWhen": {
+        "bind": "anchorui:ui.state",
+        "path": "showDetails",
+        "fallback": false
+      }
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:controls_close",
+      "text": "Close",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 101
+      },
+      "size": {
+        "width": 130,
+        "height": 20
+      },
+      "onClick": "anchorui:close_screen"
+    }
+  ]
+}

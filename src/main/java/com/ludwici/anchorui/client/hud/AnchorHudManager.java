@@ -554,7 +554,7 @@ public final class AnchorHudManager {
 
     public void resetPreviewOffset(String id) {
         if (editingOffsets != null && isCustomWidget(id)) {
-            editingOffsets.reset(id);
+            editingOffsets.set(id, 0, 0);
             relayout(null);
         }
     }

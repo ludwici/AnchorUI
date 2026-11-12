@@ -3,12 +3,15 @@ package com.ludwici.anchorui.api.layout;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ludwici.anchorui.api.style.PaddingElement;
+import com.ludwici.anchorui.api.style.ElementAnchor;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public final class ContainerLayout {
@@ -54,6 +57,14 @@ public final class ContainerLayout {
     public static Result resolve(int screenWidth, int screenHeight, Collection<AnchorLayout.Frame> frames,
                                  Map<String, PaddingElement> containers, Map<String, AutoSize> autoSizes,
                                  Map<String, String> parents, Consumer<String> warnings) {
+        return resolve(screenWidth, screenHeight, frames, containers, autoSizes, parents,
+                Map.of(), Set.of(), Set.of(), warnings);
+    }
+
+    public static Result resolve(int screenWidth, int screenHeight, Collection<AnchorLayout.Frame> frames,
+                                 Map<String, PaddingElement> containers, Map<String, AutoSize> autoSizes,
+                                 Map<String, String> parents, Map<String, StackLayout.Config> layouts,
+                                 Set<String> hidden, Set<String> unmanaged, Consumer<String> warnings) {
         Map<String, AnchorLayout.Frame> definitions = new LinkedHashMap<>();
         for (AnchorLayout.Frame frame : frames) {
             if (definitions.putIfAbsent(frame.id(), frame) != null) {
@@ -66,6 +77,11 @@ public final class ContainerLayout {
             }
             if (definitions.containsKey(WidgetContainers.contentId(id))) {
                 throw new IllegalArgumentException("Reserved container content frame ID: " + WidgetContainers.contentId(id));
+            }
+        }
+        for (String id : layouts.keySet()) {
+            if (!containers.containsKey(id)) {
+                throw new IllegalArgumentException("Automatic layout requires a panel or container: " + id);
             }
         }
         Map<String, List<String>> children = new LinkedHashMap<>();
@@ -82,13 +98,56 @@ public final class ContainerLayout {
         }
 
         for (int iteration = 0; iteration < 32; iteration++) {
-            List<AnchorLayout.Frame> all = new ArrayList<>(definitions.size() + containers.size());
+            Map<String, AnchorLayout.Frame> effective = new LinkedHashMap<>();
             for (AnchorLayout.Frame frame : definitions.values()) {
                 Size size = sizes.get(frame.id());
-                all.add(new AnchorLayout.Frame(frame.id(), frame.position(), size.width(), size.height()));
+                effective.put(frame.id(), new AnchorLayout.Frame(frame.id(), frame.position(), size.width(), size.height()));
+            }
+            Set<String> managed = new HashSet<>();
+            Map<String, Size> intrinsic = new LinkedHashMap<>();
+            for (var entry : layouts.entrySet()) {
+                String container = entry.getKey();
+                StackLayout.Config layout = entry.getValue();
+                PaddingElement padding = containers.get(container);
+                Size outer = sizes.get(container);
+                int availableWidth = Math.max(0, outer.width() - padding.left - padding.right);
+                int availableHeight = Math.max(0, outer.height() - padding.top - padding.bottom);
+                List<StackLayout.Item> items = new ArrayList<>();
+                for (String childId : children.getOrDefault(container, List.of())) {
+                    AnchorLayout.Frame child = effective.get(childId);
+                    if (child == null || unmanaged.contains(childId)
+                            || (layout.collapseHidden() && hidden.contains(childId))) {
+                        continue;
+                    }
+                    var position = child.position();
+                    if (!WidgetContainers.contentId(container).equals(position.relativeTo)
+                            || position.point != ElementAnchor.TOPLEFT || position.anchor != ElementAnchor.TOPLEFT) {
+                        continue;
+                    }
+                    items.add(new StackLayout.Item(childId, child.width(), child.height(), position.x, position.y));
+                }
+                intrinsic.put(container, StackLayout.intrinsic(layout, items));
+                AutoSize auto = autoSizes.getOrDefault(container, AutoSize.NONE);
+                boolean stretchCross = layout.axis() == StackLayout.Axis.ROW ? !auto.height() : !auto.width();
+                Map<String, StackLayout.Placement> placements =
+                        StackLayout.arrange(layout, availableWidth, availableHeight, items, stretchCross);
+                for (var positioned : placements.entrySet()) {
+                    StackLayout.Placement p = positioned.getValue();
+                    String childId = positioned.getKey();
+                    var position = new com.ludwici.anchorui.api.style.PositionElement(
+                            ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT,
+                            WidgetContainers.contentId(container), p.x(), p.y());
+                    effective.put(childId, new AnchorLayout.Frame(childId, position, p.width(), p.height()));
+                    managed.add(childId);
+                }
+            }
+
+            List<AnchorLayout.Frame> all = new ArrayList<>(effective.size() + containers.size());
+            for (AnchorLayout.Frame frame : effective.values()) {
+                all.add(frame);
                 PaddingElement padding = containers.get(frame.id());
                 if (padding != null) {
-                    all.add(WidgetContainers.contentFrame(frame.id(), size.width(), size.height(), padding));
+                    all.add(WidgetContainers.contentFrame(frame.id(), frame.width(), frame.height(), padding));
                 }
             }
             Map<String, AnchorLayout.Bounds> resolved = AnchorLayout.resolve(screenWidth, screenHeight, all, warnings);
@@ -107,11 +166,19 @@ public final class ContainerLayout {
                 int contentWidth = 1;
                 int contentHeight = 1;
                 for (String childId : children.getOrDefault(id, List.of())) {
+                    if (managed.contains(childId)) {
+                        continue;
+                    }
                     AnchorLayout.Bounds child = resolved.get(childId);
                     if (child != null) {
                         contentWidth = Math.max(contentWidth, child.x() + child.width() - content.x());
                         contentHeight = Math.max(contentHeight, child.y() + child.height() - content.y());
                     }
+                }
+                Size measured = intrinsic.get(id);
+                if (measured != null) {
+                    contentWidth = Math.max(contentWidth, measured.width());
+                    contentHeight = Math.max(contentHeight, measured.height());
                 }
                 Size old = sizes.get(id);
                 int nextWidth = auto.width() ? safeSize(contentWidth, padding.left, padding.right) : old.width();
@@ -123,7 +190,11 @@ public final class ContainerLayout {
                 }
             }
             if (!changed) {
-                return new Result(resolved, Map.copyOf(sizes));
+                Map<String, Size> actualSizes = new LinkedHashMap<>();
+                for (AnchorLayout.Frame frame : effective.values()) {
+                    actualSizes.put(frame.id(), new Size(frame.width(), frame.height()));
+                }
+                return new Result(resolved, Map.copyOf(actualSizes));
             }
         }
         throw new IllegalArgumentException("Container autoSize did not converge; avoid anchoring auto-sized children to the parent's right/center/bottom edge");

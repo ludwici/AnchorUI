@@ -730,6 +730,15 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             AnchorUI.LOGGER.error("Anchor UI screen events rejected: {}", layoutError);
             return;
         }
+        Set<ItemContext> movedItems = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        for (DeclaredWidget definition : definitions) {
+            RetainedWidget previous = retained.get(definition.id());
+            ItemContext current = widgetItemContexts.get(definition.id());
+            if (previous != null && previous.itemContext() != null && current != null
+                    && previous.itemContext().index() != current.index()) {
+                movedItems.add(previous.itemContext());
+            }
+        }
         List<PlacedWidget> created = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
         for (DeclaredWidget definition : definitions) {
@@ -742,7 +751,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 if (previous != null && TemplateListReuse.canReuse(previous.definition().settings, element.settings,
                         previous.itemContext(), rowContext)) {
                     PlacedWidget retainedWidget = previous.placed();
-                    boolean moved = rowContext != null && previous.itemContext().index() != rowContext.index();
+                    boolean moved = previous.itemContext() != null && movedItems.contains(previous.itemContext());
                     if (rowContext != null) {
                         previous.itemContext().moveToIndex(rowContext.index());
                         widgetItemContexts.put(definition.id(), previous.itemContext());

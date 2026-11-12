@@ -95,7 +95,7 @@ External mods register a `WidgetFactory` under a namespaced `ResourceLocation` u
 
 The demo type `anchorui_test:counter` uses a vanilla `Button` and can be tested with `/anchorui test scene11`. `/anchorui test scene12` checks unknown types and exceptions from factories without breaking the other widgets.
 
-See **[Custom Widgets API](docs/CUSTOM_WIDGETS.md)** for complete Java and JSON examples, guarantees, and current limitations. Mods can also register reusable formatters for JSON bindings and text templates; see **[Data Formatters](docs/FORMATTERS.md)**. JSON screens also support lifecycle, hover, click and change handlers using registered Java actions; see **[UI Events](docs/UI_EVENTS.md)**. Repeated quest/dialogue buttons can be authored using **[Template List and Item Context](docs/TEMPLATE_LIST.md)**, with per-row event data and dynamic list updates.
+See **[Custom Widgets API](docs/CUSTOM_WIDGETS.md)** for complete Java and JSON examples, guarantees, and current limitations. Mods can also register reusable formatters for JSON bindings and text templates; see **[Data Formatters](docs/FORMATTERS.md)**. JSON screens also support lifecycle, hover, click and change handlers using registered Java actions; see **[UI Events](docs/UI_EVENTS.md)**. Repeated quest/dialogue buttons can be authored using **[Template List and Item Context](docs/TEMPLATE_LIST.md)**, with per-row event data, dynamic updates, Grid Layout and custom Java layout algorithms. JSON screens support tabs and local switches using **[Local UI State](docs/UI_STATE.md)**.
 
 ## Typed widget configuration using records
 

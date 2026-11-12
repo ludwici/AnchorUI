@@ -166,4 +166,46 @@ public class StackLayoutTest {
         assertEquals(new AnchorLayout.Bounds(15, 17, 12, 11), result.bounds().get("demo:manual"));
         assertEquals(new AnchorLayout.Bounds(38, 10, 40, 60), result.bounds().get("demo:b"));
     }
+
+    @Test
+    public void nestedAutoSizedRowsAndColumnsConverge() {
+        String outer = "demo:outer";
+        String inner = "demo:inner";
+        var frames = List.of(frame(outer, "screen", 20, 20, 1, 1),
+                frame(inner, outer + "/__content", 0, 0, 1, 1),
+                frame("demo:text1", inner + "/__content", 0, 0, 40, 12),
+                frame("demo:text2", inner + "/__content", 0, 0, 10, 15),
+                frame("demo:button", outer + "/__content", 0, 0, 20, 10));
+        var result = resolve(frames,
+                Map.of(outer, new PaddingElement(1, 1), inner, new PaddingElement(2, 2)),
+                Map.of(outer, new ContainerLayout.AutoSize(true, true),
+                        inner, new ContainerLayout.AutoSize(true, true)),
+                Map.of(inner, outer, "demo:text1", inner, "demo:text2", inner, "demo:button", outer),
+                Map.of(outer, StackLayout.Config.parse(json("""
+                        {"layout":{"type":"row","gap":6}}
+                        """)),
+                        inner, StackLayout.Config.parse(json("""
+                        {"layout":{"type":"column","gap":4}}
+                        """))), Set.of(), Set.of());
+        assertEquals(new ContainerLayout.Size(44, 35), result.sizes().get(inner));
+        assertEquals(new ContainerLayout.Size(72, 37), result.sizes().get(outer));
+        assertEquals(new AnchorLayout.Bounds(71, 21, 20, 10), result.bounds().get("demo:button"));
+        assertEquals(2, result.bounds().get("demo:text2").x() - result.bounds().get(inner).x());
+    }
+
+    @Test
+    public void explicitNonContentAnchorIsNotManagedByStack() {
+        String panel = "demo:panel";
+        var explicit = new AnchorLayout.Frame("demo:external",
+                new PositionElement(ElementAnchor.CENTER, ElementAnchor.CENTER, "screen", 0, 0), 30, 12);
+        var result = resolve(List.of(frame(panel, "screen", 10, 10, 200, 70), explicit,
+                        frame("demo:first", panel + "/__content", 0, 0, 20, 12)),
+                Map.of(panel, new PaddingElement()), Map.of(),
+                Map.of("demo:first", panel, "demo:external", panel),
+                Map.of(panel, StackLayout.Config.parse(json("""
+                        {"layout":{"type":"row","gap":10}}
+                        """))), Set.of(), Set.of());
+        assertEquals(new AnchorLayout.Bounds(235, 144, 30, 12), result.bounds().get("demo:external"));
+        assertEquals(new AnchorLayout.Bounds(10, 10, 20, 12), result.bounds().get("demo:first"));
+    }
 }

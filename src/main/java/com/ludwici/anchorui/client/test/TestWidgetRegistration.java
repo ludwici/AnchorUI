@@ -65,6 +65,21 @@ public final class TestWidgetRegistration {
                         "id": "anchorui_test:collect_herbs",
                         "title": "Collect healing herbs",
                         "level": 3
+                      },
+                      {
+                        "id": "anchorui_test:repair_bridge",
+                        "title": "Repair the old bridge",
+                        "level": 2
+                      },
+                      {
+                        "id": "anchorui_test:visit_ruins",
+                        "title": "Explore forgotten ruins",
+                        "level": 4
+                      },
+                      {
+                        "id": "anchorui_test:find_cart",
+                        "title": "Find a merchant cart",
+                        "level": 1
                       }
                     ]
                     """ : """

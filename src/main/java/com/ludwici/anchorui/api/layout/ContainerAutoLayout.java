@@ -30,6 +30,7 @@ public interface ContainerAutoLayout {
             throw new IllegalArgumentException("Container layout must be row, column, grid, or an object");
         }
         return switch (type) {
+            case "none", "anchorui:none" -> null;
             case "row", "column", "anchorui:row", "anchorui:column" -> StackLayout.Config.parse(settings);
             case "grid", "anchorui:grid" -> GridLayout.Config.parse(settings);
             default -> throw new IllegalArgumentException("Unknown container layout: " + type);

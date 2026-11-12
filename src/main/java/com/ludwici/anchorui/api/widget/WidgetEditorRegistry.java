@@ -80,6 +80,14 @@ public final class WidgetEditorRegistry {
                 Field.integer("size.height", "Height", 0, 0, 16384, 10)));
         register(WidgetTypeIds.BUTTON, List.of(
                 Field.text("text", "Button text", ""),
+                Field.color("color", "Text color", "#FFE278"),
+                Field.color("fillColor", "Fill", "#FF28384B"),
+                Field.color("borderColor", "Border", "#FF728CA3"),
+                Field.color("hoverColor", "Hover", "#FF385E81"),
+                Field.color("disabledColor", "Disabled", "#FF353B43"),
+                Field.texture("textures.background.normal", "Button skin"),
+                Field.texture("textures.background.hover", "Hover skin"),
+                Field.texture("textures.background.disabled", "Disabled skin"),
                 Field.integer("size.width", "Width", 120, 1, 16384, 10),
                 Field.integer("size.height", "Height", 20, 1, 16384, 2)));
         List<Field> panel = List.of(
@@ -88,6 +96,11 @@ public final class WidgetEditorRegistry {
                 Field.integer("borderWidth", "Border width", 0, 0, 256, 1),
                 Field.integer("radius", "Radius", 0, 0, 256, 1),
                 Field.texture("texture", "Texture"),
+                Field.color("tint", "Texture tint", "#FFFFFFFF"),
+                Field.integer("textureWidth", "Texture W", 256, 1, 16384, 10),
+                Field.integer("textureHeight", "Texture H", 256, 1, 16384, 10),
+                Field.integer("u", "Texture U", 0, 0, 16384, 1),
+                Field.integer("v", "Texture V", 0, 0, 16384, 1),
                 Field.integer("size.width", "Width", 120, 1, 16384, 10),
                 Field.integer("size.height", "Height", 70, 1, 16384, 10));
         register(WidgetTypeIds.PANEL, panel);
@@ -99,6 +112,11 @@ public final class WidgetEditorRegistry {
                 Field.integer("size.height", "Height", 14, 1, 16384, 2)));
         register(WidgetTypeIds.IMAGE, List.of(
                 Field.texture("texture", "Texture"),
+                Field.color("tint", "Tint", "#FFFFFFFF"),
+                Field.integer("textureWidth", "Texture W", 256, 1, 16384, 10),
+                Field.integer("textureHeight", "Texture H", 256, 1, 16384, 10),
+                Field.integer("u", "Texture U", 0, 0, 16384, 1),
+                Field.integer("v", "Texture V", 0, 0, 16384, 1),
                 Field.integer("size.width", "Width", 64, 1, 16384, 10),
                 Field.integer("size.height", "Height", 64, 1, 16384, 10)));
         List<Field> stateFields = new ArrayList<>();
@@ -109,6 +127,19 @@ public final class WidgetEditorRegistry {
         stateFields.add(Field.texture("textures.background.normal", "Background skin"));
         stateFields.add(Field.texture("textures.background.hover", "Hover skin"));
         stateFields.add(Field.texture("textures.background.disabled", "Disabled skin"));
+        for (String part : List.of("indicator", "track", "thumb")) {
+            stateFields.add(Field.texture("textures." + part + ".off", part + " off"));
+            stateFields.add(Field.texture("textures." + part + ".on", part + " on"));
+            stateFields.add(Field.texture("textures." + part + ".offHover", part + " off hover"));
+            stateFields.add(Field.texture("textures." + part + ".onHover", part + " on hover"));
+        }
+        stateFields.add(Field.texture("textures.arrow.closed", "Arrow closed"));
+        stateFields.add(Field.texture("textures.arrow.open", "Arrow open"));
+        stateFields.add(Field.texture("textures.popup.normal", "Popup skin"));
+        stateFields.add(Field.texture("textures.option.normal", "Option skin"));
+        stateFields.add(Field.texture("textures.option.selected", "Selected option"));
+        stateFields.add(Field.texture("textures.tab.normal", "Tab skin"));
+        stateFields.add(Field.texture("textures.tab.selected", "Selected tab"));
         stateFields.add(Field.integer("size.width", "Width", 150, 1, 16384, 10));
         stateFields.add(Field.integer("size.height", "Height", 22, 1, 16384, 2));
         for (ResourceLocation id : List.of(WidgetTypeIds.CHECKBOX, WidgetTypeIds.SWITCH,

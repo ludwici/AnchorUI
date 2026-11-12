@@ -96,6 +96,40 @@ The editor still treats arbitrary widget-specific configuration (text, textures,
 
 Try this with `/anchorui screen open anchorui:advanced_layout_demo`, then **F8**. Switch a panel from `row` to `grid`, alter its columns, try a child's `grow`, and confirm **Save** and **Cancel** behave independently. Test against `stack_layout_demo` and `conditional_content_demo` for hidden children and cases.
 
+### Visual widget editing: text, colors, textures and sizes
+
+The F8 inspector now also contains a **VISUAL / CONTENT** section for built-in widgets and for custom Java widgets that explicitly register editor fields. You can edit:
+
+- `text` and text alignment/wrapping for text widgets; button labels and state-control labels.
+- Text, fill, border and accent colors in hexadecimal format (`#RRGGBB` or `#AARRGGBB`); panel border width and corner radius.
+- `texture` resource IDs for panels and images; resource-pack sprite variants such as `textures.background.normal`/`hover`/`disabled` for state controls.
+- Width and height of applicable widgets, progress-bar `showText`, and other numeric/boolean/choice fields registered in Java.
+
+Use **- / +** to adjust numeric, Boolean or enumerated options. Use **E** to open an editable input box for text, color or texture resource IDs, then press **Enter / Apply** or **Esc / Cancel**. Use **R** to reset an individual override. The original source JSON remains visible read-only below the editable controls.
+
+Changes refresh the edited widget's appearance immediately, while preserving the screen's Local UI State. This refresh is triggered on an explicit edit, **not** on each frame or mouse drag. Invalid values are rejected; for custom widgets with a `Codec`, invalid factory configurations cause the preview to roll back.
+
+Appearance overrides are stored in the same per-screen override JSON under `appearance`, for example:
+
+```json
+{
+  "version": 1,
+  "offsets": {
+    "anchorui:heading": {
+      "appearance": {
+        "text": "New heading",
+        "color": "#FFEFEFEF",
+        "size.width": 200
+      }
+    }
+  }
+}
+```
+
+Neither the resource pack nor server-owned gameplay data is modified. Developers can make their Java widget properties editable using `WidgetEditorRegistry.register(...)`; see [Custom widgets](CUSTOM_WIDGETS.md#10-поля-визуального-f8-редактора-java-api). Arbitrary event handlers, data bindings and Java-side behavior **are not** editable by this UI.
+
+To test: open `/anchorui screen open anchorui:advanced_layout_demo`, press **F8**, change a button label, adjust panel border properties and save. Try `/anchorui screen open anchorui:ui_controls_textured_demo` for state-control texture variants.
+
 ### Shared native scrollbar implementation
 
 The right Inspector, the left Widgets list, and JSON scrollable containers now use the same `NativeContainerScrollPanel` adapter over NeoForge 1.21.1's `ScrollPanel`. Each instance has independent scroll state. Wheel motion, dragging the scrollbar thumb and clamping to the content range are delegated to the native component, not implemented separately for the editor. Widget-list grouping, inspector field resets, labels and clipping still use their existing drawing code. Scrolling a panel does not scroll the other editor panel; the editor's own controls take input precedence over the JSON content preview. The slim inspector/list scroll tracks keep their original approximate widths and colors.

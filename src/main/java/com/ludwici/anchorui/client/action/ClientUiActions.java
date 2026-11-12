@@ -3,6 +3,9 @@ package com.ludwici.anchorui.client.action;
 import com.google.gson.JsonElement;
 import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.api.action.UiActionRegistry;
+import com.ludwici.anchorui.api.state.UiLocalState;
+import com.ludwici.anchorui.api.state.UiStateHost;
+import com.ludwici.anchorui.api.widget.WidgetContext;
 import com.ludwici.anchorui.client.LoreLoader;
 import com.ludwici.anchorui.client.ScreenIds;
 import com.ludwici.anchorui.client.gui.ItemLoreScreen;
@@ -41,5 +44,44 @@ public final class ClientUiActions {
                 context.screen().onClose();
             }
         });
+
+        UiActionRegistry.register(ResourceLocation.fromNamespaceAndPath("anchorui", "set_state"), (context, config) -> {
+            UiLocalState state = screenState(context);
+            String key = stateKey(config);
+            JsonElement raw = config.get("value");
+            state.validateSet(key, raw);
+            JsonElement value = raw.deepCopy();
+            return () -> {
+                if (context.minecraft().screen == context.screen()) {
+                    state.set(key, value);
+                }
+            };
+        });
+
+        UiActionRegistry.register(ResourceLocation.fromNamespaceAndPath("anchorui", "toggle_state"), (context, config) -> {
+            UiLocalState state = screenState(context);
+            String key = stateKey(config);
+            state.validateToggle(key);
+            return () -> {
+                if (context.minecraft().screen == context.screen()) {
+                    state.toggle(key);
+                }
+            };
+        });
+    }
+
+    private static UiLocalState screenState(WidgetContext context) {
+        if (!(context.screen() instanceof UiStateHost host)) {
+            throw new IllegalArgumentException("UI state actions can only be used in screens with local UI state");
+        }
+        return host.uiState();
+    }
+
+    private static String stateKey(com.google.gson.JsonObject config) {
+        JsonElement raw = config.get("key");
+        if (raw == null || !raw.isJsonPrimitive() || !raw.getAsJsonPrimitive().isString()) {
+            throw new IllegalArgumentException("UI state action requires a string 'key'");
+        }
+        return raw.getAsString();
     }
 }

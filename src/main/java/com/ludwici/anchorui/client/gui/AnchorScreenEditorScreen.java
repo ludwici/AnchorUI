@@ -216,11 +216,7 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     private void refreshFrameHandles() {
         frameHandles = target.editorHandles();
-        List<WidgetListPanel.Entry> entries = new ArrayList<>(frameHandles.size());
-        for (ItemLoreScreen.EditorHandle handle : frameHandles) {
-            entries.add(new WidgetListPanel.Entry(handle.id(), handle.visible(), false));
-        }
-        frameEntries = List.copyOf(entries);
+        frameEntries = target.editorWidgetEntries();
         if (selected != null) {
             for (ItemLoreScreen.EditorHandle handle : frameHandles) {
                 if (handle.id().equals(selected.id())) {

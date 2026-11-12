@@ -9,6 +9,8 @@ import net.minecraft.client.gui.GuiGraphics;
 public interface UiPopupWidget {
     boolean isPopupOpen();
 
+    boolean containsPopup(double mouseX, double mouseY);
+
     boolean mouseClickedPopup(double mouseX, double mouseY, int button);
 
     boolean mouseScrolledPopup(double mouseX, double mouseY, double scrollY);

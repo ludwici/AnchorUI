@@ -457,7 +457,7 @@ public final class AnchorHudEditorScreen extends Screen {
                 default -> "IDs ALL";
             }));
             for (Button control : controls) {
-                control.visible = !compact && !inspectorCollapsed;
+                control.visible = !compact && !inspectorCollapsed && editingAppearance == null;
             }
             if (editingAppearance != null) {
                 int modalX = appearanceInput.getX() - 8;

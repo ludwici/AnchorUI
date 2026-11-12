@@ -191,7 +191,7 @@ Grid is now available **outside** `anchorui:template_list`:
 }
 ```
 
-- `columns`: 1–256, default 1. Elements fill each row left-to-right and then wrap to the next row. If there are fewer elements than configured columns, only occupied columns are laid out.
+- `columns`: 1–256, default 1. Elements fill each row left-to-right and then wrap to the next row. **The declared number of tracks stays fixed**, even if some cells are empty or their children become hidden.
 - `columnGap` and `rowGap`: independent gaps (0–4096); `gap` provides both defaults.
 - `cellWidth` and `cellHeight`: optional fixed sizes. Without `cellWidth`, a fixed-width container divides its padded width evenly between columns; an auto-width container sizes each column to its widest child. Without `cellHeight`, each row is as tall as its tallest child.
 - `justifyItems`: horizontal placement *within* a cell, and `alignItems`: vertical placement. Both accept `start`, `center`, `end`, `stretch` and default to `start`.

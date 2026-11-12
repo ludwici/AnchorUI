@@ -182,7 +182,7 @@ Scrollable panels can expose `onChange` in exactly the same way:
 
 When a player changes its scroll offset, the Java action receives e.g. `{"x": 0, "y": 36}`. Changes caused by layout recomputation do not emit this event.
 
-## Java: emit changes from custom widgets
+The built-in `anchorui:checkbox`, `anchorui:switch`, `anchorui:select` and `anchorui:tabs` widgets already implement `UiChangeSource` and report their new state through `onChange`. See [Built-in Interactive Controls](UI_CONTROLS.md).\n\n## Java: emit changes from custom widgets
 
 A custom registered `AbstractWidget` can implement `UiChangeSource`, which AnchorUI will connect to the widget's JSON `onChange` action automatically.
 

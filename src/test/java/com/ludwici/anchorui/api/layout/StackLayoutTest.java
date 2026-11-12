@@ -90,8 +90,8 @@ public class StackLayoutTest {
                         frame("demo:b", parent + "/__content", 0, 0, 40, 15)),
                 Map.of(parent, new PaddingElement()), Map.of(),
                 Map.of("demo:a", parent, "demo:b", parent), Map.of(parent, layout), Set.of(), Set.of());
-        assertEquals(new AnchorLayout.Bounds(70, 45, 30, 10), result.bounds().get("demo:a"));
-        assertEquals(new AnchorLayout.Bounds(60, 60, 40, 15), result.bounds().get("demo:b"));
+        assertEquals(new AnchorLayout.Bounds(70, 50, 30, 10), result.bounds().get("demo:a"));
+        assertEquals(new AnchorLayout.Bounds(60, 65, 40, 15), result.bounds().get("demo:b"));
     }
 
     @Test

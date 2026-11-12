@@ -1,6 +1,8 @@
 package com.ludwici.anchorui.client.hud;
 
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonObject;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.style.ElementAnchor;
 import com.ludwici.anchorui.api.style.PositionElement;
@@ -200,5 +202,70 @@ public class HudLayoutOffsetsTest {
         ElementAnchor parentAnchor = anchor == null ? base.anchor : anchor.anchor();
         String parent = anchor == null ? base.relativeTo : anchor.relativeTo();
         return new PositionElement(point, parentAnchor, parent, base.x + offset.x(), base.y + offset.y());
+    }
+
+    @Test
+    public void componentLayoutOverridesSurviveSaveAndMergeWithResourceDefaults() throws IOException {
+        String id = "mypack:toolbar";
+        Path path = directory.resolve("anchorui/hud-layout.json");
+        HudLayoutOffsets offsets = new HudLayoutOffsets();
+        offsets.setSettingOverride(id, "layout", "gap", new JsonPrimitive(12));
+        offsets.setSettingOverride(id, "layout", "wrap", new JsonPrimitive(true));
+        offsets.setSettingOverride(id, "layoutItem", "grow", new JsonPrimitive(2));
+        offsets.set(id, 5, -3);
+        JsonObject defaults = JsonParser.parseString("""
+                {"layout":{"type":"row","gap":4,"justify":"center"},
+                 "layoutItem":{"grow":1,"minWidth":30}}
+                """).getAsJsonObject();
+        JsonObject effective = offsets.effectiveSettings(id, defaults);
+        assertEquals("row", effective.getAsJsonObject("layout").get("type").getAsString());
+        assertEquals(12, effective.getAsJsonObject("layout").get("gap").getAsInt());
+        assertTrue(effective.getAsJsonObject("layout").get("wrap").getAsBoolean());
+        assertEquals("center", effective.getAsJsonObject("layout").get("justify").getAsString());
+        assertEquals(30, effective.getAsJsonObject("layoutItem").get("minWidth").getAsInt());
+        assertEquals(2, effective.getAsJsonObject("layoutItem").get("grow").getAsInt());
+        assertEquals(4, defaults.getAsJsonObject("layout").get("gap").getAsInt());
+
+        HudLayoutStorage.save(path, offsets);
+        HudLayoutOffsets loaded = HudLayoutStorage.load(path);
+        assertTrue(loaded.sameAs(offsets));
+        assertEquals(new HudLayoutOffsets.Offset(5, -3), loaded.get(id));
+        assertEquals(2, loaded.settingOverride(id, "layoutItem", "grow").getAsInt());
+
+        HudLayoutOffsets copy = loaded.copy();
+        copy.clearSettingOverride(id, "layout", "gap");
+        assertEquals(4, copy.effectiveSettings(id, defaults).getAsJsonObject("layout").get("gap").getAsInt());
+        assertEquals(12, loaded.effectiveSettings(id, defaults).getAsJsonObject("layout").get("gap").getAsInt());
+        copy.reset(id);
+        assertEquals(null, copy.settingOverride(id, "layoutItem", "grow"));
+        assertEquals(2, loaded.settingOverride(id, "layoutItem", "grow").getAsInt());
+        copy.resetAll();
+        assertTrue(copy.toJson().getAsJsonObject("offsets").isEmpty());
+    }
+
+    @Test
+    public void editorOverridesConvertShorthandAndPreserveLegacyFiles() {
+        HudLayoutOffsets offsets = new HudLayoutOffsets();
+        String id = "mypack:container";
+        offsets.setSettingOverride(id, "layout", "gap", new JsonPrimitive(6));
+        offsets.setSettingOverride(id, "layoutItem", "enabled", new JsonPrimitive(true));
+        JsonObject source = JsonParser.parseString("""
+                {"layout":"column","layoutItem":false}
+                """).getAsJsonObject();
+        JsonObject effective = offsets.effectiveSettings(id, source);
+        assertEquals("column", effective.getAsJsonObject("layout").get("type").getAsString());
+        assertEquals(6, effective.getAsJsonObject("layout").get("gap").getAsInt());
+        assertTrue(effective.getAsJsonObject("layoutItem").get("enabled").getAsBoolean());
+
+        assertThrows(IllegalArgumentException.class, () -> offsets.setSettingOverride(id, "arbitrary", "x", new JsonPrimitive(1)));
+        assertThrows(IllegalArgumentException.class, () -> HudLayoutOffsets.fromJson(JsonParser.parseString("""
+                {"version":1,"offsets":{"mypack:container":{"layout":"invalid"}}}
+                """).getAsJsonObject()));
+        HudLayoutOffsets legacy = HudLayoutOffsets.fromJson(JsonParser.parseString("""
+                {"version":1,"offsets":{"mypack:container":{"x":3,"hidden":true}}}
+                """).getAsJsonObject());
+        assertEquals(new HudLayoutOffsets.Offset(3, 0), legacy.get(id));
+        assertTrue(legacy.isHidden(id));
+        assertEquals(null, legacy.settingOverride(id, "layout", "type"));
     }
 }

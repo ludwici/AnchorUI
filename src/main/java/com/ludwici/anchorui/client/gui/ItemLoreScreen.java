@@ -383,7 +383,10 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 frames.add(placed.frame(offsets));
                 if (placed.widget() instanceof PanelWidget) {
                     containers.put(placed.id(), placed.style().padding);
-                    StackLayout.Config stack = StackLayout.Config.parse(placed.style().resolvedSettings);
+                    JsonObject layoutSettings = placed.style().resolvedSettings;
+                    StackLayout.Config stack = layoutSettings.has("type")
+                            && WidgetContainers.supportsChildren(layoutSettings.get("type").getAsString())
+                            ? StackLayout.Config.parse(layoutSettings) : null;
                     if (stack != null) {
                         stackLayouts.put(placed.id(), stack);
                     }

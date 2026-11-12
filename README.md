@@ -97,6 +97,14 @@ The demo type `anchorui_test:counter` uses a vanilla `Button` and can be tested 
 
 See **[Custom Widgets API](docs/CUSTOM_WIDGETS.md)** for complete Java and JSON examples, guarantees, and current limitations. Mods can also register reusable formatters for JSON bindings and text templates; see **[Data Formatters](docs/FORMATTERS.md)**. JSON screens also support lifecycle, hover, click and change handlers using registered Java actions; see **[UI Events](docs/UI_EVENTS.md)**. Repeated quest/dialogue buttons can be authored using **[Template List and Item Context](docs/TEMPLATE_LIST.md)**, with per-row event data, dynamic updates, Grid Layout and custom Java layout algorithms. JSON screens support stateful tabs, checkboxes, switches and dropdowns through **[Built-in Interactive Controls](docs/UI_CONTROLS.md)** and **[Local UI State](docs/UI_STATE.md)**. Controls can use resource-pack texture skins with normal, hovered, selected and disabled variants; skins support atlases, UV regions, tint, nine-slice and shared reusable style definitions.
 
+## Component-aware F8 editors
+
+Both F8 editors now display **nested components** in the Widgets list (with type hints and collapsible container branches), rather than treating the entire layout as an alphabetic list of unrelated IDs. The inspector can edit generic `layout` and `layoutItem` properties directly: switch `row`/`column`/`grid`, adjust gaps, wrap, alignment, columns and cell dimensions, toggle participation in auto layout, and tune `grow`/`shrink` and size limits.
+
+The new **- / +** controls apply changes to the current preview and validate them; **R** clears a single overridden field. Save/Cancel still work and write only user-specific overrides to `config/anchorui/`, without modifying resource packs or Java widget configuration. Layout edits are preserved through resource reload and game restart. Other widget-specific source properties remain read-only for now.
+
+See [HUD editor](docs/HUD.md#component-aware-inspector-row-column-grid-flex) and [Screen editor](docs/SCREEN_EDITOR.md#editing-the-actual-anchorui-layout-components).
+
 ## Automatic layouts for panels and containers
 
 Ordinary `panel` and `container` widgets support opt-in `row`, `column` and **standalone `grid`** layouts. They use the same anchors, scrolling, padding, clipping, transform and editor systems as manually positioned children.

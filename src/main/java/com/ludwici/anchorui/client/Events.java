@@ -15,6 +15,7 @@ import com.ludwici.anchorui.client.gui.ProgressWidget;
 import com.ludwici.anchorui.client.binding.MinecraftDataSources;
 import com.ludwici.anchorui.client.action.ClientUiActions;
 import com.ludwici.anchorui.client.gui.JsonActionButton;
+import com.ludwici.anchorui.client.gui.StateControlWidget;
 import com.ludwici.anchorui.client.hud.AnchorHudManager;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
@@ -38,6 +39,10 @@ public class Events {
             BuiltinDataFormatters.register();
             ClientUiActions.register();
             AnchorWidgetRegistry.register(WidgetTypeIds.BUTTON, JsonActionButton::create);
+            AnchorWidgetRegistry.register(WidgetTypeIds.CHECKBOX, (context, element, style) -> StateControlWidget.create(context, element, style, StateControlWidget.Kind.CHECKBOX));
+            AnchorWidgetRegistry.register(WidgetTypeIds.SWITCH, (context, element, style) -> StateControlWidget.create(context, element, style, StateControlWidget.Kind.SWITCH));
+            AnchorWidgetRegistry.register(WidgetTypeIds.SELECT, (context, element, style) -> StateControlWidget.create(context, element, style, StateControlWidget.Kind.SELECT));
+            AnchorWidgetRegistry.register(WidgetTypeIds.TABS, (context, element, style) -> StateControlWidget.create(context, element, style, StateControlWidget.Kind.TABS));
             AnchorWidgetRegistry.register(WidgetTypeIds.PROGRESS, (context, element, style) -> new ProgressWidget(context, element.settings, style));
             AnchorWidgetRegistry.register(WidgetTypeIds.DATA_LIST, (context, element, style) -> new DataListWidget(context, element.settings, style));
             AnchorWidgetRegistry.register(WidgetTypeIds.TEMPLATE_LIST, (context, element, style) -> new PanelWidget(context, element.settings, style));

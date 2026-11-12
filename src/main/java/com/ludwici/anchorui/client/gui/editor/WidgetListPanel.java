@@ -16,10 +16,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 public final class WidgetListPanel {
-    public record Entry(String id, boolean visible, boolean readOnly) {
+    public record Entry(String id, boolean visible, boolean readOnly, String type, String containerParent) {
+        public Entry(String id, boolean visible, boolean readOnly) {
+            this(id, visible, readOnly, "", null);
+        }
     }
 
-    private record Row(Entry entry, int group, String header) {
+    private record Row(Entry entry, int group, String header, int depth, boolean hasChildren) {
         private boolean heading() {
             return entry == null;
         }
@@ -54,6 +57,7 @@ public final class WidgetListPanel {
     private boolean dragging;
     private boolean collapsed = true;
     private final Set<Integer> collapsedGroups = new HashSet<>();
+    private final Set<String> collapsedContainers = new HashSet<>();
     private boolean rowsDirty = true;
     private List<Entry> cachedEntries = List.of();
     private List<Row> cachedRows = List.of();
@@ -128,6 +132,14 @@ public final class WidgetListPanel {
                 }
                 rowsDirty = true;
                 ensureScrollBar(rows(entries));
+            } else if (row != null && row.hasChildren()
+                    && mouseX >= x + 8 + Math.min(60, row.depth() * 10)
+                    && mouseX < x + 24 + Math.min(60, row.depth() * 10)) {
+                if (!collapsedContainers.add(row.entry().id())) {
+                    collapsedContainers.remove(row.entry().id());
+                }
+                rowsDirty = true;
+                ensureScrollBar(rows(entries));
             }
         }
         return true;
@@ -179,7 +191,14 @@ public final class WidgetListPanel {
             return null;
         }
         Row row = rowAt(mouseY, entries);
-        return row == null ? null : row.entry();
+        if (row == null || row.heading()) {
+            return null;
+        }
+        if (row.hasChildren() && mouseX >= x + 8 + Math.min(60, row.depth() * 10)
+                && mouseX < x + 24 + Math.min(60, row.depth() * 10)) {
+            return null;
+        }
+        return row.entry();
     }
 
     private int visibleHeight() {
@@ -236,9 +255,18 @@ public final class WidgetListPanel {
                                     chosen ? 0xB04A4435 : 0x88405062);
                         }
                         int tint = chosen ? SELECTED_COLOR : entry.visible() ? color(row.group()) : 0xFF8993A1;
-                        graphics.fill(x + 7, lineY + 5, x + 10, lineY + 12, tint);
-                        String label = font.plainSubstrByWidth(entry.id(), width - 29);
-                        graphics.drawString(font, label, x + 15, lineY + 4, tint, false);
+                        int indentation = Math.min(60, row.depth() * 10);
+                        int textX = x + 15 + indentation + (row.hasChildren() ? 10 : 0);
+                        if (row.hasChildren()) {
+                            graphics.drawString(font, collapsedContainers.contains(entry.id()) ? ">" : "v",
+                                    x + 11 + indentation, lineY + 4, tint, false);
+                        }
+                        graphics.fill(textX - 3, lineY + 5, textX, lineY + 12, tint);
+                        String local = entry.id().substring(entry.id().indexOf(':') + 1);
+                        String label = local.substring(local.lastIndexOf('/') + 1);
+                        String prefix = widgetPrefix(entry.type());
+                        label = font.plainSubstrByWidth(prefix + label, width - (textX - x) - 16);
+                        graphics.drawString(font, label, textX + 4, lineY + 4, tint, false);
                     }
                 }
             }
@@ -254,8 +282,9 @@ public final class WidgetListPanel {
         }
 
         Entry hovered = entryAt(mouseX, mouseY, entries);
-        if (hovered != null && font.width(hovered.id()) > width - 29) {
+        if (hovered != null) {
             graphics.renderTooltip(font, Component.literal(hovered.id()
+                    + (hovered.type().isEmpty() ? "" : " [" + hovered.type() + "]")
                     + (hovered.readOnly() ? " (read-only)" : "")), mouseX, mouseY);
         }
     }
@@ -285,9 +314,10 @@ public final class WidgetListPanel {
         for (Entry entry : entries) {
             byId.putIfAbsent(entry.id(), entry);
         }
+        List<String> sorted = EditorWidgetOrder.sorted(byId.keySet(), currentNamespace);
         List<Row> result = new ArrayList<>();
         int previousGroup = -1;
-        for (String id : EditorWidgetOrder.sorted(byId.keySet(), currentNamespace)) {
+        for (String id : sorted) {
             int group = EditorWidgetOrder.group(id, currentNamespace);
             if (group != previousGroup) {
                 String heading = switch (group) {
@@ -295,17 +325,95 @@ public final class WidgetListPanel {
                     case 1 -> "CURRENT: " + currentNamespace;
                     default -> "OTHER MODS";
                 };
-                result.add(new Row(null, group, heading));
+                result.add(new Row(null, group, heading, 0, false));
                 previousGroup = group;
             }
-            if (!collapsedGroups.contains(group)) {
-                result.add(new Row(byId.get(id), group, null));
+            if (collapsedGroups.contains(group)) {
+                continue;
+            }
+            Entry entry = byId.get(id);
+            if (entry.containerParent() != null && byId.containsKey(entry.containerParent())
+                    && EditorWidgetOrder.group(entry.containerParent(), currentNamespace) == group) {
+                continue;
+            }
+            appendHierarchy(result, entry, group, 0, byId, sorted, new HashSet<>());
+        }
+        Set<String> seen = new HashSet<>();
+        for (Row row : result) {
+            if (row.entry() != null) {
+                seen.add(row.entry().id());
+            }
+        }
+        for (String id : sorted) {
+            int group = EditorWidgetOrder.group(id, currentNamespace);
+            if (!collapsedGroups.contains(group) && !seen.contains(id)
+                    && !isUnderCollapsedParent(byId.get(id), byId)) {
+                appendHierarchy(result, byId.get(id), group, 0, byId, sorted, seen);
             }
         }
         cachedEntries = List.copyOf(entries);
         cachedRows = List.copyOf(result);
         rowsDirty = false;
         return cachedRows;
+    }
+
+    private void appendHierarchy(List<Row> rows, Entry entry, int group, int depth,
+                                 Map<String, Entry> byId, List<String> ordered, Set<String> seen) {
+        if (!seen.add(entry.id())) {
+            return;
+        }
+        boolean hasChildren = false;
+        for (String candidate : ordered) {
+            Entry child = byId.get(candidate);
+            if (entry.id().equals(child.containerParent())
+                    && EditorWidgetOrder.group(child.id(), currentNamespace) == group) {
+                hasChildren = true;
+                break;
+            }
+        }
+        rows.add(new Row(entry, group, null, depth, hasChildren));
+        if (collapsedContainers.contains(entry.id()) || depth >= 12) {
+            return;
+        }
+        for (String candidate : ordered) {
+            Entry child = byId.get(candidate);
+            if (entry.id().equals(child.containerParent())
+                    && EditorWidgetOrder.group(child.id(), currentNamespace) == group) {
+                appendHierarchy(rows, child, group, depth + 1, byId, ordered, seen);
+            }
+        }
+    }
+
+    private boolean isUnderCollapsedParent(Entry entry, Map<String, Entry> byId) {
+        Set<String> visited = new HashSet<>();
+        String parent = entry.containerParent();
+        while (parent != null && visited.add(parent)) {
+            if (collapsedContainers.contains(parent)) {
+                return true;
+            }
+            Entry ancestor = byId.get(parent);
+            parent = ancestor == null ? null : ancestor.containerParent();
+        }
+        return false;
+    }
+
+    private static String widgetPrefix(String type) {
+        if (type.endsWith(":panel") || type.endsWith(":container")) {
+            return "[P] ";
+        }
+        if (type.endsWith(":button")) {
+            return "[B] ";
+        }
+        if (type.endsWith(":text")) {
+            return "[T] ";
+        }
+        if (type.endsWith(":progress")) {
+            return "[=] ";
+        }
+        if (type.endsWith(":image") || type.endsWith(":texture")) {
+            return "[I] ";
+        }
+        return "";
     }
 
     private int contentHeight(List<Row> rows) {

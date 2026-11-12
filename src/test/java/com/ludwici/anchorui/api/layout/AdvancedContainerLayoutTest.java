@@ -299,4 +299,19 @@ public class AdvancedContainerLayoutTest {
         assertEquals(160, result.bounds().get("x:side").x());
         assertEquals(80, result.bounds().get("x:cell2").x());
     }
+
+    @Test
+    public void gridKeepsThreeDeclaredTracksWithOnlyTwoCells() {
+        String p = "x:grid";
+        var frames = List.of(frame(p, "screen", 0, 0, 300, 50),
+                frame("x:a", p + "/__content", 0, 0, 20, 20),
+                frame("x:b", p + "/__content", 0, 0, 20, 20));
+        var result = layout(frames, Map.of(p, new PaddingElement()), Map.of(),
+                Map.of("x:a", p, "x:b", p),
+                Map.of(p, ContainerAutoLayout.parse(json("""
+                        {"layout":{"type":"grid","columns":3,"columnGap":6,"justifyItems":"stretch"}}
+                        """))), Map.of(), Set.of());
+        assertEquals(new AnchorLayout.Bounds(0, 0, 96, 20), result.bounds().get("x:a"));
+        assertEquals(new AnchorLayout.Bounds(102, 0, 96, 20), result.bounds().get("x:b"));
+    }
 }

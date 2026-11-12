@@ -263,6 +263,18 @@ For example, editing a panel's layout and one child may produce:
 
 The overrides are merged with resource-defined layout settings. A field reset reverts to the inherited resource/style value; it does **not** erase other fields. The original `config/anchorui/hud-layout.json` schema stays at version 1, and the screen editor uses its existing per-screen file location. No arbitrary widget types, textures or gameplay configuration are added by the editor.
 
+### Visual and content properties in the HUD editor
+
+The same F8 inspector now exposes a **VISUAL / CONTENT** section for built-in widgets and registered custom Java widgets. It can adjust text labels, text and fill/border/accent colors, image/panel texture resource IDs, state-control background skins, progress bar value labels, widths/heights and relevant panel border/radius fields. A mod may expose additional fields with `WidgetEditorRegistry` (see [Custom widgets](CUSTOM_WIDGETS.md)).
+
+- **- / +** changes numeric, Boolean and enumerated options.
+- **E** opens an input field for text, hexadecimal colors and texture paths. **Apply** / **Enter** confirms; **Cancel** / **Esc** closes without changes.
+- **R** resets just the selected field. The regular **Reset** button clears a selected widget's overrides; **Reset all** clears all.
+- Invalid values are rejected before or during widget reconstruction, and the previous preview is restored. Edits rebuild the HUD widget instances **on change**, not on every frame.
+- Changes persist locally under `appearance` in the existing `config/anchorui/hud-layout.json`; source resource packs and mod-provided Java code are unchanged.
+
+For a basic check, enable `/anchorui test rpg on`, open **F8**, select a health progress bar, edit its `Fill` color and `Width`, save and reopen. Use the image/panel demo to try entering a different texture resource ID, and verify an invalid path is rejected.
+
 ### Demo HUD spacing
 
 The built-in HUD preview now has **zero gap** between its connected elements: the header/body, body/diamond, diamond/extra label and extra label/copied header use `x: 0` or `y: 0` wherever their edges are attached. The bottom-right corner widget keeps its intentional `x: -16, y: -16` screen padding.

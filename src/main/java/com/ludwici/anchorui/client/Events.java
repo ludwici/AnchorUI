@@ -40,6 +40,7 @@ public class Events {
             AnchorWidgetRegistry.register(WidgetTypeIds.BUTTON, JsonActionButton::create);
             AnchorWidgetRegistry.register(WidgetTypeIds.PROGRESS, (context, element, style) -> new ProgressWidget(context, element.settings, style));
             AnchorWidgetRegistry.register(WidgetTypeIds.DATA_LIST, (context, element, style) -> new DataListWidget(context, element.settings, style));
+            AnchorWidgetRegistry.register(WidgetTypeIds.TEMPLATE_LIST, (context, element, style) -> new PanelWidget(context, element.settings, style));
             AnchorWidgetRegistry.register(WidgetTypeIds.TEXT, (context, element, style) -> {
                 BoundText binding = BoundText.parse(element.settings.get("text"));
                 return binding.isDynamic() ? new BoundTextWidget(context, binding, style) : new AnchoredTextWidget(element.text, context.font(), style);

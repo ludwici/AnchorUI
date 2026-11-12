@@ -17,6 +17,7 @@ public class LoreEntity {
     public final String namespace;
     public final JsonElement onOpen;
     public final JsonElement onClose;
+    public final JsonObject initialState;
     public final boolean hasExplicitWidgets;
     public final List<LoreComponent> components = new ArrayList<>();
     public final List<UiElement> entities = new ArrayList<>();
@@ -27,6 +28,10 @@ public class LoreEntity {
 
     public LoreEntity(JsonObject root, String namespace) {
         this.namespace = namespace;
+        if (root.has("state") && !root.get("state").isJsonObject()) {
+            throw new IllegalArgumentException("Screen 'state' must be a JSON object");
+        }
+        initialState = root.has("state") ? root.getAsJsonObject("state").deepCopy() : new JsonObject();
         onOpen = root.has("onOpen") ? root.get("onOpen").deepCopy() : null;
         onClose = root.has("onClose") ? root.get("onClose").deepCopy() : null;
         this.hasExplicitWidgets = root.has("entities");

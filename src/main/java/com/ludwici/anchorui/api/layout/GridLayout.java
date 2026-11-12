@@ -85,7 +85,7 @@ public final class GridLayout {
         if (items.isEmpty()) {
             return new ContainerAutoLayout.Arrangement(Map.of(), new ContainerLayout.Size(1, 1));
         }
-        int columns = Math.min(config.columns(), items.size());
+        int columns = config.columns();
         int rows = (items.size() + columns - 1) / columns;
         int[] widths = new int[columns];
         int[] heights = new int[rows];

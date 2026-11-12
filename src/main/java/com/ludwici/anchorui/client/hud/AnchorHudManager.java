@@ -270,9 +270,12 @@ public final class AnchorHudManager {
         Set<String> manual = new HashSet<>();
         for (PlacedWidget placed : widgets) {
             frames.add(placed.frame(offsets));
+            JsonObject currentSettings = offsets.hasSettingOverrides(placed.id())
+                    ? offsets.effectiveSettings(placed.id(), placed.style().resolvedSettings)
+                    : placed.style().resolvedSettings;
             if (placed.widget() instanceof com.ludwici.anchorui.client.gui.PanelWidget) {
                 containers.put(placed.id(), placed.style().padding);
-                var layoutSettings = offsets.effectiveSettings(placed.id(), placed.style().resolvedSettings);
+                var layoutSettings = currentSettings;
                 ContainerAutoLayout stack = layoutSettings.has("type")
                         && WidgetContainers.supportsChildren(layoutSettings.get("type").getAsString())
                         ? ContainerAutoLayout.parse(layoutSettings) : null;
@@ -286,7 +289,7 @@ public final class AnchorHudManager {
             if (placed.containerParent() != null) {
                 parents.put(placed.id(), placed.containerParent());
             }
-            StackLayout.Rules rules = StackLayout.Rules.parse(offsets.effectiveSettings(placed.id(), placed.style().resolvedSettings));
+            StackLayout.Rules rules = StackLayout.Rules.parse(currentSettings);
             itemRules.put(placed.id(), rules);
             if (!rules.managed()) {
                 manual.add(placed.id());

@@ -424,9 +424,12 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             Set<String> clipping = new HashSet<>();
             for (PlacedWidget placed : placedWidgets) {
                 frames.add(placed.frame(offsets));
+                JsonObject currentSettings = offsets.hasSettingOverrides(placed.id())
+                        ? offsets.effectiveSettings(placed.id(), placed.style().resolvedSettings)
+                        : placed.style().resolvedSettings;
                 if (placed.widget() instanceof PanelWidget) {
                     containers.put(placed.id(), placed.style().padding);
-                    JsonObject layoutSettings = offsets.effectiveSettings(placed.id(), placed.style().resolvedSettings);
+                    JsonObject layoutSettings = currentSettings;
                     ContainerAutoLayout stack = layoutSettings.has("type")
                             && WidgetContainers.supportsChildren(layoutSettings.get("type").getAsString())
                             ? ContainerAutoLayout.parse(layoutSettings) : null;
@@ -443,7 +446,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 if (placed.containerParent() != null) {
                     parents.put(placed.id(), placed.containerParent());
                 }
-                StackLayout.Rules rules = StackLayout.Rules.parse(offsets.effectiveSettings(placed.id(), placed.style().resolvedSettings));
+                StackLayout.Rules rules = StackLayout.Rules.parse(currentSettings);
                 itemRules.put(placed.id(), rules);
                 if (!rules.managed()) {
                     manual.add(placed.id());

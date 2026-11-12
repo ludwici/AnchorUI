@@ -19,9 +19,9 @@ public final class JsonActionButton {
         var settings = style.resolvedSettings;
         if (settings.has("textures") || settings.has("fillColor") || settings.has("borderColor")
                 || settings.has("hoverColor") || settings.has("disabledColor") || settings.has("color")) {
-            return new SkinnedActionButton(context, element.text, style, settings, () -> {
+            return new SkinnedActionButton(context, element.text, style, settings, button -> {
                 if (context.screen() instanceof ItemLoreScreen screen) {
-                    screen.dispatchWidgetClick(context.registry().widget(element.id).orElse(null));
+                    screen.dispatchWidgetClick(button);
                 } else {
                     fallback.run();
                 }

@@ -79,6 +79,10 @@ The completed functionality above does **not** imply finished visual consistency
 
 **Priority: high; can proceed alongside Stage 2.**
 
+- [x] Add a component-aware **VISUAL / CONTENT** inspector to HUD and screen F8 editors: editable text, basic colors, texture resource paths, sizes, basic widget styles and typed controls.
+- [x] Register custom editable widget fields through an explicit Java `WidgetEditorRegistry`; persist appearance overrides separately from resource packs and validate edits.
+- [x] Rebuild edited widget visuals on explicit changes, preserving screen Local UI State, with rollback for invalid widget configurations.
+- [ ] In-game QA for appearance editing, resource reload, modal focus and custom Java widget codecs.
 - [ ] Unify visual style inheritance and appearance across progress bars, buttons, panels and interactive controls, including hover/disabled/focused states where appropriate.
 - [ ] Verify matching borders/frames on RPG HUD progress bars; keep the earlier second-bar regression in the QA suite.
 - [ ] Audit rendering order for screen backgrounds, blur, outlines, overlays, tooltips and clipping.

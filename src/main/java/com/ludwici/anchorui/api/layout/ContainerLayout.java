@@ -89,7 +89,12 @@ public final class ContainerLayout {
             if (!containers.containsKey(entry.getValue())) {
                 throw new IllegalArgumentException("Unknown structural container for '" + entry.getKey() + "': " + entry.getValue());
             }
-            children.computeIfAbsent(entry.getValue(), ignored -> new ArrayList<>()).add(entry.getKey());
+        }
+        for (String childId : definitions.keySet()) {
+            String parent = parents.get(childId);
+            if (parent != null) {
+                children.computeIfAbsent(parent, ignored -> new ArrayList<>()).add(childId);
+            }
         }
         Map<String, Size> sizes = new LinkedHashMap<>();
         for (AnchorLayout.Frame frame : definitions.values()) {

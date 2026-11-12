@@ -131,7 +131,7 @@ The HUD core covers JSON composition, read-only display and an optional player-f
 
 The editor includes a **separate, draggable Widgets panel** listing every loaded HUD widget, including inactive vanilla reference IDs. Click any entry to select it in the inspector and highlight its on-screen bounds. Hidden custom widgets remain in the list and can be selected without clicking an invisible rectangle. Scroll the list independently of the inspector; drag its title bar to move it.
 
-List order is **vanilla `minecraft:*` IDs first**, then `anchorui:*` (the current HUD editor's mod ID), then other namespaces in alphabetical order. Purple vanilla items are read-only and can be inspected but cannot be moved or modified. While **Pick parent** is active, clicking any entry sets the selected custom widget's parent to that ID. The panel also lists vanilla references even if they are currently inactive.
+List order is **vanilla `minecraft:*` IDs first**, then `anchorui:*` (the current HUD editor's mod ID), then other namespaces. Within a namespace group, container children appear **nested below their structural parent** with simple type markers (`[P]` panel/container, `[B]` button, `[T]` text, `[=]` progress, `[I]` image). Click a container's disclosure arrow to fold or unfold its descendants; click its name to select it. Hover a row to see the full namespaced ID and widget type. Cross-namespace children remain in their respective namespace group. Purple vanilla items are read-only and can be inspected but cannot be moved or modified. While **Pick parent** is active, clicking an entry sets the selected custom widget's parent to that ID. The panel also lists vanilla references even if they are currently inactive.
 
 Pressing **Tab** temporarily hides both editor panels while keeping on-screen widget outlines visible.
 
@@ -153,7 +153,7 @@ To edit widget placement:
 3. Use **Point** and **Anchor** to cycle through the nine attachment points. **The widget immediately moves according to the newly selected points**; any previously configured manual offsets remain unchanged.
 4. Select a widget, then press **Change parent**. Click another highlighted widget to choose it as the new parent, or click an empty part of the world to use **screen** as the parent. The parent changes **only after the click**. Circular relationships and attempts to parent a widget to itself are rejected. Press **Esc** or **Cancel parent** to leave selection mode without changing anything.
 5. Use **Hide / Show** to control whether a selected widget is displayed in gameplay. Hidden widgets still occupy their layout bounds, so other widgets can remain attached.
-6. Press **R** or **Reset** to restore the selected widget's default position, anchors and visibility. **Reset all** restores all HUD widget settings in the preview.
+6. Press **R** to reset the selected widget's **position offset only**. Use the **Reset** button to restore all overrides for the selected widget (position, anchors, visibility and component layout values); **Reset all** clears overrides for every widget.
 7. Controls now appear in a **narrow, vertical panel at the right edge**. Drag the panel by its title bar to move it anywhere on-screen. Its default placement leaves the bottom-right HUD widget uncovered. Press **Tab** to hide the panel temporarily, then press Tab again to restore it.
 8. **Show demo / Hide demo** toggles the bundled HUD test resources for easier testing.
 9. Choose **Save** (or Ctrl+S) to persist the current settings and close, or **Cancel / Esc** to discard all unsaved changes.
@@ -227,6 +227,42 @@ The scrollable property inspector displays a small **R** button on the right of 
 
 The inspector buttons follow their lines when scrolling. A grey reset button means the field is already at its default. The regular **Reset** button still restores every editable field of the selected widget, while **Reset all** clears all HUD overrides. Saving remains an explicit action.
 
+### Component-aware inspector (row, column, grid, flex)
+
+Both the HUD editor and the F8 **screen editor** now show live **COMPONENT / LAYOUT** fields when a selected widget is an AnchorUI panel/container or an element structurally nested inside one.
+
+- Select a **panel or container** to change its `layout` mode (`none`, `row`, `column`, `grid`), gaps, alignment/distribution, wrapping, line gap, column count, per-cell sizing and `collapseHidden`. Only fields applicable to the active layout appear.
+- Select a **child widget** to edit `layoutItem.enabled` (manual versus auto-managed), `grow`, `shrink` and per-axis minimum/maximum dimensions. These are generic container properties; the widget's own custom Java configuration remains in the read-only JSON section.
+- Use **- / +** beside a value to move through enum options, toggle booleans or change numeric fields in small steps; use the small **R** to remove just that field's override. Modified values are highlighted. Invalid settings (for instance, a minimum larger than a maximum or a cyclic layout) are rejected, leaving the current preview intact.
+- Changes reflow the existing widget instances immediately, including the bounds shown by F8, container scroll limits and anchored descendants. The parent/point/anchor editor controls and magnetic dragging still work.
+- **Save** persists these settings as client-side overrides, not as changes to the mod/resource-pack JSON. **Cancel** discards them. Legacy layout files without these fields continue to load.
+
+For example, editing a panel's layout and one child may produce:
+
+```json
+{
+  "version": 1,
+  "offsets": {
+    "mypack:toolbar": {
+      "layout": {
+        "type": "row",
+        "gap": 8,
+        "wrap": true
+      }
+    },
+    "mypack:toolbar/child_1": {
+      "layoutItem": {
+        "enabled": true,
+        "grow": 2,
+        "minWidth": 40
+      }
+    }
+  }
+}
+```
+
+The overrides are merged with resource-defined layout settings. A field reset reverts to the inherited resource/style value; it does **not** erase other fields. The original `config/anchorui/hud-layout.json` schema stays at version 1, and the screen editor uses its existing per-screen file location. No arbitrary widget types, textures or gameplay configuration are added by the editor.
+
 ### Demo HUD spacing
 
 The built-in HUD preview now has **zero gap** between its connected elements: the header/body, body/diamond, diamond/extra label and extra label/copied header use `x: 0` or `y: 0` wherever their edges are attached. The bottom-right corner widget keeps its intentional `x: -16, y: -16` screen padding.
@@ -242,7 +278,7 @@ User overrides in `config/anchorui/hud-layout.json` are applied in addition to r
 - Change the **Point** and **Anchor** of `anchorui_test:hud_extra`: it must move immediately to the corresponding attachment position while retaining its manual offsets. Press **Change parent** and click another widget; the parent changes only after your click. Try to select itself or create a cycle, which must be rejected. Click empty space to choose `screen`, or press Esc to cancel parent selection.
 - The bottom-right `anchorui_test:hud_corner` must be directly clickable and draggable with the right-side inspector open. Drag the panel by its title bar, scroll the widget's raw JSON, and confirm that nested properties are visible. Press Tab if the panel overlaps a widget. Test **Hide / Show**, then **Cancel** to restore the previous layout.
 - Reopen, drag a widget, choose **Save & close**, and verify the same position persists after reopening and restarting the game.
-- Try **Reset**, **Reset all** and **Ctrl+S**; the saved file should contain only modified widget positions, anchors and visibility flags.
+- Try **Reset**, **Reset all** and **Ctrl+S**; the saved file should contain only modified positions, anchors, visibility flags and explicit component layout changes.
 - Resize the game or change GUI Scale while HUD is visible to check anchor reflow.
 
 - In the editor, move a widget vertically to create `user offset: 0, 63`, scroll to that row and press its right-hand **R**. Verify the offset becomes `0, 0` without resetting its parent, attachment points or visibility. Reset parent, point, anchor and visibility individually and verify the other user overrides remain intact.

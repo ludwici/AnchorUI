@@ -94,7 +94,7 @@ public class UiEventBindingsTest {
                 """), "onOpen"));
         assertThrows(IllegalArgumentException.class, () -> UiEventBindings.compile(null, json("""
                 {
-                  "onHoverEnter": "ui_events_test:not_an_object"
+                  "onHoverEnter": 42
                 }
                 """), "onHoverEnter"));
         assertThrows(IllegalArgumentException.class, () -> UiEventBindings.compile(null, json("""

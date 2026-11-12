@@ -19,6 +19,8 @@ import com.ludwici.anchorui.api.layout.ContainerLayout;
 import com.ludwici.anchorui.api.layout.StackLayout;
 import com.ludwici.anchorui.api.layout.ContainerAutoLayout;
 import com.ludwici.anchorui.client.gui.editor.LayoutInspectorControls;
+import com.ludwici.anchorui.client.gui.editor.AppearanceInspectorControls;
+import com.google.gson.JsonElement;
 import com.ludwici.anchorui.client.gui.editor.WidgetListPanel;
 import com.ludwici.anchorui.api.layout.ContainerScroll;
 import com.ludwici.anchorui.api.layout.WidgetContainers;
@@ -350,6 +352,69 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         HudLayoutOffsets candidate = editingScreenOffsets.copy();
         candidate.clearSettingOverride(id, control.section(), control.field());
         return useCandidate(candidate);
+    }
+
+    public List<AppearanceInspectorControls.Control> editorAppearanceControls(String id) {
+        HudLayoutOffsets offsets = currentScreenOffsets();
+        for (PlacedWidget placed : placedWidgets) {
+            if (placed.id().equals(id)) {
+                LoreEntity.UiElement definition = widgetRegistry.definition(id).orElse(null);
+                if (definition == null) {
+                    return List.of();
+                }
+                JsonObject settings = placed.style().resolvedSettings.deepCopy();
+                if (definition.settings.has("text") && definition.settings.get("text").isJsonPrimitive()) {
+                    settings.add("text", definition.settings.get("text").deepCopy());
+                }
+                return AppearanceInspectorControls.describe(id, definition.type, settings, offsets);
+            }
+        }
+        return List.of();
+    }
+
+    public boolean editorSetAppearance(String id, AppearanceInspectorControls.Control control, String value) {
+        if (editingScreenOffsets == null || widgetRegistry.widget(id).isEmpty()) {
+            return false;
+        }
+        JsonElement parsed;
+        try {
+            parsed = AppearanceInspectorControls.parse(control.field(), value);
+        } catch (RuntimeException exception) {
+            screenSaveError = exception.getMessage();
+            return false;
+        }
+        HudLayoutOffsets previous = editingScreenOffsets;
+        HudLayoutOffsets candidate = previous.copy();
+        candidate.setSettingOverride(id, "appearance", control.field().path(), parsed);
+        editingScreenOffsets = candidate;
+        buildWidgets(false);
+        if (layoutError != null || widgetRegistry.widget(id).isEmpty()) {
+            editingScreenOffsets = previous;
+            buildWidgets(false);
+            screenSaveError = "Invalid widget appearance value";
+            return false;
+        }
+        screenSaveError = "";
+        return true;
+    }
+
+    public boolean editorResetAppearance(String id, AppearanceInspectorControls.Control control) {
+        if (editingScreenOffsets == null) {
+            return false;
+        }
+        HudLayoutOffsets previous = editingScreenOffsets;
+        HudLayoutOffsets candidate = previous.copy();
+        candidate.clearSettingOverride(id, "appearance", control.field().path());
+        editingScreenOffsets = candidate;
+        buildWidgets(false);
+        if (layoutError != null || widgetRegistry.widget(id).isEmpty()) {
+            editingScreenOffsets = previous;
+            buildWidgets(false);
+            screenSaveError = "Invalid widget appearance reset";
+            return false;
+        }
+        screenSaveError = "";
+        return true;
     }
 
     public boolean resetEditorProperty(String id, AnchorHudManager.EditableProperty property) {
@@ -818,8 +883,11 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         }
         List<PlacedWidget> created = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
+        HudLayoutOffsets appearance = currentScreenOffsets();
         for (DeclaredWidget definition : definitions) {
-            LoreEntity.UiElement element = definition.element();
+            LoreEntity.UiElement element = appearance.hasAppearanceOverrides(definition.id())
+                    ? new LoreEntity.UiElement(appearance.widgetSettings(definition.id(), definition.element().settings))
+                    : definition.element();
             try {
                 LoreStyle styleSource = element.settings.has("style") ? LoreLoader.INSTANCE.getStyle(element.settings.get("style").getAsString()) : theme;
                 LoreStyle.Element style = definition.legacyStyle() == null ? styleSource.get(element.type, element.settings) : styleSource.get(definition.legacyStyle(), null);

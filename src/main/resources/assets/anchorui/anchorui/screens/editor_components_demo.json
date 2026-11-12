@@ -49,7 +49,11 @@
           "size": {
             "width": 160,
             "height": 20
-          }
+          },
+          "fillColor": "#FF284C67",
+          "borderColor": "#FFC6D5E3",
+          "hoverColor": "#FF3B7593",
+          "disabledColor": "#FF343D48"
         },
         {
           "type": "anchorui:progress",

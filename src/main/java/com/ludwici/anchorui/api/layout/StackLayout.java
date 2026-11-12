@@ -112,7 +112,7 @@ public final class StackLayout {
             if (maxWidth < minWidth || maxHeight < minHeight) {
                 throw new IllegalArgumentException("layoutItem maximum size must not be smaller than its minimum");
             }
-            return new Rules(true, grow, shrink, minWidth, maxWidth, minHeight, maxHeight);
+            return new Rules(GsonHelper.getAsBoolean(object, "enabled", true), grow, shrink, minWidth, maxWidth, minHeight, maxHeight);
         }
 
         private static double number(JsonObject object, String key) {

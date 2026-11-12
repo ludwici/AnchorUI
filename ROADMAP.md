@@ -1,160 +1,145 @@
-# Anchor UI — Roadmap and Decision Log
+# AnchorUI — Roadmap and Decision Log
 
-> Working plan recovered from the AnchorUI project discussion, cross-checked against the `1.21.1` branch on 2026-11-10. This document records **agreed direction**, **existing functionality**, **unfinished work**, and **deferred ideas**. A proposed implementation detail is not a finalized API contract.
+> Status reviewed against the `1.21.1` NeoForge branch on **2026-11-12**. This is the roadmap for the **UI framework**, not for games, quests, NPC conversations, or other systems built on top of it. Checked items describe functionality already present; unchecked items remain work or QA.
 
-## 1. Project direction
+## 1. Purpose and boundaries
 
-Anchor UI is a reusable, JSON-driven, WoW-style anchoring framework for Minecraft interfaces, initially targeting **Minecraft 1.21.1 / NeoForge**.
+AnchorUI is a reusable, JSON-driven UI framework for Minecraft, with WoW-style anchors, HUDs and interactive screens. Mod and modpack authors should be able to assemble interfaces using regular Minecraft resource packs; Java integrations may register additional widgets, data providers, conditions, formatters, templates, layouts and actions.
 
-The immediate use cases are:
+Core decisions:
 
-- RPG-style in-game HUDs;
-- dialogue interfaces;
-- quest-related screens (quest list, details, progress, dialogue choices);
-- reusable UI elements contributed by different mods and resource packs.
+1. Authoring resources live under `assets/<namespace>/anchorui/` in mod assets or standard resource packs. **No External Lore Loader** or separate game-root content directory.
+2. Keep test/anchor HUD examples separate from the RPG HUD example. Both are examples, not gameplay systems.
+3. Preserve namespaced IDs, cross-mod reuse, Java extensibility, typed configuration and resource-pack overrides.
+4. Prefer event-published state and selective invalidation over unnecessary tick polling or rebuilding widget trees every frame.
+5. JSON is declarative, not a scripting environment. Gameplay-changing actions are controlled and validated by the integrating server-side mod.
+6. **AnchorUI does not implement a dialogue system.** NPC conversations, branching stories, dialogue graphs, conversation progression, portraits and history belong in a separate mod built with AnchorUI. Existing example screens are general-purpose screen/action demonstrations, not a commitment to develop a dialogue engine.
+7. Likewise, quest progression, rewards and quest persistence belong to external mods. AnchorUI supplies only generic UI primitives and integration points; quest-like example data may be used to exercise them.
 
-Character/skill-tree screens and fully custom gameplay systems may become relevant **later**, but are **not current priorities**. Anchor UI should provide UI infrastructure rather than become a standalone quest or RPG gameplay engine.
+## 2. Implemented foundation
 
-**Non-negotiable decisions from the discussion:**
+### Anchors, composition and editing
 
-1. Modpack authors can define layouts through ordinary Minecraft **resource packs**, without writing Java.
-2. Resource path: `assets/<namespace>/anchorui/` (not the old `lore/` path).
-3. **Do not build an External Lore Loader.** No separate root-of-game JSON loader; standard resource packs and mod resources are sufficient. The player-specific HUD layout override file under `config/anchorui/` is a separate concern and is not a content loader.
-4. Keep a distinct **test/anchor HUD** and **RPG HUD**. Test overlays should be independently toggled.
-5. Cross-mod extensibility, namespaced widget types/IDs, references, styles, and Java integration are central requirements.
-6. Prefer efficient, event-driven data publication where practical; avoid introducing server/client tick loops just to watch UI variables.
-7. Maintain server authority for gameplay changes: a resource-pack JSON cannot directly grant rewards, execute arbitrary code, or bypass permission checks.
+- [x] Nine-point `AnchorLayout` with `point`, `anchor`, `relativeTo`, offsets, parent chains, resize support and diagnostics for bad references/cycles.
+- [x] HUD JSON composition across mods and resource packs, separately toggled test and RPG HUD demos.
+- [x] F8 HUD editor and context-sensitive screen editor: drag, parent/anchor selection, magnetic snapping, visibility overrides, reset, inspector and persistent local positioning.
+- [x] Read-only vanilla HUD anchors for layout alignment; no modification of vanilla HUD elements.
+- [x] Nested panels/containers, padding, opt-in clipping, basic group scaling, content-based `autoSize` and vertical/horizontal scrolling.
+- [x] JSON visual primitives: images, texture regions, tint/alpha, nine-slice, borders and rounded panel geometry.
 
-## 2. Existing foundation (as of 2026-11-10)
+### Extensible UI model
 
-The following is documented in the current repository and/or supported by the latest commits. Treat it as an **implemented baseline**, not future work:
+- [x] Namespaced widget types/IDs, `imports`, reusable `widgets/*.json`, references and overrides.
+- [x] Public Java widget factories and typed `Codec<T>` registration; reusable template definitions can come from resource packs or Java.
+- [x] Typed Data Binding for numbers, strings, booleans, objects and lists; nested paths, fallbacks, rich/live text, numeric progress, data lists and namespaced formatters.
+- [x] Java data providers, including `registerMutable` and publish-on-change caching.
+- [x] Compiled `visibleWhen` and `enabledWhen` Conditions: Boolean logic, typed comparisons, string/array operations and custom Java-registered operators.
+- [x] Screen events (`onOpen`, `onClose`, `onClick`, `onHoverEnter`, `onHoverLeave`, `onChange`) with typed, namespaced Java action registration.
+- [x] Per-screen Local UI State with `set_state`, `toggle_state`, data bindings, validation and state preservation through same-screen reinitialization.
+- [x] Built-in checkbox, switch, select and tabs controls, with state bindings, input events and resource-pack texture skins (variants, sprites/UV, nine-slice and shared styles).
+- [x] `anchorui:template_list` with item context, stable `key`, nested reusable templates, grid layout, custom Java layout factories and selective keyed widget reconciliation. Reordered rows retain widget instances and their Item Context index is updated.
+- [x] Resource reload-backed JSON loading, example resource pack, test scenes, unit tests and GitHub Actions build.
 
-- [x] `AnchorLayout` with nine attachment points, `point`, `anchor`, `relativeTo`, offsets, parent chains, and resize handling.
-- [x] Logging/fallback for unknown references, duplicate/circular anchor checks.
-- [x] JSON layouts and styles, rich/multiline text, vanilla widgets, screen rendering.
-- [x] Namespaced types, widget IDs, per-screen instance registry, reusable `widgets/*.json`, `imports` and `ref` with overrides.
-- [x] Public widget registration, custom JSON fields, typed Java `record` + Mojang `Codec` configuration.
-- [x] In-game HUD documents from resource packs/mods in a shared anchor layout.
-- [x] HUD editor (F8 / `/anchorui hud edit`): drag, anchor/parent selection, hide, reset, inspect, and locally saved overrides.
-- [x] Read-only vanilla HUD references: 25 NeoForge layer IDs, positional bounds, HUD editor outlines and parent selection, no vanilla manipulation.
-- [x] Context-sensitive F8 screen editor for Anchor UI JSON screens: visual dragging with snap, parent/point/anchor changes, hide/reset, scaled hitboxes, save/cancel per-screen overrides.
-- [x] Separate anchor-testing and RPG HUD demos: `/anchorui test hud1` and `/anchorui test rpg`.
-- [x] `anchorui:progress` (numeric binding) and resource-pack dialogue demo with `anchorui:button`.
-- [x] Resource-pack screen loading and `anchorui:open_screen` / `anchorui:close_screen` actions.
-- [x] Typed Data Binding: number, string, boolean, object, list; nested `path` and fallbacks; dynamic text/templates and `anchorui:data_list`.
-- [x] Conditions stage 1–2: compiled Boolean/comparison expressions, `all` / `any` / `not`, typed comparisons and `visibleWhen` / `enabledWhen` for HUD and screens, including legacy visibility binding compatibility.
-- [x] Java data registrations via `DataValueRegistry`, including cached `registerMutable` / publish-on-change providers and backward compatibility with numeric providers.
-- [x] Binding test HUD/screen and starter resource pack examples.
-- [x] JSON test scenes `scene1`–`scene14`, tests/CI build setup.
+The completed functionality above does **not** imply finished visual consistency, a general flow layout system, condition-driven content selection, action guards or polished resource failure diagnostics.
 
-**Important distinctions:** `visibleWhen` and `enabledWhen` now use the compiled Conditions engine, but conditional content (`cases`), action-level guards, and UI State remain unimplemented. Current dialogues demonstrate screen navigation, **not** complete branching conversation/quest state. Texture/image, panel, nested containers, opt-in clipping, nine-slice and basic group scaling are implemented. Content-based container auto sizing and opt-in generic JSON scrolling are implemented; full flex/grid layout and visual-style parity remain future work.
+## 3. Next work — ordered priorities
 
-See `README.md`, `docs/HUD.md`, `docs/DATA_BINDINGS.md`, `docs/MODPACK_AUTHORING.md`, `docs/WIDGET_REFERENCES.md`, and `docs/CUSTOM_WIDGETS.md` for implemented APIs. If a later code change contradicts this snapshot, update the checkboxes.
+### Stage 1 — Generic conditional content and guarded actions
 
-## 3. Next development stages
+**Priority: next.** Extend the existing Conditions engine, not a domain-specific conversation or quest system.
 
-### Stage A — Visual primitives and layout composition
+- [ ] Design declarative `cases` / conditional variants to choose widget content or a referenced template from compiled Conditions.
+- [ ] Add reusable action-level guards evaluated when the event fires, including disabled/false paths and clear diagnostics.
+- [ ] Keep the schema compact, typed and compatible with existing `visibleWhen` / `enabledWhen` behavior.
+- [ ] Cover nested widgets, local UI state, template rows, missing data, malformed conditions and short-circuit evaluation in tests.
+- [ ] Define an opt-in policy for whether hidden children keep or collapse their layout space; coordinate with Stage 2.
 
-**Priority: high.** RPG HUD and dialogue authors need more than text, item models and progress bars.
+**Done when:** a JSON UI can select content and safely gate a generic action without implementing its own widget or scripting logic.
 
-- [x] Implement a first-class **texture/image widget** with namespaced textures, scaling, UV cropping, tint, and alpha. Better missing-resource handling is still future work.
-- [x] Implement initial **panel/container** widgets, nested children, padding, content bounds, anchors, clipping, and parent-first draw order. More advanced layout policies remain future work.
-- [x] Add opt-in container `autoSize` (content bounds plus padding, nested sizing) and scroll viewports (vertical/horizontal/both) with existing Anchor UI transforms and Minecraft scissor/input primitives. Not a flex/grid or replacement for NeoForge's specialized `ScrollPanel`.
-- [ ] Unify widget visual styling: borders/frames, backgrounds, overlays and progress-bar style consistency. Specifically guard against the prior RPG HUD issue where the second bar did not receive the same border appearance as the first.
-- [ ] Verify rendering order when screens use blur, backgrounds, outlines, tooltips and widget content; avoid elements unexpectedly appearing beneath the blur.
-- [ ] Keep content and widgets reusable through `style`, `ref` and imports, rather than duplicating definitions.
-- [ ] Extend tests/resource-pack demos for textures, resource reload, missing assets, panel nesting, different GUI scales and consistent progress-bar styling.
+### Stage 2 — General-purpose automatic layouts
 
-**Acceptance:** A resource pack can build an illustrated RPG HUD/dialogue panel from native Anchor UI widgets without requiring a custom Java widget just to render a frame/texture.
+**Priority: high.** Grid placement for `template_list` already exists, but it is not a general layout engine.
 
-### Stage B — General Conditions
+- [ ] Add reusable row/column stack or flow layouts for ordinary container children, with `gap`, alignment and distribution.
+- [ ] Investigate flexible size/grow, wrapping, min/max size and a general grid layout independent of `template_list`.
+- [ ] Support optional collapsed layout space for hidden children without changing legacy anchored screens by default.
+- [ ] Preserve explicit anchors, scroll, clipping, scaling, editor overrides and hit-testing when automatic layout is enabled.
+- [ ] Add stress tests for nested layouts, resize/GUI scale, long text and mixed fixed/auto-sized children.
 
-**Priority: high, after the necessary binding primitives.**
+**Done when:** common menus, card groups and HUD sections can be assembled without manually assigning an x/y offset to every child.
 
-- [x] Add a general compiled condition model for visibility and enabled states, beyond the previous boolean-only `visibleWhen`.
-- [x] Implement typed `eq` / `ne`, numeric comparisons, string/list checks, `exists`, `empty`, `isNull` and `all` / `any` / `not`. JSON schema is documented in `docs/CONDITIONS.md`.
-- [x] Preserve layout bounds for hidden widgets, respect typed fallbacks, detect malformed expressions, isolate per-widget errors, and guard provider failures.
-- [x] Compile expressions and resolve data providers when constructing widgets; short-circuit compound rules and read each source once per evaluation. No new tick loops.
-- [x] Support third-party Java registration of namespaced unary/binary operators via `ConditionOperationRegistry`, resolved during condition compilation and usable in `visibleWhen` / `enabledWhen`.
-- [ ] Add conditional content (`cases`), action guards and richer dialogue/quest choice predicates in a subsequent stage.
-- [ ] Decide on optional collapsed-space layout for conditionally hidden children and optional event-driven invalidation/caching of expensive conditions.
+### Stage 3 — Consistent appearance and input polish
 
-**Acceptance:** A dialogue choice or quest detail can be enabled/hidden based on safe, declared client-side state and a mod-provided value.
+**Priority: high; can proceed alongside Stage 2.**
 
-### Stage C — UI State and richer Screen Actions
+- [ ] Unify visual style inheritance and appearance across progress bars, buttons, panels and interactive controls, including hover/disabled/focused states where appropriate.
+- [ ] Verify matching borders/frames on RPG HUD progress bars; keep the earlier second-bar regression in the QA suite.
+- [ ] Audit rendering order for screen backgrounds, blur, outlines, overlays, tooltips and clipping.
+- [ ] Improve missing-texture and malformed-style diagnostics; test F3+T reload and resource-pack replacement.
+- [ ] Improve keyboard focus, navigation, tab order and accessibility for interactive screens.
+- [ ] Extend demos with consistent texture/scale themes, including small GUI scales.
 
-**Priority: high for dialogues, after/alongside Conditions.**
+**Done when:** shared style resources give consistent results across built-in widgets, with stable rendering and input behavior.
 
-- [ ] Provide **UI State** for local screen/dialogue variables (e.g., selected option, current page, temporary choice flags).
-- [ ] Define state lifetime: per-widget, per-screen, and optionally across screen navigation. Specify reset/initialization behavior.
-- [ ] Expand the explicit action registry beyond `open_screen` and `close_screen` to support safe, declarative state updates and dialogue flow. Names and JSON schema are **TBD**.
-- [ ] Clarify focus, keyboard navigation, action enablement and errors when transitioning between screens.
-- [ ] Keep actions from resource packs sandboxed. Any action that changes quests, inventories, currency, permissions or other gameplay state must go through a server-authorized integration supplied by another mod.
-- [ ] Add tests for navigation loops, invalid actions, missing screens, state initialization/reset, and resource reloads.
+### Stage 4 — State, lifecycle and screen navigation refinements
 
-**Acceptance:** A multipage dialogue can react to local choices without custom code for every page, while protected gameplay actions remain server controlled.
+**Priority: medium.** Local UI State and basic screen actions are already implemented.
 
-### Stage D — Dialogue and quest UI building blocks
+- [ ] Specify an optional, explicit state handoff/shared scope for screen navigation (if needed), without introducing a dialogue-specific state machine.
+- [ ] Define lifecycle semantics for focus, reopening, navigation failures and resource reload.
+- [ ] Clarify action guard and state validation errors for resource-pack authors.
+- [ ] Test screen transitions, reopen/reset, invalid targets and nested interactive components.
 
-**Priority: high product use case; build on A–C.**
+**Done when:** independent screens can compose safely with predictable state lifetime and focus restoration.
 
-- [ ] Turn the simple two-page demo into useful **branching dialogues** with conditional choices and reusable presentation templates.
-- [ ] Supply quest-UI components/patterns: quest list, quest detail, objective progress, available/completed states, tracker and narrative descriptions.
-- [ ] Bind those screens to structured data exposed by a quest/gameplay mod; add an example of integration with external quest providers.
-- [ ] Define opt-in callbacks/actions for starting, advancing, accepting or turning in quests **only through server-validated integrations**.
-- [ ] Cover empty lists, large lists, selection, scrolling, localization, tooltips and controller/keyboard focus where relevant.
-- [ ] Keep this a **UI framework**: quest persistence, progression rules and reward logic are not automatically part of Anchor UI.
+### Stage 5 — Declarative animation primitives
 
-**Acceptance:** A modpack can present quest data and dialogues via resource-pack JSON while the actual quest engine remains independent.
+**Priority: medium, after stable layout/visibility behavior.**
 
-### Stage E — Animations and polish
+- [ ] Provide general-purpose fade, slide and interpolation primitives for widgets and screens.
+- [ ] Define triggers on open/close, state changes and visibility/data changes, plus easing and duration configuration.
+- [ ] Maintain correct anchors, clipping, transformed hitboxes, scroll and editor behavior during animations.
+- [ ] Avoid global per-tick scans and per-frame tree recreation; add performance tests.
 
-**Priority: medium; after stable state, conditions and visual primitives.**
+**Done when:** mod/resource-pack UI authors can add visual transitions without dedicated Java rendering code.
 
-- [ ] Add declarative animations/transitions for showing/hiding screens or widgets, e.g. fade, slide and interpolation where appropriate.
-- [ ] Define when transitions trigger: state changes, screen opening/closing and data changes.
-- [ ] Ensure animation does not destabilize anchors, hitboxes, clipping, focus or HUD editor overrides.
-- [ ] Avoid per-tick global scans or allocating/rebuilding widget trees on every frame.
-- [ ] Add animation examples and performance tests.
+### Stage 6 — API, performance, documentation and release quality
 
-**Acceptance:** HUD/dialogue transitions feel polished without forcing each mod to write bespoke rendering logic.
+**Priority: continuous.**
 
-### Stage F — API, performance, documentation, release quality
+- [ ] Consolidate and document stable APIs for widgets, templates, actions, layout factories, data sources, formatters, conditions and resource reload.
+- [ ] Explore dirty/epoch-based binding invalidation for expensive providers; retain existing live bindings and event-published providers.
+- [ ] Investigate partial layout recalculation for large screens and keyed lists; instance retention is already implemented.
+- [ ] Improve diagnostics for unknown types/refs, missing assets and invalid actions/conditions.
+- [ ] Expand automated and in-client QA for F3+T, GUI resize/scale, multiple resource packs, keyboard focus, multiplayer and client-only behavior.
+- [ ] Publish public English documentation (GitBook) with copyable examples and clear compatibility guarantees.
+- [ ] Run CI for each supported version/loader branch once ports are in scope.
 
-**Priority: ongoing.**
+## 4. Existing QA / regressions
 
-- [ ] Consolidate a documented, stable API for custom widgets, typed configuration, data sources, actions, resource reload and screen/HUD integration.
-- [ ] Revisit Data Binding coverage so new built-in widgets can read typed values consistently. Existing structured bindings and mutable PUSH providers must remain supported.
-- [ ] Keep heavy/externally synchronized values event-published when possible; make caching, invalidation and redraw behavior explicit. Rendering may read the latest cached value, but `registerMutable` does not run a tick listener by itself.
-- [ ] Improve authoring diagnostics: unknown widget/type/ref, broken texture, malformed style/binding, invalid condition/action.
-- [ ] Expand automated tests and test scenes, including independent demo toggles, GUI resize, F3+T resource reload, multiplayer/client-only behavior, and accessibility/keyboard handling.
-- [ ] Prepare public **English** documentation (GitBook was discussed) and maintain ready-to-copy resource-pack examples.
-- [ ] Check build/CI for every supported branch when ports begin; the current roadmap's implementation status concerns `1.21.1` only.
+- [ ] Check visual parity of all progress bars, including equivalent borders and texture styling.
+- [ ] Verify background blur, popups, outlines and tooltips render in the correct order.
+- [ ] Verify texture replacement, broken resource paths, reloads and multiple GUI scales.
+- [ ] Verify moved keyed list widgets keep correct focus, click handlers, index-sensitive custom widgets and scroll positions in-game. Unit tests and CI already cover the underlying reconciliation.
+- [x] Separate test/anchor and RPG HUD toggles.
+- [x] Namespaced screen commands without showing the internal `screens/` path.
+- [ ] 3D model `scene4` off-screen positioning: **deferred**, not a release blocker.
+- [ ] Minor text vertical alignment observation: **deferred**, not a release blocker.
 
-## 4. Regressions / known discussion notes to preserve
+## 5. Explicitly outside the framework
 
-These were discussed during testing, and should remain in the QA backlog until explicitly verified:
+- Built-in dialogue engine: NPC conversation trees, branching narrative rules, dialogue history, character portraits as a dedicated system, progression and persistence. Such a mod may **use** AnchorUI's generic controls and actions.
+- Standalone quest engine: objective progression, rewards, quest storage and game rules. Quest-specific screens can be composed externally using AnchorUI widgets.
+- External Lore Loader; arbitrary Java/scripts in JSON; unvalidated or client-authoritative gameplay changes.
+- Full character/skill systems, game mechanics and specialized 3D scene editors. These may be separate integrations later.
+- Existing small demo documents may remain as UI tests; they do not expand the scope of the core framework.
 
-- [ ] Verify that `anchorui:progress` bars share equivalent styling (including borders), not merely identical numeric dimensions.
-- [ ] Verify blurred backgrounds, overlays, outlines and other layers render in the intended order.
-- [x] Keep `/anchorui test hud1` independent of `/anchorui test rpg` (current documentation describes independent toggles).
-- [x] Open namespaced screens via `/anchorui screen open namespace:name`; command parsing must accept the colon and hide internal `screens/` path details (documented in current README).
-- [ ] Revisit the 3D model test from `scene4` only if that feature becomes relevant. The discussion explicitly **deferred** its off-screen/over-sensitive movement issue; do not treat it as a current blocker.
-- [ ] Consider the earlier observation that text appeared slightly raised relative to expected alignment; **deferred**, not current priority.
+## 6. Recommended next sequence
 
-## 5. Deferred / excluded scope
+1. **`cases` and guarded actions** (generic Conditions extension).
+2. **Row/column container layout**, with an opt-in collapsed-visibility policy.
+3. **Visual consistency and interaction QA** (especially progress bars, textures and blur).
+4. **Screen lifecycle polish and optional state handoff**.
+5. **Animations**, alongside API stability, performance work, English documentation and additional test coverage.
 
-- **Excluded:** External Lore Loader, direct game-root content directory, arbitrary JSON-side Java/script execution, unapproved server mutations.
-- **Deferred:** character profile and skill-tree screens, full RPG/unique gameplay systems, standalone quest engine, broad 3D widget controls.
-- **Separate configuration:** player HUD positioning is persisted to `config/anchorui/hud-layout.json`, and screen-editor overrides are persisted per resource under `config/anchorui/screens/`; neither is an authored-content loader.
-- **Compatibility policy:** preserve existing JSON and Java integration APIs when adding new features where feasible; document intentional breaking changes.
-
-## 6. Suggested order of work
-
-1. **Texture widget + style fidelity + container/panel composition** — unlocks production-quality RPG HUD and dialogue layouts.
-2. **General Conditions** — turns static, bound screens into conditional interfaces.
-3. **UI State + safe action expansion** — enables real dialogue choices and local UI flows.
-4. **Dialogue/quest UI components** — practical end-user features on the stable primitives.
-5. **Animations and polish**, alongside tests, API stabilization and English documentation.
-
-This is a working backlog, not a promise of exact release versions or dates. Update completion state when code and tests actually land.
+This is a working backlog, not a release schedule. Update completion checkboxes only when code and tests actually land.

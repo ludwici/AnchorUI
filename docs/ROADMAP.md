@@ -22,7 +22,7 @@ AnchorUI provides reusable, JSON-driven tools for assembling Minecraft HUDs and 
 
 ## Next priorities
 
-1. **Generic conditional content and action guards:** reusable `cases`/variant selection; evaluate action predicates at interaction time; validate errors and integration with Local UI State and Template Lists.
+1. **Conditional content and action guards — core implemented:** `anchorui:cases` and action-time `when` now support compiled Conditions, named templates and Template Lists. Remaining work is client QA and the future hidden-space collapse policy.
 2. **Automatic layouts:** general row/column/flow layout for containers, spacing/alignment, optional wrap and flexible sizing; opt-in layout-space collapse for hidden elements.
 3. **Style and input fidelity:** consistent progress-bar/widget frames, texture/style inheritance, blur/render order, missing-asset errors, resource reload and keyboard/focus behavior.
 4. **Lifecycle and navigation:** optional general-purpose screen-state handoff, predictable focus and reopen behavior; no dialogue-specific state machine.

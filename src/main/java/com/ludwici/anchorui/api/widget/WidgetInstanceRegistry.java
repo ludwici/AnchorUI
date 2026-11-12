@@ -12,6 +12,11 @@ public final class WidgetInstanceRegistry {
     private final Map<String, LoreEntity.UiElement> definitions = new LinkedHashMap<>();
     private final Map<String, AbstractWidget> widgets = new LinkedHashMap<>();
 
+    public void clear() {
+        definitions.clear();
+        widgets.clear();
+    }
+
     public void declare(String id, LoreEntity.UiElement element) {
         if (definitions.putIfAbsent(id, element) != null) {
             throw new IllegalArgumentException("Duplicate widget id: " + id);

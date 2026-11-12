@@ -2,9 +2,11 @@ package com.ludwici.anchorui.client.test;
 
 import com.ludwici.anchorui.api.action.UiActionRegistry;
 import com.ludwici.anchorui.api.binding.DataValueRegistry;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.Codec;
 import com.ludwici.anchorui.api.widget.AnchorWidgetRegistry;
+import com.ludwici.anchorui.api.widget.WidgetTemplateRegistry;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -25,6 +27,27 @@ public final class TestWidgetRegistration {
     }
 
     public static void register() {
+        WidgetTemplateRegistry.register(ResourceLocation.fromNamespaceAndPath("anchorui_test", "java_quest_row"), () -> {
+            JsonObject definition = new JsonObject();
+            definition.addProperty("type", "anchorui:button");
+
+            JsonObject title = new JsonObject();
+            title.addProperty("item", "title");
+            definition.add("text", title);
+
+            JsonObject action = new JsonObject();
+            action.addProperty("type", "anchorui_test:accept_quest");
+            JsonObject questId = new JsonObject();
+            questId.addProperty("item", "id");
+            action.add("quest", questId);
+            definition.add("onClick", action);
+
+            JsonObject size = new JsonObject();
+            size.addProperty("width", 198);
+            size.addProperty("height", 22);
+            definition.add("size", size);
+            return definition;
+        });
         questItems = DataValueRegistry.registerMutable(QUESTS, JsonParser.parseString("""
                 [
                   {

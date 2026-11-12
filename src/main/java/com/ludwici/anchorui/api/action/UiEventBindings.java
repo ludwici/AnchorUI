@@ -35,12 +35,16 @@ public final class UiEventBindings {
     }
 
     public void fire(String name, String targetId, JsonElement value) {
+        fire(name, targetId, value, null);
+    }
+
+    public void fire(String name, String targetId, JsonElement value, JsonElement item) {
         Consumer<UiEvent> handler = handlers.get(name);
         if (handler == null) {
             return;
         }
         try {
-            handler.accept(new UiEvent(name, targetId, value));
+            handler.accept(new UiEvent(name, targetId, value, item));
         } catch (RuntimeException exception) {
             if (failed.add(name)) {
                 AnchorUI.LOGGER.error("Anchor UI event '{}' failed for '{}'", name, targetId, exception);

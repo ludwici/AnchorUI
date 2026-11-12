@@ -21,11 +21,13 @@ public class UiActionArgumentsTest {
     private record QuestArguments(String quest, int amount, boolean silent) {
     }
 
-    private static final Codec<QuestArguments> QUEST_CODEC = RecordCodecBuilder.create(instance -> instance.group(
+    private static final Codec<QuestArguments> BASE_CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.STRING.fieldOf("quest").forGetter(QuestArguments::quest),
             Codec.INT.optionalFieldOf("amount", 1).forGetter(QuestArguments::amount),
             Codec.BOOL.optionalFieldOf("silent", false).forGetter(QuestArguments::silent)
-    ).apply(instance, QuestArguments::new)).validate(arguments -> {
+    ).apply(instance, QuestArguments::new));
+
+    private static final Codec<QuestArguments> QUEST_CODEC = BASE_CODEC.validate(arguments -> {
         if (!arguments.quest().contains(":") || ResourceLocation.tryParse(arguments.quest()) == null) {
             return DataResult.error(() -> "quest must be a namespaced identifier");
         }

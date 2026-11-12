@@ -37,6 +37,7 @@ import com.ludwici.anchorui.client.hud.HudLayoutOffsets;
 import com.ludwici.anchorui.client.hud.HudLayoutStorage;
 import net.neoforged.fml.loading.FMLPaths;
 import com.mojang.blaze3d.platform.InputConstants;
+import org.lwjgl.glfw.GLFW;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
@@ -1124,6 +1125,14 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            for (int index = placedWidgets.size() - 1; index >= 0; index--) {
+                if (placedWidgets.get(index).widget() instanceof UiPopupWidget popup && popup.isPopupOpen()) {
+                    popup.closePopup();
+                    return true;
+                }
+            }
+        }
         if (KeyRegistry.EDIT_HUD.isActiveAndMatches(InputConstants.getKey(keyCode, scanCode))) {
             minecraft.setScreen(new AnchorScreenEditorScreen(this));
             return true;

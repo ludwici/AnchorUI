@@ -12,9 +12,9 @@ Bindings are registered by Java mods under namespaced IDs. Resource-pack authors
 | String | `anchorui:text.text`, including interpolation templates |
 | Boolean | `visibleWhen` and `enabledWhen` for any HUD or screen widget, including composite [Conditions](CONDITIONS.md) |
 | Object | Structured source with `path`, e.g. `health` on `player.profile` |
-| List | `anchorui:data_list.items`, selecting fields from each element |
+| List | `anchorui:data_list.items` for text, or `anchorui:template_list.items` for interactive row templates |
 
-The previously published `NumericDataRegistry` API remains supported and shares its registrations with the new typed registry.
+For buttons and nested widgets generated from a list binding, see [Template List and Item Context](TEMPLATE_LIST.md). Item fields can drive per-row text, Conditions and action arguments.\n\nThe previously published `NumericDataRegistry` API remains supported and shares its registrations with the new typed registry.
 
 ### Plain numeric values and nested fields
 

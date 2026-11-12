@@ -70,7 +70,7 @@ A `state` object at the root of a screen JSON defines the available keys and the
 
 State updates from `anchorui:set_state` and `anchorui:toggle_state` are reflected by Conditions and text bindings on the next screen render, without rebuilding unrelated widgets. These actions work on normal AnchorUI **screens**, not display-only HUDs.
 
-## JSON state actions
+Ready-made widgets can change UI state directly: `anchorui:checkbox` and `anchorui:switch` toggle boolean state; `anchorui:select` and `anchorui:tabs` set a selected string/number value. They all emit `onChange` events. See [Built-in Interactive Controls](UI_CONTROLS.md).\n\n## JSON state actions
 
 - `anchorui:set_state`: requires a declared `key` and `value` of the same JSON type as the initial value. Use it for selected tabs, page numbers, and structured values.
 - `anchorui:toggle_state`: requires a declared boolean `key`; flips it between `true` and `false`.

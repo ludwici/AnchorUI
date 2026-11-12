@@ -124,6 +124,40 @@ public class UiEventBindingsTest {
     }
 
     @Test
+    public void repeatedRowEventsCarryItemWithoutOverwritingChangeValues() {
+        AtomicReference<UiEvent> received = new AtomicReference<>();
+        UiActionRegistry.registerEvent(id("item_context"), (context, settings) -> received::set);
+        UiEventBindings events = UiEventBindings.compile(null, json("""
+                {
+                  "onClick": "ui_events_test:item_context",
+                  "onChange": "ui_events_test:item_context"
+                }
+                """), "onClick", "onChange");
+
+        JsonObject item = json("""
+                {
+                  "id": "demo:quest",
+                  "title": "Find a sword"
+                }
+                """);
+        events.fire("onClick", "demo:quest_button", item, item);
+        item.addProperty("title", "Mutated outside");
+        assertEquals("demo:quest", received.get().value().getAsJsonObject().get("id").getAsString());
+        assertEquals("Find a sword", received.get().item().getAsJsonObject().get("title").getAsString());
+
+        JsonObject scrollPosition = json("""
+                {
+                  "x": 0,
+                  "y": 28
+                }
+                """);
+        events.fire("onChange", "demo:quest_list", scrollPosition, item);
+        assertEquals(28, received.get().value().getAsJsonObject().get("y").getAsInt());
+        assertEquals("demo:quest", received.get().item().getAsJsonObject().get("id").getAsString());
+        assertEquals("onChange", received.get().name());
+    }
+
+    @Test
     public void duplicateRegistrationIsRejected() {
         UiActionRegistry.registerEvent(id("duplicate"), (context, settings) -> event -> {});
         assertThrows(IllegalStateException.class, () -> UiActionRegistry.register(id("duplicate"), (context, settings) -> () -> {}));

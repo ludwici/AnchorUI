@@ -1,0 +1,95 @@
+{
+  "style": "anchorui:style/default",
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:java_template_title",
+      "text": "<b>JAVA TEMPLATE DEMO</b>",
+      "align": "center",
+      "color": "#FFFFFFFF",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -88
+      },
+      "size": {
+        "width": 260,
+        "height": 20
+      }
+    },
+    {
+      "type": "anchorui:template_list",
+      "id": "anchorui:java_quest_rows",
+      "items": {
+        "bind": "anchorui_test:quests",
+        "fallback": []
+      },
+      "key": "id",
+      "rowHeight": 24,
+      "gap": 4,
+      "maxEntries": 16,
+      "fillColor": "#E023354A",
+      "borderColor": "#FFAEC9D9",
+      "borderWidth": 1,
+      "radius": 3,
+      "scroll": {
+        "axis": "vertical",
+        "step": 24
+      },
+      "padding": {
+        "left": 8,
+        "right": 8,
+        "top": 7,
+        "bottom": 7
+      },
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -12
+      },
+      "size": {
+        "width": 236,
+        "height": 110
+      },
+      "template": "anchorui_test:java_quest_row"
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:java_quest_toggle",
+      "text": "Reorder / add quest",
+      "onClick": "anchorui_test:toggle_quests",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 60
+      },
+      "size": {
+        "width": 184,
+        "height": 20
+      }
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:java_quest_close",
+      "text": "Close",
+      "onClick": "anchorui:close_screen",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 87
+      },
+      "size": {
+        "width": 130,
+        "height": 20
+      }
+    }
+  ]
+}

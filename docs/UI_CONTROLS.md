@@ -100,6 +100,35 @@ String and numeric options are allowed (including numeric page IDs). The corresp
 
 No arbitrary values or scripts are evaluated from JSON. State changes are client-side presentation behavior only.
 
+## Action button appearance (opt-in)
+
+`anchorui:button` continues to use the **vanilla Minecraft button** unless you explicitly configure a custom visual style. To opt in, provide a fill/border/hover/disabled color or a `textures` object. The click event behavior and Action Guards are unchanged.
+
+```json
+{
+  "type": "anchorui:button",
+  "id": "mypack:confirm",
+  "text": "Confirm",
+  "size": {"width": 130, "height": 22},
+  "fillColor": "#FF284C67",
+  "borderColor": "#FFC6D5E3",
+  "hoverColor": "#FF3B7593",
+  "disabledColor": "#FF343D48",
+  "textures": {
+    "background": {
+      "normal": "mypack:textures/gui/button_normal.png",
+      "hover": "mypack:textures/gui/button_hover.png",
+      "disabled": "mypack:textures/gui/button_disabled.png"
+    }
+  },
+  "onClick": {"type": "mypack:confirm_action"}
+}
+```
+
+The sprite fields accept the same resource-pack texture syntax and resource locations as other skinned AnchorUI controls. A missing state uses the `normal` sprite if supplied. When no background sprite is configured, the optional `fillColor`, `borderColor`, `hoverColor` and `disabledColor` settings draw a simple colored button. Text color uses the existing widget `color`/style property.
+
+Both the HUD and screen F8 editors can edit these fields using **VISUAL / CONTENT**. The `normal`, `hover` and `disabled` paths can be entered with **E** and are saved as local appearance overrides. Custom appearance applies on a deliberate edit; the ordinary vanilla-button path stays unchanged until an explicit style is configured.
+
 ## Appearance
 
 All four controls use `size.width` / `size.height` and the existing widget text color. Their fill can inherit the widget style's `background.color`. You can override colors directly in JSON:

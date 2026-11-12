@@ -4,6 +4,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ludwici.anchorui.api.style.ElementAnchor;
 import com.ludwici.anchorui.api.widget.WidgetIds;
+import com.ludwici.anchorui.api.widget.WidgetEditorRegistry;
+import com.ludwici.anchorui.api.WidgetTypeIds;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -53,11 +55,14 @@ public final class HudLayoutOffsets {
     }
 
     public void setSettingOverride(String id, String section, String property, JsonElement value) {
-        if (!"layout".equals(section) && !"layoutItem".equals(section)) {
+        if (!"layout".equals(section) && !"layoutItem".equals(section) && !"appearance".equals(section)) {
             throw new IllegalArgumentException("Unsupported editor override section: " + section);
         }
         if (value == null || value.isJsonNull() || !value.isJsonPrimitive()) {
             throw new IllegalArgumentException("Editor component overrides must be primitive values");
+        }
+        if ("appearance".equals(section) && !property.matches("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*){0,5}")) {
+            throw new IllegalArgumentException("Invalid appearance property path");
         }
         String qualified = WidgetIds.id(id, "anchorui");
         JsonObject overrides = componentSettings.computeIfAbsent(qualified, ignored -> new JsonObject());
@@ -85,6 +90,37 @@ public final class HudLayoutOffsets {
         return componentSettings.containsKey(id);
     }
 
+    public boolean hasAppearanceOverrides(String id) {
+        JsonObject settings = componentSettings.get(id);
+        return settings != null && settings.has("appearance");
+    }
+
+    public JsonObject widgetSettings(String id, JsonObject original) {
+        JsonObject result = original.deepCopy();
+        JsonObject settings = componentSettings.get(id);
+        if (settings == null || !settings.has("appearance")) {
+            return result;
+        }
+        var type = WidgetTypeIds.parse(result.get("type").getAsString());
+        for (var entry : settings.getAsJsonObject("appearance").entrySet()) {
+            WidgetEditorRegistry.Field field = WidgetEditorRegistry.find(type, entry.getKey());
+            if (field == null) {
+                continue;
+            }
+            String[] segments = entry.getKey().split("\\.");
+            JsonObject parent = result;
+            for (int index = 0; index < segments.length - 1; index++) {
+                String segment = segments[index];
+                if (!parent.has(segment) || !parent.get(segment).isJsonObject()) {
+                    parent.add(segment, new JsonObject());
+                }
+                parent = parent.getAsJsonObject(segment);
+            }
+            parent.add(segments[segments.length - 1], entry.getValue().deepCopy());
+        }
+        return result;
+    }
+
     public JsonObject effectiveSettings(String id, JsonObject base) {
         JsonObject result = base.deepCopy();
         JsonObject overrides = componentSettings.get(id);
@@ -92,6 +128,9 @@ public final class HudLayoutOffsets {
             return result;
         }
         for (var entry : overrides.entrySet()) {
+            if ("appearance".equals(entry.getKey())) {
+                continue;
+            }
             JsonObject section = new JsonObject();
             JsonElement existing = result.get(entry.getKey());
             if (existing != null && existing.isJsonObject()) {
@@ -233,7 +272,7 @@ public final class HudLayoutOffsets {
             if (value.has("hidden")) {
                 result.setHidden(id, value.get("hidden").getAsBoolean());
             }
-            for (String section : new String[]{"layout", "layoutItem"}) {
+            for (String section : new String[]{"layout", "layoutItem", "appearance"}) {
                 if (value.has(section)) {
                     if (!value.get(section).isJsonObject()) {
                         throw new IllegalArgumentException("Editor override '" + section + "' must be an object");

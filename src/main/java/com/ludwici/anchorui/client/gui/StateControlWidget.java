@@ -272,7 +272,7 @@ public final class StateControlWidget extends AbstractButton implements UiChange
                         Math.max(0, width - 24), textColor);
                 int arrowX = x + width - arrowSize - 3;
                 if (!textures.render(graphics, "arrow", arrowX, y + (height - arrowSize) / 2,
-                        arrowSize, arrowSize, active ? popupOpen ? "open" : "closed" : "disabled")) {
+                        arrowSize, arrowSize, !active ? "disabled" : popupOpen ? "open" : "closed", "closed")) {
                     drawText(graphics, popupOpen ? "▲" : "▼", x + width - 15,
                             y + (height - 8) / 2, 12, MUTED);
                 }
@@ -285,9 +285,11 @@ public final class StateControlWidget extends AbstractButton implements UiChange
                     int right = x + (index + 1) * width / count;
                     boolean tabHover = hovered && mouseX >= left && mouseX < right;
                     boolean selected = index == chosen;
-                    boolean rendered = textures.render(graphics, "tab", left, y, right - left, height,
-                            active ? selected ? tabHover ? "selectedHover" : "selected"
-                                    : tabHover ? "hover" : "normal" : "disabled");
+                    boolean rendered = selected
+                            ? textures.render(graphics, "tab", left, y, right - left, height,
+                                    !active ? "disabled" : tabHover ? "selectedHover" : "selected", "selected")
+                            : textures.render(graphics, "tab", left, y, right - left, height,
+                                    !active ? "disabled" : tabHover ? "hover" : "normal");
                     if (!rendered) {
                         if (selected) {
                             graphics.fill(left + 1, y + 1, right - 1, y + height - 1, accentColor);
@@ -411,9 +413,12 @@ public final class StateControlWidget extends AbstractButton implements UiChange
                     && mouseY >= top && mouseY < top + popupRowHeight;
             boolean selectedOption = index == selected;
             boolean optionHover = hovered || index == highlight;
-            if (!textures.render(graphics, "option", x + 1, top, width - 2, popupRowHeight,
-                    selectedOption ? optionHover ? "selectedHover" : "selected"
-                            : optionHover ? "hover" : "normal")) {
+            boolean texturedOption = selectedOption
+                    ? textures.render(graphics, "option", x + 1, top, width - 2, popupRowHeight,
+                            optionHover ? "selectedHover" : "selected", "selected")
+                    : textures.render(graphics, "option", x + 1, top, width - 2, popupRowHeight,
+                            optionHover ? "hover" : "normal");
+            if (!texturedOption) {
                 if (selectedOption || optionHover) {
                     graphics.fill(x + 1, top, x + width - 1, top + popupRowHeight,
                             selectedOption ? accentColor : HOVER);

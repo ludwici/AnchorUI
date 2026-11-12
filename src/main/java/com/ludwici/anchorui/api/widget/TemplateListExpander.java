@@ -45,9 +45,20 @@ public final class TemplateListExpander {
     }
 
     public static List<Entry> expand(JsonObject config, JsonArray items, String listId, Map<String, JsonObject> templates) {
-        if (!config.has("template") || !config.get("template").isJsonObject()) {
-            throw new IllegalArgumentException("template_list requires a widget object in 'template'");
+        JsonElement rawTemplate = config.get("template");
+        JsonObject rowTemplate;
+        if (rawTemplate != null && rawTemplate.isJsonObject()) {
+            rowTemplate = rawTemplate.getAsJsonObject();
+        } else if (rawTemplate != null && rawTemplate.isJsonPrimitive()
+                && rawTemplate.getAsJsonPrimitive().isString()) {
+            rowTemplate = new JsonObject();
+            rowTemplate.addProperty("ref", rawTemplate.getAsString());
+        } else {
+            throw new IllegalArgumentException("template_list requires a widget object or namespaced template ID in 'template'");
         }
+
+        Map<String, JsonObject> resolvedTemplates = new HashMap<>(WidgetTemplateRegistry.definitions());
+        resolvedTemplates.putAll(templates);
         int rowHeight = GsonHelper.getAsInt(config, "rowHeight", 22);
         int gap = GsonHelper.getAsInt(config, "gap", 2);
         int maxEntries = GsonHelper.getAsInt(config, "maxEntries", 64);
@@ -78,12 +89,12 @@ public final class TemplateListExpander {
 
             ItemContext context = new ItemContext(item, key, index);
             String rowId = listId + "/entry_" + digest(key);
-            JsonElement substituted = substitute(config.get("template"), context);
+            JsonElement substituted = substitute(rowTemplate, context);
             JsonObject document = new JsonObject();
             JsonArray entities = new JsonArray();
             entities.add(substituted);
             document.add("entities", entities);
-            JsonArray expanded = WidgetDocumentResolver.resolve(document, namespace, templates).getAsJsonArray("entities");
+            JsonArray expanded = WidgetDocumentResolver.resolve(document, namespace, resolvedTemplates).getAsJsonArray("entities");
             if (expanded.isEmpty()) {
                 continue;
             }
@@ -97,7 +108,7 @@ public final class TemplateListExpander {
             }
 
             for (int widgetIndex = 0; widgetIndex < expanded.size(); widgetIndex++) {
-                JsonObject widget = expanded.get(widgetIndex).getAsJsonObject().deepCopy();
+                JsonObject widget = substitute(expanded.get(widgetIndex), context).getAsJsonObject();
                 String id = widget.get("id").getAsString();
                 widget.addProperty("id", ids.get(id));
 

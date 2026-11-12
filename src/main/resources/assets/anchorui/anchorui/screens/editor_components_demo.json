@@ -1,0 +1,106 @@
+{
+  "state": {
+    "highlight": true
+  },
+  "entities": [
+    {
+      "type": "anchorui:panel",
+      "id": "editor_panel",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "TOPLEFT",
+        "relativeTo": "screen",
+        "x": 45,
+        "y": 35
+      },
+      "size": {
+        "width": 320,
+        "height": 200
+      },
+      "padding": {
+        "left": 12,
+        "right": 12,
+        "top": 12,
+        "bottom": 12
+      },
+      "fillColor": "#DD1A2838",
+      "borderColor": "#FF8EBDD7",
+      "borderWidth": 2,
+      "radius": 8,
+      "layout": {
+        "type": "column",
+        "gap": 9
+      },
+      "children": [
+        {
+          "type": "anchorui:text",
+          "id": "demo_heading",
+          "text": "EDIT ME: Heading",
+          "color": "#FFF7DDA0",
+          "size": {
+            "width": 290,
+            "height": 20
+          }
+        },
+        {
+          "type": "anchorui:button",
+          "id": "demo_button",
+          "text": "Edit my label",
+          "size": {
+            "width": 160,
+            "height": 20
+          }
+        },
+        {
+          "type": "anchorui:progress",
+          "id": "demo_progress",
+          "value": 63,
+          "max": 100,
+          "fillColor": "#FF5CB59C",
+          "showText": true,
+          "size": {
+            "width": 265,
+            "height": 18
+          }
+        },
+        {
+          "type": "anchorui:checkbox",
+          "id": "demo_checkbox",
+          "stateKey": "highlight",
+          "text": "Edit control colors / background",
+          "size": {
+            "width": 286,
+            "height": 24
+          }
+        },
+        {
+          "type": "anchorui:image",
+          "id": "demo_image",
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 256,
+          "textureHeight": 256,
+          "size": {
+            "width": 64,
+            "height": 35
+          }
+        }
+      ]
+    },
+    {
+      "type": "anchorui:text",
+      "id": "demo_help",
+      "text": "F8: select an element, edit VISUAL / CONTENT, then Save or Cancel.",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "TOPLEFT",
+        "relativeTo": "screen",
+        "x": 45,
+        "y": 250
+      },
+      "size": {
+        "width": 350,
+        "height": 35
+      }
+    }
+  ]
+}

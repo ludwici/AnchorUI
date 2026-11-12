@@ -100,6 +100,27 @@ String and numeric options are allowed (including numeric page IDs). The corresp
 
 No arbitrary values or scripts are evaluated from JSON. State changes are client-side presentation behavior only.
 
+## Appearance
+
+All four controls use `size.width` / `size.height` and the existing widget text color. Their fill can inherit the widget style's `background.color`. You can override colors directly in JSON:
+
+```json
+{
+  "type": "anchorui:switch",
+  "text": "Notifications",
+  "stateKey": "notifications",
+  "fillColor": "#CC1B2534",
+  "borderColor": "#99B1C2",
+  "accentColor": "#377EA2",
+  "size": {
+    "width": 210,
+    "height": 22
+  }
+}
+```
+
+`fillColor`, `borderColor` and `accentColor` accept `#RRGGBB` or `#AARRGGBB`. The same settings apply to checkbox, select and tabs.
+
 ## onChange and onClick
 
 These widgets implement `UiChangeSource`, so they work with existing namespaced UI events:

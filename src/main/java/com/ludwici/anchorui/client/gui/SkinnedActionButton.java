@@ -9,10 +9,11 @@ import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.GsonHelper;
+import java.util.function.Consumer;
 
 public final class SkinnedActionButton extends AbstractButton {
     private final WidgetContext context;
-    private final Runnable onPress;
+    private final Consumer<SkinnedActionButton> onPress;
     private final StateControlTextures textures;
     private final int fillColor;
     private final int borderColor;
@@ -21,7 +22,7 @@ public final class SkinnedActionButton extends AbstractButton {
     private final int textColor;
 
     public SkinnedActionButton(WidgetContext context, String label, LoreStyle.Element style,
-                               JsonObject settings, Runnable onPress) {
+                               JsonObject settings, Consumer<SkinnedActionButton> onPress) {
         super(0, 0, style.size.width > 0 ? style.size.width : 120,
                 style.size.height > 0 ? style.size.height : 20, Component.literal(label));
         this.context = context;
@@ -36,7 +37,7 @@ public final class SkinnedActionButton extends AbstractButton {
 
     @Override
     public void onPress() {
-        onPress.run();
+        onPress.accept(this);
     }
 
     @Override

@@ -53,10 +53,6 @@ public final class GridLayout {
             int rowGap = dimension(properties, "rowGap", gap, 4096);
             int cellWidth = dimension(properties, "cellWidth", 0, 16384);
             int cellHeight = dimension(properties, "cellHeight", 0, 16384);
-            if (properties.has("cellWidth") && cellWidth == 0
-                    || properties.has("cellHeight") && cellHeight == 0) {
-                throw new IllegalArgumentException("Explicit grid cell sizes must be positive");
-            }
             return new Config(columns, columnGap, rowGap, cellWidth, cellHeight,
                     Align.parse(properties, "justifyItems"), Align.parse(properties, "alignItems"),
                     GsonHelper.getAsBoolean(properties, "collapseHidden", false));

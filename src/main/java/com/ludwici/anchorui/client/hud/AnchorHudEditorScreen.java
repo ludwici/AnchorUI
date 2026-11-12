@@ -575,6 +575,7 @@ public final class AnchorHudEditorScreen extends Screen {
     }
 
     private void openAppearanceInput(String id, AppearanceInspectorControls.Control control) {
+        status = "";
         editingAppearance = control;
         editingAppearanceId = id;
         appearanceInput.setValue(control.value());

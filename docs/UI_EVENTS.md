@@ -36,9 +36,15 @@ UiActionRegistry.registerEvent(
 
 Register on the client during `FMLClientSetupEvent.enqueueWork`, before AnchorUI loads JSON screens. The code above assumes `MyClientUiHandler` is a helper supplied by your mod.
 
-The `UiEvent` record exposes `name()`, `targetId()`, and `value()`. Widget IDs are resolved, namespaced IDs from the AnchorUI widget registry; screen events use the document ID (or `namespace:screen` for programmatically constructed screens). The `value()` accessor returns a defensive copy.
+The `UiEvent` record exposes `name()`, `targetId()`, `value()`, and `item()`. Widget IDs are resolved, namespaced IDs from the AnchorUI widget registry; screen events use the document ID (or `namespace:screen` for programmatically constructed screens). The `value()` accessor returns a defensive copy.
 
 Both the old and new actions compile once at screen construction. Duplicate registrations fail immediately. Unknown IDs and malformed event actions are rejected at screen/widget creation. Runtime action failures are logged once per event binding and do not crash the screen.
+
+## Template List event context
+
+Events from a repeated template row carry its current item object. For `onClick` and hover events, `event.value()` is that item object; `event.item()` exposes the row object for **all** event types, including `onChange`. For `onChange`, `event.value()` still represents the actual changed value, such as scrollbar offsets. Non-row widgets have `event.item()` equal to JSON null. Java widget/action factories can also inspect `context.itemContext()` to get the row value, key and index.
+
+See [Template List and Item Context](TEMPLATE_LIST.md) for the JSON syntax, live updates and an in-game quest demo.
 
 ## Short action syntax
 

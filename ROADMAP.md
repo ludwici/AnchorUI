@@ -58,17 +58,21 @@ The completed functionality above does **not** imply finished visual consistency
 
 ### Stage 2 — General-purpose automatic layouts
 
-**Status: row/column foundation implemented; advanced layout and runtime QA remain.** Grid placement for `template_list` already existed independently.
+**Status: automatic row/column/grid layouts, flex sizing and wrapping implemented; in-game QA and advanced edge cases remain.** The older `template_list` layout engine is independent.
 
 - [x] Add opt-in `row` and `column` layouts for normal panels/containers with `gap`, cross-axis `align`, main-axis `justify` and `space_between`.
 - [x] Support `align: stretch` along a fixed cross axis, with preferred sizes retained for auto-sized cross axes.
 - [x] Support opt-in `collapseHidden` with condition-triggered relayout, including local state and hidden `cases` alternatives.
 - [x] Preserve manual anchors and F8 local offsets: children with external/non-top-left anchors or `layoutItem: false` opt out of the stack. Layout bounds integrate with scrolling, clipping and scaling.
 - [x] Add automated tests for nested auto-sized containers, column/row alignment, distribution, padding, hidden rows and explicit anchors, plus a resource-pack demo.
-- [ ] Add **flexible grow/shrink**, wrapping, min/max size and a generic Grid layout independent of `template_list` (schema and behavior TBD).
+- [x] Add explicit per-child `layoutItem.grow` / `shrink` weights and min/max width/height constraints, leaving weights at zero unless configured.
+- [x] Add optional row/column `wrap` and `lineGap`, with per-line distribution and natural cross-axis auto-sizing.
+- [x] Add independent panel/container `grid` with columns, configurable gaps/cell sizes, per-cell align/stretch and hidden-cell reflow.
+- [x] Add focused geometry tests for constrained flex, wrapping in both axes, grid auto sizing, cell alignment and hidden cells.
+- [ ] Consider later CSS-like features only when demanded by use cases: grid spans, named tracks, richer responsive constraints and fine-grained incremental layout. These are not part of the first generic Grid release.
 - [ ] Complete runtime QA for editor dragging, GUI resize and scale, long text, nested scrolling, moving focus and resource reload.
 
-**Done when:** the common automatic container patterns are stable in-game and can handle flexible sizes and large nested layouts.
+**Acceptance:** normal panels and containers can arrange responsive rows, columns and cell grids using resource-pack JSON, with in-client verification of advanced focus/scale/scroll cases still outstanding.
 
 ### Stage 3 — Consistent appearance and input polish
 
@@ -124,7 +128,7 @@ The completed functionality above does **not** imply finished visual consistency
 - [ ] Verify texture replacement, broken resource paths, reloads and multiple GUI scales.
 - [ ] Verify moved keyed list widgets keep correct focus, click handlers, index-sensitive custom widgets and scroll positions in-game. Unit tests and CI already cover the underlying reconciliation.
 - [ ] In-game check: toggle cases using Local UI State, verify fallback and nested child clipping, and exercise an action guard with the bundled demo.
-- [ ] In-game check: `stack_layout_demo` preserves F8 overrides, reflows both stacks on state changes, handles various GUI scales and keeps scroll/clipping correct.
+- [ ] In-game check: `stack_layout_demo` and `advanced_layout_demo` preserve F8 overrides, reflow on state changes, handle various GUI scales and keep scroll/clipping and focus correct.
 - [x] Separate test/anchor and RPG HUD toggles.
 - [x] Namespaced screen commands without showing the internal `screens/` path.
 - [ ] 3D model `scene4` off-screen positioning: **deferred**, not a release blocker.
@@ -141,7 +145,7 @@ The completed functionality above does **not** imply finished visual consistency
 ## 6. Recommended next sequence
 
 1. **In-game verification of `cases` and guarded actions**, plus the remaining collapsed-space policy decision.
-2. **In-game row/column layout QA**, then flexible sizing, wrap and generic grid as follow-up milestones.
+2. **In-game automatic-layout QA** for rows, columns, flex, wrap, grid, editor positioning, visibility changes and scroll/clipping.
 3. **Visual consistency and interaction QA** (especially progress bars, textures and blur).
 4. **Screen lifecycle polish and optional state handoff**.
 5. **Animations**, alongside API stability, performance work, English documentation and additional test coverage.

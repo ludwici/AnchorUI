@@ -97,6 +97,32 @@ The demo type `anchorui_test:counter` uses a vanilla `Button` and can be tested 
 
 See **[Custom Widgets API](docs/CUSTOM_WIDGETS.md)** for complete Java and JSON examples, guarantees, and current limitations. Mods can also register reusable formatters for JSON bindings and text templates; see **[Data Formatters](docs/FORMATTERS.md)**. JSON screens also support lifecycle, hover, click and change handlers using registered Java actions; see **[UI Events](docs/UI_EVENTS.md)**. Repeated quest/dialogue buttons can be authored using **[Template List and Item Context](docs/TEMPLATE_LIST.md)**, with per-row event data, dynamic updates, Grid Layout and custom Java layout algorithms. JSON screens support stateful tabs, checkboxes, switches and dropdowns through **[Built-in Interactive Controls](docs/UI_CONTROLS.md)** and **[Local UI State](docs/UI_STATE.md)**. Controls can use resource-pack texture skins with normal, hovered, selected and disabled variants; skins support atlases, UV regions, tint, nine-slice and shared reusable style definitions.
 
+## Automatic layouts for normal containers
+
+Panels and containers support an optional `layout` property for automatic horizontal (`row`) and vertical (`column`) placement of their direct children:
+
+```json
+{
+  "type": "anchorui:panel",
+  "layout": {
+    "type": "row",
+    "gap": 8,
+    "align": "center",
+    "justify": "space_between",
+    "collapseHidden": true
+  },
+  "size": {"width": 260, "height": 50},
+  "children": [
+    {"type": "anchorui:button", "text": "First", "size": {"width": 70, "height": 20}},
+    {"type": "anchorui:button", "text": "Second", "size": {"width": 70, "height": 20}}
+  ]
+}
+```
+
+These stack layouts share the existing AnchorUI container, `autoSize`, padding, anchors, clipping and scrolling engines. `collapseHidden` is opt-in and responds to `visibleWhen` and Local UI State changes. Explicit/manual anchored children remain unaffected (`layoutItem: false` opts an individual child out). The existing `template_list.layout` grid/custom algorithms are unchanged.
+
+Test with `/anchorui screen open anchorui:stack_layout_demo`. See [Visual widgets and automatic layouts](docs/VISUAL_WIDGETS.md#automatic-row-and-column-layouts) for the full schema and limitations. Flex grow/shrink, wrapping and a general container grid remain roadmap work.
+
 ## Conditional content and guarded actions
 
 Resource packs can select the first matching widget variant through `anchorui:cases`, using the existing Conditions grammar and optional `otherwise` fallback. Variant widgets are expanded during document loading and switch visibility without recreating the screen. Cases support ordinary nested widgets, named templates, and repeated `template_list` entries.

@@ -66,8 +66,10 @@ public class LoreStyle {
         public final boolean hidden;
         public final ContainerLayout.AutoSize autoSize;
         public final ContainerScroll.Config scroll;
+        public final JsonObject resolvedSettings;
 
         public Element(JsonObject root) {
+            resolvedSettings = root.deepCopy();
             position = new PositionElement(GsonHelper.getAsJsonObject(root, "position", new JsonObject()));
             padding = new PaddingElement(GsonHelper.getAsJsonObject(root, "padding", new JsonObject()));
             size = new SizeElement(GsonHelper.getAsJsonObject(root, "size", new JsonObject()));

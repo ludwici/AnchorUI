@@ -1,0 +1,149 @@
+package com.ludwici.anchorui.api.widget;
+
+import com.google.gson.JsonPrimitive;
+import com.ludwici.anchorui.api.WidgetTypeIds;
+import net.minecraft.resources.ResourceLocation;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+
+public final class WidgetEditorRegistry {
+    public enum Kind {
+        TEXT, COLOR, TEXTURE, INTEGER, NUMBER, BOOLEAN, CHOICE
+    }
+
+    public record Field(String path, String label, Kind kind, JsonPrimitive fallback,
+                        double min, double max, double step, List<String> choices) {
+        public Field {
+            Objects.requireNonNull(path);
+            Objects.requireNonNull(label);
+            Objects.requireNonNull(kind);
+            Objects.requireNonNull(fallback);
+            choices = List.copyOf(choices);
+            if (!path.matches("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*){0,5}")
+                    || path.equals("type") || path.equals("id")
+                    || path.startsWith("on") || path.startsWith("position")
+                    || path.startsWith("layout") || path.equals("stateKey")
+                    || path.equals("ref") || path.equals("visibleWhen") || path.equals("enabledWhen")) {
+                throw new IllegalArgumentException("Unsafe editable widget path: " + path);
+            }
+            if (min > max || !Double.isFinite(min) || !Double.isFinite(max)
+                    || !Double.isFinite(step) || step <= 0) {
+                throw new IllegalArgumentException("Invalid editor field range: " + path);
+            }
+            if (kind == Kind.CHOICE && choices.isEmpty()) {
+                throw new IllegalArgumentException("Editor choice field requires options: " + path);
+            }
+        }
+
+        public static Field text(String path, String label, String fallback) {
+            return new Field(path, label, Kind.TEXT, new JsonPrimitive(fallback), 0, 4096, 1, List.of());
+        }
+
+        public static Field color(String path, String label, String fallback) {
+            return new Field(path, label, Kind.COLOR, new JsonPrimitive(fallback), 0, 0, 1, List.of());
+        }
+
+        public static Field texture(String path, String label) {
+            return new Field(path, label, Kind.TEXTURE, new JsonPrimitive(""), 0, 0, 1, List.of());
+        }
+
+        public static Field integer(String path, String label, int fallback, int min, int max, int step) {
+            return new Field(path, label, Kind.INTEGER, new JsonPrimitive(fallback), min, max, step, List.of());
+        }
+
+        public static Field number(String path, String label, double fallback, double min, double max, double step) {
+            return new Field(path, label, Kind.NUMBER, new JsonPrimitive(fallback), min, max, step, List.of());
+        }
+
+        public static Field bool(String path, String label, boolean fallback) {
+            return new Field(path, label, Kind.BOOLEAN, new JsonPrimitive(fallback), 0, 1, 1, List.of());
+        }
+
+        public static Field choice(String path, String label, String fallback, String... choices) {
+            return new Field(path, label, Kind.CHOICE, new JsonPrimitive(fallback), 0, 0, 1, List.of(choices));
+        }
+    }
+
+    private static final Map<ResourceLocation, List<Field>> FIELDS = new ConcurrentHashMap<>();
+
+    static {
+        register(WidgetTypeIds.TEXT, List.of(
+                Field.text("text", "Text", ""),
+                Field.color("color", "Text color", "#FFE278"),
+                Field.choice("align", "Text align", "left", "left", "center", "right"),
+                Field.bool("wrap", "Text wrap", false),
+                Field.integer("size.width", "Width", 0, 0, 16384, 10),
+                Field.integer("size.height", "Height", 0, 0, 16384, 10)));
+        register(WidgetTypeIds.BUTTON, List.of(
+                Field.text("text", "Button text", ""),
+                Field.integer("size.width", "Width", 120, 1, 16384, 10),
+                Field.integer("size.height", "Height", 20, 1, 16384, 2)));
+        List<Field> panel = List.of(
+                Field.color("fillColor", "Fill", "#00000000"),
+                Field.color("borderColor", "Border", "#00000000"),
+                Field.integer("borderWidth", "Border width", 0, 0, 256, 1),
+                Field.integer("radius", "Radius", 0, 0, 256, 1),
+                Field.texture("texture", "Texture"),
+                Field.integer("size.width", "Width", 120, 1, 16384, 10),
+                Field.integer("size.height", "Height", 70, 1, 16384, 10));
+        register(WidgetTypeIds.PANEL, panel);
+        register(WidgetTypeIds.CONTAINER, panel);
+        register(WidgetTypeIds.PROGRESS, List.of(
+                Field.color("fillColor", "Fill", "#E85B60"),
+                Field.bool("showText", "Show values", false),
+                Field.integer("size.width", "Width", 160, 1, 16384, 10),
+                Field.integer("size.height", "Height", 14, 1, 16384, 2)));
+        register(WidgetTypeIds.IMAGE, List.of(
+                Field.texture("texture", "Texture"),
+                Field.integer("size.width", "Width", 64, 1, 16384, 10),
+                Field.integer("size.height", "Height", 64, 1, 16384, 10)));
+        List<Field> stateFields = new ArrayList<>();
+        stateFields.add(Field.text("text", "Label", ""));
+        stateFields.add(Field.color("fillColor", "Fill", "#D923354A"));
+        stateFields.add(Field.color("borderColor", "Border", "#FF718699"));
+        stateFields.add(Field.color("accentColor", "Accent", "#FF426D94"));
+        stateFields.add(Field.texture("textures.background.normal", "Background skin"));
+        stateFields.add(Field.texture("textures.background.hover", "Hover skin"));
+        stateFields.add(Field.texture("textures.background.disabled", "Disabled skin"));
+        stateFields.add(Field.integer("size.width", "Width", 150, 1, 16384, 10));
+        stateFields.add(Field.integer("size.height", "Height", 22, 1, 16384, 2));
+        for (ResourceLocation id : List.of(WidgetTypeIds.CHECKBOX, WidgetTypeIds.SWITCH,
+                WidgetTypeIds.SELECT, WidgetTypeIds.TABS)) {
+            register(id, stateFields);
+        }
+    }
+
+    private WidgetEditorRegistry() {
+    }
+
+    public static void register(ResourceLocation type, List<Field> fields) {
+        Objects.requireNonNull(type);
+        List<Field> values = List.copyOf(fields);
+        java.util.Set<String> names = new java.util.HashSet<>();
+        for (Field field : values) {
+            if (!names.add(field.path())) {
+                throw new IllegalArgumentException("Duplicate editor field: " + field.path());
+            }
+        }
+        if (FIELDS.putIfAbsent(type, values) != null) {
+            throw new IllegalArgumentException("Editor fields already registered for " + type);
+        }
+    }
+
+    public static List<Field> fields(ResourceLocation type) {
+        return FIELDS.getOrDefault(type, List.of());
+    }
+
+    public static Field find(ResourceLocation type, String path) {
+        for (Field field : fields(type)) {
+            if (field.path().equals(path)) {
+                return field;
+            }
+        }
+        return null;
+    }
+}

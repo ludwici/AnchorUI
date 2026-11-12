@@ -3,9 +3,7 @@
   "onOpen": {
     "type": "anchorui_test:event_notice"
   },
-  "onClose": {
-    "type": "anchorui_test:event_notice"
-  },
+  "onClose": "anchorui_test:event_notice",
   "entities": [
     {
       "type": "anchorui:text",
@@ -29,12 +27,8 @@
       "type": "anchorui:text",
       "id": "anchorui:event_hover",
       "text": "Hover here: enter / leave",
-      "onHoverEnter": {
-        "type": "anchorui_test:event_notice"
-      },
-      "onHoverLeave": {
-        "type": "anchorui_test:event_notice"
-      },
+      "onHoverEnter": "anchorui_test:event_notice",
+      "onHoverLeave": "anchorui_test:event_notice",
       "position": {
         "point": "CENTER",
         "anchor": "CENTER",
@@ -56,9 +50,7 @@
       "type": "anchorui:button",
       "id": "anchorui:event_click",
       "text": "Click: onClick",
-      "onClick": {
-        "type": "anchorui_test:event_notice"
-      },
+      "onClick": "anchorui_test:event_notice",
       "position": {
         "point": "CENTER",
         "anchor": "CENTER",
@@ -74,9 +66,7 @@
     {
       "type": "anchorui:panel",
       "id": "anchorui:event_scroll",
-      "onChange": {
-        "type": "anchorui_test:event_notice"
-      },
+      "onChange": "anchorui_test:event_notice",
       "scroll": {
         "axis": "vertical",
         "step": 20
@@ -239,9 +229,7 @@
       "type": "anchorui:button",
       "id": "anchorui:event_close",
       "text": "Close (onClose)",
-      "onClick": {
-        "type": "anchorui:close_screen"
-      },
+      "onClick": "anchorui:close_screen",
       "position": {
         "point": "CENTER",
         "anchor": "CENTER",

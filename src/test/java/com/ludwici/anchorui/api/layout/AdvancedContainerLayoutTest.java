@@ -216,4 +216,61 @@ public class AdvancedContainerLayoutTest {
         assertEquals(80, result.bounds().get("x:c").x());
         assertEquals(new AnchorLayout.Bounds(7, 8, 40, 20), result.bounds().get("x:manual"));
     }
+    @Test
+    public void growClampsAtMaximumAndRedistributesUnusedSpace() {
+        String p = "x:flex";
+        var frames = List.of(frame(p, "screen", 0, 0, 180, 40),
+                frame("x:a", p + "/__content", 0, 0, 40, 20),
+                frame("x:b", p + "/__content", 0, 0, 40, 20));
+        var first = StackLayout.Rules.parse(json("""
+                {"layoutItem":{"grow":1,"maxWidth":60}}
+                """));
+        var second = StackLayout.Rules.parse(json("""
+                {"layoutItem":{"grow":1,"maxWidth":160}}
+                """));
+        var result = layout(frames, Map.of(p, new PaddingElement()), Map.of(),
+                Map.of("x:a", p, "x:b", p),
+                Map.of(p, ContainerAutoLayout.parse(json("""
+                        {"layout":"row"}
+                        """))),
+                Map.of("x:a", first, "x:b", second), Set.of());
+        assertEquals(new AnchorLayout.Bounds(0, 0, 60, 20), result.bounds().get("x:a"));
+        assertEquals(new AnchorLayout.Bounds(60, 0, 120, 20), result.bounds().get("x:b"));
+    }
+
+    @Test
+    public void explicitGridCellSizesAreStableWhenContainerIsLarger() {
+        String p = "x:grid";
+        var frames = List.of(frame(p, "screen", 0, 0, 300, 150),
+                frame("x:a", p + "/__content", 0, 0, 50, 15),
+                frame("x:b", p + "/__content", 0, 0, 50, 15),
+                frame("x:c", p + "/__content", 0, 0, 50, 15));
+        var result = layout(frames, Map.of(p, new PaddingElement()), Map.of(),
+                Map.of("x:a", p, "x:b", p, "x:c", p),
+                Map.of(p, ContainerAutoLayout.parse(json("""
+                        {"layout":{"type":"grid","columns":2,"cellWidth":90,"cellHeight":32,
+                         "columnGap":8,"rowGap":6,"justifyItems":"end","alignItems":"end"}}
+                        """))), Map.of(), Set.of());
+        assertEquals(new AnchorLayout.Bounds(40, 17, 50, 15), result.bounds().get("x:a"));
+        assertEquals(new AnchorLayout.Bounds(138, 17, 50, 15), result.bounds().get("x:b"));
+        assertEquals(new AnchorLayout.Bounds(40, 55, 50, 15), result.bounds().get("x:c"));
+    }
+
+    @Test
+    public void wrappingFallsBackToSingleLineWhenMainAxisIsAutoSized() {
+        String p = "x:row";
+        var frames = List.of(frame(p, "screen", 0, 0, 1, 1),
+                frame("x:a", p + "/__content", 0, 0, 60, 12),
+                frame("x:b", p + "/__content", 0, 0, 60, 20));
+        var result = layout(frames, Map.of(p, new PaddingElement(2, 2)),
+                Map.of(p, new ContainerLayout.AutoSize(true, true)),
+                Map.of("x:a", p, "x:b", p),
+                Map.of(p, ContainerAutoLayout.parse(json("""
+                        {"layout":{"type":"row","wrap":true,"gap":5}}
+                        """))), Map.of(), Set.of());
+        assertEquals(new ContainerLayout.Size(129, 24), result.sizes().get(p));
+        assertEquals(67, result.bounds().get("x:b").x());
+        assertEquals(2, result.bounds().get("x:b").y());
+    }
+
 }

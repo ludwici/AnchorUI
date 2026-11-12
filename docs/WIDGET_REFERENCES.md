@@ -97,15 +97,21 @@ Fields absent in the override come from `moda:header`. This enables reusable com
 
 Templates may themselves reference another template using `"ref": "othermod:template"`. Circular template inheritance is reported as an error. Missing definitions raise a warning during resource loading; unavailable imports or references are skipped while the other widgets remain available. An anchor to the absent widget falls back to `screen` with its own warning.
 
-## Two registries and lifecycle
+## Named Template List rows
+
+The `anchorui:template_list` widget can use `"template": "moda:quest_row"` instead of embedding a full row object. The name resolves to a reusable definition at `assets/moda/anchorui/templates/quest_row.json`, an existing `widgets/quest_row.json`, or a Java definition provided by `WidgetTemplateRegistry.register(...)`. Dedicated `templates/` files override matching `widgets/` files. Resource-pack files override Java defaults of the same ID.
+
+The normal `ref` syntax remains available inside templates and supports inherited definitions and nested children. Item-specific `{"item": "field"}` values are substituted after external references are resolved, so text, conditions and action arguments in named files are evaluated for the correct row. See [Template List and Item Context](TEMPLATE_LIST.md).
+
+## Registries and lifecycle
 
 `AnchorWidgetRegistry` remains the global registry of **factories by type**.
 
-`WidgetDefinitionRegistry`, available at `LoreLoader.INSTANCE.getDefinitions()`, holds immutable snapshots of **exported JSON definitions by qualified ID**. It is rebuilt on resource reload; querying a definition returns a copy of its JSON.
+`WidgetDefinitionRegistry`, available at `LoreLoader.INSTANCE.getDefinitions()`, holds immutable snapshots of **exported JSON definitions by qualified ID**, including resource-pack template definitions. It is rebuilt on resource reload; querying a definition returns a copy of its JSON.
 
 `WidgetInstanceRegistry`, available from `WidgetContext.widgets()`, is a **per-screen registry**. First, every widget in the assembled screen is declared under its qualified ID. Then Anchor UI asks the type registry to create the widget instances, applies style/dimensions, attaches the instances, and finally positions all widgets using `AnchorLayout`.
 
-This separation matters: a widget in one open screen cannot anchor to a widget visible only in some different screen. Importing a definition explicitly brings a new instance into the current screen. Factories can inspect declared descriptions early using `context.widgets().definition(id)`; `context.widgets().widget(id)` returns an instance once that factory has run.
+`WidgetTemplateRegistry` holds Java-authored reusable widget definitions. Template lists combine these with resource-backed definitions at expansion time. A Java template is not a new widget type; it describes one or more ordinary registered widgets.\n\nThis separation matters: a widget in one open screen cannot anchor to a widget visible only in some different screen. Importing a definition explicitly brings a new instance into the current screen. Factories can inspect declared descriptions early using `context.widgets().definition(id)`; `context.widgets().widget(id)` returns an instance once that factory has run.
 
 ## Test
 

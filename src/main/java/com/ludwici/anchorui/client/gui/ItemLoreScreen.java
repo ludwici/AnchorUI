@@ -741,12 +741,30 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 RetainedWidget previous = retained.get(definition.id());
                 if (previous != null && TemplateListReuse.canReuse(previous.definition().settings, element.settings,
                         previous.itemContext(), rowContext)) {
-                    widgetRegistry.attach(definition.id(), previous.placed().widget());
-                    widgetEventBindings.put(definition.id(), previous.events());
+                    PlacedWidget retainedWidget = previous.placed();
+                    boolean moved = rowContext != null && previous.itemContext().index() != rowContext.index();
+                    if (rowContext != null) {
+                        previous.itemContext().moveToIndex(rowContext.index());
+                        widgetItemContexts.put(definition.id(), previous.itemContext());
+                    }
+                    UiEventBindings events = moved
+                            ? UiEventBindings.compile(retainedWidget.context(), element.settings,
+                                    "onClick", "onHoverEnter", "onHoverLeave", "onChange")
+                            : previous.events();
+                    bindChangeListener(retainedWidget.widget(), events, definition.id());
+                    widgetRegistry.attach(definition.id(), retainedWidget.widget());
+                    widgetEventBindings.put(definition.id(), events);
                     if (previous.selfDispatching()) {
                         selfDispatchingClicks.add(definition.id());
                     }
-                    created.add(previous.placed());
+                    PositionElement p = style.position;
+                    PositionElement position = new PositionElement(p.point, p.anchor,
+                            WidgetIds.reference(p.relativeTo, loreEntity.namespace), p.x, p.y);
+                    created.add(new PlacedWidget(definition.id(), retainedWidget.widget(), style, position,
+                            retainedWidget.context(), retainedWidget.visibleWhen(), retainedWidget.enabledWhen(),
+                            retainedWidget.baseVisible(), retainedWidget.baseActive(), retainedWidget.containerParent(),
+                            retainedWidget.clipChildren(), retainedWidget.group(), retainedWidget.autoSize(),
+                            retainedWidget.scroll()));
                 } else {
                     WidgetContext widgetContext = rowContext == null ? context : context.withItemContext(rowContext);
                     createWidget(widgetContext, definition.id(), element, style, created, warnings);
@@ -843,13 +861,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         BoundCondition visibleWhen = BoundCondition.parse(element.settings, "visibleWhen", true);
         BoundCondition enabledWhen = BoundCondition.parse(element.settings, "enabledWhen", true, false);
         UiEventBindings events = UiEventBindings.compile(context, element.settings, "onClick", "onHoverEnter", "onHoverLeave", "onChange");
-        if (widget instanceof UiChangeSource source) {
-            source.setChangeListener(value -> {
-                if (minecraft.screen == this && widget.visible && widget.active) {
-                    events.fire("onChange", id, value, itemPayload(id));
-                }
-            });
-        }
+        bindChangeListener(widget, events, id);
         widgetEventBindings.put(id, events);
         if (element.type.equals(WidgetTypeIds.BUTTON) || widget instanceof StateControlWidget) {
             selfDispatchingClicks.add(id);
@@ -862,6 +874,16 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 panel ? WidgetContainers.group(element.settings) : null,
                 panel ? settings.autoSize : ContainerLayout.AutoSize.NONE,
                 panel ? settings.scroll : ContainerScroll.Config.NONE));
+    }
+
+    private void bindChangeListener(AbstractWidget widget, UiEventBindings events, String id) {
+        if (widget instanceof UiChangeSource source) {
+            source.setChangeListener(value -> {
+                if (minecraft.screen == this && widget.visible && widget.active) {
+                    events.fire("onChange", id, value, itemPayload(id));
+                }
+            });
+        }
     }
 
     private void updateConditionStates() {

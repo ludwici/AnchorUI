@@ -50,6 +50,14 @@ public final class StateControlWidget extends AbstractButton implements UiChange
     private final int fillColor;
     private final int borderColor;
     private final int accentColor;
+    private final StateControlTextures textures;
+    private final int indicatorSize;
+    private final int trackWidth;
+    private final int trackHeight;
+    private final int thumbWidth;
+    private final int thumbHeight;
+    private final int arrowSize;
+    private final int popupRowHeight;
     private Consumer<JsonElement> changeListener = ignored -> {};
     private boolean popupOpen;
     private int scrollStart;
@@ -57,7 +65,8 @@ public final class StateControlWidget extends AbstractButton implements UiChange
 
     private StateControlWidget(WidgetContext context, Kind kind, UiLocalState state, String key,
                                String label, List<UiControlOptions.Choice> options, int width, int height,
-                               int textColor, int fillColor, int borderColor, int accentColor) {
+                               int textColor, int fillColor, int borderColor, int accentColor,
+                               JsonObject visualSettings) {
         super(0, 0, width, height, Component.literal(label));
         this.context = context;
         this.kind = kind;
@@ -69,6 +78,22 @@ public final class StateControlWidget extends AbstractButton implements UiChange
         this.fillColor = fillColor;
         this.borderColor = borderColor;
         this.accentColor = accentColor;
+        textures = new StateControlTextures(context, visualSettings);
+        indicatorSize = dimension(visualSettings, "indicatorSize", 14, 4, 128);
+        trackWidth = dimension(visualSettings, "trackWidth", 29, 8, 256);
+        trackHeight = dimension(visualSettings, "trackHeight", 12, 6, 128);
+        thumbWidth = dimension(visualSettings, "thumbWidth", 9, 2, 128);
+        thumbHeight = dimension(visualSettings, "thumbHeight", 8, 2, 128);
+        arrowSize = dimension(visualSettings, "arrowSize", 12, 4, 128);
+        popupRowHeight = dimension(visualSettings, "popupRowHeight", POPUP_ROW_HEIGHT, 12, 128);
+    }
+
+    private static int dimension(JsonObject settings, String name, int defaultValue, int min, int max) {
+        int value = GsonHelper.getAsInt(settings, name, defaultValue);
+        if (value < min || value > max) {
+            throw new IllegalArgumentException(name + " must be between " + min + " and " + max);
+        }
+        return value;
     }
 
     public static StateControlWidget create(WidgetContext context, LoreEntity.UiElement element,
@@ -93,12 +118,13 @@ public final class StateControlWidget extends AbstractButton implements UiChange
         }
         int width = style.size.width > 0 ? style.size.width : kind == Kind.TABS ? 220 : 150;
         int height = style.size.height > 0 ? style.size.height : 22;
-        int fillColor = settings.has("fillColor") ? WidgetColors.parse(GsonHelper.getAsString(settings, "fillColor"))
+        JsonObject visualSettings = style.resolvedSettings;
+        int fillColor = visualSettings.has("fillColor") ? WidgetColors.parse(GsonHelper.getAsString(visualSettings, "fillColor"))
                 : (style.background.color >>> 24) != 0 ? style.background.color : BASE;
-        int borderColor = settings.has("borderColor") ? WidgetColors.parse(GsonHelper.getAsString(settings, "borderColor")) : BORDER;
-        int accentColor = settings.has("accentColor") ? WidgetColors.parse(GsonHelper.getAsString(settings, "accentColor")) : SELECTED;
+        int borderColor = visualSettings.has("borderColor") ? WidgetColors.parse(GsonHelper.getAsString(visualSettings, "borderColor")) : BORDER;
+        int accentColor = visualSettings.has("accentColor") ? WidgetColors.parse(GsonHelper.getAsString(visualSettings, "accentColor")) : SELECTED;
         return new StateControlWidget(context, kind, state, key, element.text, options, width, height,
-                style.textColor, fillColor, borderColor, accentColor);
+                style.textColor, fillColor, borderColor, accentColor, visualSettings);
     }
 
     @Override
@@ -202,28 +228,39 @@ public final class StateControlWidget extends AbstractButton implements UiChange
         int y = getY();
         int height = getHeight();
         int width = getWidth();
-        drawBox(graphics, x, y, width, height, isHoveredOrFocused() ? HOVER : fillColor);
+        boolean hovered = isHoveredOrFocused();
+        if (!textures.render(graphics, "background", x, y, width, height,
+                active ? hovered ? "hover" : "normal" : "disabled")) {
+            drawBox(graphics, x, y, width, height, hovered && active ? HOVER : fillColor);
+        }
 
         switch (kind) {
             case CHECKBOX -> {
-                int side = Math.max(8, Math.min(14, height - 6));
+                int side = Math.max(8, Math.min(indicatorSize, Math.max(8, height - 6)));
                 int boxX = x + 4;
                 int boxY = y + (height - side) / 2;
-                drawBox(graphics, boxX, boxY, side, side, state.get(key).getAsBoolean() ? accentColor : fillColor);
-                if (state.get(key).getAsBoolean()) {
-                    graphics.fill(boxX + 3, boxY + 3, boxX + side - 3, boxY + side - 3, TEXT);
+                boolean checked = state.get(key).getAsBoolean();
+                if (!drawToggleTexture(graphics, "indicator", boxX, boxY, side, side, checked, hovered)) {
+                    drawBox(graphics, boxX, boxY, side, side, checked ? accentColor : fillColor);
+                    if (checked) {
+                        graphics.fill(boxX + 3, boxY + 3, boxX + side - 3, boxY + side - 3, TEXT);
+                    }
                 }
                 drawText(graphics, label, boxX + side + 6, y + (height - 8) / 2,
                         Math.max(0, width - side - 16), textColor);
             }
             case SWITCH -> {
-                int trackWidth = 29;
                 int trackX = x + 5;
-                int trackY = y + (height - 12) / 2;
+                int trackY = y + (height - trackHeight) / 2;
                 boolean enabled = state.get(key).getAsBoolean();
-                drawBox(graphics, trackX, trackY, trackWidth, 12, enabled ? accentColor : HOVER);
-                int knobX = trackX + (enabled ? 18 : 2);
-                graphics.fill(knobX, trackY + 2, knobX + 9, trackY + 10, TEXT);
+                if (!drawToggleTexture(graphics, "track", trackX, trackY, trackWidth, trackHeight, enabled, hovered)) {
+                    drawBox(graphics, trackX, trackY, trackWidth, trackHeight, enabled ? accentColor : HOVER);
+                }
+                int knobX = trackX + (enabled ? Math.max(2, trackWidth - thumbWidth - 2) : 2);
+                int knobY = trackY + (trackHeight - thumbHeight) / 2;
+                if (!drawToggleTexture(graphics, "thumb", knobX, knobY, thumbWidth, thumbHeight, enabled, hovered)) {
+                    graphics.fill(knobX, knobY, knobX + thumbWidth, knobY + thumbHeight, TEXT);
+                }
                 drawText(graphics, label, trackX + trackWidth + 6, y + (height - 8) / 2,
                         Math.max(0, width - trackWidth - 16), textColor);
             }
@@ -233,8 +270,12 @@ public final class StateControlWidget extends AbstractButton implements UiChange
                 String description = label.isBlank() ? value : label + ": " + value;
                 drawText(graphics, description, x + 7, y + (height - 8) / 2,
                         Math.max(0, width - 24), textColor);
-                drawText(graphics, popupOpen ? "▲" : "▼", x + width - 15,
-                        y + (height - 8) / 2, 12, MUTED);
+                int arrowX = x + width - arrowSize - 3;
+                if (!textures.render(graphics, "arrow", arrowX, y + (height - arrowSize) / 2,
+                        arrowSize, arrowSize, active ? popupOpen ? "open" : "closed" : "disabled")) {
+                    drawText(graphics, popupOpen ? "▲" : "▼", x + width - 15,
+                            y + (height - 8) / 2, 12, MUTED);
+                }
             }
             case TABS -> {
                 int count = options.size();
@@ -242,11 +283,18 @@ public final class StateControlWidget extends AbstractButton implements UiChange
                 for (int index = 0; index < count; index++) {
                     int left = x + index * width / count;
                     int right = x + (index + 1) * width / count;
-                    if (index == chosen) {
-                        graphics.fill(left + 1, y + 1, right - 1, y + height - 1, accentColor);
-                    }
-                    if (index > 0) {
-                        graphics.fill(left, y + 2, left + 1, y + height - 2, borderColor);
+                    boolean tabHover = hovered && mouseX >= left && mouseX < right;
+                    boolean selected = index == chosen;
+                    boolean rendered = textures.render(graphics, "tab", left, y, right - left, height,
+                            active ? selected ? tabHover ? "selectedHover" : "selected"
+                                    : tabHover ? "hover" : "normal" : "disabled");
+                    if (!rendered) {
+                        if (selected) {
+                            graphics.fill(left + 1, y + 1, right - 1, y + height - 1, accentColor);
+                        }
+                        if (index > 0) {
+                            graphics.fill(left, y + 2, left + 1, y + height - 2, borderColor);
+                        }
                     }
                     String title = options.get(index).label();
                     int maxWidth = Math.max(0, right - left - 8);
@@ -257,6 +305,18 @@ public final class StateControlWidget extends AbstractButton implements UiChange
                 }
             }
         }
+    }
+
+    private boolean drawToggleTexture(GuiGraphics graphics, String part, int x, int y, int width, int height,
+                                      boolean on, boolean hovered) {
+        String base = on ? "on" : "off";
+        if (!active) {
+            return textures.render(graphics, part, x, y, width, height, on ? "onDisabled" : "offDisabled", base);
+        }
+        if (hovered) {
+            return textures.render(graphics, part, x, y, width, height, on ? "onHover" : "offHover", base);
+        }
+        return textures.render(graphics, part, x, y, width, height, base);
     }
 
     private void drawBox(GuiGraphics graphics, int x, int y, int width, int height, int fill) {
@@ -277,12 +337,12 @@ public final class StateControlWidget extends AbstractButton implements UiChange
     private int shownOptionCount() {
         int below = Math.max(0, context.screen().height - getBottom() - 2);
         int above = Math.max(0, getY() - 2);
-        int availableRows = Math.max(1, (Math.max(below, above) - 2) / POPUP_ROW_HEIGHT);
+        int availableRows = Math.max(1, (Math.max(below, above) - 2) / popupRowHeight);
         return Math.min(options.size(), Math.min(MAX_VISIBLE_OPTIONS, availableRows));
     }
 
     private int popupY() {
-        int popupHeight = shownOptionCount() * POPUP_ROW_HEIGHT + 2;
+        int popupHeight = shownOptionCount() * popupRowHeight + 2;
         int below = Math.max(0, context.screen().height - getBottom() - 2);
         int above = Math.max(0, getY() - 2);
         return below < popupHeight && above > below ? getY() - popupHeight : getBottom();
@@ -295,7 +355,7 @@ public final class StateControlWidget extends AbstractButton implements UiChange
         }
         int top = popupY();
         return mouseX >= getX() && mouseX < getRight()
-                && mouseY >= top && mouseY < top + shownOptionCount() * POPUP_ROW_HEIGHT + 2;
+                && mouseY >= top && mouseY < top + shownOptionCount() * popupRowHeight + 2;
     }
 
     @Override
@@ -313,7 +373,7 @@ public final class StateControlWidget extends AbstractButton implements UiChange
         }
         int top = popupY();
         if (button == 0) {
-            int index = scrollStart + (int) Math.max(0, (mouseY - top - 1) / POPUP_ROW_HEIGHT);
+            int index = scrollStart + (int) Math.max(0, (mouseY - top - 1) / popupRowHeight);
             select(Math.min(index, options.size() - 1));
             clickEvent();
         }
@@ -340,18 +400,26 @@ public final class StateControlWidget extends AbstractButton implements UiChange
         int y = popupY();
         int width = getWidth();
         int count = shownOptionCount();
-        drawBox(graphics, x, y, width, count * POPUP_ROW_HEIGHT + 2, fillColor);
+        if (!textures.render(graphics, "popup", x, y, width, count * popupRowHeight + 2, "normal")) {
+            drawBox(graphics, x, y, width, count * popupRowHeight + 2, fillColor);
+        }
         int selected = selectedIndex();
         for (int row = 0; row < count; row++) {
             int index = scrollStart + row;
-            int top = y + 1 + row * POPUP_ROW_HEIGHT;
+            int top = y + 1 + row * popupRowHeight;
             boolean hovered = mouseX >= x && mouseX < x + width
-                    && mouseY >= top && mouseY < top + POPUP_ROW_HEIGHT;
-            if (index == selected || hovered || index == highlight) {
-                graphics.fill(x + 1, top, x + width - 1, top + POPUP_ROW_HEIGHT,
-                        index == selected ? accentColor : HOVER);
+                    && mouseY >= top && mouseY < top + popupRowHeight;
+            boolean selectedOption = index == selected;
+            boolean optionHover = hovered || index == highlight;
+            if (!textures.render(graphics, "option", x + 1, top, width - 2, popupRowHeight,
+                    selectedOption ? optionHover ? "selectedHover" : "selected"
+                            : optionHover ? "hover" : "normal")) {
+                if (selectedOption || optionHover) {
+                    graphics.fill(x + 1, top, x + width - 1, top + popupRowHeight,
+                            selectedOption ? accentColor : HOVER);
+                }
             }
-            drawText(graphics, options.get(index).label(), x + 7, top + 6,
+            drawText(graphics, options.get(index).label(), x + 7, top + (popupRowHeight - 8) / 2,
                     width - 14, index == selected ? TEXT : textColor);
         }
     }

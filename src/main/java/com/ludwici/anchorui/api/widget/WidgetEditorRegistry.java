@@ -121,6 +121,7 @@ public final class WidgetEditorRegistry {
                 Field.integer("size.height", "Height", 64, 1, 16384, 10)));
         List<Field> stateFields = new ArrayList<>();
         stateFields.add(Field.text("text", "Label", ""));
+        stateFields.add(Field.color("color", "Text color", "#FFE278"));
         stateFields.add(Field.color("fillColor", "Fill", "#D923354A"));
         stateFields.add(Field.color("borderColor", "Border", "#FF718699"));
         stateFields.add(Field.color("accentColor", "Accent", "#FF426D94"));

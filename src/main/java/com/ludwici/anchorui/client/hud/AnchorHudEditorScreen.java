@@ -267,9 +267,7 @@ public final class AnchorHudEditorScreen extends Screen {
         for (VanillaHudGeometry.Reference reference : frameVanillaHandles) {
             entries.add(new WidgetListPanel.Entry(reference.id(), reference.active(), true));
         }
-        for (AnchorHudManager.HudHandle handle : frameHandles) {
-            entries.add(new WidgetListPanel.Entry(handle.id(), handle.visible(), false));
-        }
+        entries.addAll(manager.getWidgetEntries());
         frameEntries = List.copyOf(entries);
     }
 

@@ -578,17 +578,29 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         String candidate = null;
         for (int index = placedWidgets.size() - 1; index >= 0; index--) {
             PlacedWidget placed = placedWidgets.get(index);
-            if (!placed.widget().visible || !insideClip(placed, mouseX, mouseY)) {
-                continue;
+            if (placed.widget() instanceof UiPopupWidget popup && popup.isPopupOpen()) {
+                WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+                if (popup.containsPopup(transform.inverseX(mouseX), transform.inverseY(mouseY))) {
+                    candidate = placed.id();
+                    break;
+                }
             }
+        }
+        if (candidate == null) {
+            for (int index = placedWidgets.size() - 1; index >= 0; index--) {
+                PlacedWidget placed = placedWidgets.get(index);
+                if (!placed.widget().visible || !insideClip(placed, mouseX, mouseY)) {
+                    continue;
+                }
             AnchorLayout.Bounds frame = layoutBounds.get(placed.id());
             if (frame == null) {
                 continue;
             }
             WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
-            if (WidgetContainers.contains(transform.physical(frame), mouseX, mouseY)) {
-                candidate = placed.id();
-                break;
+                if (WidgetContainers.contains(transform.physical(frame), mouseX, mouseY)) {
+                    candidate = placed.id();
+                    break;
+                }
             }
         }
         hoverTracker.update(candidate, (id, entered) -> {

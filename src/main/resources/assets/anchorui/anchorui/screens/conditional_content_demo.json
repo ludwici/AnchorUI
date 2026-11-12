@@ -1,0 +1,182 @@
+{
+  "state": {
+    "view": "overview",
+    "allowAction": false,
+    "highlight": false
+  },
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "heading",
+      "text": "Conditional content + guarded actions",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "TOPLEFT",
+        "relativeTo": "screen",
+        "x": 80,
+        "y": 24
+      },
+      "size": {
+        "width": 310,
+        "height": 20
+      }
+    },
+    {
+      "type": "anchorui:tabs",
+      "id": "view_tabs",
+      "stateKey": "view",
+      "options": [
+        {
+          "value": "overview",
+          "label": "Overview"
+        },
+        {
+          "value": "details",
+          "label": "Details"
+        }
+      ],
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "TOPLEFT",
+        "relativeTo": "screen",
+        "x": 80,
+        "y": 52
+      },
+      "size": {
+        "width": 270,
+        "height": 24
+      }
+    },
+    {
+      "type": "anchorui:cases",
+      "id": "content",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "TOPLEFT",
+        "relativeTo": "screen",
+        "x": 80,
+        "y": 86
+      },
+      "size": {
+        "width": 270,
+        "height": 88
+      },
+      "cases": [
+        {
+          "when": {
+            "left": {
+              "bind": "anchorui:ui.state",
+              "path": "view",
+              "fallback": ""
+            },
+            "op": "eq",
+            "right": "details"
+          },
+          "widget": {
+            "type": "anchorui:panel",
+            "fillColor": "#D5203648",
+            "borderColor": "#FF90B4D3",
+            "children": [
+              {
+                "type": "anchorui:text",
+                "text": "Details are selected",
+                "position": {
+                  "x": 10,
+                  "y": 12
+                },
+                "size": {
+                  "width": 240,
+                  "height": 20
+                }
+              }
+            ]
+          }
+        },
+        {
+          "when": true,
+          "widget": {
+            "type": "anchorui:panel",
+            "fillColor": "#D5273830",
+            "borderColor": "#FF93C3A4",
+            "children": [
+              {
+                "type": "anchorui:text",
+                "text": "Overview is selected (second case)",
+                "position": {
+                  "x": 10,
+                  "y": 12
+                },
+                "size": {
+                  "width": 245,
+                  "height": 20
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "otherwise": {
+        "type": "anchorui:text",
+        "text": "No matching view"
+      }
+    },
+    {
+      "type": "anchorui:checkbox",
+      "id": "allow",
+      "stateKey": "allowAction",
+      "text": "Allow guarded action",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "TOPLEFT",
+        "relativeTo": "screen",
+        "x": 80,
+        "y": 186
+      },
+      "size": {
+        "width": 230,
+        "height": 24
+      }
+    },
+    {
+      "type": "anchorui:button",
+      "id": "guarded_button",
+      "text": "Toggle highlight (guarded)",
+      "onClick": {
+        "type": "anchorui:toggle_state",
+        "key": "highlight",
+        "when": {
+          "bind": "anchorui:ui.state",
+          "path": "allowAction",
+          "fallback": false
+        }
+      },
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "TOPLEFT",
+        "relativeTo": "screen",
+        "x": 80,
+        "y": 218
+      },
+      "size": {
+        "width": 230,
+        "height": 24
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "guarded_result",
+      "text": "Highlight enabled: {{anchorui:ui.state#highlight}}",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "TOPLEFT",
+        "relativeTo": "screen",
+        "x": 80,
+        "y": 254
+      },
+      "size": {
+        "width": 260,
+        "height": 20
+      }
+    }
+  ]
+}

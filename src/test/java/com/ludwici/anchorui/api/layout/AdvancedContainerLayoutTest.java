@@ -273,4 +273,30 @@ public class AdvancedContainerLayoutTest {
         assertEquals(2, result.bounds().get("x:b").y());
     }
 
+
+    @Test
+    public void nestedGridUsesFlexSizedParentEvenWhenDefinitionsAreRegisteredChildFirst() {
+        String outer = "x:outer";
+        String inner = "x:inner";
+        var frames = List.of(frame(outer, "screen", 0, 0, 200, 60),
+                frame(inner, outer + "/__content", 0, 0, 50, 60),
+                frame("x:side", outer + "/__content", 0, 0, 40, 20),
+                frame("x:cell1", inner + "/__content", 0, 0, 30, 20),
+                frame("x:cell2", inner + "/__content", 0, 0, 30, 20));
+        var layouts = new java.util.LinkedHashMap<String, ContainerAutoLayout>();
+        layouts.put(inner, ContainerAutoLayout.parse(json("""
+                {"layout":{"type":"grid","columns":2,"columnGap":10}}
+                """)));
+        layouts.put(outer, ContainerAutoLayout.parse(json("""
+                {"layout":{"type":"row","gap":10}}
+                """)));
+        var result = layout(frames, Map.of(outer, new PaddingElement(), inner, new PaddingElement()),
+                Map.of(), Map.of(inner, outer, "x:side", outer, "x:cell1", inner, "x:cell2", inner),
+                layouts, Map.of(inner, StackLayout.Rules.parse(json("""
+                        {"layoutItem":{"grow":1}}
+                        """))), Set.of());
+        assertEquals(150, result.bounds().get(inner).width());
+        assertEquals(160, result.bounds().get("x:side").x());
+        assertEquals(80, result.bounds().get("x:cell2").x());
+    }
 }

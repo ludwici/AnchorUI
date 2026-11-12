@@ -101,6 +101,52 @@ Panels support optional fill, borders, and rounded corners. If `fillColor` is om
 - The HUD editor treats containers as ordinary movable frames: dragging a parent automatically moves children anchored to its content frame.
 - To scale a panel/container **with its descendants as a single group**, set `"scale": 0.9` (range 0.1 to 4.0). `"scaleOrigin": "top_left"` is the default; `"scaleOrigin": "center"` scales around the panel's center, useful for a centered phone or dialogue window. Nested group scales multiply. Screen mouse hit-testing, dragging, scrolling, mouse-over and opt-in clips use the transformed coordinates. HUD editor hitboxes and mouse dragging account for group scaling, while JSON widget sizes remain in logical GUI pixels.
 
+## Automatic row and column layouts
+
+A normal `anchorui:panel` or `anchorui:container` can lay out its direct children automatically. This is opt-in; existing manually anchored documents are unchanged.
+
+```json
+{
+  "type": "anchorui:panel",
+  "id": "mypack:toolbar",
+  "position": {"point": "TOPLEFT", "relativeTo": "screen", "x": 20, "y": 20},
+  "size": {"width": 300, "height": 50},
+  "padding": {"left": 8, "top": 6, "right": 8, "bottom": 6},
+  "layout": {
+    "type": "row",
+    "gap": 8,
+    "align": "center",
+    "justify": "space_between",
+    "collapseHidden": true
+  },
+  "children": [
+    {"type": "anchorui:button", "text": "A", "size": {"width": 70, "height": 20}},
+    {"type": "anchorui:button", "text": "B", "size": {"width": 70, "height": 20}},
+    {"type": "anchorui:button", "text": "C", "size": {"width": 70, "height": 20}}
+  ]
+}
+```
+
+- `layout.type`: `row` (left to right) or `column` (top to bottom); accepts `"row"` or `"column"` as shorthand for the full `layout` object.
+- `gap`: space between consecutive participating children, from 0 to 4096 GUI pixels, default 0.
+- `align`: cross-axis alignment `start` (default), `center`, `end`, or `stretch`. With a fixed cross-axis container size, `stretch` expands participating children to the padded content width (for `column`) or height (for `row`). If the container is auto-sized along that axis, the children's preferred dimensions are retained.
+- `justify`: main-axis alignment `start` (default), `center`, `end`, or `space_between`. Any available extra space is distributed; content larger than the container overflows, for use with clipping/scrolling.
+- `collapseHidden`: default `false`. When `true`, an invisible child is removed from the automatic layout, and following children shift without having to recreate any widget. Visible state includes `visibleWhen`, parent visibility and local F8 editor overrides. Changing a visibility condition triggers a layout recalculation only if the set of collapsed children changed.
+- `autoSize` works with `row` and `column`: the main axis is measured from the sum of participating children and gaps; the cross axis from the largest child plus padding. Nested auto-sized containers converge through the existing layout resolver.
+- Children participate when they belong structurally to the container, anchor with `TOPLEFT` to its `/__content` frame, and do not declare `"layoutItem": false`. All other children retain manual anchoring. Use `"layoutItem": false` to leave a particular child at its explicit anchored position.
+- Child `position.x` and `position.y` remain **local nudges** in addition to their computed row/column position. F8 offset overrides still apply to these children. An explicit reference to another frame or a non-`TOPLEFT` anchor opts the child out of automatic placement.
+- `layout` is used on ordinary panels/containers only. The pre-existing `template_list.layout` (vertical/grid/custom) has a separate schema and remains unchanged. An automatic row/column is not a full flexbox, wrap or generic grid system; those remain potential later extensions.
+
+Nested panels may each choose their own row/column orientation. Scrolling, clipping and group scale continue to use the shared computed frames. Existing `visibleWhen` and `anchorui:cases` can control collapsed children, but `collapseHidden` is **opt-in** to avoid changing older layouts.
+
+### Try the live layout demo
+
+```text
+/anchorui screen open anchorui:stack_layout_demo
+```
+
+Toggle **Hide middle widgets**. The row should redistribute space between its remaining buttons, while the column's footer moves upward and its auto-sized panel shrinks. Turn it off to restore the original arrangement. You can open F8 to inspect the resulting frame bounds.
+
 ## Automatic container sizing
 
 A `panel` or `container` can calculate its outer size from its **direct children** (including nested auto-sized containers) and its padding. The default remains fixed sizing, for compatibility with existing resource packs.

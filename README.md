@@ -97,6 +97,20 @@ The demo type `anchorui_test:counter` uses a vanilla `Button` and can be tested 
 
 See **[Custom Widgets API](docs/CUSTOM_WIDGETS.md)** for complete Java and JSON examples, guarantees, and current limitations. Mods can also register reusable formatters for JSON bindings and text templates; see **[Data Formatters](docs/FORMATTERS.md)**. JSON screens also support lifecycle, hover, click and change handlers using registered Java actions; see **[UI Events](docs/UI_EVENTS.md)**. Repeated quest/dialogue buttons can be authored using **[Template List and Item Context](docs/TEMPLATE_LIST.md)**, with per-row event data, dynamic updates, Grid Layout and custom Java layout algorithms. JSON screens support stateful tabs, checkboxes, switches and dropdowns through **[Built-in Interactive Controls](docs/UI_CONTROLS.md)** and **[Local UI State](docs/UI_STATE.md)**. Controls can use resource-pack texture skins with normal, hovered, selected and disabled variants; skins support atlases, UV regions, tint, nine-slice and shared reusable style definitions.
 
+## Conditional content and guarded actions
+
+Resource packs can select the first matching widget variant through `anchorui:cases`, using the existing Conditions grammar and optional `otherwise` fallback. Variant widgets are expanded during document loading and switch visibility without recreating the screen. Cases support ordinary nested widgets, named templates, and repeated `template_list` entries.
+
+Registered action objects can also declare a `when` condition, evaluated **at event time**. A false result skips the action without changing the widget's visible/disabled appearance. Conditions and action guards are client-side UI behavior, not server authorization.
+
+Try both features with:
+
+```text
+/anchorui screen open anchorui:conditional_content_demo
+```
+
+See [Conditions](docs/CONDITIONS.md#conditional-widget-content-anchoruicases) and [UI Events](docs/UI_EVENTS.md#action-time-guards-when) for the JSON schemas, examples and safety notes. A standalone dialogue/quest engine is intentionally outside AnchorUI's framework scope.
+
 ## Typed widget configuration using records
 
 A third-party mod can declare its custom fields as a Java `record` with a Mojang `Codec<T>` (typically built with `RecordCodecBuilder`) and register it using `AnchorWidgetRegistry.register(type, codec, (context, element, style, config) -> widget)`. Anchor UI parses the full JSON element using `JsonOps.INSTANCE`, ignores unrelated layout fields, and supplies a validated, typed configuration object. Defaults can be declared with `optionalFieldOf` and invariants with `Codec.validate`.

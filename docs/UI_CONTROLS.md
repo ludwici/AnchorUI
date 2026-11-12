@@ -121,6 +121,130 @@ All four controls use `size.width` / `size.height` and the existing widget text 
 
 `fillColor`, `borderColor` and `accentColor` accept `#RRGGBB` or `#AARRGGBB`. The same settings apply to checkbox, select and tabs.
 
+## Textured skins from resource packs
+
+Each built-in control accepts a `textures` object. You can skin the entire control **and** its individual parts; only the parts you specify use textures, while unspecified parts retain the existing color-based rendering.
+
+A texture can use a direct resource location such as `"mymod:textures/gui/toggle.png"` or an object with the same image-region properties as `anchorui:image`: `texture`, `textureWidth`, `textureHeight`, `u`, `v`, `regionWidth`, `regionHeight`, `tint`, and `nineSlice`. Source files live under `assets/<namespace>/textures/` in the mod or resource pack. A single image atlas may provide different appearances by assigning different `u` / `v` regions to each state.
+
+### Checkbox and switch skins
+
+```json
+{
+  "type": "anchorui:checkbox",
+  "text": "Enable effects",
+  "stateKey": "details",
+  "indicatorSize": 16,
+  "textures": {
+    "background": {
+      "normal": {
+        "texture": "mymod:textures/gui/frame.png",
+        "textureWidth": 48,
+        "textureHeight": 48,
+        "nineSlice": {
+          "left": 12,
+          "top": 12,
+          "right": 12,
+          "bottom": 12
+        }
+      },
+      "hover": "mymod:textures/gui/frame_hover.png",
+      "disabled": "mymod:textures/gui/frame_disabled.png"
+    },
+    "indicator": {
+      "off": "mymod:textures/gui/unchecked.png",
+      "on": "mymod:textures/gui/checked.png",
+      "offHover": "mymod:textures/gui/unchecked_hover.png",
+      "onHover": "mymod:textures/gui/checked_hover.png",
+      "offDisabled": "mymod:textures/gui/unchecked_disabled.png",
+      "onDisabled": "mymod:textures/gui/checked_disabled.png"
+    }
+  },
+  "size": {
+    "width": 180,
+    "height": 24
+  }
+}
+```
+
+The checkbox uses `background` across its whole widget and `indicator` for the checked/unchecked box. A switch uses the same `background`, but defines `track` and `thumb` instead of `indicator`. Its dimensions can be customized with `trackWidth`, `trackHeight`, `thumbWidth`, and `thumbHeight`, while the thumb still moves between off/on positions.
+
+For every toggle part (`indicator`, `track`, `thumb`), available variants are `off`, `on`, `offHover`, `onHover`, `offDisabled`, `onDisabled`, and optional `normal`. If an exact hovered/disabled sprite is missing, the corresponding `off`/`on` sprite is used. Without a matching sprite, the existing color renderer remains available.
+
+### Dropdown and tab skins
+
+```json
+{
+  "type": "anchorui:select",
+  "text": "Difficulty",
+  "stateKey": "difficulty",
+  "options": ["easy", "normal", "hard"],
+  "popupRowHeight": 24,
+  "textures": {
+    "background": {
+      "normal": "mymod:textures/gui/selector.png",
+      "hover": "mymod:textures/gui/selector_hover.png"
+    },
+    "arrow": {
+      "closed": "mymod:textures/gui/arrow_down.png",
+      "open": "mymod:textures/gui/arrow_up.png"
+    },
+    "popup": "mymod:textures/gui/dropdown_panel.png",
+    "option": {
+      "normal": "mymod:textures/gui/option.png",
+      "hover": "mymod:textures/gui/option_hover.png",
+      "selected": "mymod:textures/gui/option_selected.png",
+      "selectedHover": "mymod:textures/gui/option_selected_hover.png"
+    }
+  },
+  "size": {
+    "width": 180,
+    "height": 24
+  }
+}
+```
+
+Select supports `background`, `arrow` (`closed`, `open`, `disabled`), `popup` (`normal`), and `option` (`normal`, `hover`, `selected`, `selectedHover`, `disabled`).
+
+Tabs support `background` plus a `tab` texture for **each tab cell**, with variants `normal`, `hover`, `selected`, `selectedHover`, and `disabled`. Missing state variants fall back to their base state or `normal`. Text remains on top of its textured part, so tab labels and selected values continue to use the existing font/colors.
+
+The popup row height defaults to 20 GUI pixels; the dropdown arrow size defaults to 12. Override with `popupRowHeight` (12–128) and `arrowSize` (4–128). `indicatorSize` defaults to 14 (4–128); switch track and thumb sizes are also bounded to prevent invalid sizes.
+
+### Reuse one skin in a style file
+
+You do **not** need to repeat `textures` in each control. Styles already support reusable per-widget configurations; put skins in `assets/mymod/anchorui/style/rpg_controls.json`:
+
+```json
+{
+  "anchorui:checkbox": {
+    "textures": {
+      "indicator": {
+        "off": "mymod:textures/gui/off.png",
+        "on": "mymod:textures/gui/on.png"
+      }
+    }
+  },
+  "anchorui:tabs": {
+    "textures": {
+      "tab": {
+        "normal": "mymod:textures/gui/tab.png",
+        "selected": "mymod:textures/gui/tab_selected.png"
+      }
+    }
+  }
+}
+```
+
+Use `"style": "mymod:style/rpg_controls"` on the screen. Individual widgets can override some states in their own `textures`; the style and widget objects are **deep-merged**, so other states stay inherited. Existing `fillColor`, `borderColor` and `accentColor` remain usable when a texture is not supplied.
+
+### Try the textured demo
+
+```text
+/anchorui screen open anchorui:ui_controls_textured_demo
+```
+
+This screen shares the interactive controls and Local UI State from `ui_controls_demo`, but uses `anchorui:style/textured_controls`. The bundled example uses the existing `anchorui:textures/gui/nine_slice_panel.png` tinted differently for normal, hover and selected states. Replace it with your own PNGs, or point variants at different regions of a single texture atlas; no Java code changes are required. Use **F3+T** after editing resource-pack textures or JSON styles.
+
 ## onChange and onClick
 
 These widgets implement `UiChangeSource`, so they work with existing namespaced UI events:

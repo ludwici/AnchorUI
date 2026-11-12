@@ -17,6 +17,7 @@ import com.ludwici.anchorui.api.WidgetTypeIds;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.layout.ContainerLayout;
 import com.ludwici.anchorui.api.layout.StackLayout;
+import com.ludwici.anchorui.api.layout.ContainerAutoLayout;
 import com.ludwici.anchorui.api.layout.ContainerScroll;
 import com.ludwici.anchorui.api.layout.WidgetContainers;
 import com.ludwici.anchorui.api.layout.WidgetTransforms;
@@ -372,7 +373,8 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             List<AnchorLayout.Frame> frames = new ArrayList<>();
             Map<String, PaddingElement> containers = new LinkedHashMap<>();
             Map<String, ContainerLayout.AutoSize> autoSizes = new LinkedHashMap<>();
-            Map<String, StackLayout.Config> stackLayouts = new LinkedHashMap<>();
+            Map<String, ContainerAutoLayout> stackLayouts = new LinkedHashMap<>();
+            Map<String, StackLayout.Rules> itemRules = new LinkedHashMap<>();
             Map<String, String> parents = new LinkedHashMap<>();
             Set<String> manual = new HashSet<>();
             Set<String> hidden = new HashSet<>();
@@ -384,9 +386,9 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 if (placed.widget() instanceof PanelWidget) {
                     containers.put(placed.id(), placed.style().padding);
                     JsonObject layoutSettings = placed.style().resolvedSettings;
-                    StackLayout.Config stack = layoutSettings.has("type")
+                    ContainerAutoLayout stack = layoutSettings.has("type")
                             && WidgetContainers.supportsChildren(layoutSettings.get("type").getAsString())
-                            ? StackLayout.Config.parse(layoutSettings) : null;
+                            ? ContainerAutoLayout.parse(layoutSettings) : null;
                     if (stack != null) {
                         stackLayouts.put(placed.id(), stack);
                     }
@@ -400,8 +402,9 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 if (placed.containerParent() != null) {
                     parents.put(placed.id(), placed.containerParent());
                 }
-                if (placed.style().resolvedSettings.has("layoutItem")
-                        && !placed.style().resolvedSettings.get("layoutItem").getAsBoolean()) {
+                StackLayout.Rules rules = StackLayout.Rules.parse(placed.style().resolvedSettings);
+                itemRules.put(placed.id(), rules);
+                if (!rules.managed()) {
                     manual.add(placed.id());
                 }
                 if (!placed.widget().visible) {
@@ -415,7 +418,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 }
             }
             ContainerLayout.Result result = ContainerLayout.resolve(width, height, frames, containers, autoSizes, parents,
-                    stackLayouts, hidden, manual, warning -> {
+                    stackLayouts, itemRules, hidden, manual, warning -> {
                         if (warnings != null) {
                             warnings.add(warning);
                         }

@@ -592,11 +592,11 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 if (!placed.widget().visible || !insideClip(placed, mouseX, mouseY)) {
                     continue;
                 }
-            AnchorLayout.Bounds frame = layoutBounds.get(placed.id());
-            if (frame == null) {
-                continue;
-            }
-            WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+                AnchorLayout.Bounds frame = layoutBounds.get(placed.id());
+                if (frame == null) {
+                    continue;
+                }
+                WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
                 if (WidgetContainers.contains(transform.physical(frame), mouseX, mouseY)) {
                     candidate = placed.id();
                     break;

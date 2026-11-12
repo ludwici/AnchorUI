@@ -1,0 +1,180 @@
+{
+  "state": {
+    "hideMiddle": false
+  },
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "heading",
+      "text": "Automatic row / column layout",
+      "position": {
+        "relativeTo": "screen",
+        "x": 32,
+        "y": 14
+      },
+      "size": {
+        "width": 300,
+        "height": 20
+      }
+    },
+    {
+      "type": "anchorui:switch",
+      "id": "hide_middle",
+      "stateKey": "hideMiddle",
+      "text": "Hide middle widgets",
+      "position": {
+        "relativeTo": "screen",
+        "x": 32,
+        "y": 40
+      },
+      "size": {
+        "width": 220,
+        "height": 22
+      }
+    },
+    {
+      "type": "anchorui:panel",
+      "id": "row",
+      "position": {
+        "relativeTo": "screen",
+        "x": 32,
+        "y": 80
+      },
+      "size": {
+        "width": 318,
+        "height": 70
+      },
+      "padding": {
+        "left": 8,
+        "right": 8,
+        "top": 8,
+        "bottom": 8
+      },
+      "fillColor": "#D7223043",
+      "borderColor": "#FF93ACC4",
+      "borderWidth": 1,
+      "layout": {
+        "type": "row",
+        "gap": 8,
+        "align": "center",
+        "justify": "space_between",
+        "collapseHidden": true
+      },
+      "children": [
+        {
+          "type": "anchorui:button",
+          "id": "first",
+          "text": "First",
+          "size": {
+            "width": 75,
+            "height": 20
+          }
+        },
+        {
+          "type": "anchorui:button",
+          "id": "middle",
+          "text": "Middle",
+          "visibleWhen": {
+            "not": {
+              "bind": "anchorui:ui.state",
+              "path": "hideMiddle",
+              "fallback": false
+            }
+          },
+          "size": {
+            "width": 78,
+            "height": 20
+          }
+        },
+        {
+          "type": "anchorui:button",
+          "id": "last",
+          "text": "Last",
+          "size": {
+            "width": 75,
+            "height": 20
+          }
+        }
+      ]
+    },
+    {
+      "type": "anchorui:panel",
+      "id": "column",
+      "position": {
+        "relativeTo": "screen",
+        "x": 32,
+        "y": 166
+      },
+      "size": {
+        "width": 260,
+        "height": 50
+      },
+      "autoSize": "height",
+      "padding": {
+        "left": 10,
+        "right": 10,
+        "top": 8,
+        "bottom": 8
+      },
+      "fillColor": "#D71F352C",
+      "borderColor": "#FF81C09C",
+      "borderWidth": 1,
+      "layout": {
+        "type": "column",
+        "gap": 7,
+        "align": "start",
+        "collapseHidden": true
+      },
+      "children": [
+        {
+          "type": "anchorui:text",
+          "id": "col_title",
+          "text": "Column autoSize",
+          "size": {
+            "width": 150,
+            "height": 16
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "col_hidden",
+          "text": "Middle line (collapsible)",
+          "visibleWhen": {
+            "not": {
+              "bind": "anchorui:ui.state",
+              "path": "hideMiddle",
+              "fallback": false
+            }
+          },
+          "size": {
+            "width": 195,
+            "height": 16
+          }
+        },
+        {
+          "type": "anchorui:text",
+          "id": "col_footer",
+          "text": "Footer follows the visible rows",
+          "size": {
+            "width": 225,
+            "height": 16
+          }
+        }
+      ]
+    },
+    {
+      "type": "anchorui:text",
+      "id": "hint",
+      "text": "Switch to check gap reflow and container height.",
+      "position": {
+        "relativeTo": "screen",
+        "x": 32,
+        "y": 300
+      },
+      "size": {
+        "width": 355,
+        "height": 32
+      }
+    }
+  ]
+}

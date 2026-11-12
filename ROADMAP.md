@@ -58,15 +58,17 @@ The completed functionality above does **not** imply finished visual consistency
 
 ### Stage 2 — General-purpose automatic layouts
 
-**Priority: high.** Grid placement for `template_list` already exists, but it is not a general layout engine.
+**Status: row/column foundation implemented; advanced layout and runtime QA remain.** Grid placement for `template_list` already existed independently.
 
-- [ ] Add reusable row/column stack or flow layouts for ordinary container children, with `gap`, alignment and distribution.
-- [ ] Investigate flexible size/grow, wrapping, min/max size and a general grid layout independent of `template_list`.
-- [ ] Support optional collapsed layout space for hidden children without changing legacy anchored screens by default.
-- [ ] Preserve explicit anchors, scroll, clipping, scaling, editor overrides and hit-testing when automatic layout is enabled.
-- [ ] Add stress tests for nested layouts, resize/GUI scale, long text and mixed fixed/auto-sized children.
+- [x] Add opt-in `row` and `column` layouts for normal panels/containers with `gap`, cross-axis `align`, main-axis `justify` and `space_between`.
+- [x] Support `align: stretch` along a fixed cross axis, with preferred sizes retained for auto-sized cross axes.
+- [x] Support opt-in `collapseHidden` with condition-triggered relayout, including local state and hidden `cases` alternatives.
+- [x] Preserve manual anchors and F8 local offsets: children with external/non-top-left anchors or `layoutItem: false` opt out of the stack. Layout bounds integrate with scrolling, clipping and scaling.
+- [x] Add automated tests for nested auto-sized containers, column/row alignment, distribution, padding, hidden rows and explicit anchors, plus a resource-pack demo.
+- [ ] Add **flexible grow/shrink**, wrapping, min/max size and a generic Grid layout independent of `template_list` (schema and behavior TBD).
+- [ ] Complete runtime QA for editor dragging, GUI resize and scale, long text, nested scrolling, moving focus and resource reload.
 
-**Done when:** common menus, card groups and HUD sections can be assembled without manually assigning an x/y offset to every child.
+**Done when:** the common automatic container patterns are stable in-game and can handle flexible sizes and large nested layouts.
 
 ### Stage 3 — Consistent appearance and input polish
 
@@ -122,6 +124,7 @@ The completed functionality above does **not** imply finished visual consistency
 - [ ] Verify texture replacement, broken resource paths, reloads and multiple GUI scales.
 - [ ] Verify moved keyed list widgets keep correct focus, click handlers, index-sensitive custom widgets and scroll positions in-game. Unit tests and CI already cover the underlying reconciliation.
 - [ ] In-game check: toggle cases using Local UI State, verify fallback and nested child clipping, and exercise an action guard with the bundled demo.
+- [ ] In-game check: `stack_layout_demo` preserves F8 overrides, reflows both stacks on state changes, handles various GUI scales and keeps scroll/clipping correct.
 - [x] Separate test/anchor and RPG HUD toggles.
 - [x] Namespaced screen commands without showing the internal `screens/` path.
 - [ ] 3D model `scene4` off-screen positioning: **deferred**, not a release blocker.
@@ -138,7 +141,7 @@ The completed functionality above does **not** imply finished visual consistency
 ## 6. Recommended next sequence
 
 1. **In-game verification of `cases` and guarded actions**, plus the remaining collapsed-space policy decision.
-2. **Row/column container layout**, with an opt-in collapsed-visibility policy.
+2. **In-game row/column layout QA**, then flexible sizing, wrap and generic grid as follow-up milestones.
 3. **Visual consistency and interaction QA** (especially progress bars, textures and blur).
 4. **Screen lifecycle polish and optional state handoff**.
 5. **Animations**, alongside API stability, performance work, English documentation and additional test coverage.

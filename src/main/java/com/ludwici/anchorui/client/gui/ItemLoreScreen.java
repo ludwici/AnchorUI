@@ -28,6 +28,7 @@ import com.ludwici.anchorui.api.widget.WidgetConfigException;
 import com.ludwici.anchorui.api.widget.WidgetContext;
 import com.ludwici.anchorui.api.widget.ItemContext;
 import com.ludwici.anchorui.api.widget.TemplateListExpander;
+import com.ludwici.anchorui.api.widget.TemplateListReuse;
 import com.ludwici.anchorui.api.widget.UiChangeSource;
 import com.ludwici.anchorui.api.widget.WidgetIds;
 import com.ludwici.anchorui.api.widget.WidgetInstanceRegistry;
@@ -60,6 +61,10 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     }
 
     private record TemplateListState(BoundData items, WidgetContext context, JsonArray snapshot) {
+    }
+
+    private record RetainedWidget(LoreEntity.UiElement definition, PlacedWidget placed, ItemContext itemContext,
+                                  UiEventBindings events, boolean selfDispatching) {
     }
 
     private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, WidgetContext context,
@@ -636,8 +641,26 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
 
     @Override
     protected void init() {
+        buildWidgets(false);
+    }
+
+    private void buildWidgets(boolean incremental) {
+        Map<String, RetainedWidget> retained = new HashMap<>();
+        if (incremental) {
+            for (PlacedWidget placed : placedWidgets) {
+                LoreEntity.UiElement definition = widgetRegistry.definition(placed.id()).orElse(null);
+                UiEventBindings events = widgetEventBindings.get(placed.id());
+                if (definition != null && events != null) {
+                    retained.put(placed.id(), new RetainedWidget(definition, placed,
+                            widgetItemContexts.get(placed.id()), events, selfDispatchingClicks.contains(placed.id())));
+                }
+            }
+            clearWidgets();
+            widgetRegistry.clear();
+        } else {
+            widgetRegistry = new WidgetInstanceRegistry();
+        }
         loadScreenOffsets();
-        widgetRegistry = new WidgetInstanceRegistry();
         placedWidgets = List.of();
         widgetEventBindings.clear();
         widgetItemContexts.clear();
@@ -715,8 +738,19 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 LoreStyle styleSource = element.settings.has("style") ? LoreLoader.INSTANCE.getStyle(element.settings.get("style").getAsString()) : theme;
                 LoreStyle.Element style = definition.legacyStyle() == null ? styleSource.get(element.type, element.settings) : styleSource.get(definition.legacyStyle(), null);
                 ItemContext rowContext = widgetItemContexts.get(definition.id());
-                WidgetContext widgetContext = rowContext == null ? context : context.withItemContext(rowContext);
-                createWidget(widgetContext, definition.id(), element, style, created, warnings);
+                RetainedWidget previous = retained.get(definition.id());
+                if (previous != null && TemplateListReuse.canReuse(previous.definition().settings, element.settings,
+                        previous.itemContext(), rowContext)) {
+                    widgetRegistry.attach(definition.id(), previous.placed().widget());
+                    widgetEventBindings.put(definition.id(), previous.events());
+                    if (previous.selfDispatching()) {
+                        selfDispatchingClicks.add(definition.id());
+                    }
+                    created.add(previous.placed());
+                } else {
+                    WidgetContext widgetContext = rowContext == null ? context : context.withItemContext(rowContext);
+                    createWidget(widgetContext, definition.id(), element, style, created, warnings);
+                }
             } catch (RuntimeException exception) {
                 AnchorUI.LOGGER.error("Failed to configure Anchor UI widget '{}'", definition.id(), exception);
                 warnings.add("Invalid settings for widget '" + definition.id() + "': " + exception.getMessage());
@@ -872,8 +906,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 }
             }
 
-            clearWidgets();
-            init();
+            buildWidgets(true);
 
             for (var entry : previousScroll.entrySet()) {
                 ContainerScroll.Limits limits = scrollLimits.get(entry.getKey());

@@ -42,6 +42,8 @@ The same widgets work in JSON screens and in HUD documents. Flat `entities` docu
 
 `anchorui:panel` and `anchorui:container` may also specify `texture`, UV attributes and `nineSlice`. The image covers the panel body; tint and alpha apply to the texture, while `fillColor` and `borderColor` draw underneath it.
 
+For texture-based styling of interactive controls (`anchorui:checkbox`, `anchorui:switch`, `anchorui:select`, `anchorui:tabs`), see [Built-in Interactive Controls](UI_CONTROLS.md#textured-skins-from-resource-packs). Their skins reuse this same `TextureRegion` format, UV atlas settings, tint, and nine-slice support, with distinct textures for selected, hover, checked, and disabled states.
+
 ## Panels
 
 ```json

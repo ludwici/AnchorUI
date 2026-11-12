@@ -172,6 +172,81 @@ All three forms are supported:
 
 A missing template ID is reported as an error when building the screen. As before, a template must ultimately resolve to a registered widget type, and the existing per-widget error handling applies to invalid widget configuration.
 
+## Grid layout and Java-defined layouts
+
+By default `template_list` keeps its existing vertical row layout. To create a grid, set `layout.type` to `grid` (or `anchorui:grid`):
+
+```json
+{
+  "type": "anchorui:template_list",
+  "id": "mymod:skills",
+  "items": {
+    "bind": "mymod:skills.available",
+    "fallback": []
+  },
+  "key": "id",
+  "template": "mymod:skill_card",
+  "rowHeight": 48,
+  "layout": {
+    "type": "grid",
+    "columns": 4,
+    "columnGap": 6,
+    "rowGap": 6
+  },
+  "padding": {
+    "left": 6,
+    "right": 6
+  },
+  "scroll": {
+    "axis": "vertical",
+    "step": 54
+  },
+  "size": {
+    "width": 240,
+    "height": 180
+  }
+}
+```
+
+The grid fills rows from left to right and wraps after `columns` entries. The **cell width** is derived from `size.width`, left/right padding, gaps and the column count. The **cell height** defaults to `rowHeight` (22 when omitted). A grid cell overrides the generated root widget's `size.width` and `size.height`; nested child widgets retain their own sizes. The root widget's optional `position.x`/`position.y` offsets are added to the grid position. Scroll and clipping work like a vertical template list.
+
+For fixed-size cells or a grid without an explicit container width, set `layout.cellWidth` (1–16384) and optionally `layout.cellHeight` (1–4096). Both are measured in GUI pixels. `columns` must be 1–256, and `columnGap` and `rowGap` must be 0–4096. `layout` may also be `"grid"` (defaults to one column), or `"vertical"`, but the object form is more useful for configuration.
+
+The old `rowHeight` and `gap` properties still work for vertical lists, and a list without `layout` preserves existing root widget dimensions. For a grid, `rowHeight` and `gap` provide fallback cell height and gap values.
+
+### Custom layout algorithms from Java
+
+A client-side mod can register a layout under any namespaced ID. Its factory receives the options and list metrics; its layout function returns an `x`/`y` coordinate and cell size for each index:
+
+```java
+TemplateListLayoutRegistry.register(
+    ResourceLocation.fromNamespaceAndPath("mymod", "diagonal"),
+    (options, metrics) -> {
+        int step = options.get("step").getAsInt();
+        return index -> new TemplateListLayoutRegistry.Cell(index * step, index * step, 42, 24);
+    }
+);
+```
+
+```json
+{
+  "layout": {
+    "type": "mymod:diagonal",
+    "step": 12
+  }
+}
+```
+
+For **typed configuration**, register `TemplateListLayoutRegistry.register(id, Codec<T>, (config, metrics) -> layout)`. Use a record and `Codec<T>` to specify required options, defaults and validation. `metrics.rowHeight()`, `metrics.gap()` and `metrics.availableWidth()` describe the list settings. The framework creates the layout once when generating list rows, not per frame. It executes your registered Java code only; the JSON itself cannot run scripts. Returning a cell with width 0 preserves the template's width.
+
+### Try the grid demo
+
+```text
+/anchorui screen open anchorui:template_grid_demo
+```
+
+This demo uses the same reusable file-backed quest template and mutable data source as the normal list, but arranges quest buttons in three columns. Click **Reorder / add quest** to populate and reorder the grid without leaving the screen.
+
 ## Item references inside the template
 
 A JSON object with only the **item** path substitutes that field as a value of its original type (string, number, boolean, object, or list). Optional **fallback** supplies a replacement for a missing path.
@@ -196,12 +271,12 @@ The **template** may be a panel/container with nested **children**, or it can re
 | items | A list Data Binding or literal JSON array |
 | template | Inline widget JSON object or named template ID (resource pack or Java) |
 | key | Path to unique string/number within every entry; recommended for live updates |
-| rowHeight | Height/placement step of a row; default 22 |
-| gap | Vertical spacing; default 2 |
-| maxEntries | Maximum generated rows; default 64 and hard limit 256 |
+| rowHeight | Vertical row height or grid cell-height default; default 22 |
+| gap | Vertical row spacing or default grid gap; default 2 |
+| maxEntries | Maximum generated rows; default 64 and hard limit 256 |\n| layout | Optional vertical/grid layout or registered Java layout by ID; default vertical |
 | size, padding, scroll, styles | Standard panel/container options |
 
-Rows are positioned vertically relative to the list's content area, with step rowHeight + gap. If the root template does not specify size.height, it defaults to rowHeight. Duplicate keys and invalid configuration cause a descriptive error on screen initialization. If **key** is absent, the row index is used.
+Without a custom layout, rows are positioned vertically relative to the list's content area, with step rowHeight + gap. If the root template does not specify size.height, it defaults to rowHeight. Duplicate keys and invalid configuration cause a descriptive error on screen initialization. If **key** is absent, the row index is used.
 
 The list source is checked for changes during screen rendering. Only when the array changes is the screen's generated widget tree rebuilt; scroll offsets are clamped and preserved, and focus is restored by ID where possible. Keys give stable widget **IDs**, but a changed list still recreates widgets. Custom widgets holding local internal state should store important state outside themselves if it must survive data updates. Rebuilding the list does not repeat the screen's onOpen event.
 

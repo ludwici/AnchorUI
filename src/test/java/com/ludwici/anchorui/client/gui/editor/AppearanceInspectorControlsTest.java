@@ -75,6 +75,21 @@ public class AppearanceInspectorControlsTest {
     }
 
     @Test
+    public void actionButtonsExposeSkinsAndHoverPaletteWithoutAffectingVanillaDefaults() {
+        var controls = AppearanceInspectorControls.describe("test:button", WidgetTypeIds.BUTTON,
+                json("""
+                        {"type":"anchorui:button","text":"Click me","size":{"width":120,"height":20}}
+                        """), new HudLayoutOffsets());
+        assertEquals("Click me", find(controls, "text").value());
+        assertEquals("#FF28384B", find(controls, "fillColor").value());
+        assertEquals("#FF385E81", find(controls, "hoverColor").value());
+        assertEquals("#FF353B43", find(controls, "disabledColor").value());
+        assertEquals("", find(controls, "textures.background.hover").value());
+        assertTrue(find(controls, "textures.background.normal").textual());
+        assertEquals(120, Integer.parseInt(find(controls, "size.width").value()));
+    }
+
+    @Test
     public void appearanceOverridesMergeAsSafeWidgetFieldsAndSurviveStorage() {
         var id = "example:panel";
         HudLayoutOffsets offsets = new HudLayoutOffsets();

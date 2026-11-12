@@ -105,6 +105,8 @@ public final class ContainerLayout {
                 children.computeIfAbsent(parent, ignored -> new ArrayList<>()).add(childId);
             }
         }
+        List<String> layoutOrder = new ArrayList<>(layouts.keySet());
+        layoutOrder.sort(java.util.Comparator.comparingInt(id -> structuralDepth(id, parents)));
         Map<String, Size> sizes = new LinkedHashMap<>();
         for (AnchorLayout.Frame frame : definitions.values()) {
             AutoSize auto = autoSizes.getOrDefault(frame.id(), AutoSize.NONE);
@@ -119,9 +121,8 @@ public final class ContainerLayout {
             }
             Set<String> managed = new HashSet<>();
             Map<String, Size> intrinsic = new LinkedHashMap<>();
-            for (var entry : layouts.entrySet()) {
-                String container = entry.getKey();
-                ContainerAutoLayout layout = entry.getValue();
+            for (String container : layoutOrder) {
+                ContainerAutoLayout layout = layouts.get(container);
                 PaddingElement padding = containers.get(container);
                 AnchorLayout.Frame outer = effective.get(container);
                 int availableWidth = Math.max(0, outer.width() - padding.left - padding.right);
@@ -217,6 +218,22 @@ public final class ContainerLayout {
             }
         }
         throw new IllegalArgumentException("Container autoSize did not converge; avoid anchoring auto-sized children to the parent's right/center/bottom edge");
+    }
+
+    private static int structuralDepth(String id, Map<String, String> parents) {
+        Set<String> visited = new HashSet<>();
+        int depth = 0;
+        String current = id;
+        while ((current = parents.get(current)) != null) {
+            if (!visited.add(current)) {
+                throw new IllegalArgumentException("Circular structural container parent near '" + id + "'");
+            }
+            depth++;
+            if (depth > 256) {
+                throw new IllegalArgumentException("Container nesting exceeds 256 at '" + id + "'");
+            }
+        }
+        return depth;
     }
 
     private static int safeSize(int content, int firstPadding, int lastPadding) {

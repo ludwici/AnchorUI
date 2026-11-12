@@ -401,11 +401,11 @@ public final class AnchorScreenEditorScreen extends Screen {
                 }
             }
             if (editingAppearance != null) {
-                int x = appearanceInput.getX() - 8;
-                int y = appearanceInput.getY() - 23;
-                graphics.fill(x - 1, y - 1, x + appearanceInput.getWidth() + 17, y + 72, 0xFF162332);
+                int modalX = appearanceInput.getX() - 8;
+                int modalY = appearanceInput.getY() - 23;
+                graphics.fill(modalX - 1, modalY - 1, modalX + appearanceInput.getWidth() + 17, modalY + 72, 0xFF162332);
                 graphics.drawString(font, font.plainSubstrByWidth(editingAppearance.field().label(),
-                        appearanceInput.getWidth()), x + 8, y + 8, SELECTED, false);
+                        appearanceInput.getWidth()), modalX + 8, modalY + 8, SELECTED, false);
             }
             super.render(graphics, mouseX, mouseY, partialTick);
             widgetList.render(graphics, font, mouseX, mouseY, frameEntries,

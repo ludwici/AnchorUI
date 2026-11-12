@@ -804,7 +804,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             });
         }
         widgetEventBindings.put(id, events);
-        if (element.type.equals(WidgetTypeIds.BUTTON)) {
+        if (element.type.equals(WidgetTypeIds.BUTTON) || widget instanceof StateControlWidget) {
             selfDispatchingClicks.add(id);
         }
         widgetRegistry.attach(id, widget);
@@ -922,6 +922,24 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             }
         }
         renderScrollIndicators(graphics, mouseX, mouseY, partialTick);
+        renderWidgetPopups(graphics, mouseX, mouseY);
+    }
+
+    private void renderWidgetPopups(GuiGraphics graphics, int mouseX, int mouseY) {
+        for (PlacedWidget placed : placedWidgets) {
+            if (!(placed.widget() instanceof UiPopupWidget popup) || !popup.isPopupOpen()) {
+                continue;
+            }
+            WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+            graphics.pose().pushPose();
+            try {
+                graphics.pose().translate(transform.translateX(), transform.translateY(), 0);
+                graphics.pose().scale((float) transform.scale(), (float) transform.scale(), 1.0F);
+                popup.renderPopup(graphics, (int) transform.inverseX(mouseX), (int) transform.inverseY(mouseY));
+            } finally {
+                graphics.pose().popPose();
+            }
+        }
     }
 
     void dispatchWidgetClick(AbstractWidget widget) {
@@ -944,6 +962,9 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         draggingWidget = null;
         updateConditionStates();
+        if (mouseClickedWidgetPopup(mouseX, mouseY, button)) {
+            return true;
+        }
         if (mouseClickedScrollBar(mouseX, mouseY, button)) {
             return true;
         }
@@ -967,6 +988,25 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                     }
                 }
                 return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean mouseClickedWidgetPopup(double mouseX, double mouseY, int button) {
+        for (int index = placedWidgets.size() - 1; index >= 0; index--) {
+            PlacedWidget placed = placedWidgets.get(index);
+            if (!(placed.widget() instanceof UiPopupWidget popup) || !popup.isPopupOpen()) {
+                continue;
+            }
+            WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+            if (popup.mouseClickedPopup(transform.inverseX(mouseX), transform.inverseY(mouseY), button)) {
+                setFocused(placed.widget());
+                return true;
+            }
+            AnchorLayout.Bounds frame = layoutBounds.get(placed.id());
+            if (frame == null || !WidgetContainers.contains(transform.physical(frame), mouseX, mouseY)) {
+                popup.closePopup();
             }
         }
         return false;
@@ -1001,6 +1041,15 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        for (int index = placedWidgets.size() - 1; index >= 0; index--) {
+            PlacedWidget placed = placedWidgets.get(index);
+            if (placed.widget() instanceof UiPopupWidget popup && popup.isPopupOpen()) {
+                WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+                if (popup.mouseScrolledPopup(transform.inverseX(mouseX), transform.inverseY(mouseY), scrollY)) {
+                    return true;
+                }
+            }
+        }
         for (int index = placedWidgets.size() - 1; index >= 0; index--) {
             PlacedWidget placed = placedWidgets.get(index);
             if (!placed.widget().visible || !placed.widget().active || !insideClip(placed, mouseX, mouseY)) {

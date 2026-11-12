@@ -1,5 +1,7 @@
 package com.ludwici.anchorui.client.gui;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.ludwici.anchorui.api.action.UiEventBindings;
@@ -7,6 +9,8 @@ import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.KeyRegistry;
 import com.ludwici.anchorui.api.LoreEntity;
 import com.ludwici.anchorui.api.condition.BoundCondition;
+import com.ludwici.anchorui.api.binding.BoundData;
+import com.ludwici.anchorui.api.binding.DataBindingSpec;
 import com.ludwici.anchorui.api.WidgetTypeIds;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.layout.ContainerLayout;
@@ -20,6 +24,8 @@ import com.ludwici.anchorui.api.style.PositionElement;
 import com.ludwici.anchorui.api.widget.AnchorWidgetRegistry;
 import com.ludwici.anchorui.api.widget.WidgetConfigException;
 import com.ludwici.anchorui.api.widget.WidgetContext;
+import com.ludwici.anchorui.api.widget.ItemContext;
+import com.ludwici.anchorui.api.widget.TemplateListExpander;
 import com.ludwici.anchorui.api.widget.UiChangeSource;
 import com.ludwici.anchorui.api.widget.WidgetIds;
 import com.ludwici.anchorui.api.widget.WidgetInstanceRegistry;
@@ -50,6 +56,9 @@ public class ItemLoreScreen extends Screen {
     private record DeclaredWidget(String id, LoreEntity.UiElement element, String legacyStyle) {
     }
 
+    private record TemplateListState(BoundData items, WidgetContext context, JsonArray snapshot) {
+    }
+
     private record PlacedWidget(String id, AbstractWidget widget, LoreStyle.Element style, PositionElement position, WidgetContext context,
                                 BoundCondition visibleWhen, BoundCondition enabledWhen, boolean baseVisible, boolean baseActive,
                                 String containerParent, boolean clipChildren, WidgetTransforms.Group group,
@@ -75,6 +84,8 @@ public class ItemLoreScreen extends Screen {
     private WidgetInstanceRegistry widgetRegistry = new WidgetInstanceRegistry();
     private List<PlacedWidget> placedWidgets = List.of();
     private final Map<String, UiEventBindings> widgetEventBindings = new HashMap<>();
+    private final Map<String, ItemContext> widgetItemContexts = new HashMap<>();
+    private List<TemplateListState> templateLists = List.of();
     private final Set<String> selfDispatchingClicks = new HashSet<>();
     private final UiHoverTracker hoverTracker = new UiHoverTracker();
     private UiEventBindings screenEventBindings;
@@ -577,7 +588,8 @@ public class ItemLoreScreen extends Screen {
             }
             UiEventBindings events = widgetEventBindings.get(id);
             if (events != null) {
-                events.fire(entered ? "onHoverEnter" : "onHoverLeave", id, JsonNull.INSTANCE);
+                JsonElement item = itemPayload(id);
+                events.fire(entered ? "onHoverEnter" : "onHoverLeave", id, item, item);
             }
         });
     }
@@ -606,6 +618,8 @@ public class ItemLoreScreen extends Screen {
         widgetRegistry = new WidgetInstanceRegistry();
         placedWidgets = List.of();
         widgetEventBindings.clear();
+        widgetItemContexts.clear();
+        templateLists = List.of();
         selfDispatchingClicks.clear();
         hoverTracker.reset();
         layoutBounds = Map.of();
@@ -621,6 +635,8 @@ public class ItemLoreScreen extends Screen {
 
         LoreStyle theme = LoreLoader.INSTANCE.getStyle(loreEntity.style);
         List<DeclaredWidget> definitions = new ArrayList<>();
+        List<TemplateListState> listStates = new ArrayList<>();
+        WidgetContext context = new WidgetContext(minecraft, this, item, loreEntity, widgetRegistry);
         try {
             if (!loreEntity.hasExplicitWidgets) {
                 declare(definitions, legacy(WidgetTypeIds.TEXT, "title", loreEntity.title, 1.0F), "title");
@@ -632,6 +648,19 @@ public class ItemLoreScreen extends Screen {
                     String defaultId = element.type.getPath().replace('/', '_') + "_" + index;
                     String id = element.id.isBlank() ? defaultId : element.id;
                     declare(definitions, element, id, null);
+                    if (element.type.equals(WidgetTypeIds.TEMPLATE_LIST)) {
+                        String listId = WidgetIds.id(id, loreEntity.namespace);
+                        BoundData items = BoundData.parse(element.settings, "items", new JsonArray(), DataBindingSpec.Kind.LIST);
+                        JsonArray rows = items.get(context).getAsJsonArray();
+                        listStates.add(new TemplateListState(items, context, rows.deepCopy()));
+                        for (TemplateListExpander.Entry row : TemplateListExpander.expand(element.settings, rows, listId,
+                                LoreLoader.INSTANCE.getDefinitions().exportForResolution())) {
+                            LoreEntity.UiElement rowElement = new LoreEntity.UiElement(row.settings());
+                            String rowId = WidgetIds.id(rowElement.id, loreEntity.namespace);
+                            widgetItemContexts.put(rowId, row.itemContext());
+                            declare(definitions, rowElement, rowId, null);
+                        }
+                    }
                     index++;
                 }
             }
@@ -641,7 +670,7 @@ public class ItemLoreScreen extends Screen {
             return;
         }
 
-        WidgetContext context = new WidgetContext(minecraft, this, item, loreEntity, widgetRegistry);
+        templateLists = List.copyOf(listStates);
         JsonObject screenSettings = new JsonObject();
         if (loreEntity.onOpen != null) {
             screenSettings.add("onOpen", loreEntity.onOpen);
@@ -663,7 +692,9 @@ public class ItemLoreScreen extends Screen {
             try {
                 LoreStyle styleSource = element.settings.has("style") ? LoreLoader.INSTANCE.getStyle(element.settings.get("style").getAsString()) : theme;
                 LoreStyle.Element style = definition.legacyStyle() == null ? styleSource.get(element.type, element.settings) : styleSource.get(definition.legacyStyle(), null);
-                createWidget(context, definition.id(), element, style, created, warnings);
+                ItemContext rowContext = widgetItemContexts.get(definition.id());
+                WidgetContext widgetContext = rowContext == null ? context : context.withItemContext(rowContext);
+                createWidget(widgetContext, definition.id(), element, style, created, warnings);
             } catch (RuntimeException exception) {
                 AnchorUI.LOGGER.error("Failed to configure Anchor UI widget '{}'", definition.id(), exception);
                 warnings.add("Invalid settings for widget '" + definition.id() + "': " + exception.getMessage());
@@ -759,7 +790,7 @@ public class ItemLoreScreen extends Screen {
         if (widget instanceof UiChangeSource source) {
             source.setChangeListener(value -> {
                 if (minecraft.screen == this && widget.visible && widget.active) {
-                    events.fire("onChange", id, value);
+                    events.fire("onChange", id, value, itemPayload(id));
                 }
             });
         }
@@ -795,8 +826,50 @@ public class ItemLoreScreen extends Screen {
         }
     }
 
+    private JsonElement itemPayload(String id) {
+        ItemContext context = widgetItemContexts.get(id);
+        return context == null ? JsonNull.INSTANCE : context.value();
+    }
+
+    private void refreshTemplateLists() {
+        if (templateLists.isEmpty() || minecraft.screen != this) {
+            return;
+        }
+        for (TemplateListState list : templateLists) {
+            JsonArray latest = list.items().get(list.context()).getAsJsonArray();
+            if (latest.equals(list.snapshot())) {
+                continue;
+            }
+
+            Map<String, ContainerScroll.Offset> previousScroll = new HashMap<>(scrollOffsets);
+            String previousFocus = null;
+            for (PlacedWidget placed : placedWidgets) {
+                if (placed.widget() == getFocused()) {
+                    previousFocus = placed.id();
+                    break;
+                }
+            }
+
+            clearWidgets();
+            init();
+
+            for (var entry : previousScroll.entrySet()) {
+                ContainerScroll.Limits limits = scrollLimits.get(entry.getKey());
+                if (limits != null) {
+                    scrollOffsets.put(entry.getKey(), limits.clamp(entry.getValue()));
+                }
+            }
+            updateScrolledTransforms();
+            if (previousFocus != null) {
+                widgetRegistry.widget(previousFocus).ifPresent(this::setFocused);
+            }
+            break;
+        }
+    }
+
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        refreshTemplateLists();
         updateConditionStates();
         updateHover(mouseX, mouseY);
         if (minecraft.screen != this) {
@@ -850,7 +923,8 @@ public class ItemLoreScreen extends Screen {
             if (placed.widget() == widget) {
                 UiEventBindings events = widgetEventBindings.get(placed.id());
                 if (events != null) {
-                    events.fire("onClick", placed.id(), JsonNull.INSTANCE);
+                    JsonElement item = itemPayload(placed.id());
+                    events.fire("onClick", placed.id(), item, item);
                 }
                 return;
             }
@@ -878,7 +952,8 @@ public class ItemLoreScreen extends Screen {
                     if (!selfDispatchingClicks.contains(placed.id())) {
                         UiEventBindings events = widgetEventBindings.get(placed.id());
                         if (events != null) {
-                            events.fire("onClick", placed.id(), JsonNull.INSTANCE);
+                            JsonElement item = itemPayload(placed.id());
+                            events.fire("onClick", placed.id(), item, item);
                         }
                     }
                 }

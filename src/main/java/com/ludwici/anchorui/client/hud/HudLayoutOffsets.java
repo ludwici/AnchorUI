@@ -81,6 +81,10 @@ public final class HudLayoutOffsets {
         }
     }
 
+    public boolean hasSettingOverrides(String id) {
+        return componentSettings.containsKey(id);
+    }
+
     public JsonObject effectiveSettings(String id, JsonObject base) {
         JsonObject result = base.deepCopy();
         JsonObject overrides = componentSettings.get(id);

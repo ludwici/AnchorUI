@@ -128,7 +128,7 @@ Appearance overrides are stored in the same per-screen override JSON under `appe
 
 Neither the resource pack nor server-owned gameplay data is modified. Developers can make their Java widget properties editable using `WidgetEditorRegistry.register(...)`; see [Custom widgets](CUSTOM_WIDGETS.md#10-поля-визуального-f8-редактора-java-api). Arbitrary event handlers, data bindings and Java-side behavior **are not** editable by this UI.
 
-To test: open `/anchorui screen open anchorui:advanced_layout_demo`, press **F8**, change a button label, adjust panel border properties and save. Try `/anchorui screen open anchorui:ui_controls_textured_demo` for state-control texture variants.
+To test the bundled component editor showcase, run `/anchorui screen open anchorui:editor_components_demo` and press **F8**. It includes a heading, button, progress bar, checkbox, textured image and rounded panel; edit their labels, fill/border colors, sizes and texture paths, then Save/Cancel. Use `advanced_layout_demo` for automatic Layout and `ui_controls_textured_demo` for more state-control texture variants.
 
 ### Shared native scrollbar implementation
 

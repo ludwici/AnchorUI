@@ -11,9 +11,11 @@ import com.ludwici.anchorui.client.hud.HudSnap;
 import com.ludwici.anchorui.client.gui.NativeContainerScrollPanel;
 import com.ludwici.anchorui.client.gui.editor.WidgetListPanel;
 import com.ludwici.anchorui.client.gui.editor.LayoutInspectorControls;
+import com.ludwici.anchorui.client.gui.editor.AppearanceInspectorControls;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
@@ -34,9 +36,22 @@ public final class AnchorScreenEditorScreen extends Screen {
     private static final float INSPECTOR_SCALE = 0.83F;
 
     private record InspectorLine(FormattedCharSequence text, int color, AnchorHudManager.EditableProperty property,
-                                 boolean modified, LayoutInspectorControls.Control layoutControl) {
-        private InspectorLine(FormattedCharSequence text, int color, AnchorHudManager.EditableProperty property, boolean modified) {
-            this(text, color, property, modified, null);
+                                 boolean modified, LayoutInspectorControls.Control layoutControl,
+                                 AppearanceInspectorControls.Control appearanceControl) {
+        private InspectorLine(FormattedCharSequence text, int color, AnchorHudManager.EditableProperty property,
+                              boolean modified) {
+            this(text, color, property, modified, null, null);
+        }
+
+        private InspectorLine(FormattedCharSequence text, int color, AnchorHudManager.EditableProperty property,
+                              boolean modified, LayoutInspectorControls.Control layoutControl) {
+            this(text, color, property, modified, layoutControl, null);
+        }
+    }
+
+    private record AppearanceHitbox(AppearanceInspectorControls.Control control, int direction, int x, int y) {
+        private boolean contains(double mouseX, double mouseY) {
+            return mouseX >= x && mouseX < x + 14 && mouseY >= y && mouseY < y + RESET_SIZE;
         }
     }
 
@@ -59,6 +74,12 @@ public final class AnchorScreenEditorScreen extends Screen {
     private final List<Button> controls = new ArrayList<>();
     private final List<ResetHitbox> resetHitboxes = new ArrayList<>();
     private final List<LayoutHitbox> layoutHitboxes = new ArrayList<>();
+    private final List<AppearanceHitbox> appearanceHitboxes = new ArrayList<>();
+    private EditBox appearanceInput;
+    private Button appearanceApply;
+    private Button appearanceCancel;
+    private AppearanceInspectorControls.Control editingAppearance;
+    private String editingAppearanceId;
     private List<String> sourceProperties = List.of();
     private String inspectedId;
     private int inspectorScroll;
@@ -123,6 +144,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         parent = add(x + 7, y + 101, 100, "Parent", button -> pickParent());
         add(x + 114, y + 101, 100, "Reset all", button -> resetAll());
         positionControls();
+        createAppearanceInput();
         updateControls();
     }
 
@@ -378,6 +400,13 @@ public final class AnchorScreenEditorScreen extends Screen {
                             0xFFFFD16B, false);
                 }
             }
+            if (editingAppearance != null) {
+                int x = appearanceInput.getX() - 8;
+                int y = appearanceInput.getY() - 23;
+                graphics.fill(x - 1, y - 1, x + appearanceInput.getWidth() + 17, y + 72, 0xFF162332);
+                graphics.drawString(font, font.plainSubstrByWidth(editingAppearance.field().label(),
+                        appearanceInput.getWidth()), x + 8, y + 8, SELECTED, false);
+            }
             super.render(graphics, mouseX, mouseY, partialTick);
             widgetList.render(graphics, font, mouseX, mouseY, frameEntries,
                     selected == null ? null : selected.id(), pickingParent);
@@ -391,6 +420,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         int bottom = inspectorBottom();
         resetHitboxes.clear();
         layoutHitboxes.clear();
+        appearanceHitboxes.clear();
         if (bottom <= top) {
             return;
         }
@@ -411,6 +441,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
                     if (line.layoutControl() != null) {
                         drawLayoutControl(graphics, line.layoutControl(), lineY, top, bottom);
+                    }
+                    if (line.appearanceControl() != null) {
+                        drawAppearanceControl(graphics, line.appearanceControl(), lineY, top, bottom);
                     }
                     if (line.property() != null) {
                         int buttonX = panelX() + inspectorWidth - 21;
@@ -455,6 +488,88 @@ public final class AnchorScreenEditorScreen extends Screen {
         }
     }
 
+    private void createAppearanceInput() {
+        int w = Math.min(300, Math.max(100, width - 20));
+        int x = (width - w) / 2;
+        int y = Math.max(24, height / 2 - 38);
+        appearanceInput = new EditBox(font, x + 8, y + 23, w - 16, 19, Component.literal("Appearance value"));
+        appearanceInput.setMaxLength(4096);
+        appearanceApply = Button.builder(Component.literal("Apply"), button -> commitAppearance())
+                .bounds(x + 8, y + 48, (w - 24) / 2, 20).build();
+        appearanceCancel = Button.builder(Component.literal("Cancel"), button -> closeAppearanceInput())
+                .bounds(x + 16 + (w - 24) / 2, y + 48, (w - 24) / 2, 20).build();
+        addRenderableWidget(appearanceInput);
+        addRenderableWidget(appearanceApply);
+        addRenderableWidget(appearanceCancel);
+        closeAppearanceInput();
+    }
+
+    private void openAppearanceInput(String id, AppearanceInspectorControls.Control control) {
+        editingAppearance = control;
+        editingAppearanceId = id;
+        appearanceInput.setValue(control.value());
+        appearanceInput.visible = true;
+        appearanceApply.visible = true;
+        appearanceCancel.visible = true;
+        appearanceInput.setFocused(true);
+        setFocused(appearanceInput);
+    }
+
+    private void closeAppearanceInput() {
+        editingAppearance = null;
+        editingAppearanceId = null;
+        if (appearanceInput != null) {
+            appearanceInput.visible = false;
+            appearanceInput.setFocused(false);
+        }
+        if (appearanceApply != null) {
+            appearanceApply.visible = false;
+            appearanceCancel.visible = false;
+        }
+    }
+
+    private void commitAppearance() {
+        if (editingAppearance == null) {
+            return;
+        }
+        if (target.editorSetAppearance(editingAppearanceId, editingAppearance, appearanceInput.getValue())) {
+            status = "";
+            closeAppearanceInput();
+            refreshSelection();
+        } else {
+            status = target.screenSaveError();
+        }
+    }
+
+    private void drawAppearanceControl(GuiGraphics graphics, AppearanceInspectorControls.Control control,
+                                       int lineY, int top, int bottom) {
+        int left = panelX() + inspectorWidth - 79;
+        int next = panelX() + inspectorWidth - 61;
+        int reset = panelX() + inspectorWidth - 24;
+        if (control.textual()) {
+            graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF40566A);
+            graphics.drawString(font, "E", next + 3, lineY + 1, 0xFFE5EEF5, false);
+        } else {
+            graphics.fill(left, lineY, left + 14, lineY + RESET_SIZE, 0xFF40566A);
+            graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF40566A);
+            graphics.drawString(font, "-", left + 4, lineY + 1, 0xFFE5EEF5, false);
+            graphics.drawString(font, "+", next + 3, lineY + 1, 0xFFE5EEF5, false);
+        }
+        graphics.fill(reset, lineY, reset + 14, lineY + RESET_SIZE,
+                control.modified() ? 0xFF3D6273 : 0xFF40505D);
+        graphics.drawString(font, "R", reset + 3, lineY + 1,
+                control.modified() ? 0xFFECF8FF : 0xFF80919E, false);
+        if (lineY >= top && lineY + RESET_SIZE <= bottom) {
+            if (!control.textual()) {
+                appearanceHitboxes.add(new AppearanceHitbox(control, -1, left, lineY));
+            }
+            appearanceHitboxes.add(new AppearanceHitbox(control, control.textual() ? 2 : 1, next, lineY));
+            if (control.modified()) {
+                appearanceHitboxes.add(new AppearanceHitbox(control, 0, reset, lineY));
+            }
+        }
+    }
+
     private List<InspectorLine> inspectorLines() {
         List<InspectorLine> lines = new ArrayList<>();
         if (selected == null) {
@@ -488,6 +603,17 @@ public final class AnchorScreenEditorScreen extends Screen {
                 String clipped = font.plainSubstrByWidth(label, width);
                 lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(),
                         control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null, control.modified(), control));
+            }
+        }
+        List<AppearanceInspectorControls.Control> appearanceControls = target.editorAppearanceControls(selected.id());
+        if (!appearanceControls.isEmpty()) {
+            appendInspectorLine(lines, "VISUAL / CONTENT", SELECTED, null, false);
+            for (AppearanceInspectorControls.Control control : appearanceControls) {
+                String label = control.field().label() + ": " + control.value();
+                String clipped = font.plainSubstrByWidth(label, Math.max(38, (int) ((inspectorWidth - 98) / INSPECTOR_SCALE)));
+                lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(),
+                        control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null,
+                        control.modified(), null, control));
             }
         }
         if (!selected.id().equals(inspectedId)) {
@@ -550,6 +676,10 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (editingAppearance != null) {
+            super.mouseClicked(mouseX, mouseY, button);
+            return true;
+        }
         if (!compact && button == GLFW.GLFW_MOUSE_BUTTON_LEFT
                 && mouseX >= visiblePanelX() + visiblePanelWidth() - 30
                 && mouseX < visiblePanelX() + visiblePanelWidth()
@@ -583,6 +713,27 @@ public final class AnchorScreenEditorScreen extends Screen {
                 && mouseX < visiblePanelX() + visiblePanelWidth()
                 && mouseY >= panelTop && mouseY < panelTop + (inspectorCollapsed ? 27 : expandedPanelHeight())) {
             if (insideInspector(mouseX, mouseY)) {
+                for (AppearanceHitbox hitbox : appearanceHitboxes) {
+                    if (hitbox.contains(mouseX, mouseY)) {
+                        if (hitbox.direction() == 0) {
+                            status = target.editorResetAppearance(selected.id(), hitbox.control())
+                                    ? "" : target.screenSaveError();
+                            refreshSelection();
+                        } else if (hitbox.direction() == 2) {
+                            openAppearanceInput(selected.id(), hitbox.control());
+                        } else {
+                            try {
+                                String value = AppearanceInspectorControls.stepped(hitbox.control(), hitbox.direction()).getAsString();
+                                status = target.editorSetAppearance(selected.id(), hitbox.control(), value)
+                                        ? "" : target.screenSaveError();
+                                refreshSelection();
+                            } catch (RuntimeException exception) {
+                                status = exception.getMessage();
+                            }
+                        }
+                        return true;
+                    }
+                }
                 for (LayoutHitbox hitbox : layoutHitboxes) {
                     if (hitbox.contains(mouseX, mouseY)) {
                         boolean changed = selected != null && (hitbox.direction() == 0
@@ -736,6 +887,17 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (editingAppearance != null) {
+            if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                closeAppearanceInput();
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
+                commitAppearance();
+                return true;
+            }
+            return super.keyPressed(keyCode, scanCode, modifiers);
+        }
         if (KeyRegistry.EDIT_HUD.isActiveAndMatches(InputConstants.getKey(keyCode, scanCode))) {
             save();
             return true;

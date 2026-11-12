@@ -51,6 +51,7 @@ For actions that need no arguments, the event value can be a **namespaced string
 }
 ```
 
+```json
 {
   "onClick": {
     "type": "mymod:accept_quest"

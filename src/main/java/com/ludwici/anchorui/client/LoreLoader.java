@@ -38,6 +38,7 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
     protected void apply(Map<ResourceLocation, JsonElement> objects, ResourceManager resourceManager, ProfilerFiller profiler) {
         Map<ResourceLocation, JsonObject> rawDocuments = new LinkedHashMap<>();
         Map<ResourceLocation, JsonObject> rawDefinitions = new LinkedHashMap<>();
+        Map<ResourceLocation, JsonObject> rawTemplates = new LinkedHashMap<>();
         Map<ResourceLocation, JsonObject> rawHuds = new LinkedHashMap<>();
         Map<ResourceLocation, LoreStyle> loadedStyles = new HashMap<>();
         for (var entry : objects.entrySet()) {
@@ -53,10 +54,23 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
                 }
                 ResourceLocation id = ResourceLocation.fromNamespaceAndPath(resource.getNamespace(), path);
                 rawDefinitions.put(id, json);
+            } else if (resource.getPath().startsWith("templates/")) {
+                String path = resource.getPath().substring("templates/".length());
+                if (path.isBlank()) {
+                    AnchorUI.LOGGER.warn("Empty widget template path: {}", resource);
+                    continue;
+                }
+                ResourceLocation id = ResourceLocation.fromNamespaceAndPath(resource.getNamespace(), path);
+                rawTemplates.put(id, json);
             } else if (resource.getPath().startsWith("hud/")) {
                 rawHuds.put(resource, json);
             } else {
                 rawDocuments.put(resource, json);
+            }
+        }
+        for (var entry : rawTemplates.entrySet()) {
+            if (rawDefinitions.put(entry.getKey(), entry.getValue()) != null) {
+                AnchorUI.LOGGER.warn("Widget template '{}' from templates/ overrides a definition from widgets/", entry.getKey());
             }
         }
         WidgetDefinitionRegistry loadedDefinitions = new WidgetDefinitionRegistry(rawDefinitions);

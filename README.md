@@ -97,31 +97,37 @@ The demo type `anchorui_test:counter` uses a vanilla `Button` and can be tested 
 
 See **[Custom Widgets API](docs/CUSTOM_WIDGETS.md)** for complete Java and JSON examples, guarantees, and current limitations. Mods can also register reusable formatters for JSON bindings and text templates; see **[Data Formatters](docs/FORMATTERS.md)**. JSON screens also support lifecycle, hover, click and change handlers using registered Java actions; see **[UI Events](docs/UI_EVENTS.md)**. Repeated quest/dialogue buttons can be authored using **[Template List and Item Context](docs/TEMPLATE_LIST.md)**, with per-row event data, dynamic updates, Grid Layout and custom Java layout algorithms. JSON screens support stateful tabs, checkboxes, switches and dropdowns through **[Built-in Interactive Controls](docs/UI_CONTROLS.md)** and **[Local UI State](docs/UI_STATE.md)**. Controls can use resource-pack texture skins with normal, hovered, selected and disabled variants; skins support atlases, UV regions, tint, nine-slice and shared reusable style definitions.
 
-## Automatic layouts for normal containers
+## Automatic layouts for panels and containers
 
-Panels and containers support an optional `layout` property for automatic horizontal (`row`) and vertical (`column`) placement of their direct children:
+Ordinary `panel` and `container` widgets support opt-in `row`, `column` and **standalone `grid`** layouts. They use the same anchors, scrolling, padding, clipping, transform and editor systems as manually positioned children.
 
 ```json
 {
   "type": "anchorui:panel",
-  "layout": {
-    "type": "row",
-    "gap": 8,
-    "align": "center",
-    "justify": "space_between",
-    "collapseHidden": true
-  },
-  "size": {"width": 260, "height": 50},
+  "layout": {"type": "row", "gap": 8, "align": "center", "wrap": true},
+  "size": {"width": 260, "height": 65},
   "children": [
-    {"type": "anchorui:button", "text": "First", "size": {"width": 70, "height": 20}},
-    {"type": "anchorui:button", "text": "Second", "size": {"width": 70, "height": 20}}
+    {"type": "anchorui:button", "text": "Fixed", "size": {"width": 70, "height": 20}},
+    {
+      "type": "anchorui:button",
+      "text": "Flex",
+      "size": {"width": 70, "height": 20},
+      "layoutItem": {"grow": 1, "shrink": 1, "minWidth": 40}
+    }
   ]
 }
 ```
 
-These stack layouts share the existing AnchorUI container, `autoSize`, padding, anchors, clipping and scrolling engines. `collapseHidden` is opt-in and responds to `visibleWhen` and Local UI State changes. Explicit/manual anchored children remain unaffected (`layoutItem: false` opts an individual child out). The existing `template_list.layout` grid/custom algorithms are unchanged.
+Stack children can use weighted `layoutItem.grow` / `shrink` and min/max sizes; these weights default to zero for backward compatibility. Stacks support `wrap`, `lineGap`, `justify` and `align`. A standalone grid uses `layout: {"type":"grid","columns":3,"columnGap":6,"rowGap":8}` plus optional cell sizing and per-cell alignment. `collapseHidden` remains opt-in and compacts both stacks and grids when Conditions hide children. Explicit anchors and `layoutItem: false` still opt out of automatic placement.
 
-Test with `/anchorui screen open anchorui:stack_layout_demo`. See [Visual widgets and automatic layouts](docs/VISUAL_WIDGETS.md#automatic-row-and-column-layouts) for the full schema and limitations. Flex grow/shrink, wrapping and a general container grid remain roadmap work.
+The existing `template_list.layout` grid/custom layouts remain separate and unchanged. See [Visual widgets and automatic container layouts](docs/VISUAL_WIDGETS.md#automatic-container-layouts-row-column-and-grid) for syntax and limits.
+
+Try:
+
+```text
+/anchorui screen open anchorui:stack_layout_demo
+/anchorui screen open anchorui:advanced_layout_demo
+```
 
 ## Conditional content and guarded actions
 

@@ -209,6 +209,7 @@ public final class AnchorHudEditorScreen extends Screen {
         }).bounds(right, actionsY + BUTTON_STEP * 2, halfWidth, BUTTON_HEIGHT).build());
         addControl(Button.builder(Component.literal("Save"), button -> saveAndClose()).bounds(left, actionsY + BUTTON_STEP * 3, halfWidth, BUTTON_HEIGHT).build());
         addControl(Button.builder(Component.literal("Cancel"), button -> onClose()).bounds(right, actionsY + BUTTON_STEP * 3, halfWidth, BUTTON_HEIGHT).build());
+        createAppearanceInput();
     }
 
     private Button addControl(Button button) {
@@ -457,6 +458,14 @@ public final class AnchorHudEditorScreen extends Screen {
             }));
             for (Button control : controls) {
                 control.visible = !compact && !inspectorCollapsed;
+            }
+            if (editingAppearance != null) {
+                int modalX = appearanceInput.getX() - 8;
+                int modalY = appearanceInput.getY() - 23;
+                graphics.fill(modalX - 1, modalY - 1, modalX + appearanceInput.getWidth() + 17,
+                        modalY + 72, 0xFF162332);
+                graphics.drawString(font, font.plainSubstrByWidth(editingAppearance.field().label(),
+                        appearanceInput.getWidth()), modalX + 8, modalY + 8, SELECTED_COLOR, false);
             }
             super.render(graphics, mouseX, mouseY, partialTick);
             if (!compact) {
@@ -811,6 +820,10 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (editingAppearance != null) {
+            super.mouseClicked(mouseX, mouseY, button);
+            return true;
+        }
         if (!compact && button == GLFW.GLFW_MOUSE_BUTTON_LEFT && insidePanel(mouseX, mouseY)
                 && mouseY < panelY + 20
                 && (inspectorCollapsed || (mouseX >= panelX + panelWidth - 144
@@ -1036,6 +1049,17 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (editingAppearance != null) {
+            if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                closeAppearanceInput();
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
+                commitAppearance();
+                return true;
+            }
+            return super.keyPressed(keyCode, scanCode, modifiers);
+        }
         if (KeyRegistry.EDIT_HUD.isActiveAndMatches(InputConstants.getKey(keyCode, scanCode))) {
             saveAndClose();
             return true;

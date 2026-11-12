@@ -85,7 +85,7 @@ public class StateControlTexturesTest {
                 "{\"textures\":{\"tab\":{\"checked\":\"minecraft:textures/block/stone.png\"}}}",
                 "{\"textures\":{\"arrow\":{\"open\":{}}}}",
                 "{\"textures\":{\"background\":{\"texture\":\"\"}}}",
-                "{\"textures\":{\"background\":{\"texture\":\"minecraft:textures/block/stone.png\",\"textureWidth\":16,\"textureHeight\":16,\"u\":15,\"regionWidth\":5}}",
+                "{\"textures\":{\"background\":{\"texture\":\"minecraft:textures/block/stone.png\",\"textureWidth\":16,\"textureHeight\":16,\"u\":15,\"regionWidth\":5}}}",
                 "{\"textures\":{\"background\":{\"texture\":\"minecraft:textures/block/stone.png\",\"textureWidth\":16,\"textureHeight\":16,\"regionWidth\":16,\"regionHeight\":16,\"nineSlice\":{\"left\":8,\"right\":8}}}}"
         }) {
             assertThrows(IllegalArgumentException.class, () -> new StateControlTextures(null, object(raw)), raw);

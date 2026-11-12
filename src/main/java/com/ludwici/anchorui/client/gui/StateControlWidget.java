@@ -143,7 +143,8 @@ public final class StateControlWidget extends AbstractButton implements UiChange
                     popupOpen = false;
                 } else {
                     highlight = Math.max(0, selectedIndex());
-                    scrollStart = Math.max(0, Math.min(highlight, options.size() - MAX_VISIBLE_OPTIONS));
+                    scrollStart = Math.max(0, Math.min(highlight - shownOptionCount() + 1,
+                            options.size() - shownOptionCount()));
                     popupOpen = true;
                 }
             }
@@ -185,7 +186,7 @@ public final class StateControlWidget extends AbstractButton implements UiChange
                 highlight = Math.max(0, Math.min(options.size() - 1, highlight
                         + (keyCode == GLFW.GLFW_KEY_UP ? -1 : 1)));
                 scrollStart = Math.max(0, Math.min(scrollStart, highlight));
-                scrollStart = Math.max(scrollStart, highlight - MAX_VISIBLE_OPTIONS + 1);
+                scrollStart = Math.max(scrollStart, highlight - shownOptionCount() + 1);
                 return true;
             }
         }

@@ -1,0 +1,573 @@
+{
+  "anchorui:checkbox": {
+    "text": {
+      "color": "#FFF8F5EC"
+    },
+    "textures": {
+      "background": {
+        "normal": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#D5CDD8E3",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "hover": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FFB5DDFF",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "disabled": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#779198A1",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        }
+      },
+      "indicator": {
+        "off": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#AA8296A8",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "on": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FF4BDBA3",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "onHover": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FF75F9C5",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "offHover": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FFB6D4EA",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "offDisabled": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#8889909A",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "onDisabled": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#886A9A83",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        }
+      }
+    }
+  },
+  "anchorui:switch": {
+    "text": {
+      "color": "#FFF8F5EC"
+    },
+    "trackWidth": 33,
+    "trackHeight": 14,
+    "thumbWidth": 11,
+    "thumbHeight": 10,
+    "textures": {
+      "background": {
+        "normal": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#D5CDD8E3",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "hover": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FFB5DDFF",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "disabled": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#779198A1",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        }
+      },
+      "track": {
+        "off": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FF828C99",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "on": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FF47A9A3",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "offHover": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FFB4C5D1",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "onHover": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FF6BE7CA",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        }
+      },
+      "thumb": {
+        "normal": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FFF4F1EB",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "on": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FFEEFFFA",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "off": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FFD9E2F0",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        }
+      }
+    }
+  },
+  "anchorui:select": {
+    "text": {
+      "color": "#FFF8F5EC"
+    },
+    "popupRowHeight": 24,
+    "textures": {
+      "background": {
+        "normal": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#D5CDD8E3",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "hover": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FFB5DDFF",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "disabled": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#779198A1",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        }
+      },
+      "arrow": {
+        "closed": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#CC88A8C6",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "open": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FFC4EDFF",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        }
+      },
+      "popup": {
+        "texture": "anchorui:textures/gui/nine_slice_panel.png",
+        "textureWidth": 48,
+        "textureHeight": 48,
+        "regionWidth": 48,
+        "regionHeight": 48,
+        "tint": "#F0DBE6F2",
+        "nineSlice": {
+          "left": 12,
+          "top": 12,
+          "right": 12,
+          "bottom": 12
+        }
+      },
+      "option": {
+        "normal": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#778BA1B8",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "hover": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FFB8DDF4",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "selected": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FF4C9ABE",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "selectedHover": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FF72C7E8",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        }
+      }
+    }
+  },
+  "anchorui:tabs": {
+    "text": {
+      "color": "#FFF8F5EC"
+    },
+    "textures": {
+      "background": {
+        "normal": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#D5CDD8E3",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "hover": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FFB5DDFF",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "disabled": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#779198A1",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        }
+      },
+      "tab": {
+        "normal": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#CC97A9BA",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "hover": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FFCCE4F8",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "selected": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FF2F82AE",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "selectedHover": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#FF4FA9D7",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        },
+        "disabled": {
+          "texture": "anchorui:textures/gui/nine_slice_panel.png",
+          "textureWidth": 48,
+          "textureHeight": 48,
+          "regionWidth": 48,
+          "regionHeight": 48,
+          "tint": "#667B8A96",
+          "nineSlice": {
+            "left": 12,
+            "top": 12,
+            "right": 12,
+            "bottom": 12
+          }
+        }
+      }
+    }
+  }
+}

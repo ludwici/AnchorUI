@@ -70,6 +70,30 @@ For actions that need no arguments, the event value can be a **namespaced string
 
 Use the object form when the Java action needs configurable fields. This applies to all supported event fields, including screen-level `onOpen` and `onClose`. Existing JSON action objects and `UiActionRegistry.register` factories keep working unchanged.
 
+## Action-time guards (`when`)
+
+An action object may include an optional `when` Condition. It uses the same compiled syntax as `visibleWhen` and `enabledWhen`, but it is **evaluated when the event occurs**, not only when the widget is created:
+
+```json
+{
+  "onClick": {
+    "type": "anchorui:toggle_state",
+    "key": "selected",
+    "when": {
+      "bind": "anchorui:ui.state",
+      "path": "allowSelection",
+      "fallback": false
+    }
+  }
+}
+```
+
+This works on `onClick`, `onChange`, hover, and screen `onOpen`/`onClose` handlers, including actions inside repeated `template_list` items. The reserved `when` property is removed from the JSON before the registered Java action factory or its typed Codec receives its arguments. An omitted `when` preserves the previous unguarded behavior.
+
+A false condition (including a missing source without a permissive fallback) skips the action. Invalid expressions or unknown data sources are rejected during binding compilation; provider errors fail closed and are logged. `when` never makes a button visually inactive: use `enabledWhen` for disabled appearance and input suppression. Client-side guards are UI behavior, **not server-side authorization**.
+
+See [Conditions](CONDITIONS.md#action-level-conditions-when) for the full syntax.
+
 ## Java: declare typed action arguments with Codec
 
 A mod defines **its own argument names and types** using a Java `record` plus a Minecraft `Codec<T>`. For example, this quest action accepts one required field (`quest`) and two optional fields (`amount`, `silent`):

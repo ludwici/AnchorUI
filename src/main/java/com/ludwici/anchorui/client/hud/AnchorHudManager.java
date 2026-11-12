@@ -9,6 +9,8 @@ import com.ludwici.anchorui.api.layout.ContainerLayout;
 import com.ludwici.anchorui.api.layout.StackLayout;
 import com.ludwici.anchorui.api.layout.ContainerAutoLayout;
 import com.ludwici.anchorui.client.gui.editor.LayoutInspectorControls;
+import com.ludwici.anchorui.client.gui.editor.AppearanceInspectorControls;
+import com.google.gson.JsonElement;
 import com.ludwici.anchorui.client.gui.editor.WidgetListPanel;
 import com.ludwici.anchorui.api.layout.ContainerScroll;
 import com.ludwici.anchorui.api.layout.WidgetContainers;
@@ -614,6 +616,65 @@ public final class AnchorHudManager {
         return List.of();
     }
 
+    public List<AppearanceInspectorControls.Control> getAppearanceControls(String id) {
+        for (PlacedWidget placed : widgets) {
+            if (placed.id().equals(id)) {
+                LoreEntity.UiElement definition = registry.definition(id).orElse(null);
+                if (definition == null) {
+                    return List.of();
+                }
+                JsonObject settings = placed.style().resolvedSettings.deepCopy();
+                if (definition.settings.has("text") && definition.settings.get("text").isJsonPrimitive()) {
+                    settings.add("text", definition.settings.get("text").deepCopy());
+                }
+                return AppearanceInspectorControls.describe(id, definition.type, settings, currentOffsets());
+            }
+        }
+        return List.of();
+    }
+
+    public boolean setPreviewAppearance(String id, AppearanceInspectorControls.Control control, String value) {
+        if (editingOffsets == null || !isCustomWidget(id)) {
+            return false;
+        }
+        JsonElement parsed;
+        try {
+            parsed = AppearanceInspectorControls.parse(control.field(), value);
+        } catch (RuntimeException exception) {
+            lastSaveError = exception.getMessage();
+            return false;
+        }
+        HudLayoutOffsets candidate = editingOffsets.copy();
+        candidate.setSettingOverride(id, "appearance", control.field().path(), parsed);
+        return previewAppearance(id, candidate);
+    }
+
+    public boolean resetPreviewAppearance(String id, AppearanceInspectorControls.Control control) {
+        if (editingOffsets == null || !isCustomWidget(id)) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingOffsets.copy();
+        candidate.clearSettingOverride(id, "appearance", control.field().path());
+        return previewAppearance(id, candidate);
+    }
+
+    private boolean previewAppearance(String id, HudLayoutOffsets candidate) {
+        if (builtWidth <= 0 || builtHeight <= 0) {
+            return false;
+        }
+        HudLayoutOffsets previous = editingOffsets;
+        editingOffsets = candidate;
+        rebuild(Minecraft.getInstance(), builtWidth, builtHeight, builtRevision);
+        if (registry.widget(id).isEmpty()) {
+            editingOffsets = previous;
+            rebuild(Minecraft.getInstance(), builtWidth, builtHeight, builtRevision);
+            lastSaveError = "Invalid widget appearance";
+            return false;
+        }
+        lastSaveError = null;
+        return true;
+    }
+
     public boolean adjustPreviewLayout(String id, LayoutInspectorControls.Control control, int direction) {
         if (editingOffsets == null || !isCustomWidget(id)) {
             return false;
@@ -846,10 +907,14 @@ public final class AnchorHudManager {
                 continue;
             }
             try {
-                LoreStyle theme = LoreLoader.INSTANCE.getStyle(element.settings.has("style") ? element.settings.get("style").getAsString() : entity.style);
-                LoreStyle.Element style = theme.get(element.type, element.settings);
+                JsonObject effectiveSettings = currentOffsets().hasAppearanceOverrides(definition.id())
+                        ? currentOffsets().widgetSettings(definition.id(), element.settings) : element.settings;
+                LoreEntity.UiElement visualElement = effectiveSettings == element.settings
+                        ? element : new LoreEntity.UiElement(effectiveSettings);
+                LoreStyle theme = LoreLoader.INSTANCE.getStyle(effectiveSettings.has("style") ? effectiveSettings.get("style").getAsString() : entity.style);
+                LoreStyle.Element style = theme.get(element.type, effectiveSettings);
                 WidgetContext context = new WidgetContext(minecraft, null, ItemStack.EMPTY, entity, registry);
-                AbstractWidget widget = factory.create(context, element, style);
+                AbstractWidget widget = factory.create(context, visualElement, style);
                 if (widget == null) {
                     warnings.add("HUD factory returned null for widget '" + definition.id() + "'");
                     continue;

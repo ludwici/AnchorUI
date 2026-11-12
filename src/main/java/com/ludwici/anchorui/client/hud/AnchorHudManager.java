@@ -8,6 +8,7 @@ import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.layout.ContainerLayout;
 import com.ludwici.anchorui.api.layout.StackLayout;
 import com.ludwici.anchorui.api.layout.ContainerAutoLayout;
+import com.ludwici.anchorui.client.gui.editor.LayoutInspectorControls;
 import com.ludwici.anchorui.api.layout.ContainerScroll;
 import com.ludwici.anchorui.api.layout.WidgetContainers;
 import com.ludwici.anchorui.api.layout.WidgetTransforms;
@@ -270,7 +271,7 @@ public final class AnchorHudManager {
             frames.add(placed.frame(offsets));
             if (placed.widget() instanceof com.ludwici.anchorui.client.gui.PanelWidget) {
                 containers.put(placed.id(), placed.style().padding);
-                var layoutSettings = placed.style().resolvedSettings;
+                var layoutSettings = offsets.effectiveSettings(placed.id(), placed.style().resolvedSettings);
                 ContainerAutoLayout stack = layoutSettings.has("type")
                         && WidgetContainers.supportsChildren(layoutSettings.get("type").getAsString())
                         ? ContainerAutoLayout.parse(layoutSettings) : null;
@@ -284,7 +285,7 @@ public final class AnchorHudManager {
             if (placed.containerParent() != null) {
                 parents.put(placed.id(), placed.containerParent());
             }
-            StackLayout.Rules rules = StackLayout.Rules.parse(placed.style().resolvedSettings);
+            StackLayout.Rules rules = StackLayout.Rules.parse(offsets.effectiveSettings(placed.id(), placed.style().resolvedSettings));
             itemRules.put(placed.id(), rules);
             if (!rules.managed()) {
                 manual.add(placed.id());
@@ -598,6 +599,44 @@ public final class AnchorHudManager {
 
     public JsonObject getWidgetSettings(String id) {
         return registry.definition(id).map(element -> element.settings.deepCopy()).orElse(null);
+    }
+
+    public List<LayoutInspectorControls.Control> getLayoutControls(String id) {
+        for (PlacedWidget placed : widgets) {
+            if (placed.id().equals(id)) {
+                return LayoutInspectorControls.describe(id, placed.style().resolvedSettings, currentOffsets());
+            }
+        }
+        return List.of();
+    }
+
+    public boolean adjustPreviewLayout(String id, LayoutInspectorControls.Control control, int direction) {
+        if (editingOffsets == null || !isCustomWidget(id)) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingOffsets.copy();
+        candidate.setSettingOverride(id, control.section(), control.field(), LayoutInspectorControls.stepped(control, direction));
+        return usePreviewLayout(candidate);
+    }
+
+    public boolean resetPreviewLayout(String id, LayoutInspectorControls.Control control) {
+        if (editingOffsets == null || !isCustomWidget(id)) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingOffsets.copy();
+        candidate.clearSettingOverride(id, control.section(), control.field());
+        return usePreviewLayout(candidate);
+    }
+
+    private boolean usePreviewLayout(HudLayoutOffsets candidate) {
+        try {
+            resolveLayout(candidate, null);
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
+        editingOffsets = candidate;
+        relayout(null);
+        return true;
     }
 
     public double dragScale(String id) {

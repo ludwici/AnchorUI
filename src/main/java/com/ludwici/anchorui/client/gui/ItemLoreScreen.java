@@ -1137,6 +1137,18 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         }
 
         super.render(graphics, mouseX, mouseY, partialTick);
+        renderInterfaceWidgets(graphics, mouseX, mouseY, partialTick);
+    }
+
+    void renderEditorPreview(GuiGraphics graphics, float partialTick) {
+        if (!(minecraft.screen instanceof AnchorScreenEditorScreen editor) || !editor.edits(this)) {
+            return;
+        }
+        updateConditionStates();
+        renderInterfaceWidgets(graphics, -1, -1, partialTick);
+    }
+
+    private void renderInterfaceWidgets(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         for (PlacedWidget placed : placedWidgets) {
             AbstractWidget widget = placed.widget();
             if (!widget.visible) {

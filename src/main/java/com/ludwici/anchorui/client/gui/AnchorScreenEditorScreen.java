@@ -354,9 +354,13 @@ public final class AnchorScreenEditorScreen extends Screen {
     protected void renderBlurredBackground(float partialTick) {
     }
 
+    boolean edits(ItemLoreScreen screen) {
+        return target == screen;
+    }
+
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        target.render(graphics, -1, -1, partialTick);
+        target.renderEditorPreview(graphics, partialTick);
         refreshFrameHandles();
         for (ItemLoreScreen.EditorHandle handle : frameHandles) {
             AnchorLayout.Bounds b = handle.bounds();

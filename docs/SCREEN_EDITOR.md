@@ -55,6 +55,20 @@ The file uses the same override schema as `hud-layout.json`, including the names
 
 The HUD layout remains independent in `config/anchorui/hud-layout.json`.
 
+### F8 live preview and lifecycle regression
+
+The F8 editor draws the real screen's visible widgets **under** its selection outlines and inspector. Rendering the source screen through its ordinary `render()` entry point is not sufficient because that path only renders while the screen itself is active. The editor uses a dedicated **noninteractive preview** entry point, preserving normal fill/border/text/texture rendering, clipping, local UI State visibility and scroll indicators without dispatching widget clicks, hover events or screen actions.
+
+Opening and exiting F8 is a temporary editor transition, not closing and reopening the authored screen. Its `onClose` and `onOpen` actions are not supposed to run just because F8 was toggled.
+
+**Manual regression:**
+
+1. Run `/anchorui screen open anchorui:advanced_layout_demo`. Verify the heading, buttons, switch, colored container panels, and grid are visible outside the editor.
+2. Press **F8**. The **same actual elements** must remain visible behind the cyan/yellow selection outlines; the outlines alone are **not** a valid preview.
+3. Collapse and expand the left Widgets list, select different elements, adjust a harmless layout property, and confirm their actual content stays rendered. An explicitly hidden child should disappear from the UI while its handle remains selectable from the list.
+4. Save with F8, reopen the editor, and Cancel. The display and Local UI State should be preserved without unintended `onOpen`/`onClose` actions. In the normal screen toggle **Show optional grid item**, then reopen F8: visibility and grid compaction should agree with the latest state.
+5. Repeat with `anchorui:editor_components_demo` to verify text, progress fill, checkbox colors, panel borders, and image textures. Check that opening an appearance edit dialog does not activate the underlying UI controls.
+
 ## Suggested manual checks
 
 - Open the visual demo, F8, move a textured panel and its child, save, then reopen the screen: both should retain their relative placement.

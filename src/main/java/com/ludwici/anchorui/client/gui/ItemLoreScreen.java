@@ -105,6 +105,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     private final UiHoverTracker hoverTracker = new UiHoverTracker();
     private UiEventBindings screenEventBindings;
     private boolean lifecycleActive;
+    private boolean transitioningToEditor;
     private final Map<String, Boolean> visibilityScratch = new HashMap<>();
     private final Map<String, Boolean> enabledScratch = new HashMap<>();
     private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
@@ -1356,12 +1357,13 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
 
     @Override
     public void removed() {
-        if (lifecycleActive) {
+        if (!transitioningToEditor && lifecycleActive) {
             lifecycleActive = false;
             if (screenEventBindings != null) {
                 screenEventBindings.fire("onClose", screenEventTarget(), JsonNull.INSTANCE);
             }
         }
+        transitioningToEditor = false;
         hoverTracker.reset();
         draggedScrollPanel = null;
         draggingWidget = null;
@@ -1384,6 +1386,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             }
         }
         if (KeyRegistry.EDIT_HUD.isActiveAndMatches(InputConstants.getKey(keyCode, scanCode))) {
+            transitioningToEditor = true;
             minecraft.setScreen(new AnchorScreenEditorScreen(this));
             return true;
         }

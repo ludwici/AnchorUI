@@ -8,10 +8,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-/**
- * Shared modal choice popup for HUD and screen inspectors.
- * It is rendered above the editor controls and receives input before them.
- */
 public final class EditorDropdown {
     private static final int ROW_HEIGHT = 18;
     private static final int BORDER = 0xFF718699;

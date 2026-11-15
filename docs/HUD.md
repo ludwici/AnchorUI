@@ -150,7 +150,7 @@ To edit widget placement:
 
 1. Click a widget's highlighted rectangle to select it, then **drag** it to the desired position.
 2. Use the **arrow keys** to move the selected widget by one GUI pixel, or **Shift + arrows** to move by 10 pixels.
-3. Use the **Point ▼** and **Anchor ▼** dropdowns to pick one of the nine attachment points directly. The selected value applies immediately and keeps existing offsets. The same dropdown widget is used in the component inspector for layout mode, alignment, distribution, and custom Java `CHOICE` fields. Numeric fields still use **- / +**, and Boolean fields retain their toggle controls.
+3. Use the **Point ▼** and **Anchor ▼** dropdowns to pick one of the nine attachment points directly. The selected value applies immediately and keeps existing offsets. The same dropdown widget is used in the component inspector for layout mode, alignment, distribution, and custom Java `CHOICE` fields. Numeric fields still use **- / +**, while Boolean layout and appearance settings use checkboxes.
 4. Select a widget, then press **Change parent**. Click another highlighted widget to choose it as the new parent, or click an empty part of the world to use **screen** as the parent. The parent changes **only after the click**. Circular relationships and attempts to parent a widget to itself are rejected. Press **Esc** or **Cancel parent** to leave selection mode without changing anything.
 5. Use **Hide / Show** to control whether a selected widget is displayed in gameplay. Hidden widgets still occupy their layout bounds, so other widgets can remain attached.
 6. Press **R** to reset the selected widget's **position offset only**. Use the **Reset** button to restore all overrides for the selected widget (position, anchors, visibility and component layout values); **Reset all** clears overrides for every widget.
@@ -233,7 +233,7 @@ Both the HUD editor and the F8 **screen editor** now show live **COMPONENT / LAY
 
 - Select a **panel or container** to change its `layout` mode (`none`, `row`, `column`, `grid`), gaps, alignment/distribution, wrapping, line gap, column count, per-cell sizing and `collapseHidden`. Only fields applicable to the active layout appear.
 - Select a **row/column child** to edit `layoutItem.enabled`, `grow`, `shrink` and min/max dimensions. A **Grid child** is always managed by its Grid; its inspector exposes only optional min/max sizing rather than a misleading Auto item toggle.
-- Use **- / +** beside a value to move through enum options, toggle booleans or change numeric fields in small steps; use the small **R** to remove just that field's override. Modified values are highlighted. Invalid settings (for instance, a minimum larger than a maximum or a cyclic layout) are rejected, leaving the current preview intact.
+- Use **▼** for enum choices, a checkbox for Boolean values, or **- / +** for numeric fields; use the small **R** to remove just that field's override. Modified values are highlighted. Invalid settings (for instance, a minimum larger than a maximum or a cyclic layout) are rejected, leaving the current preview intact.
 - Changes reflow the existing widget instances immediately, including the bounds shown by F8, container scroll limits and anchored descendants. The parent/point/anchor editor controls and magnetic dragging still work.
 - **Save** persists these settings as client-side overrides, not as changes to the mod/resource-pack JSON. **Cancel** discards them. Legacy layout files without these fields continue to load.
 

@@ -64,6 +64,8 @@ public class AppearanceInspectorControlsTest {
         assertThrows(IllegalArgumentException.class, () -> AppearanceInspectorControls.parse(width, "-5"));
 
         var toggle = WidgetEditorRegistry.Field.bool("showText", "Show values", false);
+        assertTrue(new AppearanceInspectorControls.Control(toggle, "false", false).booleanField());
+        assertFalse(new AppearanceInspectorControls.Control(width, "100", false).booleanField());
         assertTrue(AppearanceInspectorControls.stepped(
                 new AppearanceInspectorControls.Control(toggle, "false", false), 1).getAsBoolean());
         assertFalse(AppearanceInspectorControls.parse(toggle, "FALSE").getAsBoolean());

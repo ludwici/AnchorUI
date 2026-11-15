@@ -18,6 +18,10 @@ public final class AppearanceInspectorControls {
                 default -> false;
             };
         }
+
+        public boolean booleanField() {
+            return field.kind() == WidgetEditorRegistry.Kind.BOOLEAN;
+        }
     }
 
     private AppearanceInspectorControls() {

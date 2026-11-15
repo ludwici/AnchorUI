@@ -15,6 +15,7 @@ import com.ludwici.anchorui.client.gui.editor.LayoutInspectorControls;
 import com.ludwici.anchorui.client.gui.editor.EditorDropdown;
 import com.ludwici.anchorui.api.widget.WidgetEditorRegistry;
 import com.ludwici.anchorui.client.gui.editor.AppearanceInspectorControls;
+import com.ludwici.anchorui.client.gui.editor.EditorInspectorCheckbox;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -555,7 +556,10 @@ public final class AnchorScreenEditorScreen extends Screen {
         int next = panelX() + inspectorWidth - 61;
         int reset = panelX() + inspectorWidth - 24;
         boolean choice = !LayoutInspectorControls.choices(control).isEmpty();
-        if (choice) {
+        boolean checkbox = control.booleanField();
+        if (checkbox) {
+            EditorInspectorCheckbox.render(graphics, next, lineY, Boolean.parseBoolean(control.value()));
+        } else if (choice) {
             graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF40566A);
             graphics.drawString(font, "▼", next + 2, lineY + 1, 0xFFE5EEF5, false);
         } else {
@@ -569,7 +573,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         graphics.drawString(font, "R", reset + 3, lineY + 1,
                 control.modified() ? 0xFFECF8FF : 0xFF80919E, false);
         if (lineY >= top && lineY + RESET_SIZE <= bottom) {
-            if (!choice) {
+            if (!choice && !checkbox) {
                 layoutHitboxes.add(new LayoutHitbox(control, -1, first, lineY));
             }
             layoutHitboxes.add(new LayoutHitbox(control, choice ? 2 : 1, next, lineY));
@@ -644,7 +648,10 @@ public final class AnchorScreenEditorScreen extends Screen {
         int next = panelX() + inspectorWidth - 61;
         int reset = panelX() + inspectorWidth - 24;
         boolean choice = control.field().kind() == WidgetEditorRegistry.Kind.CHOICE;
-        if (control.textual() || choice) {
+        boolean checkbox = control.booleanField();
+        if (checkbox) {
+            EditorInspectorCheckbox.render(graphics, next, lineY, Boolean.parseBoolean(control.value()));
+        } else if (control.textual() || choice) {
             graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF40566A);
             graphics.drawString(font, choice ? "▼" : "E", next + 2, lineY + 1, 0xFFE5EEF5, false);
         } else {
@@ -658,7 +665,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         graphics.drawString(font, "R", reset + 3, lineY + 1,
                 control.modified() ? 0xFFECF8FF : 0xFF80919E, false);
         if (lineY >= top && lineY + RESET_SIZE <= bottom) {
-            if (!control.textual() && !choice) {
+            if (!control.textual() && !choice && !checkbox) {
                 appearanceHitboxes.add(new AppearanceHitbox(control, -1, left, lineY));
             }
             appearanceHitboxes.add(new AppearanceHitbox(control, choice ? 3 : control.textual() ? 2 : 1, next, lineY));
@@ -702,7 +709,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             appendInspectorLine(lines, "COMPONENT / LAYOUT", SELECTED, null, false);
             appendInspectorLine(lines, "- / + adjust | R reset", 0xFF96AEBE, null, false);
             for (LayoutInspectorControls.Control control : layoutControls) {
-                String label = control.label() + ": " + control.value();
+                String label = control.booleanField() ? control.label() : control.label() + ": " + control.value();
                 int width = Math.max(38, (int) ((inspectorWidth - 98) / INSPECTOR_SCALE));
                 String clipped = font.plainSubstrByWidth(label, width);
                 lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(),
@@ -713,7 +720,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         if (!appearanceControls.isEmpty()) {
             appendInspectorLine(lines, "VISUAL / CONTENT", SELECTED, null, false);
             for (AppearanceInspectorControls.Control control : appearanceControls) {
-                String label = control.field().label() + ": " + control.value();
+                String label = control.booleanField() ? control.field().label() : control.field().label() + ": " + control.value();
                 String clipped = font.plainSubstrByWidth(label, Math.max(38, (int) ((inspectorWidth - 98) / INSPECTOR_SCALE)));
                 lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(),
                         control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null,

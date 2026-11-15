@@ -15,6 +15,11 @@ public final class LayoutInspectorControls {
         public String key() {
             return section + "." + field;
         }
+
+        public boolean booleanField() {
+            return "layout".equals(section) && ("wrap".equals(field) || "collapseHidden".equals(field))
+                    || "layoutItem".equals(section) && "enabled".equals(field);
+        }
     }
 
     private LayoutInspectorControls() {

@@ -56,6 +56,8 @@ public class LayoutInspectorControlsTest {
         assertEquals(255, LayoutInspectorControls.stepped(find(controls, "layout.columns"), -1).getAsInt());
         assertEquals("stretch", LayoutInspectorControls.stepped(find(controls, "layout.justifyItems"), 1).getAsString());
         assertFalse(LayoutInspectorControls.stepped(find(controls, "layout.collapseHidden"), 1).getAsBoolean());
+        assertTrue(find(controls, "layout.collapseHidden").booleanField());
+        assertFalse(find(controls, "layout.columns").booleanField());
         assertEquals(10, LayoutInspectorControls.stepped(find(controls, "layout.cellWidth"), 1).getAsInt());
         assertThrows(IllegalArgumentException.class, () -> LayoutInspectorControls.stepped(find(controls, "layout.columns"), 0));
     }
@@ -76,6 +78,7 @@ public class LayoutInspectorControlsTest {
         var disabled = LayoutInspectorControls.describe("test:child", source, overrides, true, false);
         assertEquals(1, disabled.size());
         assertEquals("false", find(disabled, "layoutItem.enabled").value());
+        assertTrue(find(disabled, "layoutItem.enabled").booleanField());
         assertTrue(find(disabled, "layoutItem.enabled").modified());
         assertTrue(LayoutInspectorControls.stepped(find(disabled, "layoutItem.enabled"), 1).getAsBoolean());
     }
@@ -92,6 +95,26 @@ public class LayoutInspectorControlsTest {
         assertTrue(overrides.effectiveSettings("test:child", source)
                 .getAsJsonObject("layoutItem").get("enabled").getAsBoolean());
         assertEquals("0", find(LayoutInspectorControls.describe("test:child", source, overrides, true, false), "layoutItem.grow").value());
+    }
+
+    @Test
+    public void rowOptionsExposeCheckboxesOnlyForActualBooleanFields() {
+        var source = json("""
+                {
+                  "type": "anchorui:panel",
+                  "layout": {
+                    "type": "row",
+                    "wrap": true,
+                    "collapseHidden": false,
+                    "gap": 3
+                  }
+                }
+                """);
+        var controls = LayoutInspectorControls.describe("test:row", source, new HudLayoutOffsets());
+        assertTrue(find(controls, "layout.wrap").booleanField());
+        assertTrue(find(controls, "layout.collapseHidden").booleanField());
+        assertFalse(find(controls, "layout.gap").booleanField());
+        assertFalse(find(controls, "layout.type").booleanField());
     }
 
     @Test

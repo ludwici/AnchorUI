@@ -102,7 +102,7 @@ Selecting a `panel` or `container` now shows a **COMPONENT / LAYOUT** section ab
 
 Selecting a structural child of a container shows `Auto item` (participating in the automatic layout), flex `Grow` / `Shrink`, and the child's minimum/maximum width and height. These generic properties work for ordinary built-in and third-party widgets without replacing their Java factories. A manually anchored child can keep its explicit anchor, and `Auto item: false` excludes it from the automatic flow.
 
-For enum properties such as **Layout**, **Align**, **Justify**, and **Cell X/Y**, use the **▼** dropdown to select a named value. Numeric and Boolean settings retain **- / +**; **R** resets only that field to the source/style default. Highlighted fields have saved local overrides. The layout is validated before it replaces the preview; invalid combinations are rejected instead of destroying the widget tree.
+For enum properties such as **Layout**, **Align**, **Justify**, and **Cell X/Y**, use the **▼** dropdown to select a named value. Numeric settings retain **- / +**; Boolean fields such as **Wrap**, **Collapse**, **Auto item**, and **Show values** use a checkbox. **R** resets only that field to the source/style default. Highlighted fields have saved local overrides. The layout is validated before it replaces the preview; invalid combinations are rejected instead of destroying the widget tree.
 
 Changes affect the live layout and hitboxes immediately. **Save** persists layout overrides for this screen; **Cancel** discards them. Existing screen files and the `config/anchorui/hud-layout.json` HUD file are kept separate. You do not need to edit a mod's built-in JSON to try a new layout.
 
@@ -142,7 +142,7 @@ The F8 inspector now also contains a **VISUAL / CONTENT** section for built-in w
 - `texture` resource IDs for panels and images; resource-pack sprite variants such as `textures.background.normal`/`hover`/`disabled` for state controls.
 - Width and height of applicable widgets, progress-bar `showText`, and other numeric/boolean/choice fields registered in Java.
 
-Use **- / +** to adjust numeric and Boolean values. Java-registered `CHOICE` fields get a **▼** dropdown instead of requiring repeated clicks. Use **E** for text, color and texture resource IDs, then press **Enter / Apply** or **Esc / Cancel**. Use **R** to reset an individual override. The original JSON is available in the collapsed **SOURCE JSON [+]** section below these controls.
+Use **- / +** to adjust numeric values and click the checkbox for Boolean values. Java-registered `CHOICE` fields get a **▼** dropdown instead of requiring repeated clicks. Use **E** for text, color and texture resource IDs, then press **Enter / Apply** or **Esc / Cancel**. Use **R** to reset an individual override. The original JSON is available in the collapsed **SOURCE JSON [+]** section below these controls.
 
 Changes refresh the edited widget's appearance immediately, while preserving the screen's Local UI State. This refresh is triggered on an explicit edit, **not** on each frame or mouse drag. Invalid values are rejected; for custom widgets with a `Codec`, invalid factory configurations cause the preview to roll back.
 

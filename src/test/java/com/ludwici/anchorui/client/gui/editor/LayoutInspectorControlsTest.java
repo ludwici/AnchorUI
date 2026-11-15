@@ -95,6 +95,20 @@ public class LayoutInspectorControlsTest {
     }
 
     @Test
+    public void enumeratesDropdownChoicesButKeepsNumbersAsStepControls() {
+        var source = json("""
+                {"type":"anchorui:panel","layout":{"type":"grid",
+                 "columns":3,"justifyItems":"center","alignItems":"stretch"}}
+                """);
+        var controls = LayoutInspectorControls.describe("test:grid", source, new HudLayoutOffsets());
+        assertEquals(List.of("none", "row", "column", "grid"),
+                LayoutInspectorControls.choices(find(controls, "layout.type")));
+        assertEquals(List.of("start", "center", "end", "stretch"),
+                LayoutInspectorControls.choices(find(controls, "layout.justifyItems")));
+        assertTrue(LayoutInspectorControls.choices(find(controls, "layout.columns")).isEmpty());
+    }
+
+    @Test
     public void unrelatedWidgetsDoNotExposeLayoutControls() {
         assertTrue(LayoutInspectorControls.describe("test:label",
                 json("""

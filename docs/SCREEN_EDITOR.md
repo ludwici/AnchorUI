@@ -172,3 +172,19 @@ To test the bundled component editor showcase, run `/anchorui screen open anchor
 ### Shared native scrollbar implementation
 
 The right Inspector, the left Widgets list, and JSON scrollable containers now use the same `NativeContainerScrollPanel` adapter over NeoForge 1.21.1's `ScrollPanel`. Each instance has independent scroll state. Wheel motion, dragging the scrollbar thumb and clamping to the content range are delegated to the native component, not implemented separately for the editor. Widget-list grouping, inspector field resets, labels and clipping still use their existing drawing code. Scrolling a panel does not scroll the other editor panel; the editor's own controls take input precedence over the JSON content preview. The slim inspector/list scroll tracks keep their original approximate widths and colors.
+
+
+### Collapsible inspector categories
+
+In F8, click the section title to expand or collapse **CURRENT WIDGET**,
+**COMPONENT / LAYOUT**, **VISUAL / CONTENT**, **ANIMATION**, or
+**SOURCE JSON**. The header shows `[+]` while collapsed and `[-]`
+while expanded. Collapsed fields do not occupy rows, and the inspector
+scrollbar automatically reflects the new content height. ANIMATION and
+SOURCE JSON initially start collapsed to keep the inspector compact.
+Section expansion remains consistent when selecting another widget
+within the same editor session.
+
+See [Animation tracks v2 design](ANIMATION_TRACKS_DESIGN.md) for the
+proposed future dynamic animation list; v2 is a design proposal, not
+the behavior of the current fixed-trigger inspector.

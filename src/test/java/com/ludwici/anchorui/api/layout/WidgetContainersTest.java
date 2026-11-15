@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -15,55 +16,59 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class WidgetContainersTest {
     @Test
-    public void innerContentFrameRespectsPaddingAndNestedAnchors() {
-        var outer = new AnchorLayout.Frame("demo:outer", new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, "screen", 70, 80), 180, 120);
-        var content = WidgetContainers.contentFrame("demo:outer", 180, 120, new PaddingElement(10, 12, 14, 16));
-        var child = new AnchorLayout.Frame("demo:child", new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, WidgetContainers.contentId("demo:outer"), 0, 0), 40, 20);
-        var result = AnchorLayout.resolve(400, 300, List.of(outer, content, child));
-        assertEquals(new AnchorLayout.Bounds(80, 92, 156, 92), result.get(WidgetContainers.contentId("demo:outer")));
-        assertEquals(new AnchorLayout.Bounds(80, 92, 40, 20), result.get("demo:child"));
+    public void panelContentBoundsRespectsPaddingWithoutSyntheticFrames() {
+        var outer = new AnchorLayout.Frame("demo:outer",
+                new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, "screen", 70, 80), 180, 120);
+        var child = new AnchorLayout.Frame("demo:child",
+                new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, "demo:outer", 0, 0), 40, 20);
+        var result = ContainerLayout.resolve(400, 300, List.of(outer, child),
+                Map.of("demo:outer", new PaddingElement(10, 12, 14, 16)),
+                Map.of(), Map.of("demo:child", "demo:outer"), ignored -> {});
+        assertEquals(new AnchorLayout.Bounds(80, 92, 156, 92),
+                WidgetContainers.contentBounds(result.bounds().get("demo:outer"), new PaddingElement(10, 12, 14, 16)));
+        assertEquals(new AnchorLayout.Bounds(80, 92, 40, 20), result.bounds().get("demo:child"));
+        assertEquals(3, result.bounds().size());
     }
 
     @Test
     public void doesNotClipWhenParentHasNotOptedIn() {
         var bounds = Map.of("screen", new AnchorLayout.Bounds(0, 0, 300, 200),
-                "demo:outer/__content", new AnchorLayout.Bounds(10, 10, 30, 30));
+                "demo:outer", new AnchorLayout.Bounds(10, 10, 30, 30));
         var parents = Map.of("demo:child", "demo:outer");
-        assertTrue(WidgetContainers.clips(bounds, parents, java.util.Set.of()).isEmpty());
+        assertTrue(WidgetContainers.clips(bounds, parents, Set.of(), Map.of()).isEmpty());
     }
 
     @Test
     public void onlyOptedInAncestorsClipTheirDescendants() {
         var bounds = Map.of("screen", new AnchorLayout.Bounds(0, 0, 300, 200),
-                "demo:outer/__content", new AnchorLayout.Bounds(10, 10, 30, 30),
-                "demo:inner/__content", new AnchorLayout.Bounds(15, 15, 100, 100));
+                "demo:outer", new AnchorLayout.Bounds(10, 10, 30, 30),
+                "demo:inner", new AnchorLayout.Bounds(15, 15, 100, 100));
         var parents = Map.of("demo:inner", "demo:outer", "demo:leaf", "demo:inner");
-        var clips = WidgetContainers.clips(bounds, parents, java.util.Set.of("demo:outer"));
+        var clips = WidgetContainers.clips(bounds, parents, Set.of("demo:outer"), Map.of());
         assertEquals(new AnchorLayout.Bounds(10, 10, 30, 30), clips.get("demo:leaf"));
     }
 
     @Test
-    public void optedInClipUsesScaledContentBounds() {
-        var bounds = Map.of(
-                "screen", new AnchorLayout.Bounds(0, 0, 400, 200),
+    public void optedInClipUsesScaledPaddedPanelBounds() {
+        var bounds = Map.of("screen", new AnchorLayout.Bounds(0, 0, 400, 200),
                 "demo:box", new AnchorLayout.Bounds(80, 40, 200, 100),
-                "demo:box/__content", new AnchorLayout.Bounds(90, 50, 180, 80),
                 "demo:leaf", new AnchorLayout.Bounds(90, 50, 30, 20));
         var parents = Map.of("demo:leaf", "demo:box");
         var transforms = WidgetTransforms.resolve(bounds, parents,
                 Map.of("demo:box", new WidgetTransforms.Group(0.5, false)));
-        var clips = WidgetContainers.clips(bounds, parents, java.util.Set.of("demo:box"), transforms);
+        var clips = WidgetContainers.clips(bounds, parents, Set.of("demo:box"),
+                Map.of("demo:box", new PaddingElement(10, 10)), transforms);
         assertEquals(new AnchorLayout.Bounds(85, 45, 90, 40), clips.get("demo:leaf"));
     }
 
     @Test
-    public void clipsNestedContentToAllAncestors() {
+    public void clipsNestedPanelsToAllAncestors() {
         Map<String, AnchorLayout.Bounds> bounds = new LinkedHashMap<>();
         bounds.put("screen", new AnchorLayout.Bounds(0, 0, 300, 200));
-        bounds.put("demo:root/__content", new AnchorLayout.Bounds(20, 20, 200, 100));
-        bounds.put("demo:child/__content", new AnchorLayout.Bounds(180, 40, 90, 120));
+        bounds.put("demo:root", new AnchorLayout.Bounds(20, 20, 200, 100));
+        bounds.put("demo:child", new AnchorLayout.Bounds(180, 40, 90, 120));
         Map<String, String> parents = Map.of("demo:child", "demo:root", "demo:leaf", "demo:child");
-        var clips = WidgetContainers.clips(bounds, parents, java.util.Set.of("demo:root", "demo:child"));
+        var clips = WidgetContainers.clips(bounds, parents, Set.of("demo:root", "demo:child"), Map.of());
         assertEquals(new AnchorLayout.Bounds(20, 20, 200, 100), clips.get("demo:child"));
         assertEquals(new AnchorLayout.Bounds(180, 40, 40, 80), clips.get("demo:leaf"));
         assertTrue(WidgetContainers.contains(clips.get("demo:leaf"), 190, 50));

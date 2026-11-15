@@ -6,6 +6,10 @@ import com.ludwici.anchorui.api.style.PaddingElement;
 import com.ludwici.anchorui.api.style.PositionElement;
 
 import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.function.Function;
 import java.util.Map;
 import java.util.Set;
 
@@ -13,6 +17,39 @@ public final class WidgetContainers {
     public static final String PARENT_FIELD = "__anchorui_container_parent";
 
     private WidgetContainers() {
+    }
+
+    public static <T> List<T> parentFirst(List<T> widgets, Function<T, String> id,
+                                          Map<String, String> structuralParents) {
+        Map<String, T> indexed = new LinkedHashMap<>();
+        for (T widget : widgets) {
+            indexed.put(id.apply(widget), widget);
+        }
+        List<T> result = new ArrayList<>(widgets.size());
+        Set<String> seen = new HashSet<>();
+        Set<String> visiting = new HashSet<>();
+        for (String childId : indexed.keySet()) {
+            appendParentFirst(childId, indexed, structuralParents, visiting, seen, result);
+        }
+        return List.copyOf(result);
+    }
+
+    private static <T> void appendParentFirst(String childId, Map<String, T> indexed,
+                                              Map<String, String> structuralParents,
+                                              Set<String> visiting, Set<String> seen, List<T> result) {
+        if (seen.contains(childId)) {
+            return;
+        }
+        if (!visiting.add(childId)) {
+            throw new IllegalArgumentException("Circular structural parent: " + childId);
+        }
+        String parent = structuralParents.get(childId);
+        if (parent != null && indexed.containsKey(parent)) {
+            appendParentFirst(parent, indexed, structuralParents, visiting, seen, result);
+        }
+        visiting.remove(childId);
+        seen.add(childId);
+        result.add(indexed.get(childId));
     }
 
     public static boolean supportsChildren(String type) {

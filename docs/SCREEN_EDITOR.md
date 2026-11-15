@@ -26,13 +26,13 @@ Third-party callers using the original three-argument constructor can still prev
 
 A **draggable Widgets panel** on the left lists *only the widgets belonging to the currently open Anchor UI screen*. It does not include HUDs from other screens or the global vanilla HUD reference catalog. The entries are grouped: `minecraft:*` first if present, then the screen's namespace, then other namespaces. **Children now appear indented under their structural container** with type markers for panels, buttons, text, progress and image widgets. Click a container's disclosure arrow to collapse or expand its descendants, or click its name to select it. When the child belongs to another namespace it remains in that namespace's group. Hover any widget to see its full ID and type. Hidden widgets stay selectable from the list. Scroll the list with the mouse wheel and drag its header independently of the inspector.
 
-While **Parent** is active, clicking an ID in the list chooses that widget as the anchor target rather than selecting a different widget. Self references and circular dependencies remain rejected. Press **Tab** to temporarily hide both editor panels.
+While **Parent** is active, clicking a widget in the list chooses the target. For a panel or container, the editor opens a choice between **Anchor to container**, **Anchor to content area**, and **Move into container**. The last option changes the structural layout parent as well as the anchor. Choosing `screen` also offers **Move to screen (root)**. Self references and circular dependencies are rejected. Press **Tab** to temporarily hide both editor panels.
 
 
 1. Click any outlined widget to select it. Drag it to reposition the widget. A 6 GUI-pixel magnet helps align it with other visible widgets along X/Y; hold **Alt** to bypass snapping.
 2. Use arrow keys for one-pixel nudges (10 pixels with **Shift**).
 3. **Point** and **Anchor** cycle through the same nine anchor locations as the HUD editor.
-4. Use **Parent** and click another widget to change its anchor target. Click empty space to anchor it to `screen`. Invalid/circular relationships are rejected. Escape while choosing a parent cancels the selection.
+4. Use **Parent** and click another widget or its row in the Widgets list. Ordinary targets set an anchor directly. Selecting a **panel/container** opens three actions: anchor to its frame, anchor to its padded `/__content` frame, or **Move into container** to make the widget an actual child of its row/column/grid layout. Clicking empty world opens the screen/root options. Escape cancels the picker. Invalid/circular relationships are rejected.
 5. **Hide/Show** toggles local widget visibility. **Reset** restores the selected widget's defaults; **Reset all** clears all overrides for the open screen.
 6. **Save**, **F8** or **Ctrl+S** saves and returns to the original screen. **Cancel** or **Esc** discards edits and returns to the screen.
 7. Drag the editor panel by its title bar. Press **Tab** to temporarily hide the panel while positioning widgets.
@@ -88,7 +88,7 @@ The left **Widgets** panel can be collapsed with **[-]** in its header and reope
 
 ### Widget properties and per-field reset
 
-The right-side Inspector now exposes the same detailed widget view as the HUD editor. Select a widget by clicking its outline or its entry in the Widgets list. The inspector shows its namespaced ID, current parent, point, anchor, screen bounds, user offset and visibility, followed by a scrollable **SOURCE JSON** section. Source JSON values remain read-only; changing authored resource-pack definitions is not part of the editor.
+The right-side Inspector exposes the same detailed widget view as the HUD editor. Select a widget by clicking its outline or its entry in the Widgets list. The inspector distinguishes **anchor target** (the coordinate reference, such as `mypack:grid/__content`) from **container** (actual structural parent used for layout, clipping and inherited visibility). It also shows point, anchor, bounds, user offset, visibility and editable component fields. The **SOURCE JSON [+]** section is **collapsed by default**; click its heading to expand it and click again to collapse. Its values remain read-only.
 
 For layout properties overridden from their authored defaults, an active **R** control appears beside the respective `parent`, `point`, `anchor`, `user offset`, or `visible` line. Click it to reset that property without discarding the other overrides. The existing Point, Anchor, Parent, Hide, Reset and Reset all buttons remain available. Scroll the inspector independently with the mouse wheel or drag its scrollbar. The properties and override markers update as widgets are moved.
 
@@ -106,9 +106,38 @@ Click **-** or **+** on the right of a property to adjust it (or cycle through s
 
 Changes affect the live layout and hitboxes immediately. **Save** persists layout overrides for this screen; **Cancel** discards them. Existing screen files and the `config/anchorui/hud-layout.json` HUD file are kept separate. You do not need to edit a mod's built-in JSON to try a new layout.
 
-The editor still treats arbitrary widget-specific configuration (text, textures, Java `Codec` fields, and gameplay handlers) as **read-only source JSON**; it does not yet provide a generic authoring IDE for every component.
+The editor treats unregistered Java `Codec` fields and gameplay handlers as read-only source JSON. Built-in text, color, image and texture properties and explicitly registered custom editor fields can be changed in VISUAL / CONTENT.
 
 Try this with `/anchorui screen open anchorui:advanced_layout_demo`, then **F8**. Switch a panel from `row` to `grid`, alter its columns, try a child's `grow`, and confirm **Save** and **Cancel** behave independently. Test against `stack_layout_demo` and `conditional_content_demo` for hidden children and cases.
+
+### Anchor reference vs. structural container parent
+
+Selecting `mypack:grid` while picking a parent offers three distinct operations:
+
+- **Anchor to container** changes only `relativeTo` to `mypack:grid`. The widget stays in its original structural layout group.
+- **Anchor to content area** changes only `relativeTo` to `mypack:grid/__content`. Coordinates start inside the container's padding, but the widget is **not** automatically added to Grid.
+- **Move into container** makes `mypack:grid` the widget's *structural parent*, anchors it to `mypack:grid/__content` with TOPLEFT/TOPLEFT, resets its local layout nudge and enables its automatic layout participation. It now receives the container's Grid/Row/Column placement, visibility inheritance, clipping and scrolling behavior. Use **Parent** then click empty space and choose **Move to screen (root)** to remove that structural membership.
+
+A moved widget is represented by user-specific layout overrides, not by rewriting source `children` arrays:
+
+```json
+{
+  "version": 1,
+  "offsets": {
+    "mypack:button": {
+      "relativeTo": "mypack:grid/__content",
+      "point": "TOPLEFT",
+      "anchor": "TOPLEFT",
+      "containerParent": "mypack:grid",
+      "layoutItem": {
+        "enabled": true
+      }
+    }
+  }
+}
+```
+
+The **Parent** reset control restores both the authored structural parent and the authored anchor target. Save/Cancel continue to work on the existing per-screen override file. The editor validates target containers and structural cycles before applying a move.
 
 ### Visual widget editing: text, colors, textures and sizes
 
@@ -119,7 +148,7 @@ The F8 inspector now also contains a **VISUAL / CONTENT** section for built-in w
 - `texture` resource IDs for panels and images; resource-pack sprite variants such as `textures.background.normal`/`hover`/`disabled` for state controls.
 - Width and height of applicable widgets, progress-bar `showText`, and other numeric/boolean/choice fields registered in Java.
 
-Use **- / +** to adjust numeric, Boolean or enumerated options. Use **E** to open an editable input box for text, color or texture resource IDs, then press **Enter / Apply** or **Esc / Cancel**. Use **R** to reset an individual override. The original source JSON remains visible read-only below the editable controls.
+Use **- / +** to adjust numeric, Boolean or enumerated options. Use **E** to open an editable input box for text, color or texture resource IDs, then press **Enter / Apply** or **Esc / Cancel**. Use **R** to reset an individual override. The original JSON is available in the collapsed **SOURCE JSON [+]** section below these controls.
 
 Changes refresh the edited widget's appearance immediately, while preserving the screen's Local UI State. This refresh is triggered on an explicit edit, **not** on each frame or mouse drag. Invalid values are rejected; for custom widgets with a `Codec`, invalid factory configurations cause the preview to roll back.
 

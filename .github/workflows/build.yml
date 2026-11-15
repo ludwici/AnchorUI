@@ -38,6 +38,8 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.8"
+      - name: Check Java method-call formatting
+        run: python3 tools/format_java_calls.py --check
       - name: Build with Gradle
         run: |
           gradle build --no-daemon --stacktrace

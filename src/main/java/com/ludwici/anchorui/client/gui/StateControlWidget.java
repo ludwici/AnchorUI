@@ -195,6 +195,14 @@ public final class StateControlWidget extends AbstractButton implements UiChange
     }
 
     @Override
+    public void setFocused(boolean focused) {
+        super.setFocused(focused);
+        if (!focused) {
+            popupOpen = false;
+        }
+    }
+
+    @Override
     public void onClick(double mouseX, double mouseY) {
         if (kind == Kind.TABS) {
             int index = (int) (((mouseX - getX()) / Math.max(1, getWidth())) * options.size());

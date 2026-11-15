@@ -324,6 +324,17 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         return useCandidate(candidate);
     }
 
+    public String editorStructuralParent(String id) {
+        HudLayoutOffsets offsets = currentScreenOffsets();
+        for (PlacedWidget placed : placedWidgets) {
+            if (placed.id().equals(id)) {
+                String parent = offsets.containerParent(id, placed.containerParent());
+                return parent == null ? "(none)" : parent;
+            }
+        }
+        return "(none)";
+    }
+
     public boolean editorIsContainer(String id) {
         for (PlacedWidget placed : placedWidgets) {
             if (placed.id().equals(id)) {

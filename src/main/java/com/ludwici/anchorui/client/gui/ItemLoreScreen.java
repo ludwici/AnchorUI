@@ -91,9 +91,10 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
 
     private final Screen previous;
     private final ItemStack item;
-    private final LoreEntity loreEntity;
+    private LoreEntity loreEntity;
     private final ResourceLocation documentId;
-    private final UiLocalState uiState;
+    private UiLocalState uiState;
+    private long resourceRevision;
     private HudLayoutOffsets savedScreenOffsets = new HudLayoutOffsets();
     private HudLayoutOffsets editingScreenOffsets;
     private boolean screenOffsetsLoaded;
@@ -143,6 +144,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         this.loreEntity = entity;
         this.documentId = documentId;
         this.uiState = new UiLocalState(entity.initialState);
+        resourceRevision = LoreLoader.INSTANCE.getRevision();
     }
 
     @Override
@@ -1286,8 +1288,43 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         }
     }
 
+    private void refreshResourceDocument() {
+        if (documentId == null || resourceRevision == LoreLoader.INSTANCE.getRevision()) {
+            return;
+        }
+        resourceRevision = LoreLoader.INSTANCE.getRevision();
+        LoreEntity updated = LoreLoader.INSTANCE.getData().get(documentId);
+        if (updated == null) {
+            AnchorUI.LOGGER.warn("Screen '{}' is missing or invalid after resource reload; keeping previous UI",
+                    documentId);
+            return;
+        }
+        LoreEntity previousDocument = loreEntity;
+        UiLocalState previousState = uiState;
+        try {
+            uiState = UiLocalState.rebased(updated.initialState, previousState);
+            loreEntity = updated;
+            buildWidgets(false);
+            if (layoutError != null) {
+                String problem = layoutError;
+                loreEntity = previousDocument;
+                uiState = previousState;
+                buildWidgets(false);
+                AnchorUI.LOGGER.warn("Failed to apply reloaded screen '{}': {}; restored previous UI",
+                        documentId, problem);
+            }
+        } catch (RuntimeException exception) {
+            loreEntity = previousDocument;
+            uiState = previousState;
+            buildWidgets(false);
+            AnchorUI.LOGGER.warn("Failed to apply reloaded screen '{}'; restored previous UI",
+                    documentId, exception);
+        }
+    }
+
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        refreshResourceDocument();
         refreshTemplateLists();
         updateConditionStates();
         updateHover(mouseX, mouseY);

@@ -31,6 +31,18 @@ public final class UiLocalState {
         }
     }
 
+    public static UiLocalState rebased(JsonObject updatedDefaults, UiLocalState previous) {
+        UiLocalState updated = new UiLocalState(updatedDefaults);
+        JsonObject existing = previous.snapshot();
+        for (var entry : updated.values.entrySet()) {
+            JsonElement oldValue = existing.get(entry.getKey());
+            if (oldValue != null && sameType(entry.getValue(), oldValue)) {
+                updated.set(entry.getKey(), oldValue);
+            }
+        }
+        return updated;
+    }
+
     public synchronized JsonObject snapshot() {
         JsonObject object = new JsonObject();
         for (var entry : values.entrySet()) {

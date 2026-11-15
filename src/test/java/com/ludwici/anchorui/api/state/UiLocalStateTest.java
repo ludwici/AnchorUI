@@ -86,6 +86,58 @@ public class UiLocalStateTest {
     }
 
     @Test
+    public void rebasingAfterResourceReloadPreservesOnlyCompatibleKeys() {
+        UiLocalState current = new UiLocalState(JsonParser.parseString("""
+                {
+                  "tab": "skills",
+                  "details": false,
+                  "page": 1,
+                  "filters": [1, 2],
+                  "obsolete": "old"
+                }
+                """).getAsJsonObject());
+        current.set("tab", new JsonPrimitive("inventory"));
+        current.set("details", new JsonPrimitive(true));
+        current.set("page", new JsonPrimitive(42));
+        current.get("filters").getAsJsonArray().add(3);
+
+        JsonObject updatedDefaults = JsonParser.parseString("""
+                {
+                  "tab": "default",
+                  "details": true,
+                  "page": "first",
+                  "filters": ["all"],
+                  "newOption": false
+                }
+                """).getAsJsonObject();
+        UiLocalState updated = UiLocalState.rebased(updatedDefaults, current);
+
+        assertEquals("inventory", updated.get("tab").getAsString());
+        assertTrue(updated.get("details").getAsBoolean());
+        assertEquals("first", updated.get("page").getAsString());
+        assertEquals(2, updated.get("filters").getAsJsonArray().size());
+        assertFalse(updated.get("newOption").getAsBoolean());
+        assertThrows(IllegalArgumentException.class, () -> updated.get("obsolete"));
+        updated.set("tab", new JsonPrimitive("reloaded"));
+        assertEquals("inventory", current.get("tab").getAsString());
+    }
+
+    @Test
+    public void rebasingRejectsInvalidNewStateWithoutModifyingPrevious() {
+        UiLocalState original = new UiLocalState(JsonParser.parseString("""
+                {
+                  "tab": "changed"
+                }
+                """).getAsJsonObject());
+        assertThrows(IllegalArgumentException.class, () -> UiLocalState.rebased(JsonParser.parseString("""
+                {
+                  "bad.key": true
+                }
+                """).getAsJsonObject(), original));
+        assertEquals("changed", original.get("tab").getAsString());
+    }
+
+    @Test
     public void eachScreenGetsAnIndependentStateInstance() {
         var initial = JsonParser.parseString("""
                 {

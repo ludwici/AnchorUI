@@ -506,6 +506,8 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         candidate.clearContainerParent(id);
         candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(
                 current.defaultParent(), current.point(), current.anchor()));
+        candidate.set(id, 0, 0);
+        candidate.clearSettingOverride(id, "layoutItem", "enabled");
         return useCandidate(candidate);
     }
 

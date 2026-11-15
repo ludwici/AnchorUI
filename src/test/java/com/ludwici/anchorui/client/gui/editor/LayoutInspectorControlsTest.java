@@ -102,6 +102,18 @@ public class LayoutInspectorControlsTest {
                 """), new HudLayoutOffsets()).isEmpty());
     }
     @Test
+    public void structuralPanelChildrenExposeFlexWithoutPrivateJsonParentFields() {
+        var source = json("""
+                {"type":"anchorui:button","text":"Nested"}
+                """);
+        var controls = LayoutInspectorControls.describe("test:child", source,
+                new HudLayoutOffsets(), true, false);
+        assertEquals("true", find(controls, "layoutItem.enabled").value());
+        assertEquals("0", find(controls, "layoutItem.grow").value());
+        assertEquals("0", find(controls, "layoutItem.shrink").value());
+    }
+
+    @Test
     public void gridChildrenOnlyExposeOptionalSizeLimitsNotManualParticipationOrFlex() {
         var source = json("""
                 {"type":"anchorui:button",

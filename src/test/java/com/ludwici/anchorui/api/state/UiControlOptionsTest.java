@@ -100,6 +100,36 @@ public class UiControlOptionsTest {
     }
 
     @Test
+    public void supportsPerOptionStylesAndDefensivelyCopiesInlineAppearance() {
+        UiLocalState state = state("{\"tier\":\"rare\"}");
+        List<UiControlOptions.Choice> choices = UiControlOptions.parse(options("""
+                [
+                  {"value":"common","style":"mypack:common_option"},
+                  {"value":"rare","label":"Rare","style":{
+                    "textColor":"#FFE2B8FF",
+                    "hover":"#FF563E80",
+                    "selected":"#FF764DA2"
+                  }}
+                ]
+                """), state, "tier");
+        assertEquals("mypack:common_option", choices.get(0).style().getAsString());
+        JsonObject copy = choices.get(1).style().getAsJsonObject();
+        copy.addProperty("textColor", "#FFFFFFFF");
+        assertEquals("#FFE2B8FF", choices.get(1).style().getAsJsonObject().get("textColor").getAsString());
+
+        for (String raw : List.of(
+                "[{\"value\":\"rare\",\"style\":null}]",
+                "[{\"value\":\"rare\",\"style\":true}]",
+                "[{\"value\":\"rare\",\"style\":123}]",
+                "[{\"value\":\"rare\",\"style\":[]}]",
+                "[{\"value\":\"rare\",\"style\":\"\"}]"
+        )) {
+            assertThrows(IllegalArgumentException.class, () ->
+                    UiControlOptions.parse(options(raw), state, "tier"), raw);
+        }
+    }
+
+    @Test
     public void returnedValuesCannotMutateChoice() {
         UiLocalState state = state("""
                 {"tab":"skills"}

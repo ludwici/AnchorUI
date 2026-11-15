@@ -51,6 +51,7 @@ public final class StateControlWidget extends AbstractButton implements UiChange
     private final int borderColor;
     private final int accentColor;
     private final StateControlTextures textures;
+    private final List<SelectOptionAppearance> optionAppearances;
     private final int indicatorSize;
     private final int trackWidth;
     private final int trackHeight;
@@ -79,6 +80,8 @@ public final class StateControlWidget extends AbstractButton implements UiChange
         this.borderColor = borderColor;
         this.accentColor = accentColor;
         textures = new StateControlTextures(context, visualSettings);
+        optionAppearances = kind == Kind.SELECT ? options.stream()
+                .map(choice -> SelectOptionAppearance.resolve(context, choice.style())).toList() : List.of();
         indicatorSize = dimension(visualSettings, "indicatorSize", 14, 4, 128);
         trackWidth = dimension(visualSettings, "trackWidth", 29, 8, 256);
         trackHeight = dimension(visualSettings, "trackHeight", 12, 6, 128);
@@ -413,19 +416,27 @@ public final class StateControlWidget extends AbstractButton implements UiChange
                     && mouseY >= top && mouseY < top + popupRowHeight;
             boolean selectedOption = index == selected;
             boolean optionHover = hovered || index == highlight;
-            boolean texturedOption = selectedOption
-                    ? textures.render(graphics, "option", x + 1, top, width - 2, popupRowHeight,
-                            optionHover ? "selectedHover" : "selected", "selected")
-                    : textures.render(graphics, "option", x + 1, top, width - 2, popupRowHeight,
-                            optionHover ? "hover" : "normal");
+            SelectOptionAppearance appearance = optionAppearances.get(index);
+            String primaryState = selectedOption ? optionHover ? "selectedHover" : "selected"
+                    : optionHover ? "hover" : "normal";
+            String fallbackState = selectedOption ? "selected" : "normal";
+            boolean texturedOption = appearance != null && appearance.render(graphics, x + 1, top,
+                    width - 2, popupRowHeight, primaryState, fallbackState);
             if (!texturedOption) {
-                if (selectedOption || optionHover) {
+                texturedOption = textures.render(graphics, "option", x + 1, top, width - 2,
+                        popupRowHeight, primaryState, fallbackState);
+            }
+            if (!texturedOption) {
+                Integer customColor = appearance == null ? null : appearance.backgroundColor(selectedOption, optionHover);
+                if (customColor != null || selectedOption || optionHover) {
                     graphics.fill(x + 1, top, x + width - 1, top + popupRowHeight,
-                            selectedOption ? accentColor : HOVER);
+                            customColor != null ? customColor : selectedOption ? accentColor : HOVER);
                 }
             }
+            int defaultTextColor = selectedOption ? TEXT : textColor;
             drawText(graphics, options.get(index).label(), x + 7, top + (popupRowHeight - 8) / 2,
-                    width - 14, index == selected ? TEXT : textColor);
+                    width - 14, appearance == null ? defaultTextColor
+                            : appearance.textColor(selectedOption, optionHover, defaultTextColor));
         }
     }
 

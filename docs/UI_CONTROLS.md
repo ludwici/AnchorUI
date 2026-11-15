@@ -100,6 +100,60 @@ String and numeric options are allowed (including numeric page IDs). The corresp
 
 No arbitrary values or scripts are evaluated from JSON. State changes are client-side presentation behavior only.
 
+### Styling individual dropdown entries
+
+Each `anchorui:select` option may have its own `style`. A style reference resolves from `assets/<namespace>/anchorui/style/<name>.json`; entries without a style keep the widget's shared `textures.option`, `textColor`, `fillColor` and `accentColor` appearance. Only the fields supplied by the option override the corresponding shared behavior.
+
+```json
+{
+  "type": "anchorui:select",
+  "stateKey": "rarity",
+  "options": [
+    {
+      "value": "common",
+      "label": "Common"
+    },
+    {
+      "value": "rare",
+      "label": "Rare",
+      "style": "mypack:rare_option"
+    },
+    {
+      "value": "legendary",
+      "label": "Legendary",
+      "style": {
+        "ref": "mypack:rare_option",
+        "textColor": "#FFFFD05A",
+        "selected": "#FF9C7428"
+      }
+    }
+  ]
+}
+```
+
+For `mypack:rare_option`, put this in `assets/mypack/anchorui/style/rare_option.json`:
+
+```json
+{
+  "anchorui:option": {
+    "textColor": "#FFE3C3FF",
+    "background": "#554A325F",
+    "hover": "#BB6A4B91",
+    "selected": "#FF704996",
+    "selectedHover": "#FF9572B9",
+    "selectedTextColor": "#FFFFFFFF"
+  }
+}
+```
+
+`background`, `hover`, `selected`, and `selectedHover` accept colors or the same texture objects as `textures.option` (including `u`, `v`, `tint`, and `nineSlice`). The `textures` property can also explicitly define option variants in the usual `{"option": {"normal": ..., "hover": ..., "selected": ...}}` shape. Unspecified states fall back to the list's regular rendering; option text can additionally use `hoverTextColor` and `selectedTextColor`.
+
+Use an inline `style` object to avoid a separate file. Inline `{"ref": "mypack:rare_option", ...}` deep-merges overrides with a referenced style. These per-option styles affect **only the dropdown rows**, not the widget's closed field or other choices. The textured controls demo includes both a referenced and an overridden option:
+
+```text
+/anchorui screen open anchorui:ui_controls_textured_demo
+```
+
 ## Action button appearance (opt-in)
 
 `anchorui:button` continues to use the **vanilla Minecraft button** unless you explicitly configure a custom visual style. To opt in, provide a fill/border/hover/disabled color or a `textures` object. The click event behavior and Action Guards are unchanged.

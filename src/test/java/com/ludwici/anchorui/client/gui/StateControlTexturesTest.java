@@ -93,6 +93,17 @@ public class StateControlTexturesTest {
     }
 
     @Test
+    public void bundledSelectOptionStyleIsAvailable() throws IOException {
+        var stream = getClass().getClassLoader().getResourceAsStream(
+                "assets/anchorui/anchorui/style/rare_option.json");
+        assertNotNull(stream);
+        try (var reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
+            JsonObject style = JsonParser.parseReader(reader).getAsJsonObject();
+            assertTrue(style.getAsJsonObject("anchorui:option").has("selected"));
+        }
+    }
+
+    @Test
     public void bundledResourceSkinDefinesVariantsForEachControl() throws IOException {
         var stream = getClass().getClassLoader().getResourceAsStream(
                 "assets/anchorui/anchorui/style/textured_controls.json");

@@ -1,0 +1,10 @@
+{
+  "anchorui:option": {
+    "textColor": "#FFFFD5A0",
+    "background": "#884B315C",
+    "hover": "#CC75569C",
+    "selected": "#FF725093",
+    "selectedHover": "#FF9B74BC",
+    "selectedTextColor": "#FFFFFFFF"
+  }
+}

@@ -1,0 +1,42 @@
+package com.ludwici.anchorui.client.gui;
+
+import com.google.gson.JsonParser;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+public class SelectOptionAppearanceTest {
+    @Test
+    public void stateColorsAndTextOverridesRespectInheritedFallbacks() {
+        SelectOptionAppearance appearance = SelectOptionAppearance.resolve(null, JsonParser.parseString("""
+                {
+                  "textColor": "#FFE2B8FF",
+                  "background": "#FF101010",
+                  "selected": "#FF61348A",
+                  "selectedTextColor": "#FFFFFFFF"
+                }
+                """));
+        assertEquals(0xFF101010, appearance.backgroundColor(false, false));
+        assertNull(appearance.backgroundColor(false, true));
+        assertEquals(0xFF61348A, appearance.backgroundColor(true, false));
+        assertEquals(0xFF61348A, appearance.backgroundColor(true, true));
+        assertEquals(0xFFE2B8FF, appearance.textColor(false, false, 0xFFABCDEF));
+        assertEquals(0xFFFFFFFF, appearance.textColor(true, true, 0xFFABCDEF));
+    }
+
+    @Test
+    public void rejectsMalformedInlineStyleFields() {
+        for (String raw : new String[]{
+                "{\"background\":[]}",
+                "{\"hover\":false}",
+                "{\"textColor\":7}",
+                "{\"ref\":123}",
+                "{\"textures\":[]}"
+        }) {
+            assertThrows(IllegalArgumentException.class, () ->
+                    SelectOptionAppearance.resolve(null, JsonParser.parseString(raw)), raw);
+        }
+    }
+}

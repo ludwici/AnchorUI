@@ -16,7 +16,11 @@ import java.util.Set;
  * Choices may be strings/numbers or objects with value and optional label.
  */
 public final class UiControlOptions {
-    public record Choice(JsonElement value, String label) {
+    public record Choice(JsonElement value, String label, JsonElement style) {
+        public Choice(JsonElement value, String label) {
+            this(value, label, null);
+        }
+
         public Choice {
             if (value == null || !value.isJsonPrimitive()
                     || value.getAsJsonPrimitive().isBoolean()) {
@@ -26,11 +30,26 @@ public final class UiControlOptions {
             if (label == null || label.isBlank()) {
                 throw new IllegalArgumentException("Choice label must not be empty");
             }
+            if (style != null) {
+                if (style.isJsonObject()) {
+                    style = style.deepCopy();
+                } else if (style.isJsonPrimitive() && style.getAsJsonPrimitive().isString()
+                        && !style.getAsString().isBlank()) {
+                    style = style.deepCopy();
+                } else {
+                    throw new IllegalArgumentException("Choice style must be a non-empty style id or an object");
+                }
+            }
         }
 
         @Override
         public JsonElement value() {
             return value.deepCopy();
+        }
+
+        @Override
+        public JsonElement style() {
+            return style == null ? null : style.deepCopy();
         }
     }
 
@@ -51,18 +70,20 @@ public final class UiControlOptions {
         for (JsonElement item : options) {
             JsonElement value;
             String label;
+            JsonElement choiceStyle = null;
             if (item.isJsonPrimitive()) {
                 value = item;
                 label = item.getAsString();
             } else if (item.isJsonObject()) {
                 JsonObject object = item.getAsJsonObject();
                 value = object.get("value");
+                choiceStyle = object.get("style");
                 label = GsonHelper.getAsString(object, "label",
                         value != null && value.isJsonPrimitive() ? value.getAsString() : "");
             } else {
                 throw new IllegalArgumentException("Choice must be a string/number or an object with 'value'");
             }
-            Choice choice = new Choice(value, label);
+            Choice choice = new Choice(value, label, choiceStyle);
             state.validateSet(key, choice.value());
             if (!ids.add(choice.value())) {
                 throw new IllegalArgumentException("Duplicate UI choice value: " + value);

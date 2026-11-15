@@ -18,6 +18,10 @@ public class LoreStyle {
         this.root = root.deepCopy();
     }
 
+    public JsonObject root() {
+        return root.deepCopy();
+    }
+
     public Element get(ResourceLocation type, JsonObject overrides) {
         JsonObject source = new JsonObject();
         if (root.has(type.toString()) && root.get(type.toString()).isJsonObject()) {

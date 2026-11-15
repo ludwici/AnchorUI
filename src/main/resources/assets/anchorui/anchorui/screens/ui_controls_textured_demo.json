@@ -199,11 +199,17 @@
         },
         {
           "value": "hard",
-          "label": "Hard"
+          "label": "Hard",
+          "style": "anchorui:rare_option"
         },
         {
           "value": "expert",
-          "label": "Expert"
+          "label": "Expert",
+          "style": {
+            "ref": "anchorui:rare_option",
+            "textColor": "#FFFFECC2",
+            "hover": "#FF8F5F68"
+          }
         }
       ],
       "onChange": "anchorui_test:event_notice",

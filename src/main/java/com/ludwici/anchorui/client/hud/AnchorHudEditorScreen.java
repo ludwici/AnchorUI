@@ -6,6 +6,9 @@ import com.ludwici.anchorui.api.layout.WidgetContainers;
 import com.ludwici.anchorui.KeyRegistry;
 import com.ludwici.anchorui.client.gui.editor.WidgetListPanel;
 import com.ludwici.anchorui.client.gui.editor.LayoutInspectorControls;
+import com.ludwici.anchorui.client.gui.editor.EditorDropdown;
+import com.ludwici.anchorui.api.style.ElementAnchor;
+import com.ludwici.anchorui.api.widget.WidgetEditorRegistry;
 import com.ludwici.anchorui.client.gui.editor.AppearanceInspectorControls;
 import com.ludwici.anchorui.client.gui.NativeContainerScrollPanel;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -36,6 +39,7 @@ public final class AnchorHudEditorScreen extends Screen {
     private static final int INSPECTOR_LINE_HEIGHT = 11;
     private static final float INSPECTOR_SCALE = 0.83F;
     private static final int RESET_SIZE = 11;
+    private static final List<String> ANCHOR_CHOICES = java.util.Arrays.stream(ElementAnchor.values()).map(ElementAnchor::name).toList();
 
     private record InspectorLine(FormattedCharSequence text, int color, AnchorHudManager.EditableProperty reset,
                                  boolean modified, String vanillaParent, LayoutInspectorControls.Control layoutControl,
@@ -81,6 +85,7 @@ public final class AnchorHudEditorScreen extends Screen {
     private List<VanillaHudGeometry.Reference> frameVanillaHandles = List.of();
     private List<WidgetListPanel.Entry> frameEntries = List.of();
     private final List<Button> controls = new ArrayList<>();
+    private final EditorDropdown editorDropdown = new EditorDropdown();
     private final List<ResetHitbox> resetHitboxes = new ArrayList<>();
     private final List<LayoutHitbox> layoutHitboxes = new ArrayList<>();
     private final List<AppearanceHitbox> appearanceHitboxes = new ArrayList<>();
@@ -140,6 +145,7 @@ public final class AnchorHudEditorScreen extends Screen {
         dragOrigin = null;
         snapResult = null;
         controls.clear();
+        editorDropdown.close();
         widgetList.resize(width, height);
         if (!editorStarted) {
             manager.beginEditing();
@@ -178,18 +184,13 @@ public final class AnchorHudEditorScreen extends Screen {
             };
         }).bounds(panelX + panelWidth - 114, panelY + 3, 62, 16).build());
 
-        pointButton = addControl(Button.builder(Component.literal("Point >"), button -> {
-            if (selected != null && manager.cyclePreviewPoint(selected)) {
-                status = "Widget point changed";
-            }
-        }).bounds(left, actionsY, halfWidth, BUTTON_HEIGHT).build());
-        anchorButton = addControl(Button.builder(Component.literal("Anchor >"), button -> {
-            if (selected != null && manager.cyclePreviewAnchor(selected)) {
-                status = "Parent anchor changed";
-            }
-        }).bounds(right, actionsY, halfWidth, BUTTON_HEIGHT).build());
+        pointButton = addControl(Button.builder(Component.literal("Point ▼"),
+                button -> openAnchorDropdown(true)).bounds(left, actionsY, halfWidth, BUTTON_HEIGHT).build());
+        anchorButton = addControl(Button.builder(Component.literal("Anchor ▼"),
+                button -> openAnchorDropdown(false)).bounds(right, actionsY, halfWidth, BUTTON_HEIGHT).build());
         parentButton = addControl(Button.builder(Component.literal("Pick parent"), button -> {
             if (selected != null) {
+                editorDropdown.close();
                 choosingParent = !choosingParent;
                 draggingWidget = false;
                 status = choosingParent ? "Click a widget or empty space (screen)" : "Parent selection cancelled";
@@ -214,6 +215,59 @@ public final class AnchorHudEditorScreen extends Screen {
         addControl(Button.builder(Component.literal("Save"), button -> saveAndClose()).bounds(left, actionsY + BUTTON_STEP * 3, halfWidth, BUTTON_HEIGHT).build());
         addControl(Button.builder(Component.literal("Cancel"), button -> onClose()).bounds(right, actionsY + BUTTON_STEP * 3, halfWidth, BUTTON_HEIGHT).build());
         createAppearanceInput();
+    }
+
+    private void openAnchorDropdown(boolean pointChoice) {
+        if (selected == null) {
+            return;
+        }
+        AnchorHudManager.HudHandle handle = null;
+        for (AnchorHudManager.HudHandle entry : frameHandles) {
+            if (entry.id().equals(selected)) {
+                handle = entry;
+                break;
+            }
+        }
+        if (handle == null) {
+            return;
+        }
+        String id = selected;
+        Button source = pointChoice ? pointButton : anchorButton;
+        String current = (pointChoice ? handle.point() : handle.anchor()).name();
+        editorDropdown.open(source.getX(), source.getY(), source.getWidth(), source.getHeight(),
+                width, height, ANCHOR_CHOICES, current, value -> {
+                    if (!id.equals(selected)) {
+                        return;
+                    }
+                    ElementAnchor chosen = ElementAnchor.fromString(value);
+                    boolean changed = pointChoice ? manager.setPreviewPoint(id, chosen)
+                            : manager.setPreviewAnchor(id, chosen);
+                    status = changed ? "" : "Invalid anchor position";
+                });
+    }
+
+    private void openLayoutDropdown(LayoutHitbox hitbox) {
+        if (selected == null) {
+            return;
+        }
+        String id = selected;
+        LayoutInspectorControls.Control control = hitbox.control();
+        editorDropdown.open(hitbox.x() - 106, hitbox.y(), 14, RESET_SIZE, width, height,
+                LayoutInspectorControls.choices(control), control.value().replace("anchorui:", ""), value -> {
+                    status = manager.setPreviewLayout(id, control, value) ? "" : "Invalid layout value or constraints";
+                });
+    }
+
+    private void openAppearanceDropdown(AppearanceHitbox hitbox) {
+        if (selected == null) {
+            return;
+        }
+        String id = selected;
+        AppearanceInspectorControls.Control control = hitbox.control();
+        editorDropdown.open(hitbox.x() - 106, hitbox.y(), 14, RESET_SIZE, width, height,
+                control.field().choices(), control.value(), value -> {
+                    status = manager.setPreviewAppearance(id, control, value) ? "" : manager.getLastSaveError();
+                });
     }
 
     private void chooseParentTarget(String id) {
@@ -265,6 +319,7 @@ public final class AnchorHudEditorScreen extends Screen {
             widgetList.setCollapsed(true);
         }
         inspectorCollapsed = !inspectorCollapsed;
+        editorDropdown.close();
         draggingPanel = false;
         inspectorScrollBar = null;
     }
@@ -339,6 +394,7 @@ public final class AnchorHudEditorScreen extends Screen {
 
     private void selectWidget(String id) {
         if (id == null || !id.equals(selected)) {
+            editorDropdown.close();
             selected = id;
             inspectedId = null;
             inspectedVanilla = null;
@@ -494,6 +550,7 @@ public final class AnchorHudEditorScreen extends Screen {
                 widgetList.render(graphics, font, mouseX, mouseY, frameEntries,
                         selected != null ? selected : inspectedVanilla, choosingParent);
             }
+            editorDropdown.render(graphics, font, mouseX, mouseY);
         } finally {
             graphics.pose().popPose();
         }
@@ -560,17 +617,25 @@ public final class AnchorHudEditorScreen extends Screen {
         int first = panelX + panelWidth - 79;
         int next = panelX + panelWidth - 61;
         int reset = panelX + panelWidth - 24;
-        graphics.fill(first, lineY, first + 14, lineY + RESET_SIZE, 0xFF40566A);
-        graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF40566A);
-        graphics.drawString(font, "-", first + 4, lineY + 1, 0xFFE5EEF5, false);
-        graphics.drawString(font, "+", next + 3, lineY + 1, 0xFFE5EEF5, false);
+        boolean choice = !LayoutInspectorControls.choices(control).isEmpty();
+        if (choice) {
+            graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF40566A);
+            graphics.drawString(font, "▼", next + 2, lineY + 1, 0xFFE5EEF5, false);
+        } else {
+            graphics.fill(first, lineY, first + 14, lineY + RESET_SIZE, 0xFF40566A);
+            graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF40566A);
+            graphics.drawString(font, "-", first + 4, lineY + 1, 0xFFE5EEF5, false);
+            graphics.drawString(font, "+", next + 3, lineY + 1, 0xFFE5EEF5, false);
+        }
         graphics.fill(reset, lineY, reset + 14, lineY + RESET_SIZE,
                 control.modified() ? 0xFF3D6273 : 0xFF40505D);
         graphics.drawString(font, "R", reset + 3, lineY + 1,
                 control.modified() ? 0xFFECF8FF : 0xFF80919E, false);
         if (lineY >= top && lineY + RESET_SIZE <= bottom) {
-            layoutHitboxes.add(new LayoutHitbox(control, -1, first, lineY));
-            layoutHitboxes.add(new LayoutHitbox(control, 1, next, lineY));
+            if (!choice) {
+                layoutHitboxes.add(new LayoutHitbox(control, -1, first, lineY));
+            }
+            layoutHitboxes.add(new LayoutHitbox(control, choice ? 2 : 1, next, lineY));
             if (control.modified()) {
                 layoutHitboxes.add(new LayoutHitbox(control, 0, reset, lineY));
             }
@@ -595,6 +660,7 @@ public final class AnchorHudEditorScreen extends Screen {
 
     private void openAppearanceInput(String id, AppearanceInspectorControls.Control control) {
         status = "";
+        editorDropdown.close();
         editingAppearance = control;
         editingAppearanceId = id;
         appearanceInput.setValue(control.value());
@@ -635,9 +701,10 @@ public final class AnchorHudEditorScreen extends Screen {
         int left = panelX + panelWidth - 79;
         int next = panelX + panelWidth - 61;
         int reset = panelX + panelWidth - 24;
-        if (control.textual()) {
+        boolean choice = control.field().kind() == WidgetEditorRegistry.Kind.CHOICE;
+        if (control.textual() || choice) {
             graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF40566A);
-            graphics.drawString(font, "E", next + 3, lineY + 1, 0xFFE5EEF5, false);
+            graphics.drawString(font, choice ? "▼" : "E", next + 2, lineY + 1, 0xFFE5EEF5, false);
         } else {
             graphics.fill(left, lineY, left + 14, lineY + RESET_SIZE, 0xFF40566A);
             graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF40566A);
@@ -649,10 +716,10 @@ public final class AnchorHudEditorScreen extends Screen {
         graphics.drawString(font, "R", reset + 3, lineY + 1,
                 control.modified() ? 0xFFECF8FF : 0xFF80919E, false);
         if (lineY >= top && lineY + RESET_SIZE <= bottom) {
-            if (!control.textual()) {
+            if (!control.textual() && !choice) {
                 appearanceHitboxes.add(new AppearanceHitbox(control, -1, left, lineY));
             }
-            appearanceHitboxes.add(new AppearanceHitbox(control, control.textual() ? 2 : 1, next, lineY));
+            appearanceHitboxes.add(new AppearanceHitbox(control, choice ? 3 : control.textual() ? 2 : 1, next, lineY));
             if (control.modified()) {
                 appearanceHitboxes.add(new AppearanceHitbox(control, 0, reset, lineY));
             }
@@ -871,6 +938,9 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (editorDropdown.isOpen()) {
+            return editorDropdown.mouseClicked(mouseX, mouseY, button);
+        }
         if (editingAppearance != null) {
             super.mouseClicked(mouseX, mouseY, button);
             return true;
@@ -931,6 +1001,8 @@ public final class AnchorHudEditorScreen extends Screen {
                                     ? "" : manager.getLastSaveError();
                         } else if (hitbox.direction() == 2) {
                             openAppearanceInput(selected, hitbox.control());
+                        } else if (hitbox.direction() == 3) {
+                            openAppearanceDropdown(hitbox);
                         } else {
                             try {
                                 String value = AppearanceInspectorControls.stepped(hitbox.control(), hitbox.direction()).getAsString();
@@ -945,6 +1017,10 @@ public final class AnchorHudEditorScreen extends Screen {
                 }
                 for (LayoutHitbox hitbox : layoutHitboxes) {
                     if (hitbox.contains(mouseX, mouseY)) {
+                        if (hitbox.direction() == 2) {
+                            openLayoutDropdown(hitbox);
+                            return true;
+                        }
                         boolean changed = hitbox.direction() == 0
                                 ? manager.resetPreviewLayout(selected, hitbox.control())
                                 : manager.adjustPreviewLayout(selected, hitbox.control(), hitbox.direction());
@@ -1080,6 +1156,9 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (editorDropdown.mouseScrolled(mouseX, mouseY, scrollY)) {
+            return true;
+        }
         if (!compact && widgetList.scroll(mouseX, mouseY, scrollY, frameEntries)) {
             return true;
         }
@@ -1098,6 +1177,9 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (editorDropdown.keyPressed(keyCode)) {
+            return true;
+        }
         if (editingAppearance != null) {
             if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
                 closeAppearanceInput();
@@ -1119,6 +1201,7 @@ public final class AnchorHudEditorScreen extends Screen {
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_TAB) {
+            editorDropdown.close();
             compact = !compact;
             draggingPanel = false;
             inspectorScrollBar = null;

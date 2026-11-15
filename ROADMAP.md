@@ -71,6 +71,7 @@ The completed functionality above does **not** imply finished visual consistency
 - [x] Add focused geometry tests for constrained flex, wrapping in both axes, grid auto sizing, cell alignment and hidden cells.
 - [ ] Consider later CSS-like features only when demanded by use cases: grid spans, named tracks, richer responsive constraints and fine-grained incremental layout. These are not part of the first generic Grid release.
 - [x] Update HUD and screen F8 editors to inspect and edit row/column/grid/flex layout fields using persisted per-widget overrides, and browse nested widget structure in a collapsible hierarchy.
+- [x] Distinguish coordinate anchor targets from structural container parents in both F8 editors; support container/content/move picker, move-to-root, cycle-safe saved overrides and default-collapsed read-only source JSON.
 - [ ] Complete runtime QA for editor dragging, layout-field cycling, Save/Cancel, GUI resize and scale, nested scrolling, moving focus and resource reload.
 
 **Acceptance:** normal panels and containers can arrange responsive rows, columns and cell grids using resource-pack JSON, with in-client verification of advanced focus/scale/scroll cases still outstanding.

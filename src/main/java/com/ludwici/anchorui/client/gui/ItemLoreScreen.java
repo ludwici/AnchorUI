@@ -1552,8 +1552,36 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         minecraft.setScreen(previous);
     }
 
+    private boolean focusNextInteractiveWidget(int keyCode, int scanCode, int modifiers) {
+        GuiEventListener current = getFocused();
+        if (current != null && current.keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        List<UiFocusTraversal.Candidate> candidates = new ArrayList<>();
+        for (PlacedWidget placed : placedWidgets) {
+            AbstractWidget widget = placed.widget();
+            AnchorLayout.Bounds logical = layoutBounds.get(placed.id());
+            AnchorLayout.Bounds physical = logical == null ? null
+                    : transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY).physical(logical);
+            candidates.add(new UiFocusTraversal.Candidate(placed.id(), widget.visible, widget.active,
+                    physical, clipBounds.get(placed.id())));
+        }
+        String next = UiFocusTraversal.next(candidates, new AnchorLayout.Bounds(0, 0, width, height),
+                focusedWidgetId, (modifiers & GLFW.GLFW_MOD_SHIFT) != 0);
+        if (next == null) {
+            setFocused(null);
+        } else {
+            widgetRegistry.widget(next).ifPresent(this::setFocused);
+        }
+        return true;
+    }
+
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == GLFW.GLFW_KEY_TAB) {
+            updateConditionStates();
+            return focusNextInteractiveWidget(keyCode, scanCode, modifiers);
+        }
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             for (int index = placedWidgets.size() - 1; index >= 0; index--) {
                 if (placedWidgets.get(index).widget() instanceof UiPopupWidget popup && popup.isPopupOpen()) {

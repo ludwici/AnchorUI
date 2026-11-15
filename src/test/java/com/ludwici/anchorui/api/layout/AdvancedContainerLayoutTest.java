@@ -196,7 +196,7 @@ public class AdvancedContainerLayoutTest {
     }
 
     @Test
-    public void collapsingGridHiddenCellsReflowsAndKeepsManualChildren() {
+    public void collapsingGridHiddenCellsReflowsEveryStructuralChild() {
         String p = "x:grid";
         var frames = List.of(frame(p, "screen", 0, 0, 150, 100),
                 frame("x:a", p + "/__content", 0, 0, 20, 10),
@@ -214,8 +214,46 @@ public class AdvancedContainerLayoutTest {
         assertEquals(0, result.bounds().get("x:a").y());
         assertEquals(0, result.bounds().get("x:c").y());
         assertEquals(80, result.bounds().get("x:c").x());
-        assertEquals(new AnchorLayout.Bounds(7, 8, 40, 20), result.bounds().get("x:manual"));
+        assertEquals(new AnchorLayout.Bounds(0, 20, 40, 20), result.bounds().get("x:manual"));
     }
+    @Test
+    public void gridOwnsAllStructuralChildrenRegardlessOfTheirLegacyAnchorAndLayoutItem() {
+        String p = "x:grid";
+        var unrelated = new AnchorLayout.Frame("x:external",
+                new PositionElement(ElementAnchor.CENTER, ElementAnchor.BOTTOMRIGHT, "screen", 90, 40), 50, 12);
+        var frames = List.of(frame(p, "screen", 15, 25, 260, 150),
+                frame("x:a", "screen", 100, 70, 40, 20),
+                unrelated,
+                frame("x:c", p, 200, 60, 60, 22));
+        var parents = Map.of("x:a", p, "x:external", p, "x:c", p);
+        var layout = Map.of(p, ContainerAutoLayout.parse(json("""
+                {"layout":{"type":"grid","columns":2,"columnGap":8,"rowGap":6,
+                  "justifyItems":"stretch","alignItems":"center"}}
+                """)));
+        var rules = Map.of("x:a", StackLayout.Rules.parse(json("""
+                {"layoutItem":false}
+                """)));
+        var result = layout(frames, Map.of(p, new PaddingElement(10, 10)),
+                Map.of(), parents, layout, rules, Set.of());
+        assertEquals(new AnchorLayout.Bounds(25, 35, 116, 20), result.bounds().get("x:a"));
+        assertEquals(new AnchorLayout.Bounds(149, 39, 116, 12), result.bounds().get("x:external"));
+        assertEquals(new AnchorLayout.Bounds(25, 61, 116, 22), result.bounds().get("x:c"));
+    }
+
+    @Test
+    public void gridDoesNotAbsorbWidgetsThatAreNotItsChildren() {
+        String p = "x:grid";
+        var frames = List.of(frame(p, "screen", 10, 15, 180, 80),
+                frame("x:a", "screen", 25, 29, 30, 14),
+                frame("x:outside", "screen", 300, 100, 50, 20));
+        var result = layout(frames, Map.of(p, new PaddingElement()), Map.of(),
+                Map.of("x:a", p), Map.of(p, ContainerAutoLayout.parse(json("""
+                        {"layout":{"type":"grid","columns":2,"gap":8}}
+                        """))), Map.of(), Set.of());
+        assertEquals(new AnchorLayout.Bounds(10, 15, 30, 14), result.bounds().get("x:a"));
+        assertEquals(new AnchorLayout.Bounds(300, 100, 50, 20), result.bounds().get("x:outside"));
+    }
+
     @Test
     public void growClampsAtMaximumAndRedistributesUnusedSpace() {
         String p = "x:flex";

@@ -368,6 +368,7 @@ public final class AnchorHudManager {
     }
 
     private Set<String> currentLayoutHidden() {
+        HudLayoutOffsets offsets = currentOffsets();
         Set<String> hidden = new HashSet<>();
         Map<String, String> parents = new LinkedHashMap<>();
         for (PlacedWidget placed : widgets) {

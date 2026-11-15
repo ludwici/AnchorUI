@@ -29,6 +29,8 @@ public final class WidgetListPanel {
     }
 
     private static final int HEADER_HEIGHT = 21;
+    private static final int MIN_EXPANDED_HEIGHT = 64;
+    private static final int SCREEN_MARGIN = 8;
     private static final int COLLAPSED_WIDTH = 100;
     private static final int FOOTER_HEIGHT = 17;
     private static final int ROW_HEIGHT = 17;
@@ -45,6 +47,7 @@ public final class WidgetListPanel {
     private int y = 8;
     private int width = 214;
     private int height = 300;
+    private int preferredHeight = 300;
     private int scroll;
     private NativeContainerScrollPanel scrollBar;
     private double previousScrollMouseY;
@@ -70,9 +73,15 @@ public final class WidgetListPanel {
         viewportWidth = guiWidth;
         viewportHeight = guiHeight;
         width = Math.min(224, Math.max(120, guiWidth / 3));
-        height = Math.min(360, Math.max(64, guiHeight - 16));
+        preferredHeight = Math.min(360, Math.max(MIN_EXPANDED_HEIGHT, guiHeight - SCREEN_MARGIN * 2));
         x = Math.max(0, Math.min(x, Math.max(0, guiWidth - width)));
-        y = Math.max(0, Math.min(y, Math.max(0, guiHeight - height)));
+        y = Math.max(0, Math.min(y, Math.max(0, guiHeight - MIN_EXPANDED_HEIGHT - SCREEN_MARGIN)));
+        updateHeight();
+    }
+
+    private void updateHeight() {
+        height = Math.min(preferredHeight, Math.max(HEADER_HEIGHT + FOOTER_HEIGHT + 1,
+                viewportHeight - y - SCREEN_MARGIN));
     }
 
     public boolean contains(double mouseX, double mouseY) {
@@ -155,8 +164,10 @@ public final class WidgetListPanel {
         if (!dragging || button != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             return false;
         }
-        x = Math.max(0, Math.min(startX + (int) Math.round(mouseX - dragStartX), viewportWidth - width));
-        y = Math.max(0, Math.min(startY + (int) Math.round(mouseY - dragStartY), viewportHeight - height));
+        x = Math.max(0, Math.min(startX + (int) Math.round(mouseX - dragStartX), Math.max(0, viewportWidth - width)));
+        y = Math.max(0, Math.min(startY + (int) Math.round(mouseY - dragStartY),
+                Math.max(0, viewportHeight - MIN_EXPANDED_HEIGHT - SCREEN_MARGIN)));
+        updateHeight();
         return true;
     }
 

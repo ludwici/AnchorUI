@@ -1376,7 +1376,9 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
             if (widget.mouseClicked(transform.inverseX(mouseX), transform.inverseY(mouseY), button)) {
                 if (minecraft.screen == this) {
-                    setFocused(widget);
+                    if (getFocused() != widget) {
+                        setFocused(widget);
+                    }
                     draggingWidget = placed;
                     if (!selfDispatchingClicks.contains(placed.id())) {
                         UiEventBindings events = widgetEventBindings.get(placed.id());
@@ -1400,7 +1402,9 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             }
             WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
             if (popup.mouseClickedPopup(transform.inverseX(mouseX), transform.inverseY(mouseY), button)) {
-                setFocused(placed.widget());
+                if (getFocused() != placed.widget()) {
+                    setFocused(placed.widget());
+                }
                 return true;
             }
             AnchorLayout.Bounds frame = layoutBounds.get(placed.id());

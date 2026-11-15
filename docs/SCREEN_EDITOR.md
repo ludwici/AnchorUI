@@ -92,7 +92,7 @@ The right-side Inspector shows a single **parent** reference for each widget. Fo
 
 For layout properties overridden from their authored defaults, an active **R** control appears beside the respective `parent`, `point`, `anchor`, `user offset`, or `visible` line. Click it to reset that property without discarding the other overrides. The existing Point, Anchor, Parent, Hide, Reset and Reset all buttons remain available. Scroll the inspector independently with the mouse wheel or drag its scrollbar. The properties and override markers update as widgets are moved.
 
-The **Widgets** list starts collapsed (a short header at the top left); click **[+]** to open it, then **[-]** to collapse it again. Its namespace sections retain their individual expanded/collapsed state.
+The **Widgets** list starts collapsed (a short header at the top left); click **[+]** to open it, then **[-]** to collapse it again. Drag the Widgets header freely toward the bottom of the screen: the expanded list automatically reduces its height to fit the remaining space, and grows back when moved upward. Its scrollbar adapts to the visible list height. Its namespace sections retain their individual expanded/collapsed state.
 
 When dragging a widget, its **center** also magnetically aligns to the horizontal and vertical centerlines of the whole screen. Each axis snaps independently within the standard 6-GUI-pixel threshold. The same rule applies to the HUD editor; holding Alt disables all snapping. Alignment guides appear while the magnet is engaged.
 

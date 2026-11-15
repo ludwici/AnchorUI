@@ -348,3 +348,5 @@ When dragging a custom HUD widget, the magnetic aligner also detects the **scree
 ### Shared scroll controls
 
 The Inspector and Widgets list now use the same native NeoForge `ScrollPanel` adapter as the scrollable JSON containers. Each is independently scrollable via the mouse wheel or by dragging the bar. Existing per-widget reset controls, category grouping, and collapsed panel behavior are unchanged. Their scrollbar colors/widths are configured through the common adapter rather than separately drawn using hand-written thumb geometry. A scrollbar cannot drag the HUD beneath the editor panel.
+
+The F8 Widgets panel automatically reduces its expanded height when dragged close to the screen bottom, and grows when moved back up. The list remains scrollable within the available space.

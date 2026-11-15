@@ -142,7 +142,7 @@ The F8 inspector now also contains a **VISUAL / CONTENT** section for built-in w
 - `texture` resource IDs for panels and images; resource-pack sprite variants such as `textures.background.normal`/`hover`/`disabled` for state controls.
 - Width and height of applicable widgets, progress-bar `showText`, and other numeric/boolean/choice fields registered in Java.
 
-Use **- / +** to adjust numeric, Boolean or enumerated options. Use **E** to open an editable input box for text, color or texture resource IDs, then press **Enter / Apply** or **Esc / Cancel**. Use **R** to reset an individual override. The original JSON is available in the collapsed **SOURCE JSON [+]** section below these controls.
+Use **- / +** to adjust numeric and Boolean values. Java-registered `CHOICE` fields get a **▼** dropdown instead of requiring repeated clicks. Use **E** for text, color and texture resource IDs, then press **Enter / Apply** or **Esc / Cancel**. Use **R** to reset an individual override. The original JSON is available in the collapsed **SOURCE JSON [+]** section below these controls.
 
 Changes refresh the edited widget's appearance immediately, while preserving the screen's Local UI State. This refresh is triggered on an explicit edit, **not** on each frame or mouse drag. Invalid values are rejected; for custom widgets with a `Codec`, invalid factory configurations cause the preview to roll back.
 

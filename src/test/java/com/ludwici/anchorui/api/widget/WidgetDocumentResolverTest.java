@@ -197,4 +197,38 @@ public class WidgetDocumentResolverTest {
         assertThrows(IllegalArgumentException.class, () -> WidgetIds.id(":missing_namespace", "anchorui"));
         assertThrows(IllegalArgumentException.class, () -> WidgetIds.id("invalid:", "anchorui"));
     }
+    @Test
+    public void gridChildrenOnlyNeedTheChildrenArrayInAuthoredJson() {
+        JsonObject document = json("""
+                {
+                  "entities": [
+                    {
+                      "type": "anchorui:panel",
+                      "id": "grid",
+                      "layout": {"type":"grid","columns":3,"gap":6},
+                      "children": [
+                        {"type":"anchorui:button","id":"first","text":"First"},
+                        {"type":"anchorui:button","id":"second","text":"Second"},
+                        {"type":"anchorui:button","id":"third","text":"Third"}
+                      ]
+                    }
+                  ]
+                }
+                """);
+        JsonObject result = WidgetDocumentResolver.resolve(document, "example", Map.of());
+        assertEquals(4, result.getAsJsonArray("entities").size());
+        for (int index = 1; index <= 3; index++) {
+            JsonObject child = result.getAsJsonArray("entities").get(index).getAsJsonObject();
+            assertEquals("example:grid", child.get("__anchorui_container_parent").getAsString());
+            assertEquals("example:grid/__content",
+                    child.getAsJsonObject("position").get("relativeTo").getAsString());
+            assertFalse(child.has("layoutItem"));
+        }
+        JsonObject sourceChild = document.getAsJsonArray("entities").get(0)
+                .getAsJsonObject().getAsJsonArray("children").get(0).getAsJsonObject();
+        assertFalse(sourceChild.has("position"));
+        assertFalse(sourceChild.has("__anchorui_container_parent"));
+        assertFalse(sourceChild.has("layoutItem"));
+    }
+
 }

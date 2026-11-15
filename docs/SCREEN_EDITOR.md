@@ -110,7 +110,7 @@ Every compact F8 inspector control (−, +, E, ▼, R, color swatches and checkb
 
 The editor treats unregistered Java `Codec` fields and gameplay handlers as read-only source JSON. Built-in text, color, image and texture properties and explicitly registered custom editor fields can be changed in VISUAL / CONTENT.
 
-Try this with `/anchorui screen open anchorui:advanced_layout_demo`, then **F8**. Switch a panel from `row` to `grid`, alter its columns, try a child's `grow`, and confirm **Save** and **Cancel** behave independently. Test against `stack_layout_demo` and `conditional_content_demo` for hidden children and cases.
+Try this with `/anchorui screen open anchorui:advanced_layout_demo`, then **F8**. Switch a panel from `row` to `grid`, alter its columns, try a child's `grow`, and confirm **Save** and **Cancel** behave independently. Test against `stack_layout_demo` and `conditional_content_demo` for hidden children and cases. Use `hidden_space_policy_demo` to compare reserved vs collapsed layouts and their scroll limits side by side. The full client acceptance checklist is in [Stage 1/2 QA](QA_STAGE_1_2.md).
 
 ### Move widgets directly into Grid
 

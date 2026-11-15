@@ -6,7 +6,7 @@ Anchor UI supports **compiled, declarative conditions** for HUD widgets and reso
 
 | Property | Behavior |
 | --- | --- |
-| `visibleWhen` | The widget is visible only when the condition is true. Its reserved layout bounds remain unchanged when hidden. Visibility of parent containers also affects their children. |
+| `visibleWhen` | The widget is visible only when the condition is true. Hidden children reserve layout space by default; an automatic parent with `layout.collapseHidden: true` removes them from its layout flow. Visibility of parent containers also affects their children. |
 | `enabledWhen` | The widget stays visible but `AbstractWidget.active` becomes false when the condition is false. Vanilla-style buttons then render as disabled and reject clicks. Custom widget implementations should respect `active` when drawing or handling interactions. |
 
 **Both fields default to `true` when omitted.** A resource-pack's existing `hidden: true` or local HUD visibility override cannot be reversed by conditions. Condition results never bypass those controls.
@@ -283,7 +283,7 @@ The action's `when` is compiled once but **evaluated when the event fires**. Whe
 
 Conditions and action guards are **client-side presentation decisions**, never authorization to grant items, spend currency or modify world/server data. The integrating server-side mod must validate all protected operations.
 
-The current `cases` feature selects **whole widgets**, not individual text fragments or style properties within a single mutable widget instance. Conditional layout-space collapse, more advanced automatic layout and fine-grained condition invalidation remain planned. A general-purpose stateful interface is supported; NPC dialogue/quest engines are intentionally outside AnchorUI's framework scope.
+The current `cases` feature selects **whole widgets**, not individual text fragments or style properties within a single mutable widget instance. Their hidden alternatives follow the same `layout.collapseHidden` policy as `visibleWhen`: see [Stage 1/2 layout policy](QA_STAGE_1_2.md#hidden-child-layout-policy). Fine-grained condition invalidation and advanced CSS-like layout extensions are optional future work, not a requirement of `cases`. NPC dialogue/quest engines remain outside AnchorUI's framework scope.
 
 ## In-game demos
 

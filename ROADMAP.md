@@ -46,19 +46,19 @@ The completed functionality above does **not** imply finished visual consistency
 
 ### Stage 1 — Generic conditional content and guarded actions
 
-**Status: core delivered; follow-up layout behavior and in-client QA remain.** Extend the existing Conditions engine, not a domain-specific conversation or quest system.
+**Status: all Stage 1 framework features and the hidden-space policy are implemented and covered by automated tests; in-client checks remain under QA.** Extend the existing Conditions engine, not a domain-specific conversation or quest system.
 
 - [x] Implement `anchorui:cases` for first-match widget/template selection, including a fallback and compiled Conditions.
 - [x] Add `when` action-level guards evaluated at event time; invalid expressions fail validation and unavailable data fails closed.
 - [x] Keep both features compatible with existing `visibleWhen` / `enabledWhen`, UI State, named templates and resource packs.
 - [x] Add unit tests for nested widgets, template rows, first-match selection, missing/malformed conditions and live guard updates. In-game QA is still pending.
-- [ ] Define an opt-in policy for whether hidden children keep or collapse their layout space; coordinate with Stage 2.
+- [x] Define and test the opt-in hidden-space policy: hidden direct children reserve their layout slot by default, while `layout.collapseHidden: true` removes them from automatic row/column/grid flow, auto-sized content measurements and scroll overflow. Existing manual/anchored layouts keep their geometry; local UI State, `visibleWhen`, `cases` and editor hide/show trigger the same policy.
 
 **Done when:** a JSON UI can select content and safely gate a generic action without implementing its own widget or scripting logic.
 
 ### Stage 2 — General-purpose automatic layouts
 
-**Status: automatic row/column/grid layouts, flex sizing and wrapping implemented; in-game QA and advanced edge cases remain.** The older `template_list` layout engine is independent.
+**Status: the planned row/column/grid, flex, wrapping and hidden-child policies are implemented. Additional integration tests cover responsive geometry, saved F8 layout changes and collapsed-child scroll limits; actual in-client QA still remains.** The older `template_list` layout engine is independent.
 
 - [x] Add opt-in `row` and `column` layouts for normal panels/containers with `gap`, cross-axis `align`, main-axis `justify` and `space_between`.
 - [x] Support `align: stretch` along a fixed cross axis, with preferred sizes retained for auto-sized cross axes.
@@ -72,12 +72,13 @@ The completed functionality above does **not** imply finished visual consistency
 - [x] Treat `anchorui:panel` as a default parent without additional authored container/context nodes; keep nested hierarchy outside per-widget JSON, use Panel IDs for child anchors and apply padding in layout resolution. Do not accept removed `/__content` anchors; Panel padding and viewport geometry are computed directly.
 - [x] Preserve Screen Editor inspector scroll when changing values via `+`/`-` with SOURCE JSON collapsed; show one parent label instead of duplicated internal parent/anchor details.
 - [x] Add focused geometry tests for constrained flex, wrapping in both axes, grid auto sizing, cell alignment and hidden cells.
-- [ ] Consider later CSS-like features only when demanded by use cases: grid spans, named tracks, richer responsive constraints and fine-grained incremental layout. These are not part of the first generic Grid release.
+- [x] Scope decision: CSS-like features (grid spans, named tracks, richer responsive constraints and fine-grained incremental layout) are **deferred extensions**, not unfinished requirements of the current Grid release. Reassess them only for a concrete use case.
 - [x] Update HUD and screen F8 editors to inspect and edit row/column/grid/flex layout fields using persisted per-widget overrides, and browse nested widget structure in a collapsible hierarchy.
 - [x] Distinguish coordinate anchor targets from structural container parents in both F8 editors; support container/content/move picker, move-to-root, cycle-safe saved overrides and default-collapsed read-only source JSON.
-- [ ] Complete runtime QA for editor dragging, layout-field cycling, Save/Cancel, GUI resize and scale, nested scrolling, moving focus and resource reload.
+- [x] Expand automated Stage 1/2 regression coverage for reserve-vs-collapse semantics, row/grid conditional reflow, autoSize with hidden manual children, F8 override Save/Cancel, widget ID retention, resize/wrapping and scroll clamping; add a dedicated visual comparison demo.
+- [ ] Complete **in-client** runtime QA for editor dragging, layout-field cycling, Save/Cancel, GUI resize and scale, nested scrolling, moving focus and resource reload. See [Stage 1/2 QA](docs/QA_STAGE_1_2.md). This requires launching Minecraft and cannot be certified by Gradle tests alone.
 
-**Acceptance:** normal panels and containers can arrange responsive rows, columns and cell grids using resource-pack JSON, with in-client verification of advanced focus/scale/scroll cases still outstanding.
+**Acceptance:** row/column/grid and hidden-space behavior have automated coverage and a repeatable in-game acceptance checklist. In-client focus, scale, editor and reload verification remains outstanding, so Stage 2 is not yet fully QA-signed-off.
 
 ### Stage 3 — Consistent appearance and input polish
 

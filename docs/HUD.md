@@ -150,7 +150,7 @@ To edit widget placement:
 
 1. Click a widget's highlighted rectangle to select it, then **drag** it to the desired position.
 2. Use the **arrow keys** to move the selected widget by one GUI pixel, or **Shift + arrows** to move by 10 pixels.
-3. Use **Point** and **Anchor** to cycle through the nine attachment points. **The widget immediately moves according to the newly selected points**; any previously configured manual offsets remain unchanged.
+3. Use the **Point ▼** and **Anchor ▼** dropdowns to pick one of the nine attachment points directly. The selected value applies immediately and keeps existing offsets. The same dropdown widget is used in the component inspector for layout mode, alignment, distribution, and custom Java `CHOICE` fields. Numeric fields still use **- / +**, and Boolean fields retain their toggle controls.
 4. Select a widget, then press **Change parent**. Click another highlighted widget to choose it as the new parent, or click an empty part of the world to use **screen** as the parent. The parent changes **only after the click**. Circular relationships and attempts to parent a widget to itself are rejected. Press **Esc** or **Cancel parent** to leave selection mode without changing anything.
 5. Use **Hide / Show** to control whether a selected widget is displayed in gameplay. Hidden widgets still occupy their layout bounds, so other widgets can remain attached.
 6. Press **R** to reset the selected widget's **position offset only**. Use the **Reset** button to restore all overrides for the selected widget (position, anchors, visibility and component layout values); **Reset all** clears overrides for every widget.

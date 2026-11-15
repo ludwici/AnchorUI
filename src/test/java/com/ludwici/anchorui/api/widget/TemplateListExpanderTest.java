@@ -65,7 +65,8 @@ public class TemplateListExpanderTest {
         assertTrue(first.get("id").getAsString().startsWith("example:quests/entry_"));
         assertEquals("First quest", first.get("text").getAsString());
         assertEquals("example:first", first.getAsJsonObject("onClick").get("quest").getAsString());
-        assertEquals("example:quests", first.get("__anchorui_container_parent").getAsString());
+        assertEquals("example:quests", result.get(0).parentId());
+        assertFalse(first.has("__anchorui_container_parent"));
         assertEquals("example:quests/__content", first.getAsJsonObject("position").get("relativeTo").getAsString());
         assertEquals(0, first.getAsJsonObject("position").get("y").getAsInt());
         assertEquals(28, second.getAsJsonObject("position").get("y").getAsInt());
@@ -134,8 +135,9 @@ public class TemplateListExpanderTest {
         String parent = result.get(0).settings().get("id").getAsString();
         JsonObject child = result.get(1).settings();
         assertTrue(child.get("id").getAsString().startsWith(parent + "/"));
-        assertEquals(parent, child.get("__anchorui_container_parent").getAsString());
-        assertEquals(parent + "/__content", child.getAsJsonObject("position").get("relativeTo").getAsString());
+        assertEquals(parent, result.get(1).parentId());
+        assertFalse(child.has("__anchorui_container_parent"));
+        assertEquals(parent, child.getAsJsonObject("position").get("relativeTo").getAsString());
         assertEquals(12, child.getAsJsonObject("enabledWhen").get("left").getAsInt());
         assertEquals("Kill dragon", child.get("text").getAsString());
         assertEquals("example:accept", child.get("onClick").getAsString());
@@ -336,7 +338,8 @@ public class TemplateListExpanderTest {
         assertEquals(2, rows.size());
         String parentId = rows.getFirst().settings().get("id").getAsString();
         JsonObject child = rows.get(1).settings();
-        assertEquals(parentId, child.get("__anchorui_container_parent").getAsString());
+        assertEquals(parentId, rows.get(1).parentId());
+        assertFalse(child.has("__anchorui_container_parent"));
         assertEquals("Sword", child.get("text").getAsString());
         assertEquals("quest:one", child.getAsJsonObject("onClick").get("quest").getAsString());
     }

@@ -81,6 +81,9 @@ public final class AnchorScreenEditorScreen extends Screen {
     private AppearanceInspectorControls.Control editingAppearance;
     private String editingAppearanceId;
     private List<String> sourceProperties = List.of();
+    private boolean sourceExpanded;
+    private int sourceHeaderIndex = -1;
+    private int sourceHeaderY = -1;
     private String inspectedId;
     private int inspectorScroll;
     private int maxInspectorScroll;
@@ -222,6 +225,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         if (id == null || !id.equals(inspectedId)) {
             inspectedId = null;
             sourceProperties = List.of();
+            sourceExpanded = false;
             resetInspectorScroll();
         }
         selected = null;
@@ -435,6 +439,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         List<InspectorLine> lines = inspectorLines();
         maxInspectorScroll = Math.max(0, lines.size() * INSPECTOR_LINE_HEIGHT - (bottom - top));
         inspectorScroll = Math.max(0, Math.min(inspectorScroll, maxInspectorScroll));
+        sourceHeaderY = sourceHeaderIndex < 0 ? -1 : top - inspectorScroll + sourceHeaderIndex * INSPECTOR_LINE_HEIGHT;
         updateInspectorScrollBar(top, bottom);
         graphics.enableScissor(panelX() + 4, top, panelX() + inspectorWidth - 4, bottom);
         try {
@@ -586,6 +591,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     private List<InspectorLine> inspectorLines() {
         List<InspectorLine> lines = new ArrayList<>();
         if (selected == null) {
+            sourceHeaderIndex = -1;
             appendInspectorLine(lines, "SELECT A WIDGET", SELECTED, null, false);
             appendInspectorLine(lines, "Click a widget or the Widgets list", 0xFFE5EEF5, null, false);
             appendInspectorLine(lines, "Arrows: 1px | Shift: 10px", 0xFFE5EEF5, null, false);
@@ -629,14 +635,17 @@ public final class AnchorScreenEditorScreen extends Screen {
                         control.modified(), null, control));
             }
         }
-        if (!selected.id().equals(inspectedId)) {
-            JsonObject settings = target.editorSourceSettings(selected.id());
-            sourceProperties = HudInspectorProperties.flatten(settings);
-            inspectedId = selected.id();
-        }
-        appendInspectorLine(lines, "SOURCE JSON (read only)", SELECTED, null, false);
-        for (String property : sourceProperties) {
-            appendInspectorLine(lines, property, 0xFFB7CEDF, null, false);
+        sourceHeaderIndex = lines.size();
+        appendInspectorLine(lines, "SOURCE JSON " + (sourceExpanded ? "[-]" : "[+]") + " (read only)", SELECTED, null, false);
+        if (sourceExpanded) {
+            if (!selected.id().equals(inspectedId)) {
+                JsonObject settings = target.editorSourceSettings(selected.id());
+                sourceProperties = HudInspectorProperties.flatten(settings);
+                inspectedId = selected.id();
+            }
+            for (String property : sourceProperties) {
+                appendInspectorLine(lines, property, 0xFFB7CEDF, null, false);
+            }
         }
         return lines;
     }
@@ -726,6 +735,11 @@ public final class AnchorScreenEditorScreen extends Screen {
                 && mouseX < visiblePanelX() + visiblePanelWidth()
                 && mouseY >= panelTop && mouseY < panelTop + (inspectorCollapsed ? 27 : expandedPanelHeight())) {
             if (insideInspector(mouseX, mouseY)) {
+                if (sourceHeaderY >= inspectorTop() && sourceHeaderY + INSPECTOR_LINE_HEIGHT <= inspectorBottom()
+                        && mouseY >= sourceHeaderY && mouseY < sourceHeaderY + INSPECTOR_LINE_HEIGHT) {
+                    sourceExpanded = !sourceExpanded;
+                    return true;
+                }
                 for (AppearanceHitbox hitbox : appearanceHitboxes) {
                     if (hitbox.contains(mouseX, mouseY)) {
                         if (hitbox.direction() == 0) {

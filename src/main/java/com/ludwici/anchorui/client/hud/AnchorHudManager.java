@@ -92,6 +92,7 @@ public final class AnchorHudManager {
 
     private WidgetInstanceRegistry registry = new WidgetInstanceRegistry();
     private List<PlacedWidget> widgets = List.of();
+    private List<PlacedWidget> visibilityOrder = List.of();
     private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
     private Set<String> collapsingLayoutParents = Set.of();
     private Set<String> collapsedLayoutHidden = Set.of();
@@ -546,7 +547,7 @@ public final class AnchorHudManager {
         HudLayoutOffsets offsets = currentOffsets();
         visibilityScratch.clear();
         enabledScratch.clear();
-        for (PlacedWidget placed : widgets) {
+        for (PlacedWidget placed : visibilityOrder.isEmpty() ? widgets : visibilityOrder) {
             String parent = offsets.containerParent(placed.id(), placed.containerParent());
             boolean parentVisible = parent == null || visibilityScratch.getOrDefault(parent, false);
             boolean parentEnabled = parent == null || enabledScratch.getOrDefault(parent, false);
@@ -1044,6 +1045,7 @@ public final class AnchorHudManager {
                 scrollOffsets.put(entry.getKey(), entry.getValue().clamp(previous));
             }
             containerParents = Map.copyOf(parents);
+            visibilityOrder = WidgetContainers.parentFirst(widgets, PlacedWidget::id, parents);
             containerGroups = Map.copyOf(groups);
             this.clippingContainers = Set.copyOf(clippingContainers);
             updateScrolledTransforms();
@@ -1060,6 +1062,7 @@ public final class AnchorHudManager {
             nativeScrollPanels.clear();
             draggedScrollPanel = null;
             widgets = List.of();
+            visibilityOrder = List.of();
             if (warnings != null) {
                 warnings.add("HUD layout rejected: " + exception.getMessage());
             }

@@ -127,7 +127,7 @@ public final class WidgetDocumentResolver {
             normalizePosition(child, childNamespace);
             JsonObject position = child.has("position") && child.get("position").isJsonObject() ? child.getAsJsonObject("position") : new JsonObject();
             if (!position.has("relativeTo")) {
-                position.addProperty("relativeTo", WidgetContainers.contentId(id));
+                position.addProperty("relativeTo", id);
             }
             child.add("position", position);
             child.addProperty(WidgetContainers.PARENT_FIELD, id);

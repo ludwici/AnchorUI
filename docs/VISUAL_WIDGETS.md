@@ -96,7 +96,7 @@ Panels support optional fill, borders, and rounded corners. If `fillColor` is om
 - A child with no explicit `relativeTo` is placed at the top-left of its parent's **padded content area**, with the same anchor/point semantics as any other widget. Do not manually add the parent's padding to the child's offset.
 - A child can be any registered widget. Nested `panel` and `container` elements may have their own `children`. Existing `ref` templates can be used for children too.
 - Descendants are rendered after the parent and hidden whenever their parent is hidden. **Clipping is disabled by default.** Set `"clipChildren": true` on a panel/container to clip its descendants to its padded content area. Multiple clipping ancestors intersect; parents without clipping do not constrain their descendants. Mouse clicks outside opted-in clip areas are ignored.
-- Children have normal namespaced IDs; an omitted ID is generated as `<parent path>/child_0`, etc. The internal content frame uses `<parent id>/__content`, which should not be declared as a widget ID.
+- Children have normal namespaced IDs; an omitted ID is generated as `<parent path>/child_0`, etc. The runtime generates an internal content frame (`<parent id>/__content`) for clipping and anchored positioning. **Do not write this frame or any `__anchorui_*` property in authored JSON.** Plain nested `children` are sufficient, particularly for Grid.
 - Children can still explicitly specify a different `position.relativeTo` target; clipping applies only when an ancestor sets `clipChildren: true`.
 - The HUD editor treats containers as ordinary movable frames: dragging a parent automatically moves children anchored to its content frame.
 - To scale a panel/container **with its descendants as a single group**, set `"scale": 0.9` (range 0.1 to 4.0). `"scaleOrigin": "top_left"` is the default; `"scaleOrigin": "center"` scales around the panel's center, useful for a centered phone or dialogue window. Nested group scales multiply. Screen mouse hit-testing, dragging, scrolling, mouse-over and opt-in clips use the transformed coordinates. HUD editor hitboxes and mouse dragging account for group scaling, while JSON widget sizes remain in logical GUI pixels.
@@ -196,12 +196,14 @@ Grid is now available **outside** `anchorui:template_list`:
 - `cellWidth` and `cellHeight`: optional fixed sizes. Without `cellWidth`, a fixed-width container divides its padded width evenly between columns; an auto-width container sizes each column to its widest child. Without `cellHeight`, each row is as tall as its tallest child.
 - `justifyItems`: horizontal placement *within* a cell, and `alignItems`: vertical placement. Both accept `start`, `center`, `end`, `stretch` and default to `start`.
 - `collapseHidden`: a hidden child does not occupy a grid cell; later children fill the vacated position. The grid height can shrink with `autoSize`.
-- Width/height constraints in `layoutItem` also apply to grid children. Flex `grow`/`shrink` are reserved for row/column stacks, not the grid.
+- Every direct child in the Grid's `children` array is placed automatically, in declaration order. No `position`, `relativeTo`, `__content` or `layoutItem.enabled` is needed. The Grid owns the child's cell even when a legacy anchor or `layoutItem: false` is present. Width/height constraints in `layoutItem` remain optional; flex `grow`/`shrink` apply only to row/column stacks.
 - The `layout` shorthand `"grid"` is supported, defaulting to one column.
 
 ### Composition and compatibility
 
-Only direct children structurally belonging to the container and anchored `TOPLEFT` to its `/__content` frame take part in automatic placement. Use `"layoutItem": false` to keep a child at an explicit anchor or anchor it to a different target; `position.x/y` on participating children are additive *local nudges*, not absolute positions.
+For **row/column**, a child joins automatic placement when it is structurally nested in the container and uses the usual top-left content anchor. `"layoutItem": false` or an explicit external/non-top-left anchor keeps a row/column child manually positioned; `position.x/y` are optional local nudges.
+
+For **Grid**, *all direct structural children* always occupy Grid cells according to the parent's `columns`, `gap`, `cellWidth`/`cellHeight`, `alignItems`, and `justifyItems`. Grid ignores child `position` anchors and x/y for placement; optional size constraints can still be set per child. This also applies to widgets moved into Grid using F8 **Parent**. No internal anchor IDs should appear in authored children.
 
 All variants reuse the existing AnchorUI scrolling, clipping, scale transforms, focus/hitboxes and F8 layout overrides. `visibleWhen` and `anchorui:cases` can control hidden children. Layout is recalculated when the participating hidden set changes, not on every ordinary frame.
 

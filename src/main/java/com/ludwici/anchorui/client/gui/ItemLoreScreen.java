@@ -1215,9 +1215,6 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
 
     private void rememberFocusedWidget() {
         if (getFocused() == null) {
-            if (minecraft.screen == this) {
-                focusedWidgetId = null;
-            }
             return;
         }
         for (PlacedWidget placed : placedWidgets) {

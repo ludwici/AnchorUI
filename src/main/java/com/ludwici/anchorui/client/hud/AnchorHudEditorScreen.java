@@ -807,6 +807,22 @@ public final class AnchorHudEditorScreen extends Screen {
         return null;
     }
 
+    private AnchorHudManager.HudHandle clickedParentPanel(double x, double y) {
+        for (int index = frameHandles.size() - 1; index >= 0; index--) {
+            AnchorHudManager.HudHandle handle = frameHandles.get(index);
+            if (!manager.isPreviewContainer(handle.id()) || handle.id().equals(selected)) {
+                continue;
+            }
+            AnchorLayout.Bounds bounds = handle.bounds();
+            if (bounds.width() > 0 && bounds.height() > 0
+                    && x >= bounds.x() && x < bounds.x() + bounds.width()
+                    && y >= bounds.y() && y < bounds.y() + bounds.height()) {
+                return handle;
+            }
+        }
+        return null;
+    }
+
     private VanillaHudGeometry.Reference clickedVanillaHandle(double mouseX, double mouseY) {
         if (vanillaViewMode == 0) {
             return null;
@@ -965,7 +981,11 @@ public final class AnchorHudEditorScreen extends Screen {
         AnchorHudManager.HudHandle clicked = clickedHandle(mouseX, mouseY);
         VanillaHudGeometry.Reference vanilla = clicked == null ? clickedVanillaHandle(mouseX, mouseY) : null;
         if (choosingParent && selected != null) {
-            chooseParentTarget(clicked != null ? clicked.id() : vanilla != null ? vanilla.id() : "screen");
+            AnchorHudManager.HudHandle panel = clickedParentPanel(mouseX, mouseY);
+            VanillaHudGeometry.Reference targetReference = panel == null
+                    ? clickedVanillaHandle(mouseX, mouseY) : null;
+            chooseParentTarget(panel != null ? panel.id()
+                    : targetReference != null ? targetReference.id() : "screen");
             return true;
         }
         if (clicked != null) {

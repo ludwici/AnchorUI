@@ -610,6 +610,8 @@ public final class AnchorHudManager {
                     HudLayoutOffsets candidate = editingOffsets.copy();
                     candidate.clearContainerParent(id);
                     candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(parent, point, anchor));
+                    candidate.set(id, 0, 0);
+                    candidate.clearSettingOverride(id, "layoutItem", "enabled");
                     return usePreviewLayout(candidate);
                 }
                 return changePreviewAnchor(id, new HudLayoutOffsets.AnchorOverride(parent, point, anchor));

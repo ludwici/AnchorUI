@@ -31,6 +31,7 @@ public final class HudLayoutOffsets {
 
     private final Map<String, Offset> offsets = new LinkedHashMap<>();
     private final Map<String, AnchorOverride> anchors = new LinkedHashMap<>();
+    private final Map<String, String> containerParents = new LinkedHashMap<>();
     private final Set<String> hidden = new TreeSet<>();
     private final Map<String, JsonObject> componentSettings = new LinkedHashMap<>();
 
@@ -45,6 +46,30 @@ public final class HudLayoutOffsets {
     public boolean isHidden(String id) {
         return hidden.contains(id);
     }
+
+    public String containerParent(String id, String sourceParent) {
+        String override = containerParents.get(id);
+        return override == null ? sourceParent : "screen".equals(override) ? null : override;
+    }
+
+    public void setContainerParent(String id, String parent) {
+        String qualified = WidgetIds.id(id, "anchorui");
+        String target = "screen".equals(parent) ? "screen" : WidgetIds.id(parent, "anchorui");
+        if (qualified.equals(target)) {
+            throw new IllegalArgumentException("Widget cannot contain itself");
+        }
+        containerParents.put(qualified, target);
+    }
+
+    public void clearContainerParent(String id) {
+        containerParents.remove(WidgetIds.id(id, "anchorui"));
+    }
+
+    public boolean hasContainerParentOverride(String id) {
+        return containerParents.containsKey(id);
+    }
+
+
 
     public JsonElement settingOverride(String id, String section, String property) {
         JsonObject overrides = componentSettings.get(id);
@@ -187,6 +212,7 @@ public final class HudLayoutOffsets {
     public void reset(String id) {
         offsets.remove(id);
         anchors.remove(id);
+        containerParents.remove(id);
         hidden.remove(id);
         componentSettings.remove(id);
     }
@@ -194,6 +220,7 @@ public final class HudLayoutOffsets {
     public void resetAll() {
         offsets.clear();
         anchors.clear();
+        containerParents.clear();
         hidden.clear();
         componentSettings.clear();
     }
@@ -206,6 +233,7 @@ public final class HudLayoutOffsets {
         HudLayoutOffsets result = new HudLayoutOffsets();
         result.offsets.putAll(offsets);
         result.anchors.putAll(anchors);
+        result.containerParents.putAll(containerParents);
         result.hidden.addAll(hidden);
         for (var entry : componentSettings.entrySet()) {
             result.componentSettings.put(entry.getKey(), entry.getValue().deepCopy());
@@ -214,7 +242,8 @@ public final class HudLayoutOffsets {
     }
 
     public boolean sameAs(HudLayoutOffsets other) {
-        return offsets.equals(other.offsets) && anchors.equals(other.anchors) && hidden.equals(other.hidden)
+        return offsets.equals(other.offsets) && anchors.equals(other.anchors)
+                && containerParents.equals(other.containerParents) && hidden.equals(other.hidden)
                 && componentSettings.equals(other.componentSettings);
     }
 
@@ -225,6 +254,7 @@ public final class HudLayoutOffsets {
         Set<String> ids = new TreeSet<>();
         ids.addAll(offsets.keySet());
         ids.addAll(anchors.keySet());
+        ids.addAll(containerParents.keySet());
         ids.addAll(hidden);
         ids.addAll(componentSettings.keySet());
         for (String id : ids) {
@@ -239,6 +269,10 @@ public final class HudLayoutOffsets {
                 value.addProperty("relativeTo", anchor.relativeTo());
                 value.addProperty("point", anchor.point().name());
                 value.addProperty("anchor", anchor.anchor().name());
+            }
+            String containerParent = containerParents.get(id);
+            if (containerParent != null) {
+                value.addProperty("containerParent", containerParent);
             }
             if (hidden.contains(id)) {
                 value.addProperty("hidden", true);
@@ -275,6 +309,9 @@ public final class HudLayoutOffsets {
                 ElementAnchor point = ElementAnchor.fromString(value.get("point").getAsString());
                 ElementAnchor anchor = ElementAnchor.fromString(value.get("anchor").getAsString());
                 result.setAnchor(id, new AnchorOverride(target, point, anchor));
+            }
+            if (value.has("containerParent")) {
+                result.setContainerParent(id, value.get("containerParent").getAsString());
             }
             if (value.has("hidden")) {
                 result.setHidden(id, value.get("hidden").getAsBoolean());

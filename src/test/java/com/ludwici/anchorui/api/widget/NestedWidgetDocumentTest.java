@@ -49,7 +49,7 @@ public class NestedWidgetDocumentTest {
         var result = resolved.getAsJsonArray("entities");
         assertEquals("demo:own", result.get(1).getAsJsonObject().get("id").getAsString());
         assertEquals("Custom", result.get(1).getAsJsonObject().get("text").getAsString());
-        assertEquals("demo:outer", resolved.getAsJsonObject("widgetParents")
+        assertEquals("demo:box", resolved.getAsJsonObject("widgetParents")
                 .get(result.get(1).getAsJsonObject().get("id").getAsString()).getAsString());
         assertTrue(!result.get(1).getAsJsonObject().has("__anchorui_container_parent"));
     }

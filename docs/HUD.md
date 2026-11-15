@@ -330,7 +330,7 @@ A bound progress bar reads the data when rendering but **does not recreate the w
 
 ## RPG bar consistency
 
-The bundled RPG health and food progress bars use the same 16-pixel height, `padding: {"left":1,"right":1,"top":1,"bottom":1}` and background color. That padding leaves a visible one-pixel border around each colored fill. The standalone starter resource pack uses matching progress-bar styling. The RPG test is enabled separately with `/anchorui test rpg on`.
+The bundled RPG health and food progress bars now inherit identical padding, track background and overlaid one-pixel border from `anchorui:style/rpg_progress`; each bar supplies only its own fill color and data binding. This prevents mismatched second-bar frames when the shared skin changes. The standalone starter resource pack still supplies matching per-widget styling. Enable the RPG test separately with `/anchorui test rpg on` and use F8 to inspect or override each bar.
 
 ### Collapsible editor panels
 

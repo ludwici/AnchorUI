@@ -108,6 +108,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     private UiEventBindings screenEventBindings;
     private boolean lifecycleActive;
     private boolean transitioningToEditor;
+    private String focusedWidgetId;
     private final Map<String, Boolean> visibilityScratch = new HashMap<>();
     private final Map<String, Boolean> enabledScratch = new HashMap<>();
     private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
@@ -895,6 +896,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     }
 
     private void buildWidgets(boolean incremental) {
+        rememberFocusedWidget();
         Map<String, RetainedWidget> retained = new HashMap<>();
         if (incremental) {
             for (PlacedWidget placed : placedWidgets) {
@@ -1067,6 +1069,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             addWidget(placed.widget());
         }
         updateConditionStates();
+        restoreFocusedWidget();
         if (!lifecycleActive && minecraft.screen == this) {
             lifecycleActive = true;
             screenEventBindings.fire("onOpen", screenEventTarget(), JsonNull.INSTANCE);
@@ -1210,6 +1213,38 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         return context == null ? JsonNull.INSTANCE : context.value();
     }
 
+    private void rememberFocusedWidget() {
+        if (getFocused() == null) {
+            if (minecraft.screen == this) {
+                focusedWidgetId = null;
+            }
+            return;
+        }
+        for (PlacedWidget placed : placedWidgets) {
+            if (placed.widget() == getFocused()) {
+                focusedWidgetId = placed.id();
+                return;
+            }
+        }
+    }
+
+    private void restoreFocusedWidget() {
+        if (focusedWidgetId == null) {
+            return;
+        }
+        for (PlacedWidget placed : placedWidgets) {
+            if (!placed.id().equals(focusedWidgetId)) {
+                continue;
+            }
+            if (placed.widget().visible && placed.widget().active) {
+                setFocused(placed.widget());
+                return;
+            }
+            break;
+        }
+        setFocused(null);
+    }
+
     private void refreshTemplateLists() {
         if (templateLists.isEmpty() || minecraft.screen != this) {
             return;
@@ -1221,14 +1256,6 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             }
 
             Map<String, ContainerScroll.Offset> previousScroll = new HashMap<>(scrollOffsets);
-            String previousFocus = null;
-            for (PlacedWidget placed : placedWidgets) {
-                if (placed.widget() == getFocused()) {
-                    previousFocus = placed.id();
-                    break;
-                }
-            }
-
             buildWidgets(true);
 
             for (var entry : previousScroll.entrySet()) {
@@ -1238,9 +1265,6 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 }
             }
             updateScrolledTransforms();
-            if (previousFocus != null) {
-                widgetRegistry.widget(previousFocus).ifPresent(this::setFocused);
-            }
             break;
         }
     }
@@ -1497,6 +1521,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
 
     @Override
     public void removed() {
+        rememberFocusedWidget();
         if (!transitioningToEditor && lifecycleActive) {
             lifecycleActive = false;
             if (screenEventBindings != null) {

@@ -107,6 +107,9 @@ public final class AnchorHudEditorScreen extends Screen {
     private String selected;
     private String inspectedId;
     private List<String> sourceProperties = List.of();
+    private boolean sourceExpanded;
+    private int sourceHeaderIndex = -1;
+    private int sourceHeaderY = -1;
     private String status = "";
     private double dragStartX;
     private double dragStartY;
@@ -326,6 +329,7 @@ public final class AnchorHudEditorScreen extends Screen {
             inspectedId = null;
             inspectedVanilla = null;
             sourceProperties = List.of();
+            sourceExpanded = false;
             inspectorScroll = 0;
         }
     }
@@ -492,6 +496,7 @@ public final class AnchorHudEditorScreen extends Screen {
         List<InspectorLine> lines = inspectorLines(active);
         maxInspectorScroll = Math.max(0, lines.size() * INSPECTOR_LINE_HEIGHT - visibleHeight);
         inspectorScroll = Math.max(0, Math.min(maxInspectorScroll, inspectorScroll));
+        sourceHeaderY = sourceHeaderIndex < 0 ? -1 : top - inspectorScroll + sourceHeaderIndex * INSPECTOR_LINE_HEIGHT;
         if (bottom <= top) {
             inspectorScrollBar = null;
             return;
@@ -642,6 +647,7 @@ public final class AnchorHudEditorScreen extends Screen {
 
     private List<InspectorLine> inspectorLines(AnchorHudManager.HudHandle active) {
         List<InspectorLine> lines = new ArrayList<>();
+        sourceHeaderIndex = -1;
         if (choosingParent) {
             appendLine(lines, "CHOOSE PARENT", 0xFF8DF4AA);
             appendLine(lines, "Click another widget", 0xFFE5EEF5);
@@ -718,14 +724,17 @@ public final class AnchorHudEditorScreen extends Screen {
                             null, control.modified(), null, null, control));
                 }
             }
-            if (!active.id().equals(inspectedId)) {
-                JsonObject settings = manager.getWidgetSettings(active.id());
-                sourceProperties = HudInspectorProperties.flatten(settings);
-                inspectedId = active.id();
-            }
-            appendLine(lines, "SOURCE JSON", 0xFFFFCF64);
-            for (String property : sourceProperties) {
-                appendLine(lines, property, 0xFFB7CEDF);
+            sourceHeaderIndex = lines.size();
+            appendLine(lines, "SOURCE JSON " + (sourceExpanded ? "[-]" : "[+]") + " (read only)", 0xFFFFCF64);
+            if (sourceExpanded) {
+                if (!active.id().equals(inspectedId)) {
+                    JsonObject settings = manager.getWidgetSettings(active.id());
+                    sourceProperties = HudInspectorProperties.flatten(settings);
+                    inspectedId = active.id();
+                }
+                for (String property : sourceProperties) {
+                    appendLine(lines, property, 0xFFB7CEDF);
+                }
             }
         }
         return lines;
@@ -873,6 +882,11 @@ public final class AnchorHudEditorScreen extends Screen {
                 }
             }
             if (selected != null && insideInspector(mouseX, mouseY)) {
+                if (sourceHeaderY >= inspectorTop() && sourceHeaderY + INSPECTOR_LINE_HEIGHT <= inspectorBottom()
+                        && mouseY >= sourceHeaderY && mouseY < sourceHeaderY + INSPECTOR_LINE_HEIGHT) {
+                    sourceExpanded = !sourceExpanded;
+                    return true;
+                }
                 for (AppearanceHitbox hitbox : appearanceHitboxes) {
                     if (hitbox.contains(mouseX, mouseY)) {
                         if (hitbox.direction() == 0) {

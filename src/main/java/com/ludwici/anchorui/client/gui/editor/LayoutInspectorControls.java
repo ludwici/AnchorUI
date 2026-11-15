@@ -25,6 +25,11 @@ public final class LayoutInspectorControls {
     }
 
     public static List<Control> describe(String id, JsonObject source, HudLayoutOffsets overrides, boolean gridChild) {
+        return describe(id, source, overrides, gridChild, gridChild);
+    }
+
+    public static List<Control> describe(String id, JsonObject source, HudLayoutOffsets overrides,
+                                         boolean structuralChild, boolean gridChild) {
         if (source == null) {
             return List.of();
         }
@@ -59,7 +64,7 @@ public final class LayoutInspectorControls {
                 controls.add(control(overrides, id, "layout", "collapseHidden", "Collapse", value(effective, "layout", "collapseHidden", "false")));
             }
         }
-        if (effective.has(WidgetContainers.PARENT_FIELD) || gridChild) {
+        if (structuralChild || effective.has(WidgetContainers.PARENT_FIELD) || gridChild) {
             String enabled = value(effective, "layoutItem", "enabled", "true");
             if (!gridChild) {
                 controls.add(control(overrides, id, "layoutItem", "enabled", "Auto item", enabled));

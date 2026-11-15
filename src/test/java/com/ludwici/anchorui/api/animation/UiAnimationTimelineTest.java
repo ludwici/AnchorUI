@@ -128,8 +128,7 @@ public class UiAnimationTimelineTest {
                 """).getAsJsonObject();
         UiAnimationSpec disabled = UiAnimationSpec.parse(override, defaults);
         assertEquals(null, disabled.track(UiAnimationSpec.Trigger.OPEN));
-        assertThrows(IllegalArgumentException.class,
-                () -> spec("{\"animation\":{\"open\":{\"preset\":\"unknown\"}}}"));
+        assertThrows(IllegalArgumentException.class, () -> spec("{\"animation\":{\"open\":{\"preset\":\"unknown\"}}}"));
     }
 
     @Test

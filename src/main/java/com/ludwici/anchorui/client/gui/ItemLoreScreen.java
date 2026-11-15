@@ -856,7 +856,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                     continue;
                 }
                 WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
-                if (WidgetContainers.contains(WidgetAnimation.physicalBounds(frame, transform, animationFrame(placed, System.nanoTime())), mouseX, mouseY)) {
+                if (insideAnimatedBounds(placed, mouseX, mouseY, System.nanoTime())) {
                     candidate = placed.id();
                     break;
                 }
@@ -1539,10 +1539,9 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         for (int index = placedWidgets.size() - 1; index >= 0; index--) {
             PlacedWidget placed = placedWidgets.get(index);
             AbstractWidget widget = placed.widget();
-            if (!widget.visible || !widget.active || !insideClip(placed, mouseX, mouseY)) {
+            if (!widget.visible || !widget.active || !insideAnimatedBounds(placed, mouseX, mouseY, System.nanoTime())) {
                 continue;
             }
-            WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
             if (widget.mouseClicked(widgetMouseX(placed, mouseX, System.nanoTime()), widgetMouseY(placed, mouseY, System.nanoTime()), button)) {
                 if (minecraft.screen == this) {
                     if (getFocused() != widget) {
@@ -1577,7 +1576,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 return true;
             }
             AnchorLayout.Bounds frame = layoutBounds.get(placed.id());
-            if (frame == null || !WidgetContainers.contains(WidgetAnimation.physicalBounds(frame, transform, animationFrame(placed, System.nanoTime())), mouseX, mouseY)) {
+            if (frame == null || !insideAnimatedBounds(placed, mouseX, mouseY, System.nanoTime())) {
                 popup.closePopup();
             }
         }
@@ -1592,8 +1591,10 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         if (draggingWidget == null) {
             return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
         }
+        long now = System.nanoTime();
         WidgetTransforms.Transform transform = transforms.getOrDefault(draggingWidget.id(), WidgetTransforms.IDENTITY);
-        return draggingWidget.widget().mouseDragged(transform.inverseX(mouseX), transform.inverseY(mouseY), button, dragX / transform.scale(), dragY / transform.scale());
+        double scale = transform.scale() * animationFrame(draggingWidget, now).scale();
+        return draggingWidget.widget().mouseDragged(widgetMouseX(draggingWidget, mouseX, now), widgetMouseY(draggingWidget, mouseY, now), button, dragX / scale, dragY / scale);
     }
 
     @Override
@@ -1623,18 +1624,31 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         }
         for (int index = placedWidgets.size() - 1; index >= 0; index--) {
             PlacedWidget placed = placedWidgets.get(index);
-            if (!placed.widget().visible || !placed.widget().active || !insideClip(placed, mouseX, mouseY)) {
+            if (!placed.widget().visible || !placed.widget().active || !insideAnimatedBounds(placed, mouseX, mouseY, System.nanoTime())) {
                 continue;
             }
-            WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
-            AnchorLayout.Bounds frame = layoutBounds.get(placed.id());
-            if (frame != null && WidgetContainers.contains(WidgetAnimation.physicalBounds(frame, transform, animationFrame(placed, System.nanoTime())), mouseX, mouseY)
-                    && placed.widget().mouseScrolled(widgetMouseX(placed, mouseX, System.nanoTime()), widgetMouseY(placed, mouseY, System.nanoTime()), scrollX, scrollY)) {
+            if (placed.widget().mouseScrolled(widgetMouseX(placed, mouseX, System.nanoTime()), widgetMouseY(placed, mouseY, System.nanoTime()), scrollX, scrollY)) {
                 return true;
             }
         }
         return scrollContentsAt(mouseX, mouseY, scrollX, scrollY)
                 || super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+    }
+
+    private boolean insideAnimatedBounds(PlacedWidget placed, double mouseX, double mouseY, long now) {
+        if (!insideClip(placed, mouseX, mouseY)) {
+            return false;
+        }
+        AnchorLayout.Bounds frame = layoutBounds.get(placed.id());
+        if (frame == null) {
+            return false;
+        }
+        UiAnimationSpec.Frame animation = animationFrame(placed, now);
+        if (animation.opacity() <= 0.01) {
+            return false;
+        }
+        WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+        return WidgetContainers.contains(WidgetAnimation.physicalBounds(frame, transform, animation), mouseX, mouseY);
     }
 
     private boolean insideClip(PlacedWidget placed, double mouseX, double mouseY) {

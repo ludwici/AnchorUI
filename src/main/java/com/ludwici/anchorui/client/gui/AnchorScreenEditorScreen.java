@@ -223,7 +223,8 @@ public final class AnchorScreenEditorScreen extends Screen {
     }
 
     private void select(String id) {
-        if (id == null || !id.equals(inspectedId)) {
+        String previousId = selected == null ? null : selected.id();
+        if (!java.util.Objects.equals(id, previousId)) {
             inspectedId = null;
             sourceProperties = List.of();
             sourceExpanded = false;

@@ -5,10 +5,22 @@ on:
     branches:
       - "1.20.1"
       - "1.21.1"
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - "**/*.mdx"
+      - "**/*.adoc"
+      - "**/*.rst"
   pull_request:
     branches:
       - "1.20.1"
       - "1.21.1"
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - "**/*.mdx"
+      - "**/*.adoc"
+      - "**/*.rst"
   workflow_dispatch:
 
 permissions:

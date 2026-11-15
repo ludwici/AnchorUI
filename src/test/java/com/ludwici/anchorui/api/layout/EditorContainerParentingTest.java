@@ -36,14 +36,14 @@ public class EditorContainerParentingTest {
         HudLayoutOffsets offsets = new HudLayoutOffsets();
         assertNull(offsets.containerParent(child, null));
         assertEquals("test:left", offsets.containerParent(child, "test:left"));
-        offsets.setAnchor(child, new HudLayoutOffsets.AnchorOverride("test:right/__content",
+        offsets.setAnchor(child, new HudLayoutOffsets.AnchorOverride("test:right",
                 ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
         assertEquals("test:left", offsets.containerParent(child, "test:left"));
 
         offsets.setContainerParent(child, "test:right");
         offsets.set(child, -20, -10);
         assertEquals("test:right", offsets.containerParent(child, "test:left"));
-        assertEquals("test:right/__content", offsets.anchor(child).relativeTo());
+        assertEquals("test:right", offsets.anchor(child).relativeTo());
 
         Path path = directory.resolve("layout.json");
         HudLayoutStorage.save(path, offsets);
@@ -75,7 +75,7 @@ public class EditorContainerParentingTest {
         HudLayoutOffsets offsets = new HudLayoutOffsets();
         offsets.setContainerParent(child, right);
         offsets.setAnchor(child, new HudLayoutOffsets.AnchorOverride(
-                WidgetContainers.contentId(right), ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
+                right, ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
         offsets.set(child, -42, -7);
 
         var source = new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT,
@@ -86,7 +86,7 @@ public class EditorContainerParentingTest {
                 override.relativeTo(), source.x + offset.x(), source.y + offset.y());
         var frames = List.of(frame(left, "screen", 0, 0, 100, 40),
                 frame(right, "screen", 150, 20, 210, 80),
-                frame("test:existing", WidgetContainers.contentId(right), 0, 0, 40, 15),
+                frame("test:existing", right, 0, 0, 40, 15),
                 new AnchorLayout.Frame(child, attached, 50, 18));
         var result = ContainerLayout.resolve(600, 300, frames,
                 Map.of(left, new PaddingElement(), right, new PaddingElement(10, 10)),

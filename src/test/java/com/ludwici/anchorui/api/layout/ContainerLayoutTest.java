@@ -20,7 +20,7 @@ public class ContainerLayoutTest {
     @Test
     public void measuresChildrenIncludingPaddingAndPreservesFixedDimensions() {
         var frames = List.of(frame("demo:panel", "screen", 50, 60, 120, 70),
-                frame("demo:label", "demo:panel/__content", 3, 4, 40, 12));
+                frame("demo:label", "demo:panel", 3, 4, 40, 12));
         var result = ContainerLayout.resolve(400, 300, frames,
                 Map.of("demo:panel", new PaddingElement(5, 6, 7, 8)),
                 Map.of("demo:panel", new ContainerLayout.AutoSize(true, true)),
@@ -33,8 +33,8 @@ public class ContainerLayoutTest {
     public void nestedAutoContainersConvergeAndCanBeAnchoredToScreenCenter() {
         var outer = new AnchorLayout.Frame("demo:outer",
                 new PositionElement(ElementAnchor.CENTER, ElementAnchor.CENTER, "screen", 0, 0), 120, 90);
-        var frames = List.of(outer, frame("demo:inner", "demo:outer/__content", 3, 4, 1, 1),
-                frame("demo:text", "demo:inner/__content", 0, 0, 60, 14));
+        var frames = List.of(outer, frame("demo:inner", "demo:outer", 3, 4, 1, 1),
+                frame("demo:text", "demo:inner", 0, 0, 60, 14));
         var result = ContainerLayout.resolve(400, 300, frames,
                 Map.of("demo:outer", new PaddingElement(6, 5, 6, 5),
                         "demo:inner", new PaddingElement(2, 3, 2, 3)),
@@ -49,7 +49,7 @@ public class ContainerLayoutTest {
     @Test
     public void fixedSizeContainersAreUnaffected() {
         var frames = List.of(frame("demo:fixed", "screen", 10, 15, 210, 95),
-                frame("demo:child", "demo:fixed/__content", 0, 0, 300, 130));
+                frame("demo:child", "demo:fixed", 0, 0, 300, 130));
         var result = ContainerLayout.resolve(400, 300, frames,
                 Map.of("demo:fixed", new PaddingElement(10, 10, 10, 10)),
                 Map.of(), Map.of("demo:child", "demo:fixed"), ignored -> {});

@@ -1,6 +1,7 @@
 package com.ludwici.anchorui.api.layout;
 
 import com.google.gson.JsonParser;
+import com.ludwici.anchorui.api.style.PaddingElement;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -11,10 +12,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class ContainerScrollTest {
     @Test
     public void calculatesOverflowForBothAxes() {
-        var bounds = Map.of("demo:container/__content", new AnchorLayout.Bounds(12, 14, 100, 60),
+        var bounds = Map.of("demo:container", new AnchorLayout.Bounds(10, 12, 104, 64),
                 "demo:child", new AnchorLayout.Bounds(42, 50, 200, 140));
         var limits = ContainerScroll.measure(bounds, Map.of("demo:child", "demo:container"),
-                Map.of("demo:container", new ContainerScroll.Config(true, true, 18)));
+                Map.of("demo:container", new ContainerScroll.Config(true, true, 18)),
+                Map.of("demo:container", new PaddingElement(2, 2)));
         assertEquals(new ContainerScroll.Limits(130, 116), limits.get("demo:container"));
     }
 

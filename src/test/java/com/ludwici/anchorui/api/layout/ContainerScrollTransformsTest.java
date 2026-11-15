@@ -1,6 +1,7 @@
 package com.ludwici.anchorui.api.layout;
 
 import org.junit.jupiter.api.Test;
+import com.ludwici.anchorui.api.style.PaddingElement;
 
 import java.util.Map;
 import java.util.Set;
@@ -14,7 +15,6 @@ public class ContainerScrollTransformsTest {
         Map<String, AnchorLayout.Bounds> bounds = Map.of(
                 "screen", new AnchorLayout.Bounds(0, 0, 400, 300),
                 "demo:panel", new AnchorLayout.Bounds(50, 30, 130, 80),
-                "demo:panel/__content", new AnchorLayout.Bounds(58, 38, 114, 64),
                 "demo:child", new AnchorLayout.Bounds(60, 40, 100, 200)
         );
         Map<String, String> parents = Map.of("demo:child", "demo:panel");
@@ -32,7 +32,8 @@ public class ContainerScrollTransformsTest {
         assertNotEquals(original.get("demo:child").physical(bounds.get("demo:child")),
                 scrolled.get("demo:child").physical(bounds.get("demo:child")));
 
-        var viewport = WidgetContainers.clips(bounds, parents, Set.of("demo:panel"), scrolled);
+        var viewport = WidgetContainers.clips(bounds, parents, Set.of("demo:panel"),
+                Map.of("demo:panel", new PaddingElement(8, 8)), scrolled);
         assertEquals(new AnchorLayout.Bounds(86, 54, 58, 32), viewport.get("demo:child"));
     }
 
@@ -41,9 +42,7 @@ public class ContainerScrollTransformsTest {
         Map<String, AnchorLayout.Bounds> bounds = Map.of(
                 "screen", new AnchorLayout.Bounds(0, 0, 500, 400),
                 "demo:outer", new AnchorLayout.Bounds(20, 20, 160, 130),
-                "demo:outer/__content", new AnchorLayout.Bounds(24, 24, 152, 122),
                 "demo:inner", new AnchorLayout.Bounds(30, 40, 100, 80),
-                "demo:inner/__content", new AnchorLayout.Bounds(34, 44, 92, 72),
                 "demo:leaf", new AnchorLayout.Bounds(40, 60, 80, 30)
         );
         Map<String, String> parents = Map.of("demo:inner", "demo:outer", "demo:leaf", "demo:inner");

@@ -13,7 +13,6 @@ public class WidgetTransformsTest {
         var bounds = Map.of(
                 "screen", new AnchorLayout.Bounds(0, 0, 500, 300),
                 "demo:parent", new AnchorLayout.Bounds(100, 50, 200, 150),
-                "demo:parent/__content", new AnchorLayout.Bounds(110, 60, 180, 130),
                 "demo:child", new AnchorLayout.Bounds(110, 60, 30, 20));
         var transforms = WidgetTransforms.resolve(bounds, Map.of("demo:child", "demo:parent"),
                 Map.of("demo:parent", new WidgetTransforms.Group(0.5, false)));

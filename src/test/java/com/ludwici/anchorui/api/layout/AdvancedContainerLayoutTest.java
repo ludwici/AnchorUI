@@ -77,8 +77,8 @@ public class AdvancedContainerLayoutTest {
     @Test
     public void rowGrowAllocatesExtraSpaceAndPreservesOrder() {
         var frames = List.of(frame("x:panel", "screen", 0, 0, 200, 50),
-                frame("x:a", "x:panel/__content", 0, 0, 40, 20),
-                frame("x:b", "x:panel/__content", 0, 0, 50, 20));
+                frame("x:a", "x:panel", 0, 0, 40, 20),
+                frame("x:b", "x:panel", 0, 0, 50, 20));
         var grow = StackLayout.Rules.parse(json("""
                 {"layoutItem":{"grow":1}}
                 """));
@@ -95,8 +95,8 @@ public class AdvancedContainerLayoutTest {
     @Test
     public void rowShrinkRespectsMinimumSizesAndRestoresWhenSpaceReturns() {
         var frames = List.of(frame("x:panel", "screen", 0, 0, 100, 50),
-                frame("x:a", "x:panel/__content", 0, 0, 80, 20),
-                frame("x:b", "x:panel/__content", 0, 0, 80, 20));
+                frame("x:a", "x:panel", 0, 0, 80, 20),
+                frame("x:b", "x:panel", 0, 0, 80, 20));
         var first = StackLayout.Rules.parse(json("""
                 {"layoutItem":{"shrink":1,"minWidth":60}}
                 """));
@@ -123,9 +123,9 @@ public class AdvancedContainerLayoutTest {
     public void rowWrapAddsLinesAndAutoSizesCrossAxis() {
         String p = "x:panel";
         var frames = List.of(frame(p, "screen", 5, 6, 120, 1),
-                frame("x:a", p + "/__content", 0, 0, 60, 10),
-                frame("x:b", p + "/__content", 0, 0, 50, 20),
-                frame("x:c", p + "/__content", 0, 0, 40, 12));
+                frame("x:a", p, 0, 0, 60, 10),
+                frame("x:b", p, 0, 0, 50, 20),
+                frame("x:c", p, 0, 0, 40, 12));
         var result = layout(frames, Map.of(p, new PaddingElement()),
                 Map.of(p, new ContainerLayout.AutoSize(false, true)),
                 Map.of("x:a", p, "x:b", p, "x:c", p),
@@ -142,9 +142,9 @@ public class AdvancedContainerLayoutTest {
     public void columnWrapCreatesAdditionalColumns() {
         String p = "x:panel";
         var frames = List.of(frame(p, "screen", 0, 0, 1, 50),
-                frame("x:a", p + "/__content", 0, 0, 30, 20),
-                frame("x:b", p + "/__content", 0, 0, 15, 20),
-                frame("x:c", p + "/__content", 0, 0, 25, 20));
+                frame("x:a", p, 0, 0, 30, 20),
+                frame("x:b", p, 0, 0, 15, 20),
+                frame("x:c", p, 0, 0, 25, 20));
         var result = layout(frames, Map.of(p, new PaddingElement()),
                 Map.of(p, new ContainerLayout.AutoSize(true, false)),
                 Map.of("x:a", p, "x:b", p, "x:c", p),
@@ -161,10 +161,10 @@ public class AdvancedContainerLayoutTest {
     public void fixedGridUsesEvenColumnsAndAlignsEachCell() {
         String p = "x:grid";
         var frames = List.of(frame(p, "screen", 0, 0, 320, 130),
-                frame("x:a", p + "/__content", 0, 0, 50, 10),
-                frame("x:b", p + "/__content", 0, 0, 70, 20),
-                frame("x:c", p + "/__content", 0, 0, 40, 12),
-                frame("x:d", p + "/__content", 0, 0, 30, 30));
+                frame("x:a", p, 0, 0, 50, 10),
+                frame("x:b", p, 0, 0, 70, 20),
+                frame("x:c", p, 0, 0, 40, 12),
+                frame("x:d", p, 0, 0, 30, 30));
         var result = layout(frames, Map.of(p, new PaddingElement(10, 10)),
                 Map.of(), Map.of("x:a", p, "x:b", p, "x:c", p, "x:d", p),
                 Map.of(p, ContainerAutoLayout.parse(json("""
@@ -181,9 +181,9 @@ public class AdvancedContainerLayoutTest {
     public void gridAutoSizeMeasuresColumnsAndRows() {
         String p = "x:grid";
         var frames = List.of(frame(p, "screen", 0, 0, 1, 1),
-                frame("x:a", p + "/__content", 0, 0, 30, 10),
-                frame("x:b", p + "/__content", 0, 0, 50, 20),
-                frame("x:c", p + "/__content", 0, 0, 80, 14));
+                frame("x:a", p, 0, 0, 30, 10),
+                frame("x:b", p, 0, 0, 50, 20),
+                frame("x:c", p, 0, 0, 80, 14));
         var result = layout(frames, Map.of(p, new PaddingElement(2, 2)),
                 Map.of(p, new ContainerLayout.AutoSize(true, true)),
                 Map.of("x:a", p, "x:b", p, "x:c", p),
@@ -199,10 +199,10 @@ public class AdvancedContainerLayoutTest {
     public void collapsingGridHiddenCellsReflowsEveryStructuralChild() {
         String p = "x:grid";
         var frames = List.of(frame(p, "screen", 0, 0, 150, 100),
-                frame("x:a", p + "/__content", 0, 0, 20, 10),
-                frame("x:hidden", p + "/__content", 0, 0, 30, 12),
-                frame("x:c", p + "/__content", 0, 0, 20, 10),
-                frame("x:manual", p + "/__content", 7, 8, 40, 20));
+                frame("x:a", p, 0, 0, 20, 10),
+                frame("x:hidden", p, 0, 0, 30, 12),
+                frame("x:c", p, 0, 0, 20, 10),
+                frame("x:manual", p, 7, 8, 40, 20));
         var parents = Map.of("x:a", p, "x:hidden", p, "x:c", p, "x:manual", p);
         var config = Map.of(p, ContainerAutoLayout.parse(json("""
                 {"layout":{"type":"grid","columns":2,"columnGap":10,"rowGap":10,"collapseHidden":true}}
@@ -258,8 +258,8 @@ public class AdvancedContainerLayoutTest {
     public void growClampsAtMaximumAndRedistributesUnusedSpace() {
         String p = "x:flex";
         var frames = List.of(frame(p, "screen", 0, 0, 180, 40),
-                frame("x:a", p + "/__content", 0, 0, 40, 20),
-                frame("x:b", p + "/__content", 0, 0, 40, 20));
+                frame("x:a", p, 0, 0, 40, 20),
+                frame("x:b", p, 0, 0, 40, 20));
         var first = StackLayout.Rules.parse(json("""
                 {"layoutItem":{"grow":1,"maxWidth":60}}
                 """));
@@ -280,9 +280,9 @@ public class AdvancedContainerLayoutTest {
     public void explicitGridCellSizesAreStableWhenContainerIsLarger() {
         String p = "x:grid";
         var frames = List.of(frame(p, "screen", 0, 0, 300, 150),
-                frame("x:a", p + "/__content", 0, 0, 50, 15),
-                frame("x:b", p + "/__content", 0, 0, 50, 15),
-                frame("x:c", p + "/__content", 0, 0, 50, 15));
+                frame("x:a", p, 0, 0, 50, 15),
+                frame("x:b", p, 0, 0, 50, 15),
+                frame("x:c", p, 0, 0, 50, 15));
         var result = layout(frames, Map.of(p, new PaddingElement()), Map.of(),
                 Map.of("x:a", p, "x:b", p, "x:c", p),
                 Map.of(p, ContainerAutoLayout.parse(json("""
@@ -298,8 +298,8 @@ public class AdvancedContainerLayoutTest {
     public void wrappingFallsBackToSingleLineWhenMainAxisIsAutoSized() {
         String p = "x:row";
         var frames = List.of(frame(p, "screen", 0, 0, 1, 1),
-                frame("x:a", p + "/__content", 0, 0, 60, 12),
-                frame("x:b", p + "/__content", 0, 0, 60, 20));
+                frame("x:a", p, 0, 0, 60, 12),
+                frame("x:b", p, 0, 0, 60, 20));
         var result = layout(frames, Map.of(p, new PaddingElement(2, 2)),
                 Map.of(p, new ContainerLayout.AutoSize(true, true)),
                 Map.of("x:a", p, "x:b", p),
@@ -317,10 +317,10 @@ public class AdvancedContainerLayoutTest {
         String outer = "x:outer";
         String inner = "x:inner";
         var frames = List.of(frame(outer, "screen", 0, 0, 200, 60),
-                frame(inner, outer + "/__content", 0, 0, 50, 60),
-                frame("x:side", outer + "/__content", 0, 0, 40, 20),
-                frame("x:cell1", inner + "/__content", 0, 0, 30, 20),
-                frame("x:cell2", inner + "/__content", 0, 0, 30, 20));
+                frame(inner, outer, 0, 0, 50, 60),
+                frame("x:side", outer, 0, 0, 40, 20),
+                frame("x:cell1", inner, 0, 0, 30, 20),
+                frame("x:cell2", inner, 0, 0, 30, 20));
         var layouts = new java.util.LinkedHashMap<String, ContainerAutoLayout>();
         layouts.put(inner, ContainerAutoLayout.parse(json("""
                 {"layout":{"type":"grid","columns":2,"columnGap":10}}
@@ -342,8 +342,8 @@ public class AdvancedContainerLayoutTest {
     public void gridKeepsThreeDeclaredTracksWithOnlyTwoCells() {
         String p = "x:grid";
         var frames = List.of(frame(p, "screen", 0, 0, 300, 50),
-                frame("x:a", p + "/__content", 0, 0, 20, 20),
-                frame("x:b", p + "/__content", 0, 0, 20, 20));
+                frame("x:a", p, 0, 0, 20, 20),
+                frame("x:b", p, 0, 0, 20, 20));
         var result = layout(frames, Map.of(p, new PaddingElement()), Map.of(),
                 Map.of("x:a", p, "x:b", p),
                 Map.of(p, ContainerAutoLayout.parse(json("""

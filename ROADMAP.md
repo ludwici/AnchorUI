@@ -107,14 +107,14 @@ The completed functionality above does **not** imply finished visual consistency
 
 ### Stage 4 — State, lifecycle and screen navigation refinements
 
-**Priority: medium.** Local UI State and basic screen actions are already implemented.
+**Status: completed and confirmed in Minecraft.** Local UI State, focus restoration and screen navigation are implemented and tested. Vanilla F3+T remains unchanged; resource-pack reload regression checks are tracked separately.
 
 - [x] Add explicit, optional `open_screen.stateHandoff` mapping selected source UI State keys into typed destination keys; preserve existing default behavior without a mapping and avoid global shared-state storage.
 - [x] Preserve keyboard focus by namespaced widget ID through screen re-entry and widget rebuilding, including F8 and keyed lists; reject missing navigation targets and invalid transfers without replacing the current screen.
 - [x] Document normal navigation vs F8 lifecycle events and Local UI State lifetime; display navigation errors to the player and log them.
 - [x] Add two-screen navigation demo plus unit/resource tests for selective transfer, defaults, invalid mappings and missing targets.
-- [ ] In-game verification of screen focus, F8 round-trips, resource reload and nested control behavior; further refine handling if the client QA reveals regressions.
-- [ ] Consider additional state scopes only when concrete use cases require them.
+- [x] In-game verification of Stage 4 screen navigation, state handoff/defaults, focus and F8 round-trips confirmed by the user. Resource reload is tested from the world using vanilla F3+T and remains a separate cross-stage regression check.
+- [x] Scope decision: additional shared/persistent State Scopes are deferred until a concrete cross-screen use case justifies expanding the public API.
 
 **Done when:** independent screens can compose safely with predictable state lifetime and focus restoration.
 
@@ -167,7 +167,7 @@ The completed functionality above does **not** imply finished visual consistency
 1. **In-game verification of `cases` and guarded actions**, plus the remaining collapsed-space policy decision.
 2. **In-game automatic-layout QA** for rows, columns, flex, wrap, grid, editor positioning, visibility changes and scroll/clipping.
 3. **Visual consistency and interaction QA** (especially progress bars, textures and blur).
-4. **Screen lifecycle client QA and optional state handoff** (core navigation transfer/focus work implemented).
+4. **Screen lifecycle and optional state handoff** — completed and confirmed in Minecraft; optional wider state scopes deferred.
 5. **Animations**, alongside API stability, performance work, English documentation and additional test coverage.
 
 This is a working backlog, not a release schedule. Update completion checkboxes only when code and tests actually land.

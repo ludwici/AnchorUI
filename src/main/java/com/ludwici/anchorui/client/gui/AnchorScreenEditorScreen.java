@@ -2,6 +2,7 @@ package com.ludwici.anchorui.client.gui;
 
 import com.ludwici.anchorui.KeyRegistry;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
+import com.ludwici.anchorui.api.layout.WidgetContainers;
 import com.ludwici.anchorui.api.style.ElementAnchor;
 import com.ludwici.anchorui.client.hud.AnchorHudManager;
 import com.ludwici.anchorui.client.hud.HudInspectorProperties;
@@ -95,6 +96,8 @@ public final class AnchorScreenEditorScreen extends Screen {
     private Button point;
     private Button anchor;
     private boolean pickingParent;
+    private String pendingContainer;
+    private final List<Button> parentChoiceButtons = new ArrayList<>();
     private boolean compact;
     private boolean inspectorCollapsed;
     private int inspectorWidth = WIDTH;
@@ -148,6 +151,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         add(x + 114, y + 101, 100, "Reset all", button -> resetAll());
         positionControls();
         createAppearanceInput();
+        createParentChoices();
         updateControls();
     }
 
@@ -217,7 +221,11 @@ public final class AnchorScreenEditorScreen extends Screen {
         hide.setMessage(Component.literal(hasSelection && selected.hiddenByUser() ? "Show" : "Hide"));
         parent.setMessage(Component.literal(pickingParent ? "Pick target..." : "Parent"));
         for (Button button : controls) {
-            button.visible = !compact && !inspectorCollapsed && editingAppearance == null;
+            button.visible = !compact && !inspectorCollapsed
+                    && editingAppearance == null && pendingContainer == null;
+        }
+        for (Button button : parentChoiceButtons) {
+            button.visible = pendingContainer != null && editingAppearance == null;
         }
     }
 
@@ -255,14 +263,7 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     private void selectFromList(WidgetListPanel.Entry entry) {
         if (pickingParent && selected != null) {
-            if (target.editorAnchor(selected.id(), entry.id(), selected.point(), selected.anchor())) {
-                pickingParent = false;
-                status = "Parent set to " + entry.id();
-            } else {
-                status = "Invalid or circular parent: " + entry.id();
-            }
-            refreshSelection();
-            updateControls();
+            chooseParentTarget(entry.id());
             return;
         }
         select(entry.id());
@@ -346,7 +347,75 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     private void pickParent() {
         pickingParent = !pickingParent;
-        status = pickingParent ? "Click a widget, or empty space for screen" : "";
+        pendingContainer = null;
+        status = pickingParent ? "Pick a widget; container offers anchor/content/move" : "";
+        updateControls();
+    }
+
+    private void chooseParentTarget(String id) {
+        if (selected == null || selected.id().equals(id)) {
+            status = "Choose a different widget";
+            return;
+        }
+        if (target.editorIsContainer(id)) {
+            pendingContainer = id;
+            pickingParent = false;
+            status = "Choose how to attach to " + id;
+            updateControls();
+            return;
+        }
+        boolean success = target.editorAnchor(selected.id(), id, selected.point(), selected.anchor());
+        status = success ? "Anchor target: " + id : "Invalid or circular anchor: " + id;
+        if (success) {
+            pickingParent = false;
+        }
+        refreshSelection();
+        updateControls();
+    }
+
+    private void createParentChoices() {
+        parentChoiceButtons.clear();
+        int boxWidth = Math.min(276, Math.max(170, width - 20));
+        int left = (width - boxWidth) / 2;
+        int top = Math.max(10, height / 2 - 65);
+        String[] labels = {"Anchor to container", "Anchor to content area", "Move into container", "Cancel"};
+        for (int index = 0; index < labels.length; index++) {
+            final int mode = index;
+            Button button = Button.builder(Component.literal(labels[index]), pressed -> applyParentChoice(mode))
+                    .bounds(left + 8, top + 25 + index * 23, boxWidth - 16, 20).build();
+            parentChoiceButtons.add(addRenderableWidget(button));
+        }
+        updateControls();
+    }
+
+    private void applyParentChoice(int mode) {
+        if (mode == 3) {
+            pendingContainer = null;
+            status = "Parent selection cancelled";
+            updateControls();
+            return;
+        }
+        if (pendingContainer == null || selected == null) {
+            return;
+        }
+        String container = pendingContainer;
+        boolean success = switch (mode) {
+            case 0 -> target.editorAnchor(selected.id(), container, selected.point(), selected.anchor());
+            case 1 -> target.editorAnchor(selected.id(), WidgetContainers.contentId(container), selected.point(), selected.anchor());
+            case 2 -> target.editorMoveIntoContainer(selected.id(), container);
+            default -> false;
+        };
+        if (success) {
+            pendingContainer = null;
+            status = switch (mode) {
+                case 0 -> "Anchor target: " + container;
+                case 1 -> "Anchor target: " + WidgetContainers.contentId(container);
+                default -> "Moved into " + container + " (automatic layout)";
+            };
+        } else {
+            status = "Invalid parent choice (cycle or layout constraints)";
+        }
+        refreshSelection();
         updateControls();
     }
 
@@ -418,6 +487,14 @@ public final class AnchorScreenEditorScreen extends Screen {
                     graphics.drawString(font, font.plainSubstrByWidth(status, appearanceInput.getWidth()),
                             modalX + 8, modalY + 74, 0xFFFFA68A, false);
                 }
+            }
+            if (pendingContainer != null) {
+                int boxWidth = Math.min(276, Math.max(170, width - 20));
+                int left = (width - boxWidth) / 2;
+                int top = Math.max(10, height / 2 - 65);
+                graphics.fill(left - 2, top - 2, left + boxWidth + 2, top + 122, 0xFF162332);
+                graphics.drawString(font, font.plainSubstrByWidth("Parent: " + pendingContainer, boxWidth - 14),
+                        left + 8, top + 8, SELECTED, false);
             }
             super.render(graphics, mouseX, mouseY, partialTick);
             widgetList.render(graphics, font, mouseX, mouseY, frameEntries,
@@ -698,6 +775,10 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (pendingContainer != null) {
+            super.mouseClicked(mouseX, mouseY, button);
+            return true;
+        }
         if (editingAppearance != null) {
             super.mouseClicked(mouseX, mouseY, button);
             return true;
@@ -800,14 +881,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         }
         ItemLoreScreen.EditorHandle hit = hit(mouseX, mouseY);
         if (pickingParent && selected != null) {
-            String parent = hit == null ? "screen" : hit.id();
-            if (target.editorAnchor(selected.id(), parent, selected.point(), selected.anchor())) {
-                status = "";
-            } else {
-                status = "Invalid or circular parent";
-            }
-            pickingParent = false;
-            refreshSelection();
+            chooseParentTarget(hit == null ? "screen" : hit.id());
             return true;
         }
         select(hit == null ? null : hit.id());
@@ -914,6 +988,14 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (pendingContainer != null) {
+            if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                pendingContainer = null;
+                pickingParent = false;
+                updateControls();
+            }
+            return true;
+        }
         if (editingAppearance != null) {
             if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
                 closeAppearanceInput();

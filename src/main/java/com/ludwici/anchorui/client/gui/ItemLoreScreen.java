@@ -101,6 +101,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     private List<PlacedWidget> visibilityOrder = List.of();
     private final Map<String, UiEventBindings> widgetEventBindings = new HashMap<>();
     private final Map<String, ItemContext> widgetItemContexts = new HashMap<>();
+    private final Map<String, String> resolvedWidgetParents = new HashMap<>();
     private List<TemplateListState> templateLists = List.of();
     private final Set<String> selfDispatchingClicks = new HashSet<>();
     private final UiHoverTracker hoverTracker = new UiHoverTracker();
@@ -903,6 +904,8 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         visibilityOrder = List.of();
         widgetEventBindings.clear();
         widgetItemContexts.clear();
+        resolvedWidgetParents.clear();
+        resolvedWidgetParents.putAll(loreEntity.widgetParents);
         templateLists = List.of();
         selfDispatchingClicks.clear();
         hoverTracker.reset();
@@ -944,6 +947,9 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                             LoreEntity.UiElement rowElement = new LoreEntity.UiElement(row.settings());
                             String rowId = WidgetIds.id(rowElement.id, loreEntity.namespace);
                             widgetItemContexts.put(rowId, row.itemContext());
+                            if (row.parentId() != null) {
+                                resolvedWidgetParents.put(rowId, row.parentId());
+                            }
                             declare(definitions, rowElement, rowId, null);
                         }
                     }
@@ -1015,7 +1021,8 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                             WidgetIds.reference(p.relativeTo, loreEntity.namespace), p.x, p.y);
                     created.add(new PlacedWidget(definition.id(), retainedWidget.widget(), style, position,
                             retainedWidget.context(), retainedWidget.visibleWhen(), retainedWidget.enabledWhen(),
-                            retainedWidget.baseVisible(), retainedWidget.baseActive(), retainedWidget.containerParent(),
+                            retainedWidget.baseVisible(), retainedWidget.baseActive(),
+                            resolvedWidgetParents.getOrDefault(definition.id(), retainedWidget.containerParent()),
                             retainedWidget.clipChildren(), retainedWidget.group(), retainedWidget.autoSize(),
                             retainedWidget.scroll(), retainedWidget.preferredWidth(), retainedWidget.preferredHeight()));
                 } else {
@@ -1122,7 +1129,8 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         widgetRegistry.attach(id, widget);
         boolean panel = widget instanceof PanelWidget;
         created.add(new PlacedWidget(id, widget, settings, position, context,
-                visibleWhen, enabledWhen, widget.visible, widget.active, WidgetContainers.parent(element.settings),
+                visibleWhen, enabledWhen, widget.visible, widget.active,
+                resolvedWidgetParents.getOrDefault(id, WidgetContainers.parent(element.settings)),
                 panel && (WidgetContainers.clipChildren(element.settings) || settings.scroll.enabled()),
                 panel ? WidgetContainers.group(element.settings) : null,
                 panel ? settings.autoSize : ContainerLayout.AutoSize.NONE,

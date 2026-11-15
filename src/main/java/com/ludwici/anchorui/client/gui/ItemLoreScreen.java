@@ -265,7 +265,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             String type = widgetRegistry.definition(placed.id())
                     .map(definition -> definition.type.toString()).orElse("");
             entries.add(new WidgetListPanel.Entry(placed.id(), placed.widget().visible, false,
-                    type, placed.containerParent()));
+                    type, currentScreenOffsets().containerParent(placed.id(), placed.containerParent())));
         }
         return List.copyOf(entries);
     }
@@ -320,6 +320,49 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         } else {
             candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(parent, point, anchor));
         }
+        return useCandidate(candidate);
+    }
+
+    public boolean editorIsContainer(String id) {
+        for (PlacedWidget placed : placedWidgets) {
+            if (placed.id().equals(id)) {
+                return placed.widget() instanceof PanelWidget;
+            }
+        }
+        return false;
+    }
+
+    public boolean editorMoveIntoContainer(String id, String containerId) {
+        if (editingScreenOffsets == null || id.equals(containerId) || !editorIsContainer(containerId)) {
+            return false;
+        }
+        PlacedWidget widget = null;
+        for (PlacedWidget placed : placedWidgets) {
+            if (placed.id().equals(id)) {
+                widget = placed;
+                break;
+            }
+        }
+        if (widget == null) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingScreenOffsets.copy();
+        candidate.setContainerParent(id, containerId);
+        candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(
+                WidgetContainers.contentId(containerId), ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
+        candidate.set(id, -widget.position().x, -widget.position().y);
+        candidate.setSettingOverride(id, "layoutItem", "enabled", new com.google.gson.JsonPrimitive(true));
+        return useCandidate(candidate);
+    }
+
+    public boolean editorMoveToRoot(String id) {
+        if (editingScreenOffsets == null || !layoutBounds.containsKey(id)) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingScreenOffsets.copy();
+        candidate.setContainerParent(id, "screen");
+        candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(
+                "screen", ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
         return useCandidate(candidate);
     }
 
@@ -509,8 +552,9 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                         scrollConfigs.put(placed.id(), placed.scroll());
                     }
                 }
-                if (placed.containerParent() != null) {
-                    parents.put(placed.id(), placed.containerParent());
+                String structuralParent = offsets.containerParent(placed.id(), placed.containerParent());
+                if (structuralParent != null) {
+                    parents.put(placed.id(), structuralParent);
                 }
                 StackLayout.Rules rules = StackLayout.Rules.parse(currentSettings);
                 itemRules.put(placed.id(), rules);
@@ -1047,7 +1091,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         enabledScratch.clear();
         HudLayoutOffsets overrides = currentScreenOffsets();
         for (PlacedWidget placed : placedWidgets) {
-            String parent = placed.containerParent();
+            String parent = offsets.containerParent(placed.id(), placed.containerParent());
             boolean parentVisible = parent == null || visibilityScratch.getOrDefault(parent, false);
             boolean parentEnabled = parent == null || enabledScratch.getOrDefault(parent, false);
             boolean shown = parentVisible && placed.baseVisible() && !overrides.isHidden(placed.id())

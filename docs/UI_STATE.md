@@ -154,3 +154,9 @@ if (context.screen() instanceof UiStateHost host) {
 ```
 
 Switch **Skills** and **Inventory**, verify the bound tab label updates immediately, toggle **Details** to show/hide the panel, and resize the GUI. Reopen the screen to confirm the original state is restored.
+
+## Resource reload of an open screen
+
+After Minecraft's **F3+T** resource reload, an open AnchorUI screen with a resource document ID detects the new document revision and rebuilds from the refreshed resource pack **without closing and reopening the screen**. Compatible declared Local UI State keys keep their current values; newly declared keys start from the new JSON defaults, and keys whose JSON type changed reset to the new default. The reload does not replay `onOpen`/`onClose` solely because the document changed.
+
+If the new document is missing, the previously loaded UI remains open. If the new layout is rejected, AnchorUI restores the previous document/state and logs the reason. Invalid individual widget settings may still produce skipped-widget diagnostics. Test these behaviors with [Stage 3 QA](QA_STAGE_3.md).

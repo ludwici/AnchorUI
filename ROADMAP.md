@@ -82,7 +82,7 @@ The completed functionality above does **not** imply finished visual consistency
 
 ### Stage 3 — Consistent appearance and input polish
 
-**Priority: high; can proceed alongside Stage 2.**
+**Status: main keyboard, rendering, color/style diagnostics and resource-reload fixes implemented; in-game verification and remaining accessibility/blur QA are still required.**
 
 - [x] Add a component-aware **VISUAL / CONTENT** inspector to HUD and screen F8 editors: editable text, basic colors, texture resource paths, sizes, basic widget styles and typed controls.
 - [x] Register custom editable widget fields through an explicit Java `WidgetEditorRegistry`; persist appearance overrides separately from resource packs and validate edits.
@@ -92,13 +92,16 @@ The completed functionality above does **not** imply finished visual consistency
 - [x] Share both RPG HUD bar backgrounds, padding and border styling through `anchorui:style/rpg_progress`, with focused geometry/style tests (in-game rendering QA remains).
 - [x] Replace Boolean `-/+` inspector steppers with real checkbox controls in both F8 editors (including Java-registered Boolean fields).
 - [x] Add explicit `focused` / `hoverFocused` button/control texture variants, visible keyboard-focus fallback outlines, and one-open-dropdown popup layering.
-- [ ] In-game QA for appearance editing, resource reload, modal focus and custom Java widget codecs.
-- [ ] Unify visual style inheritance and appearance across progress bars, buttons, panels and interactive controls, including hover/disabled/focused states where appropriate.
-- [ ] Verify matching borders/frames on RPG HUD progress bars; keep the earlier second-bar regression in the QA suite.
-- [ ] Audit rendering order for screen backgrounds, blur, outlines, overlays, tooltips and clipping.
-- [ ] Improve missing-texture and malformed-style diagnostics; test F3+T reload and resource-pack replacement.
-- [ ] Improve keyboard focus, navigation, tab order and accessibility for interactive screens.
-- [ ] Extend demos with consistent texture/scale themes, including small GUI scales.
+- [x] Share appearance inheritance between progress bars, panels, skinned buttons and state controls; use one HEX parser for background/text/skin colors, respecting `#AARRGGBB` text alpha. Style merging and variant priorities are covered by unit tests.
+- [x] Validate equal RPG progress bar dimensions, frame, padding and border inheritance in a dedicated regression test; in-game rendering parity still needs confirmation.
+- [x] Render built-in rich text Tooltip after floating Select popups and outside child scissors; suppress tooltips from text hidden underneath an open popup. The popup remains above ordinary widgets and scroll indicators.
+- [x] Warn once per reload about missing texture files and missing style references, with expected resource paths; include widget ID/type in configuration errors and skip malformed root documents instead of crashing reload.
+- [x] Detect resource-pack reloads while a screen is open, rebuild the new screen document without firing spurious lifecycle events, preserve compatible Local UI State keys, and roll back if the reloaded document fails layout validation.
+- [x] Implement Tab/Shift+Tab traversal that skips hidden, inactive, clipped and offscreen widgets, while allowing nested controls to consume Tab internally; preserve previously implemented focused/hoverFocused textures and focus outlines.
+- [x] Add `stage3_compact_demo`, an input/skin/pop-up small-scale test screen, and explicit RPG progress parity resource tests.
+- [ ] In-game QA for appearance editor, scaled/clipped keyboard and mouse hitboxes, Select popup, Color Picker modal focus, F3+T, nested tooltips and custom Java widget codecs. See [Stage 3 QA](docs/QA_STAGE_3.md).
+- [ ] Verify the complete screen background/blur/outline/tooltip order in Minecraft (including modded overlays and small GUI scales); unit tests cannot certify GPU rendering order.
+- [ ] Finish accessibility/narration and custom widget tab-order review after in-client checks; current focus traversal covers built-in and registered active widgets, but screen reader behavior is not fully verified.
 
 **Done when:** shared style resources give consistent results across built-in widgets, with stable rendering and input behavior.
 

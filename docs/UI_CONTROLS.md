@@ -413,3 +413,11 @@ See [Local UI State](UI_STATE.md) and [UI Events](UI_EVENTS.md) for the complete
 ```
 
 Switch Skills / Inventory / Quests and confirm the conditional label changes. Toggle Show details to hide/reveal the difficulty label. Toggle Notifications. Open the Difficulty dropdown, change selection and confirm the bound text updates. Each change should also be reported in chat through the registered demo `onChange` action. Close and reopen the screen to confirm defaults are restored.
+
+## Keyboard focus and Stage 3 visual QA
+
+Tab / Shift+Tab move forward/back through eligible interactive widgets in screen document order, skipping disabled, hidden, fully clipped and offscreen entries. A control may handle Tab itself (for example HEX → RGB within Color Picker) before screen-level focus traversal. Select popup Escape closes the menu without closing the screen; changing focus closes an open menu.
+
+Built-in rich-text hover tooltips are drawn after the floating Select popups and are not clipped to their text widgets. Hovering text obscured by the open popup does not show an underlying tooltip. This order applies to AnchorUI-owned tooltips; third-party renderers should follow the same overlay discipline.
+
+Use `/anchorui screen open anchorui:stage3_compact_demo` to test a Select popup escaping a clipped container, keyboard focus, skinned controls and text transparency at smaller GUI scales. See [Stage 3 QA](QA_STAGE_3.md) for the full verification checklist.

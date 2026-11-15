@@ -18,8 +18,7 @@ public class BackgroundElement {
                     | ((GsonHelper.getAsInt(rgba, "g", 0) & 255) << 8)
                     | (GsonHelper.getAsInt(rgba, "b", 0) & 255);
         } else if (value != null && value.isJsonPrimitive()) {
-            String hex = value.getAsString().replace("#", "");
-            color = hex.length() == 6 ? (int) (0xFF000000L | Long.parseLong(hex, 16)) : (int) Long.parseLong(hex, 16);
+            color = ColorValues.parse(value.getAsString());
         } else {
             color = 0;
         }

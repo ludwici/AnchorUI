@@ -79,11 +79,11 @@ public class LoreStyle {
             size = new SizeElement(GsonHelper.getAsJsonObject(root, "size", new JsonObject()));
             background = new BackgroundElement(GsonHelper.getAsJsonObject(root, "background", new JsonObject()));
             JsonObject text = root.has("text") && root.get("text").isJsonObject() ? root.getAsJsonObject("text") : new JsonObject();
-            String hex = GsonHelper.getAsString(text, "color", "#FFE278").replace("#", "");
+            String hex = GsonHelper.getAsString(text, "color", "#FFE278");
             if (root.has("color") && root.get("color").isJsonPrimitive()) {
-                hex = root.get("color").getAsString().replace("#", "");
+                hex = root.get("color").getAsString();
             }
-            textColor = (int) Long.parseLong(hex, 16) | 0xFF000000;
+            textColor = ColorValues.parse(hex);
             textAlign = GsonHelper.getAsString(root, "align", GsonHelper.getAsString(text, "align", "left")).toLowerCase(Locale.ROOT);
             textWrap = GsonHelper.getAsBoolean(root, "wrap", GsonHelper.getAsBoolean(text, "wrap", false));
             hidden = GsonHelper.getAsBoolean(root, "hidden", false);

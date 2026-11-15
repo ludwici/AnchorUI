@@ -363,6 +363,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         candidate.setContainerParent(id, "screen");
         candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(
                 "screen", ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
+        candidate.set(id, 0, 0);
         return useCandidate(candidate);
     }
 

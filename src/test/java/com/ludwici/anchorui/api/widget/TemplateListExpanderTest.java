@@ -67,7 +67,7 @@ public class TemplateListExpanderTest {
         assertEquals("example:first", first.getAsJsonObject("onClick").get("quest").getAsString());
         assertEquals("example:quests", result.get(0).parentId());
         assertFalse(first.has("__anchorui_container_parent"));
-        assertEquals("example:quests/__content", first.getAsJsonObject("position").get("relativeTo").getAsString());
+        assertEquals("example:quests", first.getAsJsonObject("position").get("relativeTo").getAsString());
         assertEquals(0, first.getAsJsonObject("position").get("y").getAsInt());
         assertEquals(28, second.getAsJsonObject("position").get("y").getAsInt());
         assertEquals("example:second", result.get(1).itemContext().get("id").getAsString());

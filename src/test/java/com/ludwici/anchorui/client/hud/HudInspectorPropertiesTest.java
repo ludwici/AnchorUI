@@ -40,17 +40,16 @@ public class HudInspectorPropertiesTest {
         assertEquals(List.of("settings: {}", "names: []", "other: null"), HudInspectorProperties.flatten(json));
     }
     @Test
-    public void hidesGeneratedContainerMetadataAndAutomaticContentAnchor() {
+    public void hidesImplicitPanelPositionOnly() {
         var json = JsonParser.parseString("""
                 {
                   "type": "anchorui:button",
                   "id": "test:cell",
-                  "__anchorui_container_parent": "test:grid",
-                  "position": {"relativeTo": "test:grid/__content", "x": 0, "y": 0},
+                  "position": {"relativeTo": "test:grid", "x": 0, "y": 0},
                   "text": "Cell"
                 }
                 """).getAsJsonObject();
-        List<String> lines = HudInspectorProperties.flatten(json);
+        List<String> lines = HudInspectorProperties.flatten(json, "test:grid");
         assertEquals(List.of("type: anchorui:button", "id: test:cell",
                 "position.x: 0", "position.y: 0", "text: Cell"), lines);
     }
@@ -60,7 +59,6 @@ public class HudInspectorPropertiesTest {
         var json = JsonParser.parseString("""
                 {
                   "type": "anchorui:button",
-                  "__anchorui_container_parent": "test:grid",
                   "position": {"relativeTo": "screen", "x": 30, "y": 10}
                 }
                 """).getAsJsonObject();

@@ -12,6 +12,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class PanelParentLayoutTest {
     private static AnchorLayout.Frame frame(String id, String target, int x, int y, int w, int h) {
@@ -42,14 +43,14 @@ public class PanelParentLayoutTest {
         String panel = "test:panel";
         var frames = List.of(frame(panel, "screen", 20, 30, 160, 100),
                 frame("test:new", panel, 2, 3, 40, 20),
-                frame("test:legacy", WidgetContainers.contentId(panel), 2, 3, 40, 20),
+                frame("test:nested", panel, 2, 3, 40, 20),
                 frame("test:external", "screen", 200, 50, 40, 20));
         var result = ContainerLayout.resolve(600, 300, frames,
                 Map.of(panel, new PaddingElement(10, 8)),
-                Map.of(), Map.of("test:new", panel, "test:legacy", panel, "test:external", panel),
+                Map.of(), Map.of("test:new", panel, "test:nested", panel, "test:external", panel),
                 ignored -> {});
         assertEquals(new AnchorLayout.Bounds(32, 41, 40, 20), result.bounds().get("test:new"));
-        assertEquals(result.bounds().get("test:new"), result.bounds().get("test:legacy"));
+        assertEquals(result.bounds().get("test:new"), result.bounds().get("test:nested"));
         assertEquals(new AnchorLayout.Bounds(200, 50, 40, 20), result.bounds().get("test:external"));
     }
 
@@ -69,4 +70,11 @@ public class PanelParentLayoutTest {
         assertEquals(new AnchorLayout.Bounds(30, 38, 40, 20), result.bounds().get("test:first"));
         assertEquals(new AnchorLayout.Bounds(104, 38, 40, 20), result.bounds().get("test:second"));
     }
+    @Test
+    public void rejectsRemovedInternalPanelAnchors() {
+        assertThrows(IllegalArgumentException.class, () -> AnchorLayout.resolve(300, 200, List.of(
+                frame("test:panel", "screen", 0, 0, 100, 80),
+                frame("test:invalid", "test:panel/__content", 0, 0, 20, 10))));
+    }
+
 }

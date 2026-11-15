@@ -93,9 +93,8 @@ public class TemplateGridLayoutTest {
             assertEquals(expected[index][1], position.get("y").getAsInt());
             assertEquals(70, size.get("width").getAsInt());
             assertEquals(20, size.get("height").getAsInt());
-            assertEquals("rpg:skills/__content", position.get("relativeTo").getAsString());
+            assertEquals("rpg:skills", position.get("relativeTo").getAsString());
             assertEquals("rpg:skills", expanded.get(index).parentId());
-            assertTrue(!row.has("__anchorui_container_parent"));
             assertEquals(items().get(index).getAsJsonObject().get("title").getAsString(), row.get("text").getAsString());
             assertEquals(items().get(index).getAsJsonObject().get("id").getAsString(),
                     row.getAsJsonObject("onClick").get("item").getAsString());

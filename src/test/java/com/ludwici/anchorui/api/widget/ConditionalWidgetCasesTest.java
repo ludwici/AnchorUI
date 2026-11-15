@@ -155,8 +155,7 @@ public class ConditionalWidgetCasesTest {
             JsonObject widget = result.get(index).settings();
             int rowIndex = index / 2;
             assertEquals("test:list", result.get(index).parentId());
-            assertFalse(widget.has(WidgetContainers.PARENT_FIELD));
-            assertEquals("test:list/__content", widget.getAsJsonObject("position").get("relativeTo").getAsString());
+            assertEquals("test:list", widget.getAsJsonObject("position").get("relativeTo").getAsString());
             assertEquals(34 * rowIndex, widget.getAsJsonObject("position").get("y").getAsInt());
             assertEquals(rowIndex, result.get(index).itemContext().index());
             assertEquals(rowIndex == 0 ? "one" : "two", result.get(index).itemContext().key());

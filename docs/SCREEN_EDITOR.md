@@ -102,7 +102,7 @@ Selecting a `panel` or `container` now shows a **COMPONENT / LAYOUT** section ab
 
 Selecting a structural child of a container shows `Auto item` (participating in the automatic layout), flex `Grow` / `Shrink`, and the child's minimum/maximum width and height. These generic properties work for ordinary built-in and third-party widgets without replacing their Java factories. A manually anchored child can keep its explicit anchor, and `Auto item: false` excludes it from the automatic flow.
 
-Click **-** or **+** on the right of a property to adjust it (or cycle through supported values), and **R** to reset that *one* field to the source/style default. Highlighted fields have saved local overrides. The layout is validated before it replaces the preview; invalid combinations are rejected instead of destroying the widget tree.
+For enum properties such as **Layout**, **Align**, **Justify**, and **Cell X/Y**, use the **▼** dropdown to select a named value. Numeric and Boolean settings retain **- / +**; **R** resets only that field to the source/style default. Highlighted fields have saved local overrides. The layout is validated before it replaces the preview; invalid combinations are rejected instead of destroying the widget tree.
 
 Changes affect the live layout and hitboxes immediately. **Save** persists layout overrides for this screen; **Cancel** discards them. Existing screen files and the `config/anchorui/hud-layout.json` HUD file are kept separate. You do not need to edit a mod's built-in JSON to try a new layout.
 

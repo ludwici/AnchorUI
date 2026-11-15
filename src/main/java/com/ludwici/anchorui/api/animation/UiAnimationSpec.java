@@ -135,10 +135,6 @@ public final class UiAnimationSpec {
         if (!java.util.Set.of("none", "custom", "fade", "slideLeft", "slideRight", "slideUp", "zoom").contains(preset)) {
             throw new IllegalArgumentException("Unknown animation preset '" + preset + "'");
         }
-        if (preset.equals("custom") && (!raw.has("duration") || !raw.get("duration").isJsonPrimitive()
-                || !raw.getAsJsonPrimitive("duration").isNumber())) {
-            throw new IllegalArgumentException("animation." + trigger + ".duration requires milliseconds");
-        }
         if (raw.has("duration") && (!raw.get("duration").isJsonPrimitive()
                 || !raw.getAsJsonPrimitive("duration").isNumber())) {
             throw new IllegalArgumentException("animation." + trigger + ".duration requires milliseconds");

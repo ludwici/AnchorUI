@@ -21,6 +21,10 @@ public final class LayoutInspectorControls {
     }
 
     public static List<Control> describe(String id, JsonObject source, HudLayoutOffsets overrides) {
+        return describe(id, source, overrides, false);
+    }
+
+    public static List<Control> describe(String id, JsonObject source, HudLayoutOffsets overrides, boolean gridChild) {
         if (source == null) {
             return List.of();
         }
@@ -55,12 +59,16 @@ public final class LayoutInspectorControls {
                 controls.add(control(overrides, id, "layout", "collapseHidden", "Collapse", value(effective, "layout", "collapseHidden", "false")));
             }
         }
-        if (effective.has(WidgetContainers.PARENT_FIELD)) {
+        if (effective.has(WidgetContainers.PARENT_FIELD) || gridChild) {
             String enabled = value(effective, "layoutItem", "enabled", "true");
-            controls.add(control(overrides, id, "layoutItem", "enabled", "Auto item", enabled));
-            if (Boolean.parseBoolean(enabled)) {
-                controls.add(control(overrides, id, "layoutItem", "grow", "Grow", value(effective, "layoutItem", "grow", "0")));
-                controls.add(control(overrides, id, "layoutItem", "shrink", "Shrink", value(effective, "layoutItem", "shrink", "0")));
+            if (!gridChild) {
+                controls.add(control(overrides, id, "layoutItem", "enabled", "Auto item", enabled));
+            }
+            if (gridChild || Boolean.parseBoolean(enabled)) {
+                if (!gridChild) {
+                    controls.add(control(overrides, id, "layoutItem", "grow", "Grow", value(effective, "layoutItem", "grow", "0")));
+                    controls.add(control(overrides, id, "layoutItem", "shrink", "Shrink", value(effective, "layoutItem", "shrink", "0")));
+                }
                 controls.add(control(overrides, id, "layoutItem", "minWidth", "Min W", value(effective, "layoutItem", "minWidth", "0")));
                 controls.add(control(overrides, id, "layoutItem", "maxWidth", "Max W", value(effective, "layoutItem", "maxWidth", "16384")));
                 controls.add(control(overrides, id, "layoutItem", "minHeight", "Min H", value(effective, "layoutItem", "minHeight", "0")));

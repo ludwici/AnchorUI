@@ -698,7 +698,7 @@ public final class AnchorHudManager {
         }
         for (PlacedWidget placed : widgets) {
             if (placed.id().equals(id)) {
-                return LayoutInspectorControls.describe(id, placed.style().resolvedSettings, offsets, gridChild);
+                return LayoutInspectorControls.describe(id, placed.style().resolvedSettings, offsets, parentId != null, gridChild);
             }
         }
         return List.of();

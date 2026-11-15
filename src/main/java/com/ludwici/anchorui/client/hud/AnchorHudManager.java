@@ -1028,7 +1028,7 @@ public final class AnchorHudManager {
                 boolean panel = widget instanceof com.ludwici.anchorui.client.gui.PanelWidget;
                 created.add(new PlacedWidget(definition.id(), widget, style, anchored,
                         widget.visible, widget.active, context, visibleWhen, enabledWhen,
-                        WidgetContainers.parent(element.settings),
+                        entity.widgetParents.getOrDefault(definition.id(), WidgetContainers.parent(element.settings)),
                         panel && (WidgetContainers.clipChildren(element.settings) || style.scroll.enabled()),
                         panel ? WidgetContainers.group(element.settings) : null,
                         panel ? style.autoSize : ContainerLayout.AutoSize.NONE,

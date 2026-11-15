@@ -224,8 +224,15 @@ public final class AnchorScreenEditorScreen extends Screen {
             button.visible = !compact && !inspectorCollapsed
                     && editingAppearance == null && pendingContainer == null;
         }
-        for (Button button : parentChoiceButtons) {
-            button.visible = pendingContainer != null && editingAppearance == null;
+        for (int index = 0; index < parentChoiceButtons.size(); index++) {
+            Button button = parentChoiceButtons.get(index);
+            boolean root = "screen".equals(pendingContainer);
+            button.visible = pendingContainer != null && editingAppearance == null && !(root && index == 1);
+            if (index == 0) {
+                button.setMessage(Component.literal(root ? "Anchor to screen" : "Anchor to container"));
+            } else if (index == 2) {
+                button.setMessage(Component.literal(root ? "Move to screen (root)" : "Move into container"));
+            }
         }
     }
 
@@ -357,7 +364,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             status = "Choose a different widget";
             return;
         }
-        if (target.editorIsContainer(id)) {
+        if ("screen".equals(id) || target.editorIsContainer(id)) {
             pendingContainer = id;
             pickingParent = false;
             status = "Choose how to attach to " + id;
@@ -399,10 +406,13 @@ public final class AnchorScreenEditorScreen extends Screen {
             return;
         }
         String container = pendingContainer;
+        boolean root = "screen".equals(container);
         boolean success = switch (mode) {
             case 0 -> target.editorAnchor(selected.id(), container, selected.point(), selected.anchor());
-            case 1 -> target.editorAnchor(selected.id(), WidgetContainers.contentId(container), selected.point(), selected.anchor());
-            case 2 -> target.editorMoveIntoContainer(selected.id(), container);
+            case 1 -> !root && target.editorAnchor(selected.id(),
+                    WidgetContainers.contentId(container), selected.point(), selected.anchor());
+            case 2 -> root ? target.editorMoveToRoot(selected.id())
+                    : target.editorMoveIntoContainer(selected.id(), container);
             default -> false;
         };
         if (success) {
@@ -410,7 +420,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             status = switch (mode) {
                 case 0 -> "Anchor target: " + container;
                 case 1 -> "Anchor target: " + WidgetContainers.contentId(container);
-                default -> "Moved into " + container + " (automatic layout)";
+                default -> root ? "Moved to screen root" : "Moved into " + container + " (automatic layout)";
             };
         } else {
             status = "Invalid parent choice (cycle or layout constraints)";

@@ -88,7 +88,7 @@ The left **Widgets** panel can be collapsed with **[-]** in its header and reope
 
 ### Widget properties and per-field reset
 
-The right-side Inspector exposes the same detailed widget view as the HUD editor. Select a widget by clicking its outline or its entry in the Widgets list. The inspector distinguishes **anchor target** (the coordinate reference, such as `mypack:grid/__content`) from **container** (actual structural parent used for layout, clipping and inherited visibility). It also shows point, anchor, bounds, user offset, visibility and editable component fields. The **SOURCE JSON [+]** section is **collapsed by default**; click its heading to expand it and click again to collapse. Its values remain read-only.
+The right-side Inspector shows a single **parent** reference for each widget. For children nested inside a Panel, the parent is that Panel's ID — no `/__content` target or separate container line. It also shows point, anchor, bounds, user offset, visibility and editable component fields. The **SOURCE JSON [+]** section is **collapsed by default**; click its heading to expand it and again to collapse. Its values remain read-only. Using **- / +** on a property preserves the inspector's scroll position.
 
 For layout properties overridden from their authored defaults, an active **R** control appears beside the respective `parent`, `point`, `anchor`, `user offset`, or `visible` line. Click it to reset that property without discarding the other overrides. The existing Point, Anchor, Parent, Hide, Reset and Reset all buttons remain available. Scroll the inspector independently with the mouse wheel or drag its scrollbar. The properties and override markers update as widgets are moved.
 
@@ -129,9 +129,9 @@ When a widget belongs to a Grid, **no manual anchor selection, `__content` refer
 
 For **author-written UI JSON**, simply put widgets in the parent's `children` array; they are automatically Grid members. No `containerParent` or `__anchorui_*` field is needed in resource packs. The last example is an **editor save file**, not the format developers must author.
 
-For row/column, the editor still sets an appropriate anchor automatically when moving a widget into the container. Selecting an ordinary non-container widget remains an advanced anchor-target operation. Invalid parent cycles are rejected, and resetting Parent restores the source hierarchy.
+For row/column, the editor sets the Panel itself as the anchor and automatically applies its padding. Selecting an ordinary non-Panel widget remains an advanced anchor-target operation. When clicking on the screen in Parent mode, the editor prioritizes Panels over their overlapping children. Invalid cycles are rejected, and resetting Parent restores the authored hierarchy.
 
-The **SOURCE JSON [+]** section is collapsed by default and hides generated internal `__anchorui_*` fields and automatic `/__content` references.
+The **SOURCE JSON [+]** section is collapsed by default. The document resolver no longer injects `__anchorui_container_parent` into each child; the parent relation comes from `children` and is carried separately. Automatic Panel targets and legacy internal references are hidden from the inspector.
 
 ### Visual widget editing: text, colors, textures and sizes
 

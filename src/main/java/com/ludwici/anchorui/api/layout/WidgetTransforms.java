@@ -61,7 +61,7 @@ public final class WidgetTransforms {
         Map<String, Transform> resolved = new LinkedHashMap<>();
         Set<String> visiting = new HashSet<>();
         for (String id : layout.keySet()) {
-            if (!"screen".equals(id) && !id.endsWith("/__content")) {
+            if (!"screen".equals(id)) {
                 resolveOne(id, layout, parents, groups, scrollOffsets, resolved, visiting);
             }
         }

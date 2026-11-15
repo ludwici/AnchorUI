@@ -84,9 +84,6 @@ public final class ContainerLayout {
             if (!definitions.containsKey(id)) {
                 throw new IllegalArgumentException("Container is missing its widget frame: " + id);
             }
-            if (definitions.containsKey(WidgetContainers.contentId(id))) {
-                throw new IllegalArgumentException("Reserved container content frame ID: " + WidgetContainers.contentId(id));
-            }
         }
         for (String id : layouts.keySet()) {
             if (!containers.containsKey(id)) {
@@ -139,8 +136,7 @@ public final class ContainerLayout {
                     StackLayout.Rules rules = itemRules.getOrDefault(childId, StackLayout.Rules.DEFAULT);
                     if (!grid) {
                         if (unmanaged.contains(childId) || !rules.managed()
-                                || (!container.equals(position.relativeTo)
-                                && !WidgetContainers.contentId(container).equals(position.relativeTo))
+                                || !container.equals(position.relativeTo)
                                 || position.point != ElementAnchor.TOPLEFT
                                 || position.anchor != ElementAnchor.TOPLEFT) {
                             continue;
@@ -186,15 +182,8 @@ public final class ContainerLayout {
                 }
             }
 
-            List<AnchorLayout.Frame> all = new ArrayList<>(effective.size() + containers.size());
-            for (AnchorLayout.Frame frame : effective.values()) {
-                all.add(frame);
-                PaddingElement padding = containers.get(frame.id());
-                if (padding != null) {
-                    all.add(WidgetContainers.contentFrame(frame.id(), frame.width(), frame.height(), padding));
-                }
-            }
-            Map<String, AnchorLayout.Bounds> resolved = AnchorLayout.resolve(screenWidth, screenHeight, all, warnings);
+            Map<String, AnchorLayout.Bounds> resolved = AnchorLayout.resolve(screenWidth, screenHeight,
+                    effective.values(), warnings);
             boolean changed = false;
             for (var entry : autoSizes.entrySet()) {
                 String id = entry.getKey();
@@ -206,7 +195,7 @@ public final class ContainerLayout {
                 if (padding == null) {
                     throw new IllegalArgumentException("Only panel and container widgets support autoSize: " + id);
                 }
-                AnchorLayout.Bounds content = resolved.get(WidgetContainers.contentId(id));
+                AnchorLayout.Bounds content = WidgetContainers.contentBounds(resolved.get(id), padding);
                 int contentWidth = 1;
                 int contentHeight = 1;
                 for (String childId : children.getOrDefault(id, List.of())) {

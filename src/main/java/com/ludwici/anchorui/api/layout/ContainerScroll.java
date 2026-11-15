@@ -2,6 +2,7 @@ package com.ludwici.anchorui.api.layout;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.ludwici.anchorui.api.style.PaddingElement;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -64,7 +65,8 @@ public final class ContainerScroll {
     }
 
     public static Map<String, Limits> measure(Map<String, AnchorLayout.Bounds> bounds,
-                                               Map<String, String> parents, Map<String, Config> configurations) {
+                                              Map<String, String> parents, Map<String, Config> configurations,
+                                              Map<String, PaddingElement> paddings) {
         Map<String, Limits> result = new LinkedHashMap<>();
         for (var entry : configurations.entrySet()) {
             String id = entry.getKey();
@@ -72,7 +74,7 @@ public final class ContainerScroll {
             if (!config.enabled()) {
                 continue;
             }
-            AnchorLayout.Bounds content = bounds.get(WidgetContainers.contentId(id));
+            AnchorLayout.Bounds content = WidgetContainers.contentBounds(bounds.get(id), paddings.get(id));
             if (content == null) {
                 throw new IllegalArgumentException("Scrollable container has no content frame: " + id);
             }

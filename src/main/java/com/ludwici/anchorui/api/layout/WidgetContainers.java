@@ -1,9 +1,7 @@
 package com.ludwici.anchorui.api.layout;
 
 import com.google.gson.JsonObject;
-import com.ludwici.anchorui.api.style.ElementAnchor;
 import com.ludwici.anchorui.api.style.PaddingElement;
-import com.ludwici.anchorui.api.style.PositionElement;
 
 import java.util.LinkedHashMap;
 import java.util.ArrayList;
@@ -14,8 +12,6 @@ import java.util.Map;
 import java.util.Set;
 
 public final class WidgetContainers {
-    public static final String PARENT_FIELD = "__anchorui_container_parent";
-
     private WidgetContainers() {
     }
 
@@ -57,22 +53,14 @@ public final class WidgetContainers {
                 || "panel".equals(type) || "container".equals(type);
     }
 
-    public static String contentId(String id) {
-        return id + "/__content";
-    }
-
-    public static String parent(JsonObject settings) {
-        if (!settings.has(PARENT_FIELD)) {
+    public static AnchorLayout.Bounds contentBounds(AnchorLayout.Bounds outer, PaddingElement padding) {
+        if (outer == null) {
             return null;
         }
-        return settings.get(PARENT_FIELD).getAsString();
-    }
-
-    public static AnchorLayout.Frame contentFrame(String id, int width, int height, PaddingElement padding) {
-        int innerWidth = Math.max(0, width - padding.left - padding.right);
-        int innerHeight = Math.max(0, height - padding.top - padding.bottom);
-        PositionElement position = new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, id, padding.left, padding.top);
-        return new AnchorLayout.Frame(contentId(id), position, innerWidth, innerHeight);
+        PaddingElement inset = padding == null ? new PaddingElement() : padding;
+        return new AnchorLayout.Bounds(outer.x() + inset.left, outer.y() + inset.top,
+                Math.max(0, outer.width() - inset.left - inset.right),
+                Math.max(0, outer.height() - inset.top - inset.bottom));
     }
 
     public static boolean clipChildren(JsonObject settings) {
@@ -88,12 +76,16 @@ public final class WidgetContainers {
         return new WidgetTransforms.Group(scale, "center".equals(origin));
     }
 
-    public static Map<String, AnchorLayout.Bounds> clips(Map<String, AnchorLayout.Bounds> bounds, Map<String, String> parents, Set<String> clippingContainers) {
-        return clips(bounds, parents, clippingContainers, Map.of());
+    public static Map<String, AnchorLayout.Bounds> clips(Map<String, AnchorLayout.Bounds> bounds,
+                                                         Map<String, String> parents, Set<String> clippingContainers,
+                                                         Map<String, PaddingElement> paddings) {
+        return clips(bounds, parents, clippingContainers, paddings, Map.of());
     }
 
-    public static Map<String, AnchorLayout.Bounds> clips(Map<String, AnchorLayout.Bounds> bounds, Map<String, String> parents,
-                                                         Set<String> clippingContainers, Map<String, WidgetTransforms.Transform> transforms) {
+    public static Map<String, AnchorLayout.Bounds> clips(Map<String, AnchorLayout.Bounds> bounds,
+                                                         Map<String, String> parents, Set<String> clippingContainers,
+                                                         Map<String, PaddingElement> paddings,
+                                                         Map<String, WidgetTransforms.Transform> transforms) {
         Map<String, AnchorLayout.Bounds> result = new LinkedHashMap<>();
         AnchorLayout.Bounds screen = bounds.get("screen");
         if (screen == null) {
@@ -105,7 +97,7 @@ public final class WidgetContainers {
             int remaining = parents.size() + 1;
             while (parent != null && remaining-- > 0) {
                 if (clippingContainers.contains(parent)) {
-                    AnchorLayout.Bounds content = bounds.get(contentId(parent));
+                    AnchorLayout.Bounds content = contentBounds(bounds.get(parent), paddings.get(parent));
                     if (content == null) {
                         intersection = new AnchorLayout.Bounds(0, 0, 0, 0);
                         break;

@@ -1361,7 +1361,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 return true;
             }
         }
-        return false;
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     private boolean mouseClickedWidgetPopup(double mouseX, double mouseY, int button) {
@@ -1389,7 +1389,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             return true;
         }
         if (draggingWidget == null) {
-            return false;
+            return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
         }
         WidgetTransforms.Transform transform = transforms.getOrDefault(draggingWidget.id(), WidgetTransforms.IDENTITY);
         return draggingWidget.widget().mouseDragged(transform.inverseX(mouseX), transform.inverseY(mouseY), button,
@@ -1402,7 +1402,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             return true;
         }
         if (draggingWidget == null) {
-            return false;
+            return super.mouseReleased(mouseX, mouseY, button);
         }
         PlacedWidget placed = draggingWidget;
         draggingWidget = null;
@@ -1433,7 +1433,8 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 return true;
             }
         }
-        return scrollContentsAt(mouseX, mouseY, scrollX, scrollY);
+        return scrollContentsAt(mouseX, mouseY, scrollX, scrollY)
+                || super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     private boolean insideClip(PlacedWidget placed, double mouseX, double mouseY) {

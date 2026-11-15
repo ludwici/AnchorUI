@@ -29,6 +29,7 @@ public class TestSceneScreen extends ItemLoreScreen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         graphics.fill(0, 0, width, height, 0xDE101722);
+        graphics.fill(0, height - 32, width, height, 0xEC0C1019);
         super.render(graphics, mouseX, mouseY, partialTick);
         if (guides) {
             graphics.fill(width / 2, 0, width / 2 + 1, height, 0x6666DDEE);
@@ -59,7 +60,6 @@ public class TestSceneScreen extends ItemLoreScreen {
             graphics.fill(8, 37, width - 8, 62, 0xCC5A4824);
             graphics.drawString(font, "WARN (" + getLayoutWarnings().size() + "): " + getLayoutWarnings().getFirst(), 16, 45, 0xFFFFD080, false);
         }
-        graphics.fill(0, height - 32, width, height, 0xEC0C1019);
         graphics.drawString(font, "G — контуры | Esc — закрыть", 7, height - 21, 0xFFBAC7D9, false);
     }
 

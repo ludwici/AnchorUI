@@ -1,6 +1,8 @@
 package com.ludwici.anchorui.client.hud;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonArray;
+import com.ludwici.anchorui.api.animation.UiAnimationSpec;
 import com.google.gson.JsonObject;
 import com.ludwici.anchorui.api.style.ElementAnchor;
 import com.ludwici.anchorui.api.widget.WidgetIds;
@@ -118,13 +120,43 @@ public final class HudLayoutOffsets {
 
     public boolean hasAppearanceOverrides(String id) {
         JsonObject settings = componentSettings.get(id);
-        return settings != null && settings.has("appearance");
+        return settings != null && (settings.has("appearance") || settings.has("animations"));
+    }
+
+    public JsonArray animationOverride(String id) {
+        JsonObject settings = componentSettings.get(id);
+        return settings != null && settings.has("animations") ? settings.getAsJsonArray("animations").deepCopy() : null;
+    }
+
+    public void setAnimationOverride(String id, JsonArray tracks) {
+        JsonObject check = new JsonObject();
+        check.add("animations", tracks);
+        UiAnimationSpec.parse(check);
+        String qualified = WidgetIds.id(id, "anchorui");
+        JsonObject settings = componentSettings.computeIfAbsent(qualified, ignored -> new JsonObject());
+        settings.add("animations", tracks.deepCopy());
+    }
+
+    public void clearAnimationOverride(String id) {
+        JsonObject settings = componentSettings.get(id);
+        if (settings != null) {
+            settings.remove("animations");
+            if (settings.isEmpty()) {
+                componentSettings.remove(id);
+            }
+        }
     }
 
     public JsonObject widgetSettings(String id, JsonObject original) {
         JsonObject result = original.deepCopy();
         JsonObject settings = componentSettings.get(id);
-        if (settings == null || !settings.has("appearance")) {
+        if (settings == null) {
+            return result;
+        }
+        if (settings.has("animations")) {
+            result.add("animations", settings.getAsJsonArray("animations").deepCopy());
+        }
+        if (!settings.has("appearance")) {
             return result;
         }
         var type = WidgetTypeIds.parse(result.get("type").getAsString());
@@ -160,7 +192,7 @@ public final class HudLayoutOffsets {
             return result;
         }
         for (var entry : overrides.entrySet()) {
-            if ("appearance".equals(entry.getKey())) {
+            if ("appearance".equals(entry.getKey()) || "animations".equals(entry.getKey())) {
                 continue;
             }
             JsonObject section = new JsonObject();
@@ -315,6 +347,12 @@ public final class HudLayoutOffsets {
             }
             if (value.has("hidden")) {
                 result.setHidden(id, value.get("hidden").getAsBoolean());
+            }
+            if (value.has("animations")) {
+                if (!value.get("animations").isJsonArray()) {
+                    throw new IllegalArgumentException("Saved animation override must be an array");
+                }
+                result.setAnimationOverride(id, value.getAsJsonArray("animations"));
             }
             for (String section : new String[]{"layout", "layoutItem", "appearance"}) {
                 if (value.has(section)) {

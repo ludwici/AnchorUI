@@ -93,8 +93,8 @@ public final class UiAnimationSpec {
         if (settings.has("animation")) {
             throw new IllegalArgumentException("Unsupported 'animation' object; use the 'animations' array");
         }
-        JsonArray local = array(settings);
-        return new UiAnimationSpec(parseEntries(merge(defaults, local)));
+        JsonArray resolved = settings.has("animations") ? array(settings) : defaults == null ? new JsonArray() : defaults.deepCopy();
+        return new UiAnimationSpec(parseEntries(merge(null, resolved)));
     }
 
     public static JsonArray array(JsonObject settings) {

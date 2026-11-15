@@ -365,6 +365,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(
                 "screen", ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
         candidate.set(id, 0, 0);
+        candidate.clearSettingOverride(id, "layoutItem", "enabled");
         return useCandidate(candidate);
     }
 
@@ -480,10 +481,21 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         return switch (property) {
             case OFFSET -> editorOffset(id, 0, 0);
             case VISIBILITY -> editorHidden(id, false);
-            case PARENT -> editorAnchor(id, current.defaultParent(), current.point(), current.anchor());
+            case PARENT -> editorRestoreParent(id, current);
             case POINT -> editorAnchor(id, current.relativeTo(), current.defaultPoint(), current.anchor());
             case ANCHOR -> editorAnchor(id, current.relativeTo(), current.point(), current.defaultAnchor());
         };
+    }
+
+    private boolean editorRestoreParent(String id, EditorHandle current) {
+        if (editingScreenOffsets == null) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingScreenOffsets.copy();
+        candidate.clearContainerParent(id);
+        candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(
+                current.defaultParent(), current.point(), current.anchor()));
+        return useCandidate(candidate);
     }
 
     public boolean resetEditorWidget(String id) {

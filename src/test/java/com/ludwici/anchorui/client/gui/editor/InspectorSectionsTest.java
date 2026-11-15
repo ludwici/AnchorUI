@@ -29,7 +29,7 @@ public class InspectorSectionsTest {
         sections.register("visual", 20);
         assertFalse(sections.click(114, 100, 180, 0, 13));
         assertTrue(sections.expanded("layout"));
-        assertTrue(sections.click(114, 100, 180, 130, 13));
+        assertTrue(sections.click(106, 100, 180, 130, 13));
         assertFalse(sections.expanded("layout"));
         sections.clearHeaders();
         sections.register("layout", 0);

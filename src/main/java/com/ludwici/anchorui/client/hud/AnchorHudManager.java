@@ -200,6 +200,18 @@ public final class AnchorHudManager {
         return changePreviewAnchor(id, new HudLayoutOffsets.AnchorOverride(handle.relativeTo(), handle.point(), next));
     }
 
+    public boolean setPreviewPoint(String id, ElementAnchor value) {
+        HudHandle handle = handle(id);
+        return handle != null && changePreviewAnchor(id,
+                new HudLayoutOffsets.AnchorOverride(handle.relativeTo(), value, handle.anchor()));
+    }
+
+    public boolean setPreviewAnchor(String id, ElementAnchor value) {
+        HudHandle handle = handle(id);
+        return handle != null && changePreviewAnchor(id,
+                new HudLayoutOffsets.AnchorOverride(handle.relativeTo(), handle.point(), value));
+    }
+
     public boolean setPreviewParent(String id, String parent) {
         HudHandle handle = handle(id);
         if (handle == null || id.equals(parent)) {
@@ -775,6 +787,15 @@ public final class AnchorHudManager {
         }
         HudLayoutOffsets candidate = editingOffsets.copy();
         candidate.setSettingOverride(id, control.section(), control.field(), LayoutInspectorControls.stepped(control, direction));
+        return usePreviewLayout(candidate);
+    }
+
+    public boolean setPreviewLayout(String id, LayoutInspectorControls.Control control, String value) {
+        if (editingOffsets == null || !isCustomWidget(id) || !LayoutInspectorControls.choices(control).contains(value)) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingOffsets.copy();
+        candidate.setSettingOverride(id, control.section(), control.field(), new com.google.gson.JsonPrimitive(value));
         return usePreviewLayout(candidate);
     }
 

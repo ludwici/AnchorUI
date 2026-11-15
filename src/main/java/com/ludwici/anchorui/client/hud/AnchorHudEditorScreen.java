@@ -748,7 +748,9 @@ public final class AnchorHudEditorScreen extends Screen {
             if (sourceExpanded) {
                 if (!active.id().equals(inspectedId)) {
                     JsonObject settings = manager.getWidgetSettings(active.id());
-                    sourceProperties = HudInspectorProperties.flatten(settings);
+                    String widgetParent = manager.getStructuralParent(active.id());
+                    sourceProperties = HudInspectorProperties.flatten(settings,
+                            "(none)".equals(widgetParent) ? null : widgetParent);
                     inspectedId = active.id();
                 }
                 for (String property : sourceProperties) {

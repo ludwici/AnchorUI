@@ -1091,7 +1091,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         enabledScratch.clear();
         HudLayoutOffsets overrides = currentScreenOffsets();
         for (PlacedWidget placed : placedWidgets) {
-            String parent = offsets.containerParent(placed.id(), placed.containerParent());
+            String parent = overrides.containerParent(placed.id(), placed.containerParent());
             boolean parentVisible = parent == null || visibilityScratch.getOrDefault(parent, false);
             boolean parentEnabled = parent == null || enabledScratch.getOrDefault(parent, false);
             boolean shown = parentVisible && placed.baseVisible() && !overrides.isHidden(placed.id())

@@ -12,9 +12,9 @@ AnchorUI supports declarative client-side UI event actions in resource-pack scre
 | `onChange` | Scrollable panel/container | User changes scroll position with wheel or native scrollbar | `{"x": number, "y": number}` |
 | `onChange` | Java widget implementing `UiChangeSource` | Widget explicitly notifies its listener of a user-made change | Any JSON value |
 | `onOpen` | Screen document root | Screen is first shown, not each frame or resize | JSON null |
-| `onClose` | Screen document root | Screen is removed, including navigation/replacement and entering the F8 editor | JSON null |
+| `onClose` | Screen document root | Normal screen closure or navigation/replacement, not an F8 editor transition | JSON null |
 
-These events are supported on resource-pack **screens**. Regular HUD overlays remain visual and do not capture mouse input. F8 preview rendering does not fire widget hover or change events; genuine screen removal/return may fire `onClose`/`onOpen`.
+These events are supported on resource-pack **screens**. Regular HUD overlays remain visual and do not capture mouse input. F8 preview rendering does not fire widget hover or change events; entering or leaving the F8 editor does **not** fire `onClose`/`onOpen`. Normal navigation fires `onClose` on the outgoing screen and `onOpen` on the incoming one, including returning to a previous screen instance.
 
 Hover actions run only when the hovered widget changes, not on every render frame. Hidden widgets and widgets behind clipping boundaries do not receive hover transitions. An inactive/disabled widget can still be hovered (for example to show a tooltip), but it cannot fire an input change. `onChange` is not a general data-binding update notification: it describes user input.
 
@@ -182,7 +182,7 @@ The framework removes the reserved `type` field before decoding arguments. Ordin
 }
 ```
 
-`anchorui:open_screen` and `anchorui:close_screen` remain client-only registered actions. A custom action may also receive the event metadata when registered through `registerEvent`.
+`anchorui:open_screen` and `anchorui:close_screen` remain client-only registered actions. `open_screen` optionally accepts `stateHandoff` to copy declared state keys into the new screen; invalid target screens or incompatible transfers fail without closing the source. See [Local UI State](UI_STATE.md#stage-4--optional-navigation-state-handoff). A custom action may also receive the event metadata when registered through `registerEvent`.
 
 Scrollable panels can expose `onChange` in exactly the same way:
 

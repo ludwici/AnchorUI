@@ -97,9 +97,40 @@ It can also be referenced as `{{anchorui:ui.state#tab}}` in live text.
 
 ## Scope and lifetime
 
-Each newly opened AnchorUI screen starts with its own independent state. Values survive that screen instance's `init()` calls, including a GUI resize or a Template List rebuild, but are reset when the screen is closed and opened as a **new instance**. Switching to a different screen starts a separate state. Nothing is persisted to disk and nothing is sent to the server automatically.
+Each newly opened AnchorUI screen starts with independent state. Existing instances keep their state through `init()`, resize, Template List rebuilds and a return via `close_screen`. A **new instance** starts with its declared defaults unless an explicit `open_screen.stateHandoff` transfers selected values. Nothing is persisted to disk and nothing is sent to the server automatically.
 
 The `anchorui:ui.state` provider returns an empty object outside state-aware screens. Conditions should use suitable fallbacks.
+
+## Stage 4 — optional navigation state handoff
+
+The `anchorui:open_screen` action accepts `stateHandoff`, a mapping of **destination state keys to source keys**:
+
+```json
+{
+  "onClick": {
+    "type": "anchorui:open_screen",
+    "screen": "mymod:details",
+    "stateHandoff": {
+      "selectedTab": "tab",
+      "details": "details"
+    }
+  }
+}
+```
+
+Both screens must declare the corresponding keys in their root `state` objects. Every copied value must match the destination's declared JSON type. Object/array values are deep-copied. Other destination keys remain at their defaults. Without `stateHandoff`, opening a screen behaves exactly as before.
+
+Malformed mappings and undeclared source keys are rejected when compiling the action. Missing or type-incompatible destination keys reject **the entire transition**, without partially applying values or closing the current screen. Missing target documents also leave the source screen open. Runtime navigation errors are logged and shown in the local chat.
+
+On normal navigation, the old screen emits `onClose` and the new one emits `onOpen`. Returning with `close_screen` reopens the previous *instance* (preserving its state), emits `onClose` for the closing screen and `onOpen` for the returned screen. F8 editor transitions suppress those lifecycle events. When a screen is reopened or its widgets are rebuilt, focus is restored by the focused widget's namespaced ID if that widget still exists, is visible and enabled.
+
+### In-game navigation QA
+
+```text
+/anchorui screen open anchorui:lifecycle_source_demo
+```
+
+Choose a tab and change **Show details**, then click **Transfer state**. The destination should show the selected values while retaining its target-only default. Return with **Back to source**: the original values should remain. **Open with defaults** starts the destination at its defaults. **Try missing screen** leaves the current screen unchanged and reports an error. The two screens use the demo `onOpen`/`onClose` event handler so you can check normal transitions and F8 behavior in chat.
 
 ## Java access
 

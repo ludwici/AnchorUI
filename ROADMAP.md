@@ -105,10 +105,12 @@ The completed functionality above does **not** imply finished visual consistency
 
 **Priority: medium.** Local UI State and basic screen actions are already implemented.
 
-- [ ] Specify an optional, explicit state handoff/shared scope for screen navigation (if needed), without introducing a dialogue-specific state machine.
-- [ ] Define lifecycle semantics for focus, reopening, navigation failures and resource reload.
-- [ ] Clarify action guard and state validation errors for resource-pack authors.
-- [ ] Test screen transitions, reopen/reset, invalid targets and nested interactive components.
+- [x] Add explicit, optional `open_screen.stateHandoff` mapping selected source UI State keys into typed destination keys; preserve existing default behavior without a mapping and avoid global shared-state storage.
+- [x] Preserve keyboard focus by namespaced widget ID through screen re-entry and widget rebuilding, including F8 and keyed lists; reject missing navigation targets and invalid transfers without replacing the current screen.
+- [x] Document normal navigation vs F8 lifecycle events and Local UI State lifetime; display navigation errors to the player and log them.
+- [x] Add two-screen navigation demo plus unit/resource tests for selective transfer, defaults, invalid mappings and missing targets.
+- [ ] In-game verification of screen focus, F8 round-trips, resource reload and nested control behavior; further refine handling if the client QA reveals regressions.
+- [ ] Consider additional state scopes only when concrete use cases require them.
 
 **Done when:** independent screens can compose safely with predictable state lifetime and focus restoration.
 
@@ -161,7 +163,7 @@ The completed functionality above does **not** imply finished visual consistency
 1. **In-game verification of `cases` and guarded actions**, plus the remaining collapsed-space policy decision.
 2. **In-game automatic-layout QA** for rows, columns, flex, wrap, grid, editor positioning, visibility changes and scroll/clipping.
 3. **Visual consistency and interaction QA** (especially progress bars, textures and blur).
-4. **Screen lifecycle polish and optional state handoff**.
+4. **Screen lifecycle client QA and optional state handoff** (core navigation transfer/focus work implemented).
 5. **Animations**, alongside API stability, performance work, English documentation and additional test coverage.
 
 This is a working backlog, not a release schedule. Update completion checkboxes only when code and tests actually land.

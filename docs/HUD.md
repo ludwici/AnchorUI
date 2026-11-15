@@ -263,6 +263,20 @@ For example, editing a panel's layout and one child may produce:
 
 The overrides are merged with resource-defined layout settings. A field reset reverts to the inherited resource/style value; it does **not** erase other fields. The original `config/anchorui/hud-layout.json` schema stays at version 1, and the screen editor uses its existing per-screen file location. No arbitrary widget types, textures or gameplay configuration are added by the editor.
 
+### Parent picker: frame, content, and actual layout membership
+
+In the F8 HUD editor, select a widget, press **Pick parent**, then click another widget or choose its row from Widgets. If it is an AnchorUI panel/container, the editor now offers:
+
+- **Anchor to container:** reference the outer panel's frame (`relativeTo: mymod:panel`).
+- **Anchor to content area:** reference the padded internal frame (`relativeTo: mymod:panel/__content`) without changing structural membership.
+- **Move into container:** change the actual structural parent to `mymod:panel`, anchor to its `/__content` frame using TOPLEFT, and make the child participate in row/column/grid placement. Clipping, scroll position and visibility now follow the new structural container.
+
+Click empty world while picking a parent to choose between **Anchor to screen** and **Move to screen (root)**. The latter removes structural membership. The inspector shows **anchor target** and **container** separately so it is clear whether a widget is only positioned relative to a panel or is truly in its layout.
+
+Moves are stored as a `containerParent` override beside the existing `relativeTo`, `point` and `anchor` fields. They remain local to the HUD layout file, can be undone using Cancel, and survive Save/reopen. Circular structural parents are rejected. Resetting the **Parent** property restores the authored structural relationship.
+
+The **SOURCE JSON [+]** group in both F8 inspectors is now **collapsed by default**. Click its heading to expand the original read-only configuration and click it again to hide the details; this does not change the widget or source resource pack.
+
 ### Visual and content properties in the HUD editor
 
 The same F8 inspector now exposes a **VISUAL / CONTENT** section for built-in widgets and registered custom Java widgets. It can adjust text labels, text and fill/border/accent colors, image/panel texture resource IDs, state-control background skins, progress bar value labels, widths/heights and relevant panel border/radius fields. A mod may expose additional fields with `WidgetEditorRegistry` (see [Custom widgets](CUSTOM_WIDGETS.md)).

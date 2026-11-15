@@ -85,8 +85,11 @@ public final class WidgetEditorRegistry {
                 Field.color("borderColor", "Border", "#FF728CA3"),
                 Field.color("hoverColor", "Hover", "#FF385E81"),
                 Field.color("disabledColor", "Disabled", "#FF353B43"),
+                Field.color("focusColor", "Focus outline", "#FFFFD16B"),
                 Field.texture("textures.background.normal", "Button skin"),
                 Field.texture("textures.background.hover", "Hover skin"),
+                Field.texture("textures.background.focused", "Focused skin"),
+                Field.texture("textures.background.hoverFocused", "Hover + focus skin"),
                 Field.texture("textures.background.disabled", "Disabled skin"),
                 Field.integer("size.width", "Width", 120, 1, 16384, 10),
                 Field.integer("size.height", "Height", 20, 1, 16384, 2)));
@@ -131,8 +134,13 @@ public final class WidgetEditorRegistry {
         stateFields.add(Field.color("fillColor", "Fill", "#D923354A"));
         stateFields.add(Field.color("borderColor", "Border", "#FF718699"));
         stateFields.add(Field.color("accentColor", "Accent", "#FF426D94"));
+        stateFields.add(Field.color("hoverColor", "Hover", "#FF36506A"));
+        stateFields.add(Field.color("disabledColor", "Disabled", "#FF353B43"));
+        stateFields.add(Field.color("focusColor", "Focus outline", "#FFFFD16B"));
         stateFields.add(Field.texture("textures.background.normal", "Background skin"));
         stateFields.add(Field.texture("textures.background.hover", "Hover skin"));
+        stateFields.add(Field.texture("textures.background.focused", "Focused skin"));
+        stateFields.add(Field.texture("textures.background.hoverFocused", "Hover + focus skin"));
         stateFields.add(Field.texture("textures.background.disabled", "Disabled skin"));
         for (String part : List.of("indicator", "track", "thumb")) {
             stateFields.add(Field.texture("textures." + part + ".off", part + " off"));

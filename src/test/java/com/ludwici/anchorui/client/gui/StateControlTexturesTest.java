@@ -41,6 +41,8 @@ public class StateControlTexturesTest {
                         "tint": "#FFAA7744"
                       },
                       "hover": "minecraft:textures/block/stone.png",
+                      "focused": "minecraft:textures/block/stone.png",
+                      "hoverFocused": "minecraft:textures/block/stone.png",
                       "disabled": "minecraft:textures/block/stone.png"
                     },
                     "indicator": {
@@ -75,6 +77,8 @@ public class StateControlTexturesTest {
         }
         assertTrue(textures.hasVariant("option", "selected"));
         assertFalse(textures.hasVariant("option", "selectedHover"));
+        assertTrue(textures.hasVariant("background", "focused"));
+        assertTrue(textures.hasVariant("background", "hoverFocused"));
         assertTrue(textures.hasVariant("fill", "normal"));
         assertFalse(textures.hasVariant("fill", "hover"));
         assertFalse(textures.has("unknown"));

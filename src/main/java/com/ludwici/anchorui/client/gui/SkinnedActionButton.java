@@ -19,6 +19,7 @@ public final class SkinnedActionButton extends AbstractButton {
     private final int borderColor;
     private final int hoverColor;
     private final int disabledColor;
+    private final int focusColor;
     private final int textColor;
 
     public SkinnedActionButton(WidgetContext context, String label, LoreStyle.Element style,
@@ -34,6 +35,7 @@ public final class SkinnedActionButton extends AbstractButton {
         this.borderColor = WidgetColors.parse(GsonHelper.getAsString(settings, "borderColor", "#FF728CA3"));
         this.hoverColor = WidgetColors.parse(GsonHelper.getAsString(settings, "hoverColor", "#FF385E81"));
         this.disabledColor = WidgetColors.parse(GsonHelper.getAsString(settings, "disabledColor", "#FF353B43"));
+        this.focusColor = WidgetColors.parse(GsonHelper.getAsString(settings, "focusColor", "#FFFFD16B"));
         this.textColor = style.textColor;
     }
 
@@ -51,10 +53,11 @@ public final class SkinnedActionButton extends AbstractButton {
         if (width <= 0 || height <= 0) {
             return;
         }
-        boolean hovered = isHoveredOrFocused();
-        String state = !active ? "disabled" : hovered ? "hover" : "normal";
-        if (!textures.render(graphics, "background", x, y, width, height, state)) {
-            int fill = !active ? disabledColor : hovered ? hoverColor : fillColor;
+        boolean hovered = isMouseOver(mouseX, mouseY);
+        boolean focused = isFocused();
+        if (!textures.render(graphics, "background", x, y, width, height,
+                ControlVisualStates.background(active, hovered, focused))) {
+            int fill = !active ? disabledColor : hovered || focused ? hoverColor : fillColor;
             if ((borderColor >>> 24) != 0) {
                 graphics.fill(x, y, x + width, y + height, borderColor);
                 if (width > 2 && height > 2) {
@@ -67,6 +70,9 @@ public final class SkinnedActionButton extends AbstractButton {
         int color = !active ? (textColor & 0x00FFFFFF) | 0x99000000 : textColor;
         graphics.drawCenteredString(context.font(), getMessage(), x + width / 2,
                 y + (height - context.font().lineHeight) / 2, color);
+        if (ControlVisualStates.needsFocusOutline(textures, active, hovered, focused)) {
+            ControlVisualStates.renderFocusOutline(graphics, x, y, width, height, focusColor);
+        }
     }
 
     @Override

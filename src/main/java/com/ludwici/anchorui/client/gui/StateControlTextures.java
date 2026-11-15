@@ -11,7 +11,7 @@ import java.util.Set;
 
 public final class StateControlTextures {
     private static final Map<String, Set<String>> PARTS = Map.of(
-            "background", Set.of("normal", "hover", "disabled"),
+            "background", Set.of("normal", "hover", "focused", "hoverFocused", "disabled"),
             "indicator", Set.of("normal", "off", "on", "offHover", "onHover", "offDisabled", "onDisabled"),
             "track", Set.of("normal", "off", "on", "offHover", "onHover", "offDisabled", "onDisabled"),
             "thumb", Set.of("normal", "off", "on", "offHover", "onHover", "offDisabled", "onDisabled"),

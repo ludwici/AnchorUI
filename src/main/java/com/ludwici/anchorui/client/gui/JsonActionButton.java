@@ -18,7 +18,8 @@ public final class JsonActionButton {
                 : UiActionRegistry.compile(context, element.settings.get("onClick"));
         var settings = style.resolvedSettings;
         if (settings.has("textures") || settings.has("background") || settings.has("fillColor") || settings.has("borderColor")
-                || settings.has("hoverColor") || settings.has("disabledColor") || settings.has("color")) {
+                || settings.has("hoverColor") || settings.has("disabledColor") || settings.has("focusColor")
+                || settings.has("color")) {
             return new SkinnedActionButton(context, element.text, style, settings, button -> {
                 if (context.screen() instanceof ItemLoreScreen screen) {
                     screen.dispatchWidgetClick(button);

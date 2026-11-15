@@ -50,6 +50,9 @@ public final class StateControlWidget extends AbstractButton implements UiChange
     private final int fillColor;
     private final int borderColor;
     private final int accentColor;
+    private final int hoverColor;
+    private final int disabledColor;
+    private final int focusColor;
     private final StateControlTextures textures;
     private final List<SelectOptionAppearance> optionAppearances;
     private final int indicatorSize;
@@ -67,7 +70,7 @@ public final class StateControlWidget extends AbstractButton implements UiChange
     private StateControlWidget(WidgetContext context, Kind kind, UiLocalState state, String key,
                                String label, List<UiControlOptions.Choice> options, int width, int height,
                                int textColor, int fillColor, int borderColor, int accentColor,
-                               JsonObject visualSettings) {
+                               int hoverColor, int disabledColor, int focusColor, JsonObject visualSettings) {
         super(0, 0, width, height, Component.literal(label));
         this.context = context;
         this.kind = kind;
@@ -79,6 +82,9 @@ public final class StateControlWidget extends AbstractButton implements UiChange
         this.fillColor = fillColor;
         this.borderColor = borderColor;
         this.accentColor = accentColor;
+        this.hoverColor = hoverColor;
+        this.disabledColor = disabledColor;
+        this.focusColor = focusColor;
         textures = new StateControlTextures(context, visualSettings);
         optionAppearances = kind == Kind.SELECT ? options.stream()
                 .map(choice -> SelectOptionAppearance.resolve(context, choice.style())).toList() : List.of();
@@ -126,8 +132,11 @@ public final class StateControlWidget extends AbstractButton implements UiChange
                 : (style.background.color >>> 24) != 0 ? style.background.color : BASE;
         int borderColor = visualSettings.has("borderColor") ? WidgetColors.parse(GsonHelper.getAsString(visualSettings, "borderColor")) : BORDER;
         int accentColor = visualSettings.has("accentColor") ? WidgetColors.parse(GsonHelper.getAsString(visualSettings, "accentColor")) : SELECTED;
+        int hoverColor = WidgetColors.parse(GsonHelper.getAsString(visualSettings, "hoverColor", "#FF36506A"));
+        int disabledColor = WidgetColors.parse(GsonHelper.getAsString(visualSettings, "disabledColor", "#FF353B43"));
+        int focusColor = WidgetColors.parse(GsonHelper.getAsString(visualSettings, "focusColor", "#FFFFD16B"));
         return new StateControlWidget(context, kind, state, key, element.text, options, width, height,
-                style.textColor, fillColor, borderColor, accentColor, visualSettings);
+                style.textColor, fillColor, borderColor, accentColor, hoverColor, disabledColor, focusColor, visualSettings);
     }
 
     @Override
@@ -174,6 +183,9 @@ public final class StateControlWidget extends AbstractButton implements UiChange
                     highlight = Math.max(0, selectedIndex());
                     scrollStart = Math.max(0, Math.min(highlight - shownOptionCount() + 1,
                             options.size() - shownOptionCount()));
+                    if (context.screen() instanceof ItemLoreScreen screen) {
+                        screen.closeOtherWidgetPopups(this);
+                    }
                     popupOpen = true;
                 }
             }
@@ -231,10 +243,12 @@ public final class StateControlWidget extends AbstractButton implements UiChange
         int y = getY();
         int height = getHeight();
         int width = getWidth();
-        boolean hovered = isHoveredOrFocused();
+        boolean hovered = isMouseOver(mouseX, mouseY);
+        boolean focused = isFocused();
         if (!textures.render(graphics, "background", x, y, width, height,
-                active ? hovered ? "hover" : "normal" : "disabled")) {
-            drawBox(graphics, x, y, width, height, hovered && active ? HOVER : fillColor);
+                ControlVisualStates.background(active, hovered, focused))) {
+            drawBox(graphics, x, y, width, height,
+                    !active ? disabledColor : hovered || focused ? hoverColor : fillColor);
         }
 
         switch (kind) {
@@ -309,6 +323,9 @@ public final class StateControlWidget extends AbstractButton implements UiChange
                             index == chosen ? TEXT : MUTED);
                 }
             }
+        }
+        if (ControlVisualStates.needsFocusOutline(textures, active, hovered, focused)) {
+            ControlVisualStates.renderFocusOutline(graphics, x, y, width, height, focusColor);
         }
     }
 

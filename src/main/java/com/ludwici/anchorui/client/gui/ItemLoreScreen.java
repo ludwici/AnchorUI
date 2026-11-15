@@ -1306,7 +1306,25 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         renderWidgetPopups(graphics, mouseX, mouseY);
     }
 
+    void closeOtherWidgetPopups(AbstractWidget owner) {
+        for (PlacedWidget placed : placedWidgets) {
+            if (placed.widget() != owner && placed.widget() instanceof UiPopupWidget popup && popup.isPopupOpen()) {
+                popup.closePopup();
+            }
+        }
+    }
+
     private void renderWidgetPopups(GuiGraphics graphics, int mouseX, int mouseY) {
+        graphics.pose().pushPose();
+        graphics.pose().translate(0, 0, 400);
+        try {
+            renderRaisedWidgetPopups(graphics, mouseX, mouseY);
+        } finally {
+            graphics.pose().popPose();
+        }
+    }
+
+    private void renderRaisedWidgetPopups(GuiGraphics graphics, int mouseX, int mouseY) {
         for (PlacedWidget placed : placedWidgets) {
             if (!(placed.widget() instanceof UiPopupWidget popup) || !popup.isPopupOpen()) {
                 continue;

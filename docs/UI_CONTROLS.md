@@ -347,6 +347,12 @@ The Java action receives the **new selected value** in `event.value()`. Boolean 
 
 The select menu opens outside the widget's normal bounds, above other screen widgets. It shows up to eight options at once and supports scrolling the menu with the wheel, clicking an option, and keyboard Up/Down plus Enter/Space. Escape closes the open menu. Tabs can be selected with the mouse, or stepped with the Left/Right arrow keys while focused.
 
+### Keyboard focus and layered dropdowns
+
+Styled buttons and built-in controls distinguish mouse hover from keyboard focus. Their `textures.background` can provide `focused` and `hoverFocused` variants in addition to `normal`, `hover` and `disabled`. A missing focused variant falls back to the existing hover/normal appearance, with a visible focus outline; use `focusColor` (default `#FFFFD16B`) to customize that outline. If a matching focus texture is provided, the outline is not overlaid. Both colors and texture paths can be edited in F8. Unstyled buttons continue to use Minecraft's vanilla rendering.
+
+Only one Select dropdown may remain open on a screen. Open dropdown panels render above normal screen widgets without inheriting the parent container's clipping rectangle. Clicking a choice and Escape handling preserve the current UI State and event semantics.
+
 ## Screen lifecycle and Java access
 
 Values are stored in the screen's `UiLocalState` and survive reinitialization/resize or Template List rebuilding within that screen instance. Newly opened screens start at their declared defaults. No state is written to disk or sent to the server.

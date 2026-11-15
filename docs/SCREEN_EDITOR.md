@@ -106,6 +106,8 @@ For enum properties such as **Layout**, **Align**, **Justify**, and **Cell X/Y**
 
 Changes affect the live layout and hitboxes immediately. **Save** persists layout overrides for this screen; **Cancel** discards them. Existing screen files and the `config/anchorui/hud-layout.json` HUD file are kept separate. You do not need to edit a mod's built-in JSON to try a new layout.
 
+Every compact F8 inspector control (−, +, E, ▼, R, color swatches and checkboxes) now uses the same 11×11 square visual size. Two-pixel vertical gaps keep consecutive controls visually separate; hitboxes remain generously sized.
+
 The editor treats unregistered Java `Codec` fields and gameplay handlers as read-only source JSON. Built-in text, color, image and texture properties and explicitly registered custom editor fields can be changed in VISUAL / CONTENT.
 
 Try this with `/anchorui screen open anchorui:advanced_layout_demo`, then **F8**. Switch a panel from `row` to `grid`, alter its columns, try a child's `grow`, and confirm **Save** and **Cancel** behave independently. Test against `stack_layout_demo` and `conditional_content_demo` for hidden children and cases.

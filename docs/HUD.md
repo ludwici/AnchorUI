@@ -225,7 +225,7 @@ The scrollable property inspector displays a small **R** button on the right of 
 - Resetting **parent**, **point** or **anchor** restores the respective value from the source JSON while preserving the other two attachment settings. A reset that would create a cyclic layout is rejected.
 - Resetting **visible** removes the user's hidden override and returns to the widget's original visibility.
 
-The inspector buttons follow their lines when scrolling. A grey reset button means the field is already at its default. The regular **Reset** button still restores every editable field of the selected widget, while **Reset all** clears all HUD overrides. Saving remains an explicit action.
+Compact inspector controls (−, +, E, ▼, R, color swatches and checkboxes) all use 11×11 square visuals with a small gap between rows. The inspector buttons follow their lines when scrolling. A grey reset button means the field is already at its default. The regular **Reset** button still restores every editable field of the selected widget, while **Reset all** clears all HUD overrides. Saving remains an explicit action.
 
 ### Component-aware inspector (row, column, grid, flex)
 

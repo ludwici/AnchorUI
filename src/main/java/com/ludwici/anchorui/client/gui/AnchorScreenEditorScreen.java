@@ -16,6 +16,7 @@ import com.ludwici.anchorui.client.gui.editor.EditorDropdown;
 import com.ludwici.anchorui.api.widget.WidgetEditorRegistry;
 import com.ludwici.anchorui.client.gui.editor.AppearanceInspectorControls;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorCheckbox;
+import com.ludwici.anchorui.client.gui.editor.EditorInspectorButton;
 import com.ludwici.anchorui.client.gui.editor.EditorColorPicker;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphics;
@@ -36,7 +37,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     private static final int SELECTED = 0xFFFFD16B;
     private static final int HIDDEN = 0xFF929BA7;
     private static final int GUIDES = 0xFF8DF0D3;
-    private static final int INSPECTOR_LINE_HEIGHT = 11;
+    private static final int INSPECTOR_LINE_HEIGHT = 13;
     private static final int RESET_SIZE = 11;
     private static final float INSPECTOR_SCALE = 0.83F;
     private static final List<String> ANCHOR_CHOICES = java.util.Arrays.stream(ElementAnchor.values()).map(ElementAnchor::name).toList();
@@ -57,13 +58,13 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     private record AppearanceHitbox(AppearanceInspectorControls.Control control, int direction, int x, int y) {
         private boolean contains(double mouseX, double mouseY) {
-            return mouseX >= x && mouseX < x + 14 && mouseY >= y && mouseY < y + RESET_SIZE;
+            return EditorInspectorButton.contains(mouseX, mouseY, x, y);
         }
     }
 
     private record LayoutHitbox(LayoutInspectorControls.Control control, int direction, int x, int y) {
         private boolean contains(double mouseX, double mouseY) {
-            return mouseX >= x && mouseX < x + 14 && mouseY >= y && mouseY < y + RESET_SIZE;
+            return EditorInspectorButton.contains(mouseX, mouseY, x, y);
         }
     }
 
@@ -371,7 +372,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         String id = selected.id();
         LayoutInspectorControls.Control control = hitbox.control();
         String current = control.value().replace("anchorui:", "");
-        editorDropdown.open(hitbox.x() - 106, hitbox.y(), 14, RESET_SIZE, width, height,
+        editorDropdown.open(hitbox.x() - 106, hitbox.y(), EditorInspectorButton.SIZE, RESET_SIZE, width, height,
                 LayoutInspectorControls.choices(control), current, value -> {
                     status = target.editorSetLayout(id, control, value) ? "" : "Invalid layout value or constraints";
                     refreshSelection();
@@ -384,7 +385,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         }
         String id = selected.id();
         AppearanceInspectorControls.Control control = hitbox.control();
-        editorDropdown.open(hitbox.x() - 106, hitbox.y(), 14, RESET_SIZE, width, height,
+        editorDropdown.open(hitbox.x() - 106, hitbox.y(), EditorInspectorButton.SIZE, RESET_SIZE, width, height,
                 control.field().choices(), control.value(), value -> {
                     status = target.editorSetAppearance(id, control, value) ? "" : target.screenSaveError();
                     refreshSelection();
@@ -565,18 +566,14 @@ public final class AnchorScreenEditorScreen extends Screen {
         if (checkbox) {
             EditorInspectorCheckbox.render(graphics, next, lineY, Boolean.parseBoolean(control.value()));
         } else if (choice) {
-            graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF40566A);
-            graphics.drawString(font, "▼", next + 2, lineY + 1, 0xFFE5EEF5, false);
+            EditorInspectorButton.draw(graphics, font, "▼", next, lineY, 0xFF40566A, 0xFFE5EEF5);
         } else {
-            graphics.fill(first, lineY, first + 14, lineY + RESET_SIZE, 0xFF40566A);
-            graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF40566A);
-            graphics.drawString(font, "-", first + 4, lineY + 1, 0xFFE5EEF5, false);
-            graphics.drawString(font, "+", next + 3, lineY + 1, 0xFFE5EEF5, false);
+            EditorInspectorButton.draw(graphics, font, "-", first, lineY, 0xFF40566A, 0xFFE5EEF5);
+            EditorInspectorButton.draw(graphics, font, "+", next, lineY, 0xFF40566A, 0xFFE5EEF5);
         }
-        graphics.fill(reset, lineY, reset + 14, lineY + RESET_SIZE,
-                control.modified() ? 0xFF3D6273 : 0xFF40505D);
-        graphics.drawString(font, "R", reset + 3, lineY + 1,
-                control.modified() ? 0xFFECF8FF : 0xFF80919E, false);
+        EditorInspectorButton.draw(graphics, font, "R", reset, lineY,
+                control.modified() ? 0xFF3D6273 : 0xFF40505D,
+                control.modified() ? 0xFFECF8FF : 0xFF80919E);
         if (lineY >= top && lineY + RESET_SIZE <= bottom) {
             if (!choice && !checkbox) {
                 layoutHitboxes.add(new LayoutHitbox(control, -1, first, lineY));
@@ -671,25 +668,21 @@ public final class AnchorScreenEditorScreen extends Screen {
         if (checkbox) {
             EditorInspectorCheckbox.render(graphics, next, lineY, Boolean.parseBoolean(control.value()));
         } else if (colorField) {
-            graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF718699);
             try {
-                graphics.fill(next + 2, lineY + 2, next + 12, lineY + 9, ColorPickerColor.parse(control.value()));
+                EditorInspectorButton.drawColor(graphics, next, lineY, ColorPickerColor.parse(control.value()));
             } catch (IllegalArgumentException exception) {
-                graphics.fill(next + 2, lineY + 2, next + 12, lineY + 9, 0xFF3D4550);
+                EditorInspectorButton.drawColor(graphics, next, lineY, 0xFF3D4550);
             }
         } else if (control.textual() || choice) {
-            graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF40566A);
-            graphics.drawString(font, choice ? "▼" : "E", next + 2, lineY + 1, 0xFFE5EEF5, false);
+            EditorInspectorButton.draw(graphics, font, choice ? "▼" : "E",
+                    next, lineY, 0xFF40566A, 0xFFE5EEF5);
         } else {
-            graphics.fill(left, lineY, left + 14, lineY + RESET_SIZE, 0xFF40566A);
-            graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF40566A);
-            graphics.drawString(font, "-", left + 4, lineY + 1, 0xFFE5EEF5, false);
-            graphics.drawString(font, "+", next + 3, lineY + 1, 0xFFE5EEF5, false);
+            EditorInspectorButton.draw(graphics, font, "-", left, lineY, 0xFF40566A, 0xFFE5EEF5);
+            EditorInspectorButton.draw(graphics, font, "+", next, lineY, 0xFF40566A, 0xFFE5EEF5);
         }
-        graphics.fill(reset, lineY, reset + 14, lineY + RESET_SIZE,
-                control.modified() ? 0xFF3D6273 : 0xFF40505D);
-        graphics.drawString(font, "R", reset + 3, lineY + 1,
-                control.modified() ? 0xFFECF8FF : 0xFF80919E, false);
+        EditorInspectorButton.draw(graphics, font, "R", reset, lineY,
+                control.modified() ? 0xFF3D6273 : 0xFF40505D,
+                control.modified() ? 0xFFECF8FF : 0xFF80919E);
         if (lineY >= top && lineY + RESET_SIZE <= bottom) {
             if (!control.textual() && !choice && !checkbox) {
                 appearanceHitboxes.add(new AppearanceHitbox(control, -1, left, lineY));

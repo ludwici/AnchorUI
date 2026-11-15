@@ -23,11 +23,12 @@ public final class WidgetDocumentResolver {
     public static JsonObject resolve(JsonObject document, String namespace, Map<String, JsonObject> templates, Consumer<String> warningSink) {
         JsonObject resolved = document.deepCopy();
         LinkedHashMap<String, JsonObject> elements = new LinkedHashMap<>();
+        LinkedHashMap<String, String> widgetParents = new LinkedHashMap<>();
         JsonArray imports = array(document, "imports");
         for (JsonElement value : imports) {
             String id = WidgetIds.id(value.getAsString(), namespace);
             try {
-                addNested(elements, template(id, templates, new ArrayList<>()), namespace, templates, warningSink);
+                addNested(elements, widgetParents, template(id, templates, new ArrayList<>()), namespace, templates, warningSink);
             } catch (UnknownWidgetDefinitionException exception) {
                 if (warningSink == null) {
                     throw exception;
@@ -67,7 +68,7 @@ public final class WidgetDocumentResolver {
                 }
             }
             output.addProperty("id", WidgetIds.id(output.get("id").getAsString(), namespace));
-            addNested(elements, output, namespace, templates, warningSink);
+            addNested(elements, widgetParents, output, namespace, templates, warningSink);
             index++;
         }
         JsonArray array = new JsonArray();
@@ -78,17 +79,27 @@ public final class WidgetDocumentResolver {
             resolved.add("entities", array);
         }
         resolved.remove("imports");
+        if (!widgetParents.isEmpty()) {
+            JsonObject hierarchy = new JsonObject();
+            for (var entry : widgetParents.entrySet()) {
+                hierarchy.addProperty(entry.getKey(), entry.getValue());
+            }
+            resolved.add("widgetParents", hierarchy);
+        }
         return resolved;
     }
 
-    private static void addNested(Map<String, JsonObject> elements, JsonObject original, String namespace, Map<String, JsonObject> templates, Consumer<String> warningSink) {
-        addNested(elements, original, namespace, templates, warningSink, 0);
+    private static void addNested(Map<String, JsonObject> elements, Map<String, String> widgetParents,
+                                  JsonObject original, String namespace, Map<String, JsonObject> templates,
+                                  Consumer<String> warningSink) {
+        addNested(elements, widgetParents, original, namespace, templates, warningSink, 0, null);
     }
 
-    private static void addNested(Map<String, JsonObject> elements, JsonObject original, String namespace,
-                                  Map<String, JsonObject> templates, Consumer<String> warningSink, int caseDepth) {
+    private static void addNested(Map<String, JsonObject> elements, Map<String, String> widgetParents,
+                                  JsonObject original, String namespace, Map<String, JsonObject> templates,
+                                  Consumer<String> warningSink, int caseDepth, String parentId) {
         if ("anchorui:cases".equals(original.get("type").getAsString())) {
-            expandCases(elements, original, templates, warningSink, caseDepth);
+            expandCases(elements, widgetParents, original, templates, warningSink, caseDepth, parentId);
             return;
         }
         JsonArray children = array(original, "children");
@@ -96,9 +107,12 @@ public final class WidgetDocumentResolver {
         parent.remove("children");
         String id = parent.get("id").getAsString();
         if (!children.isEmpty() && !WidgetContainers.supportsChildren(parent.get("type").getAsString())) {
-            throw new IllegalArgumentException("Widget '" + id + "' cannot contain children; use anchorui:panel or anchorui:container");
+            throw new IllegalArgumentException("Widget '" + id + "' cannot contain children; use anchorui:panel");
         }
         add(elements, parent);
+        if (parentId != null) {
+            widgetParents.put(id, parentId);
+        }
 
         int index = 0;
         for (JsonElement raw : children) {
@@ -130,14 +144,14 @@ public final class WidgetDocumentResolver {
                 position.addProperty("relativeTo", id);
             }
             child.add("position", position);
-            child.addProperty(WidgetContainers.PARENT_FIELD, id);
-            addNested(elements, child, childNamespace, templates, warningSink, caseDepth);
+            addNested(elements, widgetParents, child, childNamespace, templates, warningSink, caseDepth, id);
             index++;
         }
     }
 
-    private static void expandCases(Map<String, JsonObject> elements, JsonObject original,
-                                    Map<String, JsonObject> templates, Consumer<String> warningSink, int caseDepth) {
+    private static void expandCases(Map<String, JsonObject> elements, Map<String, String> widgetParents,
+                                    JsonObject original, Map<String, JsonObject> templates,
+                                    Consumer<String> warningSink, int caseDepth, String parentId) {
         String id = original.get("id").getAsString();
         if (caseDepth >= 8) {
             throw new IllegalArgumentException("Conditional widget nesting exceeds 8 at " + id);
@@ -169,8 +183,8 @@ public final class WidgetDocumentResolver {
             JsonElement when = choice.get("when").deepCopy();
             ConditionExpression.parse(when, false, false);
             JsonElement selector = exclusiveCase(prior, when);
-            addCaseBranch(elements, base, choice.getAsJsonObject("widget"), selector,
-                    id + "/case_" + index, templates, warningSink, caseDepth + 1);
+            addCaseBranch(elements, widgetParents, base, choice.getAsJsonObject("widget"), selector,
+                    id + "/case_" + index, templates, warningSink, caseDepth + 1, parentId);
             prior.add(when);
         }
         if (original.has("otherwise")) {
@@ -178,14 +192,15 @@ public final class WidgetDocumentResolver {
             if (!fallback.isJsonObject()) {
                 throw new IllegalArgumentException("Conditional widget '" + id + "' requires an object in 'otherwise'");
             }
-            addCaseBranch(elements, base, fallback.getAsJsonObject(), excludePrior(prior),
-                    id + "/otherwise", templates, warningSink, caseDepth + 1);
+            addCaseBranch(elements, widgetParents, base, fallback.getAsJsonObject(), excludePrior(prior),
+                    id + "/otherwise", templates, warningSink, caseDepth + 1, parentId);
         }
     }
 
-    private static void addCaseBranch(Map<String, JsonObject> elements, JsonObject base, JsonObject rawWidget,
-                                      JsonElement selector, String id, Map<String, JsonObject> templates,
-                                      Consumer<String> warningSink, int caseDepth) {
+    private static void addCaseBranch(Map<String, JsonObject> elements, Map<String, String> widgetParents,
+                                      JsonObject base, JsonObject rawWidget, JsonElement selector,
+                                      String id, Map<String, JsonObject> templates,
+                                      Consumer<String> warningSink, int caseDepth, String parentId) {
         String namespace = WidgetIds.namespace(id);
         JsonObject templateWidget = new JsonObject();
         JsonObject widget = rawWidget.deepCopy();
@@ -215,7 +230,7 @@ public final class WidgetDocumentResolver {
             throw new IllegalArgumentException("Conditional widget branch '" + id + "' requires 'type' or 'ref'");
         }
         normalizePosition(output, namespace);
-        addNested(elements, output, namespace, templates, warningSink, caseDepth);
+        addNested(elements, widgetParents, output, namespace, templates, warningSink, caseDepth, parentId);
     }
 
     private static JsonElement exclusiveCase(List<JsonElement> prior, JsonElement condition) {

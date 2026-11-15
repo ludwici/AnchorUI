@@ -268,12 +268,12 @@ The overrides are merged with resource-defined layout settings. A field reset re
 In the F8 HUD editor, select a widget, press **Pick parent**, then click a panel/container (or its entry in Widgets). It is **immediately moved into that container**. No secondary menu is needed.
 
 - For a **Grid**, every direct child automatically occupies a cell according to the Grid's `columns`, gaps, cell sizes and alignment. No extra `relativeTo`, `/__content` or `layoutItem.enabled` is necessary. Explicit source child positions are ignored by the Grid.
-- For a **row/column**, the editor supplies the top-left content anchor used by the existing stack placement rules.
+- For a **row/column**, the editor makes the Panel the anchor target and the runtime applies its padding automatically.
 - Click empty world in parent-selection mode to detach the widget back to the screen root. Clicking a regular widget or vanilla HUD reference still allows an advanced anchor-target relationship.
 
-The inspector distinguishes the structural **container** from an advanced coordinate anchor. Structural moves persist in `containerParent` client overrides and are reversible through Cancel, Parent reset or Reset all. Circular parent relationships are rejected.
+The inspector displays the **Panel parent** as a single field. F8 Parent selection prioritizes Panels even when their children overlap them. Structural moves persist locally and are reversible through Cancel, Parent reset or Reset all; circular relationships are rejected.
 
-The **SOURCE JSON [+]** group starts collapsed, and opening it does not show generated `__anchorui_*` or automatic `/__content` fields. User resource packs only need to place Grid widgets inside `children`.
+The **SOURCE JSON [+]** group starts collapsed. The renderer no longer injects `__anchorui_container_parent` into nested widget settings and automatically binds children to their Panel, including its padding. Legacy `/__content` references remain supported but are not needed in new resource packs.
 
 ### Visual and content properties in the HUD editor
 

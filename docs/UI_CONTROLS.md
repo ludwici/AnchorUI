@@ -351,7 +351,7 @@ The select menu opens outside the widget's normal bounds, above other screen wid
 
 Styled buttons and built-in controls distinguish mouse hover from keyboard focus. Their `textures.background` can provide `focused` and `hoverFocused` variants in addition to `normal`, `hover` and `disabled`. A missing focused variant falls back to the existing hover/normal appearance, with a visible focus outline; use `focusColor` (default `#FFFFD16B`) to customize that outline. If a matching focus texture is provided, the outline is not overlaid. Both colors and texture paths can be edited in F8. Unstyled buttons continue to use Minecraft's vanilla rendering.
 
-Only one Select dropdown may remain open on a screen. Open dropdown panels render above normal screen widgets without inheriting the parent container's clipping rectangle. Clicking a choice and Escape handling preserve the current UI State and event semantics.
+Only one Select dropdown may remain open on a screen. Open dropdown panels render above normal screen widgets without inheriting the parent container's clipping rectangle. Pressing Tab to move focus away closes the dropdown, as does Escape. Clicking a choice preserves the current UI State and event semantics.
 
 ## Screen lifecycle and Java access
 

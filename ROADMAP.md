@@ -89,6 +89,8 @@ The completed functionality above does **not** imply finished visual consistency
 - [x] Add per-choice Select styles with color/texture state precedence over shared row skins.
 - [x] Add `progress` track/fill/frame texture parts and per-widget text/color/frame overrides, and make Panel and Progress visual settings inherit from shared style resources.
 - [x] Share both RPG HUD bar backgrounds, padding and border styling through `anchorui:style/rpg_progress`, with focused geometry/style tests (in-game rendering QA remains).
+- [x] Replace Boolean `-/+` inspector steppers with real checkbox controls in both F8 editors (including Java-registered Boolean fields).
+- [x] Add explicit `focused` / `hoverFocused` button/control texture variants, visible keyboard-focus fallback outlines, and one-open-dropdown popup layering.
 - [ ] In-game QA for appearance editing, resource reload, modal focus and custom Java widget codecs.
 - [ ] Unify visual style inheritance and appearance across progress bars, buttons, panels and interactive controls, including hover/disabled/focused states where appropriate.
 - [ ] Verify matching borders/frames on RPG HUD progress bars; keep the earlier second-bar regression in the QA suite.

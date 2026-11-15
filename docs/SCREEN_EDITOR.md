@@ -26,13 +26,13 @@ Third-party callers using the original three-argument constructor can still prev
 
 A **draggable Widgets panel** on the left lists *only the widgets belonging to the currently open Anchor UI screen*. It does not include HUDs from other screens or the global vanilla HUD reference catalog. The entries are grouped: `minecraft:*` first if present, then the screen's namespace, then other namespaces. **Children now appear indented under their structural container** with type markers for panels, buttons, text, progress and image widgets. Click a container's disclosure arrow to collapse or expand its descendants, or click its name to select it. When the child belongs to another namespace it remains in that namespace's group. Hover any widget to see its full ID and type. Hidden widgets stay selectable from the list. Scroll the list with the mouse wheel and drag its header independently of the inspector.
 
-While **Parent** is active, clicking a widget in the list chooses the target. For a panel or container, the editor opens a choice between **Anchor to container**, **Anchor to content area**, and **Move into container**. The last option changes the structural layout parent as well as the anchor. Choosing `screen` also offers **Move to screen (root)**. Self references and circular dependencies are rejected. Press **Tab** to temporarily hide both editor panels.
+While **Parent** is active, click a container in the Widgets list to **move the selected widget inside it immediately**. Selecting Grid makes it a Grid child automatically; no extra choices or content-area anchors are required. Click empty world to move the widget back to the screen root. Clicking a non-container widget can still change an advanced coordinate anchor. Self references and circular dependencies are rejected. Press **Tab** to temporarily hide both editor panels.
 
 
 1. Click any outlined widget to select it. Drag it to reposition the widget. A 6 GUI-pixel magnet helps align it with other visible widgets along X/Y; hold **Alt** to bypass snapping.
 2. Use arrow keys for one-pixel nudges (10 pixels with **Shift**).
 3. **Point** and **Anchor** cycle through the same nine anchor locations as the HUD editor.
-4. Use **Parent** and click another widget or its row in the Widgets list. Ordinary targets set an anchor directly. Selecting a **panel/container** opens three actions: anchor to its frame, anchor to its padded `/__content` frame, or **Move into container** to make the widget an actual child of its row/column/grid layout. Clicking empty world opens the screen/root options. Escape cancels the picker. Invalid/circular relationships are rejected.
+4. Use **Parent** and click a panel/container or select it in the Widgets list. The selected widget is immediately made its child. For a Grid parent, Grid automatically assigns its cell using the parent's layout settings; child position fields are not required. Click empty world to detach the widget to the screen root. Escape cancels the picker; invalid/circular references are rejected.
 5. **Hide/Show** toggles local widget visibility. **Reset** restores the selected widget's defaults; **Reset all** clears all overrides for the open screen.
 6. **Save**, **F8** or **Ctrl+S** saves and returns to the original screen. **Cancel** or **Esc** discards edits and returns to the screen.
 7. Drag the editor panel by its title bar. Press **Tab** to temporarily hide the panel while positioning widgets.
@@ -110,34 +110,28 @@ The editor treats unregistered Java `Codec` fields and gameplay handlers as read
 
 Try this with `/anchorui screen open anchorui:advanced_layout_demo`, then **F8**. Switch a panel from `row` to `grid`, alter its columns, try a child's `grow`, and confirm **Save** and **Cancel** behave independently. Test against `stack_layout_demo` and `conditional_content_demo` for hidden children and cases.
 
-### Anchor reference vs. structural container parent
+### Move widgets directly into Grid
 
-Selecting `mypack:grid` while picking a parent offers three distinct operations:
+With F8 open, select a widget, press **Parent**, and click your Grid panel (for example `anchorui:grid`) or select that panel from Widgets. **That's it:** the widget becomes a direct child of the Grid and receives a cell according to `columns`, gaps, cell sizing and alignment. Repeat for other widgets. The Grid's own settings control the arrangement.
 
-- **Anchor to container** changes only `relativeTo` to `mypack:grid`. The widget stays in its original structural layout group.
-- **Anchor to content area** changes only `relativeTo` to `mypack:grid/__content`. Coordinates start inside the container's padding, but the widget is **not** automatically added to Grid.
-- **Move into container** makes `mypack:grid` the widget's *structural parent*, anchors it to `mypack:grid/__content` with TOPLEFT/TOPLEFT, resets its local layout nudge and enables its automatic layout participation. It now receives the container's Grid/Row/Column placement, visibility inheritance, clipping and scrolling behavior. Use **Parent** then click empty space and choose **Move to screen (root)** to remove that structural membership.
-
-A moved widget is represented by user-specific layout overrides, not by rewriting source `children` arrays:
+When a widget belongs to a Grid, **no manual anchor selection, `__content` reference or `layoutItem.enabled` flag is needed**. Explicit old positions do not override Grid placement. Clicking empty space in Parent mode moves the selected widget back to the screen root. The editor saves the structural relationship locally:
 
 ```json
 {
   "version": 1,
   "offsets": {
     "mypack:button": {
-      "relativeTo": "mypack:grid/__content",
-      "point": "TOPLEFT",
-      "anchor": "TOPLEFT",
-      "containerParent": "mypack:grid",
-      "layoutItem": {
-        "enabled": true
-      }
+      "containerParent": "mypack:grid"
     }
   }
 }
 ```
 
-The **Parent** reset control restores both the authored structural parent and the authored anchor target. Save/Cancel continue to work on the existing per-screen override file. The editor validates target containers and structural cycles before applying a move.
+For **author-written UI JSON**, simply put widgets in the parent's `children` array; they are automatically Grid members. No `containerParent` or `__anchorui_*` field is needed in resource packs. The last example is an **editor save file**, not the format developers must author.
+
+For row/column, the editor still sets an appropriate anchor automatically when moving a widget into the container. Selecting an ordinary non-container widget remains an advanced anchor-target operation. Invalid parent cycles are rejected, and resetting Parent restores the source hierarchy.
+
+The **SOURCE JSON [+]** section is collapsed by default and hides generated internal `__anchorui_*` fields and automatic `/__content` references.
 
 ### Visual widget editing: text, colors, textures and sizes
 

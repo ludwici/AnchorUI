@@ -18,10 +18,10 @@ public class SelectOptionAppearanceTest {
                   "selectedTextColor": "#FFFFFFFF"
                 }
                 """));
-        assertEquals(0xFF101010, appearance.backgroundColor(false, false));
+        assertEquals(Integer.valueOf(0xFF101010), appearance.backgroundColor(false, false));
         assertNull(appearance.backgroundColor(false, true));
-        assertEquals(0xFF61348A, appearance.backgroundColor(true, false));
-        assertEquals(0xFF61348A, appearance.backgroundColor(true, true));
+        assertEquals(Integer.valueOf(0xFF61348A), appearance.backgroundColor(true, false));
+        assertEquals(Integer.valueOf(0xFF61348A), appearance.backgroundColor(true, true));
         assertEquals(0xFFE2B8FF, appearance.textColor(false, false, 0xFFABCDEF));
         assertEquals(0xFFFFFFFF, appearance.textColor(true, true, 0xFFABCDEF));
     }

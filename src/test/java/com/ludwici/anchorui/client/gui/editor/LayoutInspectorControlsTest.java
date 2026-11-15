@@ -101,4 +101,19 @@ public class LayoutInspectorControlsTest {
                 {"type":"anchorui:text"}
                 """), new HudLayoutOffsets()).isEmpty());
     }
+    @Test
+    public void gridChildrenOnlyExposeOptionalSizeLimitsNotManualParticipationOrFlex() {
+        var source = json("""
+                {"type":"anchorui:button",
+                 "layoutItem":false,
+                 "size":{"width":80,"height":20}}
+                """);
+        var controls = LayoutInspectorControls.describe("test:child", source, new HudLayoutOffsets(), true);
+        assertEquals(4, controls.size());
+        assertEquals("0", find(controls, "layoutItem.minWidth").value());
+        assertEquals("16384", find(controls, "layoutItem.maxWidth").value());
+        assertEquals("0", find(controls, "layoutItem.minHeight").value());
+        assertEquals("16384", find(controls, "layoutItem.maxHeight").value());
+    }
+
 }

@@ -1,0 +1,98 @@
+{
+  "style": "anchorui:style/default",
+  "state": {
+    "selectedTab": "default",
+    "showDetails": false,
+    "targetOnly": "kept"
+  },
+  "onOpen": "anchorui_test:event_notice",
+  "onClose": "anchorui_test:event_notice",
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:lifecycle_target_title",
+      "text": "<b>SCREEN NAVIGATION — TARGET</b>",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -74
+      },
+      "size": {
+        "width": 296,
+        "height": 20
+      },
+      "align": "center",
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:lifecycle_target_state",
+      "text": "Selected: {{anchorui:ui.state#selectedTab}}",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -38
+      },
+      "size": {
+        "width": 285,
+        "height": 20
+      },
+      "align": "center"
+    },
+    {
+      "type": "anchorui:checkbox",
+      "id": "anchorui:lifecycle_target_check",
+      "text": "Show details",
+      "stateKey": "showDetails",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -3
+      },
+      "size": {
+        "width": 230,
+        "height": 22
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:lifecycle_target_only",
+      "text": "Target-only state: {{anchorui:ui.state#targetOnly}}",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 34
+      },
+      "size": {
+        "width": 280,
+        "height": 20
+      },
+      "align": "center"
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:lifecycle_back",
+      "text": "Back to source",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 71
+      },
+      "size": {
+        "width": 165,
+        "height": 20
+      },
+      "onClick": "anchorui:close_screen"
+    }
+  ]
+}

@@ -1,0 +1,177 @@
+{
+  "style": "anchorui:style/default",
+  "state": {
+    "tab": "red",
+    "details": true,
+    "sourceOnly": "source-value"
+  },
+  "onOpen": "anchorui_test:event_notice",
+  "onClose": "anchorui_test:event_notice",
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:lifecycle_source_title",
+      "text": "<b>SCREEN NAVIGATION — SOURCE</b>",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -108
+      },
+      "size": {
+        "width": 295,
+        "height": 20
+      },
+      "align": "center",
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "anchorui:select",
+      "id": "anchorui:lifecycle_source_select",
+      "text": "Selected tab",
+      "stateKey": "tab",
+      "options": [
+        {
+          "value": "red",
+          "label": "Red"
+        },
+        {
+          "value": "green",
+          "label": "Green"
+        },
+        {
+          "value": "blue",
+          "label": "Blue"
+        }
+      ],
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -71
+      },
+      "size": {
+        "width": 258,
+        "height": 22
+      }
+    },
+    {
+      "type": "anchorui:checkbox",
+      "id": "anchorui:lifecycle_source_details",
+      "text": "Show details",
+      "stateKey": "details",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -40
+      },
+      "size": {
+        "width": 258,
+        "height": 22
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:lifecycle_source_text",
+      "text": "Source: {{anchorui:ui.state#tab}}",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -8
+      },
+      "size": {
+        "width": 264,
+        "height": 20
+      },
+      "align": "center"
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:lifecycle_transfer",
+      "text": "Transfer state",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 24
+      },
+      "size": {
+        "width": 210,
+        "height": 20
+      },
+      "onClick": {
+        "type": "anchorui:open_screen",
+        "screen": "anchorui:lifecycle_target_demo",
+        "stateHandoff": {
+          "selectedTab": "tab",
+          "showDetails": "details"
+        }
+      }
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:lifecycle_defaults",
+      "text": "Open with defaults",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 54
+      },
+      "size": {
+        "width": 210,
+        "height": 20
+      },
+      "onClick": {
+        "type": "anchorui:open_screen",
+        "screen": "anchorui:lifecycle_target_demo"
+      }
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:lifecycle_missing",
+      "text": "Try missing screen",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 84
+      },
+      "size": {
+        "width": 210,
+        "height": 20
+      },
+      "onClick": {
+        "type": "anchorui:open_screen",
+        "screen": "anchorui:not_a_screen"
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:lifecycle_hint",
+      "text": "Back restores this screen's local state",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 112
+      },
+      "size": {
+        "width": 292,
+        "height": 20
+      },
+      "align": "center",
+      "color": "#FFB9C9D6"
+    }
+  ]
+}

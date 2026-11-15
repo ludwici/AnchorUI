@@ -8,6 +8,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UiStateHandoffTest {
     @Test
@@ -73,7 +74,7 @@ public class UiStateHandoffTest {
                 () -> UiStateHandoff.copy(source, target, Map.of("page", "page", "tab", "tab")));
         assertEquals(1, target.get("page").getAsInt());
         assertFalse(target.get("tab").getAsBoolean());
-        assertEquals(true, exception.getMessage().contains("Cannot transfer UI state"));
+        assertTrue(exception.getMessage().contains("Cannot transfer UI state"));
     }
 
     @Test

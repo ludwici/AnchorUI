@@ -47,6 +47,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -1213,6 +1214,17 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         return context == null ? JsonNull.INSTANCE : context.value();
     }
 
+    @Override
+    public void setFocused(GuiEventListener focused) {
+        super.setFocused(focused);
+        for (PlacedWidget placed : placedWidgets) {
+            if (placed.widget() == focused) {
+                focusedWidgetId = placed.id();
+                return;
+            }
+        }
+    }
+
     private void rememberFocusedWidget() {
         if (getFocused() == null) {
             return;
@@ -1239,6 +1251,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             }
             break;
         }
+        focusedWidgetId = null;
         setFocused(null);
     }
 

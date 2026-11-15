@@ -360,10 +360,23 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         }
         HudLayoutOffsets candidate = editingScreenOffsets.copy();
         candidate.setContainerParent(id, containerId);
-        candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(
-                WidgetContainers.contentId(containerId), ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
-        candidate.set(id, -widget.position().x, -widget.position().y);
-        candidate.setSettingOverride(id, "layoutItem", "enabled", new com.google.gson.JsonPrimitive(true));
+        boolean grid = false;
+        for (PlacedWidget placed : placedWidgets) {
+            if (placed.id().equals(containerId)) {
+                JsonObject settings = candidate.effectiveSettings(containerId, placed.style().resolvedSettings);
+                grid = ContainerAutoLayout.parse(settings) instanceof com.ludwici.anchorui.api.layout.GridLayout.Config;
+                break;
+            }
+        }
+        if (grid) {
+            candidate.clearAnchor(id);
+            candidate.set(id, 0, 0);
+        } else {
+            candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(
+                    WidgetContainers.contentId(containerId), ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
+            candidate.set(id, -widget.position().x, -widget.position().y);
+            candidate.setSettingOverride(id, "layoutItem", "enabled", new com.google.gson.JsonPrimitive(true));
+        }
         return useCandidate(candidate);
     }
 

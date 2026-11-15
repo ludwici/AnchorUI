@@ -526,8 +526,8 @@ public final class AnchorScreenEditorScreen extends Screen {
         List<InspectorLine> lines = inspectorLines();
         maxInspectorScroll = Math.max(0, lines.size() * INSPECTOR_LINE_HEIGHT - (bottom - top));
         inspectorScroll = Math.max(0, Math.min(inspectorScroll, maxInspectorScroll));
-        sourceHeaderY = sourceHeaderIndex < 0 ? -1 : top - inspectorScroll + sourceHeaderIndex * INSPECTOR_LINE_HEIGHT;
         updateInspectorScrollBar(top, bottom);
+        sourceHeaderY = sourceHeaderIndex < 0 ? -1 : top - inspectorScroll + sourceHeaderIndex * INSPECTOR_LINE_HEIGHT;
         graphics.enableScissor(panelX() + 4, top, panelX() + inspectorWidth - 4, bottom);
         try {
             int lineY = top - inspectorScroll;

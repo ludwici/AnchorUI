@@ -3,6 +3,7 @@ package com.ludwici.anchorui.client.hud;
 import com.google.gson.JsonObject;
 import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.api.LoreEntity;
+import com.ludwici.anchorui.api.animation.UiAnimationSpec;
 import com.ludwici.anchorui.api.condition.BoundCondition;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.layout.ContainerLayout;
@@ -26,6 +27,7 @@ import com.ludwici.anchorui.api.widget.WidgetIds;
 import com.ludwici.anchorui.api.widget.WidgetInstanceRegistry;
 import com.ludwici.anchorui.client.LoreLoader;
 import com.ludwici.anchorui.client.gui.AnchoredWidget;
+import com.ludwici.anchorui.client.gui.WidgetAnimation;
 import com.ludwici.anchorui.client.gui.NativeContainerScrollPanel;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -112,6 +114,7 @@ public final class AnchorHudManager {
     private Map<String, WidgetTransforms.Group> containerGroups = Map.of();
     private Set<String> clippingContainers = Set.of();
     private final Set<String> renderFailures = new HashSet<>();
+    private final Map<String, WidgetAnimation> widgetAnimations = new HashMap<>();
     private HudLayoutOffsets savedOffsets = new HudLayoutOffsets();
     private HudLayoutOffsets editingOffsets;
     private boolean storageLoaded;
@@ -857,7 +860,7 @@ public final class AnchorHudManager {
             return;
         }
         prepare(minecraft, graphics.guiWidth(), graphics.guiHeight());
-        renderWidgets(graphics, delta.getGameTimeDeltaPartialTick(false));
+        renderWidgets(graphics, delta.getGameTimeDeltaPartialTick(false), false);
     }
 
     public void renderEditorPreview(GuiGraphics graphics, float partialTick) {
@@ -866,7 +869,7 @@ public final class AnchorHudManager {
             return;
         }
         prepare(minecraft, graphics.guiWidth(), graphics.guiHeight());
-        renderWidgets(graphics, partialTick);
+        renderWidgets(graphics, partialTick, true);
     }
 
     private void prepare(Minecraft minecraft, int width, int height) {
@@ -915,17 +918,27 @@ public final class AnchorHudManager {
         return FMLPaths.CONFIGDIR.get().resolve("anchorui").resolve("hud-layout.json");
     }
 
-    private void renderWidgets(GuiGraphics graphics, float partialTick) {
+    private void renderWidgets(GuiGraphics graphics, float partialTick, boolean editorPreview) {
         applyVisibility();
         if (!collapsingLayoutParents.isEmpty() && !currentLayoutHidden().equals(collapsedLayoutHidden)) {
             relayout(null);
         }
+        long now = System.nanoTime();
         for (PlacedWidget placed : widgets) {
             if (renderFailures.contains(placed.id())) {
                 continue;
             }
             AbstractWidget widget = placed.widget();
-            if (!widget.visible) {
+            WidgetAnimation animation = editorPreview ? null : widgetAnimations.get(placed.id());
+            if (animation != null) {
+                animation.update(widget.visible, now);
+            }
+            boolean hiding = animation != null && !widget.visible && animation.renderWhenHidden(now);
+            if (!widget.visible && !hiding) {
+                continue;
+            }
+            UiAnimationSpec.Frame frame = animation == null ? UiAnimationSpec.Frame.IDENTITY : animation.frame(now);
+            if (frame.opacity() <= 0.0) {
                 continue;
             }
             AnchorLayout.Bounds clip = clipBounds.get(placed.id());
@@ -936,19 +949,33 @@ public final class AnchorHudManager {
             if (clip != null) {
                 graphics.enableScissor(clip.x(), clip.y(), clip.x() + clip.width(), clip.y() + clip.height());
             }
+            boolean originalVisible = widget.visible;
             try {
+                WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+                graphics.pose().translate(transform.translateX(), transform.translateY(), 0);
+                graphics.pose().scale((float) transform.scale(), (float) transform.scale(), 1.0F);
+                WidgetAnimation.applyPose(graphics, widget, frame);
+                if (frame.opacity() < 1.0) {
+                    graphics.flush();
+                    graphics.setColor(1.0F, 1.0F, 1.0F, (float) frame.opacity());
+                }
                 int color = placed.style().background.color;
                 if (!(widget instanceof AnchoredWidget) && (color >>> 24) != 0) {
                     graphics.fill(widget.getX(), widget.getY(), widget.getRight(), widget.getBottom(), color);
                 }
-                WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
-                graphics.pose().translate(transform.translateX(), transform.translateY(), 0);
-                graphics.pose().scale((float) transform.scale(), (float) transform.scale(), 1.0F);
+                if (hiding) {
+                    widget.visible = true;
+                }
                 widget.render(graphics, -1, -1, partialTick);
             } catch (RuntimeException exception) {
                 renderFailures.add(placed.id());
                 AnchorUI.LOGGER.error("Anchor UI HUD widget '{}' failed during rendering; disabled until rebuild", placed.id(), exception);
             } finally {
+                widget.visible = originalVisible;
+                if (frame.opacity() < 1.0) {
+                    graphics.flush();
+                    graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+                }
                 if (clip != null) {
                     graphics.disableScissor();
                 }
@@ -975,6 +1002,7 @@ public final class AnchorHudManager {
         nativeScrollPanels.clear();
         draggedScrollPanel = null;
         renderFailures.clear();
+        widgetAnimations.clear();
 
         List<Description> declared = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
@@ -1041,6 +1069,14 @@ public final class AnchorHudManager {
                 registry.attach(definition.id(), widget);
                 boolean panel = widget instanceof com.ludwici.anchorui.client.gui.PanelWidget;
                 created.add(new PlacedWidget(definition.id(), widget, style, anchored, widget.visible, widget.active, context, visibleWhen, enabledWhen, entity.widgetParents.get(definition.id()), panel && (WidgetContainers.clipChildren(element.settings) || style.scroll.enabled()), panel ? WidgetContainers.group(element.settings) : null, panel ? style.autoSize : ContainerLayout.AutoSize.NONE, panel ? style.scroll : ContainerScroll.Config.NONE, widget.getWidth(), widget.getHeight()));
+                try {
+                    WidgetAnimation animation = WidgetAnimation.parse(style.resolvedSettings, entity.animation, context);
+                    if (animation != null) {
+                        widgetAnimations.put(definition.id(), animation);
+                    }
+                } catch (IllegalArgumentException exception) {
+                    warnings.add("Invalid animation for HUD widget '" + definition.id() + "': " + exception.getMessage());
+                }
             } catch (WidgetConfigException exception) {
                 warnings.add(exception.getMessage());
             } catch (RuntimeException exception) {
@@ -1148,5 +1184,6 @@ public final class AnchorHudManager {
         visibilityScratch.clear();
         registry = new WidgetInstanceRegistry();
         renderFailures.clear();
+        widgetAnimations.clear();
     }
 }

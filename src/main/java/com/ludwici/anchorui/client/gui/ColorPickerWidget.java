@@ -7,6 +7,9 @@ import com.ludwici.anchorui.api.LoreEntity;
 import com.ludwici.anchorui.api.state.UiLocalState;
 import com.ludwici.anchorui.api.state.UiStateHost;
 import com.ludwici.anchorui.api.style.LoreStyle;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.world.item.ItemStack;
 import com.ludwici.anchorui.api.widget.UiChangeSource;
 import com.ludwici.anchorui.api.widget.WidgetContext;
 import net.minecraft.client.gui.GuiGraphics;
@@ -90,6 +93,33 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
         }
         ColorPickerColor.parse(initial.getAsString());
         return new ColorPickerWidget(context, element.text, host.uiState(), key, style);
+    }
+
+    public static ColorPickerWidget forEditor(Screen editor, String label, String value, int width, int height) {
+        JsonObject initialState = new JsonObject();
+        initialState.addProperty("draftColor", ColorPickerColor.hex(ColorPickerColor.parse(value)));
+        JsonObject settings = new JsonObject();
+        JsonObject size = new JsonObject();
+        size.addProperty("width", width);
+        size.addProperty("height", height);
+        settings.add("size", size);
+        WidgetContext context = new WidgetContext(Minecraft.getInstance(), editor,
+                ItemStack.EMPTY, new LoreEntity(new JsonObject()));
+        return new ColorPickerWidget(context, label, new UiLocalState(initialState), "draftColor",
+                new LoreStyle.Element(settings));
+    }
+
+    public String applyDraft() {
+        if (hexInput.isFocused()) {
+            commitInput(hexInput);
+        }
+        if (rgbInput.isFocused()) {
+            commitInput(rgbInput);
+        }
+        if (!invalidInput.isEmpty()) {
+            return null;
+        }
+        return ColorPickerColor.hex(color);
     }
 
     @Override

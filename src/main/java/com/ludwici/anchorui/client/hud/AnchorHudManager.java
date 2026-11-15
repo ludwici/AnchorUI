@@ -210,6 +210,16 @@ public final class AnchorHudManager {
         return changePreviewAnchor(id, new HudLayoutOffsets.AnchorOverride(parent, handle.point(), handle.anchor()));
     }
 
+    public String getStructuralParent(String id) {
+        for (PlacedWidget placed : widgets) {
+            if (placed.id().equals(id)) {
+                String parent = currentOffsets().containerParent(id, placed.containerParent());
+                return parent == null ? "(none)" : parent;
+            }
+        }
+        return "(none)";
+    }
+
     public boolean isPreviewContainer(String id) {
         for (PlacedWidget placed : widgets) {
             if (placed.id().equals(id)) {

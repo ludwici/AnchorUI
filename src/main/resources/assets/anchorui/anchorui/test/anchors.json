@@ -15,7 +15,7 @@
     },
     {
       "type": "anchorui:model",
-      "id": "itemModel",
+      "id": "item_model",
       "path": "minecraft:amethyst_shard",
       "scale": 4,
       "size": {
@@ -36,7 +36,7 @@
       "position": {
         "point": "TOPLEFT",
         "anchor": "TOPRIGHT",
-        "relativeTo": "itemModel",
+        "relativeTo": "item_model",
         "x": 12,
         "y": 10
       },

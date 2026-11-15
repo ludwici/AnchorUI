@@ -79,6 +79,7 @@ public final class WidgetDocumentResolver {
             resolved.add("entities", array);
         }
         resolved.remove("imports");
+        resolved.remove("widgetParents");
         if (!widgetParents.isEmpty()) {
             JsonObject hierarchy = new JsonObject();
             for (var entry : widgetParents.entrySet()) {

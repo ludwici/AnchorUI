@@ -98,6 +98,7 @@ public final class ContainerLayout {
             if (!containers.containsKey(entry.getValue())) {
                 throw new IllegalArgumentException("Unknown structural container for '" + entry.getKey() + "': " + entry.getValue());
             }
+            structuralDepth(entry.getKey(), parents);
         }
         for (String childId : definitions.keySet()) {
             String parent = parents.get(childId);

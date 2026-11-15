@@ -41,7 +41,7 @@ public class UiAnimationTimelineTest {
         assertEquals(0.9, half.scale(), 0.00001);
         assertEquals(1.0, t.sample(201000000L).opacity(), 0.00001);
         assertTrue(t.finished(201000000L));
-        assertEquals(42.0, half.inverseX(27.8, 10), 0.00001);
+        assertEquals(40.0, half.inverseX(27.0, 10), 0.00001);
     }
 
     @Test

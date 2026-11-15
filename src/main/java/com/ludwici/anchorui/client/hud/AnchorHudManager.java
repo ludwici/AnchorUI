@@ -238,10 +238,23 @@ public final class AnchorHudManager {
             if (placed.id().equals(id)) {
                 HudLayoutOffsets candidate = editingOffsets.copy();
                 candidate.setContainerParent(id, containerId);
-                candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(
-                        WidgetContainers.contentId(containerId), ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
-                candidate.set(id, -placed.position().x, -placed.position().y);
-                candidate.setSettingOverride(id, "layoutItem", "enabled", new com.google.gson.JsonPrimitive(true));
+                boolean grid = false;
+                for (PlacedWidget container : widgets) {
+                    if (container.id().equals(containerId)) {
+                        JsonObject settings = candidate.effectiveSettings(containerId, container.style().resolvedSettings);
+                        grid = ContainerAutoLayout.parse(settings) instanceof com.ludwici.anchorui.api.layout.GridLayout.Config;
+                        break;
+                    }
+                }
+                if (grid) {
+                    candidate.clearAnchor(id);
+                    candidate.set(id, 0, 0);
+                } else {
+                    candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(
+                            WidgetContainers.contentId(containerId), ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
+                    candidate.set(id, -placed.position().x, -placed.position().y);
+                    candidate.setSettingOverride(id, "layoutItem", "enabled", new com.google.gson.JsonPrimitive(true));
+                }
                 return usePreviewLayout(candidate);
             }
         }

@@ -129,22 +129,25 @@ public final class ContainerLayout {
                 int availableWidth = Math.max(0, outer.width() - padding.left - padding.right);
                 int availableHeight = Math.max(0, outer.height() - padding.top - padding.bottom);
                 List<StackLayout.Item> items = new ArrayList<>();
+                boolean grid = layout instanceof GridLayout.Config;
                 for (String childId : children.getOrDefault(container, List.of())) {
                     AnchorLayout.Frame child = effective.get(childId);
-                    if (child == null || unmanaged.contains(childId)
-                            || (layout.collapseHidden() && hidden.contains(childId))) {
+                    if (child == null || (layout.collapseHidden() && hidden.contains(childId))) {
                         continue;
                     }
                     var position = child.position();
-                    if (!WidgetContainers.contentId(container).equals(position.relativeTo)
-                            || position.point != ElementAnchor.TOPLEFT || position.anchor != ElementAnchor.TOPLEFT) {
-                        continue;
-                    }
                     StackLayout.Rules rules = itemRules.getOrDefault(childId, StackLayout.Rules.DEFAULT);
-                    if (!rules.managed()) {
-                        continue;
+                    if (!grid) {
+                        if (unmanaged.contains(childId) || !rules.managed()
+                                || !WidgetContainers.contentId(container).equals(position.relativeTo)
+                                || position.point != ElementAnchor.TOPLEFT
+                                || position.anchor != ElementAnchor.TOPLEFT) {
+                            continue;
+                        }
                     }
-                    items.add(new StackLayout.Item(childId, child.width(), child.height(), position.x, position.y, rules));
+                    int offsetX = grid ? 0 : position.x;
+                    int offsetY = grid ? 0 : position.y;
+                    items.add(new StackLayout.Item(childId, child.width(), child.height(), offsetX, offsetY, rules));
                 }
                 AutoSize auto = autoSizes.getOrDefault(container, AutoSize.NONE);
                 ContainerAutoLayout.Arrangement arrangement =

@@ -4,6 +4,10 @@ import com.google.gson.JsonElement;
 import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.api.action.UiActionRegistry;
 import com.ludwici.anchorui.api.state.UiLocalState;
+import com.ludwici.anchorui.api.state.UiStateHandoff;
+import net.minecraft.network.chat.Component;
+
+import java.util.Map;
 import com.ludwici.anchorui.api.state.UiStateHost;
 import com.ludwici.anchorui.api.widget.WidgetContext;
 import com.ludwici.anchorui.client.LoreLoader;
@@ -26,16 +30,30 @@ public final class ClientUiActions {
             if (id == null) {
                 throw new IllegalArgumentException("open_screen requires namespace:name");
             }
+            Map<String, String> handoff;
+            if (config.has("stateHandoff")) {
+                handoff = UiStateHandoff.parse(config, screenState(context));
+            } else {
+                handoff = Map.of();
+            }
             return () -> {
                 if (context.screen() == null || context.minecraft().screen != context.screen()) {
                     return;
                 }
                 var doc = LoreLoader.INSTANCE.getData().get(id);
                 if (doc == null) {
-                    AnchorUI.LOGGER.warn("Anchor UI screen '{}' is unavailable", id);
+                    navigationError(context, "Unknown target screen '" + ScreenIds.display(id) + "'");
                     return;
                 }
-                context.minecraft().setScreen(new ItemLoreScreen(context.screen(), context.item(), doc, id));
+                try {
+                    ItemLoreScreen destination = new ItemLoreScreen(context.screen(), context.item(), doc, id);
+                    if (!handoff.isEmpty()) {
+                        UiStateHandoff.copy(screenState(context), destination.uiState(), handoff);
+                    }
+                    context.minecraft().setScreen(destination);
+                } catch (IllegalArgumentException exception) {
+                    navigationError(context, "Cannot open '" + ScreenIds.display(id) + "': " + exception.getMessage());
+                }
             };
         });
 
@@ -68,6 +86,13 @@ public final class ClientUiActions {
                 }
             };
         });
+    }
+
+    private static void navigationError(WidgetContext context, String message) {
+        AnchorUI.LOGGER.warn("Anchor UI navigation: {}", message);
+        if (context.minecraft().player != null) {
+            context.minecraft().player.displayClientMessage(Component.literal("AnchorUI: " + message), false);
+        }
     }
 
     private static UiLocalState screenState(WidgetContext context) {

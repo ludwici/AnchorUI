@@ -96,8 +96,6 @@ public final class AnchorHudEditorScreen extends Screen {
     private boolean compact;
     private boolean inspectorCollapsed;
     private boolean choosingParent;
-    private String pendingContainer;
-    private final List<Button> parentChoiceButtons = new ArrayList<>();
     private boolean draggingWidget;
     private boolean draggingPanel;
     private NativeContainerScrollPanel inspectorScrollBar;
@@ -216,7 +214,6 @@ public final class AnchorHudEditorScreen extends Screen {
         addControl(Button.builder(Component.literal("Save"), button -> saveAndClose()).bounds(left, actionsY + BUTTON_STEP * 3, halfWidth, BUTTON_HEIGHT).build());
         addControl(Button.builder(Component.literal("Cancel"), button -> onClose()).bounds(right, actionsY + BUTTON_STEP * 3, halfWidth, BUTTON_HEIGHT).build());
         createAppearanceInput();
-        createParentChoices();
     }
 
     private void chooseParentTarget(String id) {
@@ -224,64 +221,22 @@ public final class AnchorHudEditorScreen extends Screen {
             status = "Choose another widget";
             return;
         }
-        if ("screen".equals(id) || manager.isPreviewContainer(id)) {
-            pendingContainer = id;
-            choosingParent = false;
-            status = "Choose how to attach to " + id;
-            return;
+        boolean success;
+        if ("screen".equals(id)) {
+            success = manager.movePreviewToRoot(selected);
+        } else if (manager.isPreviewContainer(id)) {
+            success = manager.movePreviewIntoContainer(selected, id);
+        } else {
+            success = manager.setPreviewParent(selected, id);
         }
-        boolean success = manager.setPreviewParent(selected, id);
-        status = success ? "Anchor target: " + id : "Invalid or circular parent: " + id;
+        status = success ? ("screen".equals(id) ? "Moved to screen root"
+                : manager.isPreviewContainer(id) ? "Moved into " + id
+                : "Anchor target: " + id)
+                : "Invalid parent or circular container relationship";
         if (success) {
             choosingParent = false;
         }
         resetInspectorScroll();
-    }
-
-    private void createParentChoices() {
-        parentChoiceButtons.clear();
-        int boxWidth = Math.min(276, Math.max(170, width - 20));
-        int left = (width - boxWidth) / 2;
-        int top = Math.max(10, height / 2 - 65);
-        String[] labels = {"Anchor to container", "Anchor to content area", "Move into container", "Cancel"};
-        for (int index = 0; index < labels.length; index++) {
-            final int mode = index;
-            Button button = Button.builder(Component.literal(labels[index]), pressed -> applyParentChoice(mode))
-                    .bounds(left + 8, top + 25 + index * 23, boxWidth - 16, 20).build();
-            parentChoiceButtons.add(addRenderableWidget(button));
-        }
-    }
-
-    private void applyParentChoice(int mode) {
-        if (mode == 3) {
-            pendingContainer = null;
-            choosingParent = false;
-            status = "Parent selection cancelled";
-            return;
-        }
-        if (pendingContainer == null || selected == null) {
-            return;
-        }
-        String container = pendingContainer;
-        boolean root = "screen".equals(container);
-        boolean success = switch (mode) {
-            case 0 -> manager.setPreviewParent(selected, container);
-            case 1 -> !root && manager.setPreviewParent(selected, WidgetContainers.contentId(container));
-            case 2 -> root ? manager.movePreviewToRoot(selected)
-                    : manager.movePreviewIntoContainer(selected, container);
-            default -> false;
-        };
-        if (success) {
-            pendingContainer = null;
-            status = switch (mode) {
-                case 0 -> "Anchor target: " + container;
-                case 1 -> "Anchor target: " + WidgetContainers.contentId(container);
-                default -> root ? "Moved to screen root" : "Moved into " + container + " (automatic layout)";
-            };
-            resetInspectorScroll();
-        } else {
-            status = "Invalid parent choice (cycle or layout constraints)";
-        }
     }
 
     private Button addControl(Button button) {
@@ -520,26 +475,7 @@ public final class AnchorHudEditorScreen extends Screen {
                 default -> "IDs ALL";
             }));
             for (Button control : controls) {
-                control.visible = !compact && !inspectorCollapsed
-                        && editingAppearance == null && pendingContainer == null;
-            }
-            for (int index = 0; index < parentChoiceButtons.size(); index++) {
-                Button button = parentChoiceButtons.get(index);
-                boolean root = "screen".equals(pendingContainer);
-                button.visible = pendingContainer != null && editingAppearance == null && !(root && index == 1);
-                if (index == 0) {
-                    button.setMessage(Component.literal(root ? "Anchor to screen" : "Anchor to container"));
-                } else if (index == 2) {
-                    button.setMessage(Component.literal(root ? "Move to screen (root)" : "Move into container"));
-                }
-            }
-            if (pendingContainer != null) {
-                int boxWidth = Math.min(276, Math.max(170, width - 20));
-                int left = (width - boxWidth) / 2;
-                int top = Math.max(10, height / 2 - 65);
-                graphics.fill(left - 2, top - 2, left + boxWidth + 2, top + 122, 0xFF162332);
-                graphics.drawString(font, font.plainSubstrByWidth("Parent: " + pendingContainer, boxWidth - 14),
-                        left + 8, top + 8, SELECTED_COLOR, false);
+                control.visible = !compact && !inspectorCollapsed && editingAppearance == null;
             }
             if (editingAppearance != null) {
                 int modalX = appearanceInput.getX() - 8;
@@ -913,10 +849,6 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (pendingContainer != null) {
-            super.mouseClicked(mouseX, mouseY, button);
-            return true;
-        }
         if (editingAppearance != null) {
             super.mouseClicked(mouseX, mouseY, button);
             return true;
@@ -1140,13 +1072,6 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (pendingContainer != null) {
-            if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
-                pendingContainer = null;
-                choosingParent = false;
-            }
-            return true;
-        }
         if (editingAppearance != null) {
             if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
                 closeAppearanceInput();

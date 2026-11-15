@@ -45,12 +45,20 @@ public class HudDemoIsolationTest {
         JsonObject rpg = hud("anchorui/anchorui/hud/rpg_status.json");
         JsonObject health = rpg.getAsJsonArray("entities").get(1).getAsJsonObject();
         JsonObject food = rpg.getAsJsonArray("entities").get(2).getAsJsonObject();
+        JsonObject rawStyle = hud("anchorui/anchorui/style/rpg_progress.json");
+        com.ludwici.anchorui.api.style.LoreStyle style = new com.ludwici.anchorui.api.style.LoreStyle(rawStyle);
+        net.minecraft.resources.ResourceLocation type = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("anchorui", "progress");
+        var healthStyle = style.get(type, health);
+        var foodStyle = style.get(type, food);
         assertEquals(health.getAsJsonObject("size"), food.getAsJsonObject("size"));
-        assertEquals(health.getAsJsonObject("padding"), food.getAsJsonObject("padding"));
-        assertEquals(health.getAsJsonObject("background"), food.getAsJsonObject("background"));
-        assertEquals(1, food.getAsJsonObject("padding").get("left").getAsInt());
-        assertEquals(1, food.getAsJsonObject("padding").get("top").getAsInt());
-        assertNotEquals(health.get("fillColor"), food.get("fillColor"));
+        assertEquals(healthStyle.padding.left, foodStyle.padding.left);
+        assertEquals(healthStyle.padding.top, foodStyle.padding.top);
+        assertEquals(1, foodStyle.padding.left);
+        assertEquals(1, foodStyle.padding.top);
+        assertEquals(healthStyle.background.color, foodStyle.background.color);
+        assertEquals(healthStyle.resolvedSettings.get("borderWidth"), foodStyle.resolvedSettings.get("borderWidth"));
+        assertEquals(healthStyle.resolvedSettings.get("borderColor"), foodStyle.resolvedSettings.get("borderColor"));
+        assertNotEquals(healthStyle.resolvedSettings.get("fillColor"), foodStyle.resolvedSettings.get("fillColor"));
     }
 
     @Test

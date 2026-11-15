@@ -417,27 +417,39 @@ public final class StateControlWidget extends AbstractButton implements UiChange
             boolean selectedOption = index == selected;
             boolean optionHover = hovered || index == highlight;
             SelectOptionAppearance appearance = optionAppearances.get(index);
-            String primaryState = selectedOption ? optionHover ? "selectedHover" : "selected"
-                    : optionHover ? "hover" : "normal";
-            String fallbackState = selectedOption ? "selected" : "normal";
-            boolean texturedOption = appearance != null && appearance.render(graphics, x + 1, top,
-                    width - 2, popupRowHeight, primaryState, fallbackState);
-            if (!texturedOption) {
-                texturedOption = textures.render(graphics, "option", x + 1, top, width - 2,
-                        popupRowHeight, primaryState, fallbackState);
-            }
-            if (!texturedOption) {
-                Integer customColor = appearance == null ? null : appearance.backgroundColor(selectedOption, optionHover);
-                if (customColor != null || selectedOption || optionHover) {
-                    graphics.fill(x + 1, top, x + width - 1, top + popupRowHeight,
-                            customColor != null ? customColor : selectedOption ? accentColor : HOVER);
-                }
+            if (!renderOptionBackground(graphics, appearance, x + 1, top, width - 2, popupRowHeight,
+                    selectedOption, optionHover) && (selectedOption || optionHover)) {
+                graphics.fill(x + 1, top, x + width - 1, top + popupRowHeight,
+                        selectedOption ? accentColor : HOVER);
             }
             int defaultTextColor = selectedOption ? TEXT : textColor;
             drawText(graphics, options.get(index).label(), x + 7, top + (popupRowHeight - 8) / 2,
                     width - 14, appearance == null ? defaultTextColor
                             : appearance.textColor(selectedOption, optionHover, defaultTextColor));
         }
+    }
+
+    private boolean renderOptionBackground(GuiGraphics graphics, SelectOptionAppearance appearance,
+                                           int x, int y, int width, int height,
+                                           boolean selected, boolean hovered) {
+        String[] statePriority = selected
+                ? hovered ? new String[]{"selectedHover", "selected", "hover"} : new String[]{"selected"}
+                : hovered ? new String[]{"hover"} : new String[0];
+        if (appearance != null) {
+            for (String state : statePriority) {
+                if (appearance.hasBackgroundVariant(state)
+                        && appearance.renderBackgroundVariant(graphics, x, y, width, height, state)) {
+                    return true;
+                }
+            }
+        }
+        for (String state : statePriority) {
+            if (textures.renderExact(graphics, "option", x, y, width, height, state)) {
+                return true;
+            }
+        }
+        return appearance != null && appearance.renderBackgroundVariant(graphics, x, y, width, height, "normal")
+                || textures.renderExact(graphics, "option", x, y, width, height, "normal");
     }
 
     @Override

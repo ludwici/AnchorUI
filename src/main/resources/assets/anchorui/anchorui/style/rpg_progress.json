@@ -1,0 +1,15 @@
+{
+  "anchorui:progress": {
+    "padding": {
+      "left": 1,
+      "right": 1,
+      "top": 1,
+      "bottom": 1
+    },
+    "background": {
+      "color": "#AA231E27"
+    },
+    "borderColor": "#FFB8AAB7",
+    "borderWidth": 1
+  }
+}

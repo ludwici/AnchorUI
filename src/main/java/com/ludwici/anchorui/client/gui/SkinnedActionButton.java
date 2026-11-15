@@ -28,7 +28,9 @@ public final class SkinnedActionButton extends AbstractButton {
         this.context = context;
         this.onPress = onPress;
         this.textures = new StateControlTextures(context, settings);
-        this.fillColor = WidgetColors.parse(GsonHelper.getAsString(settings, "fillColor", "#FF28384B"));
+        this.fillColor = settings.has("fillColor")
+                ? WidgetColors.parse(GsonHelper.getAsString(settings, "fillColor"))
+                : (style.background.color >>> 24) != 0 ? style.background.color : 0xFF28384B;
         this.borderColor = WidgetColors.parse(GsonHelper.getAsString(settings, "borderColor", "#FF728CA3"));
         this.hoverColor = WidgetColors.parse(GsonHelper.getAsString(settings, "hoverColor", "#FF385E81"));
         this.disabledColor = WidgetColors.parse(GsonHelper.getAsString(settings, "disabledColor", "#FF353B43"));

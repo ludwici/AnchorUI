@@ -10,43 +10,55 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.util.GsonHelper;
 
-
 public final class ProgressWidget extends AnchoredWidget {
     private final WidgetContext context;
     private final Font font;
     private final BoundNumber value;
     private final BoundNumber maximum;
+    private final StateControlTextures textures;
     private final int fillColor;
+    private final int borderColor;
+    private final int borderWidth;
     private final boolean showText;
 
     public ProgressWidget(WidgetContext context, JsonObject settings, LoreStyle.Element style) {
         super(style.size.width > 0 ? style.size.width : 160, style.size.height > 0 ? style.size.height : 14, style);
         this.context = context;
-        this.font = context.font();
-        this.value = BoundNumber.parse(settings, "value", 0.0);
-        this.maximum = BoundNumber.parse(settings, "max", 100.0);
-        this.fillColor = parseColor(GsonHelper.getAsString(settings, "fillColor", "#E85B60"));
-        this.showText = GsonHelper.getAsBoolean(settings, "showText", false);
+        font = context.font();
+        value = BoundNumber.parse(settings, "value", 0.0);
+        maximum = BoundNumber.parse(settings, "max", 100.0);
+        JsonObject appearance = style.resolvedSettings;
+        fillColor = WidgetColors.parse(GsonHelper.getAsString(appearance, "fillColor", "#E85B60"));
+        borderColor = WidgetColors.parse(GsonHelper.getAsString(appearance, "borderColor", "#00000000"));
+        borderWidth = GsonHelper.getAsInt(appearance, "borderWidth", 0);
+        if (borderWidth < 0 || borderWidth > 256) {
+            throw new IllegalArgumentException("Progress borderWidth must be between 0 and 256");
+        }
+        textures = new StateControlTextures(context, appearance);
+        showText = GsonHelper.getAsBoolean(appearance, "showText", false);
         active = false;
     }
 
     @Override
     protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(graphics);
+        if (!textures.render(graphics, "background", getX(), getY(), getWidth(), getHeight(), "normal")) {
+            renderBackground(graphics);
+        }
         int left = getX() + style.padding.left;
         int top = getY() + style.padding.top;
         int width = Math.max(0, getWidth() - style.padding.left - style.padding.right);
         int height = Math.max(0, getHeight() - style.padding.top - style.padding.bottom);
         if (width == 0 || height == 0) {
+            renderFrame(graphics);
             return;
         }
         double current = value.get(context);
         double max = maximum.get(context);
-        double ratio = ProgressMath.fraction(current, max);
-        int filled = (int) Math.round(width * ratio);
-        if (filled > 0) {
+        int filled = (int) Math.round(width * ProgressMath.fraction(current, max));
+        if (filled > 0 && !textures.render(graphics, "fill", left, top, filled, height, "normal")) {
             graphics.fill(left, top, left + filled, top + height, fillColor);
         }
+        renderFrame(graphics);
         if (showText) {
             String label = Math.round(current) + " / " + Math.round(max);
             int textY = top + (height - font.lineHeight) / 2;
@@ -54,16 +66,21 @@ public final class ProgressWidget extends AnchoredWidget {
         }
     }
 
-    private static int parseColor(String value) {
-        String hex = value.startsWith("#") ? value.substring(1) : value;
-        if (hex.length() != 6 && hex.length() != 8) {
-            throw new IllegalArgumentException("fillColor must be #RRGGBB or #AARRGGBB");
+    private void renderFrame(GuiGraphics graphics) {
+        int x = getX();
+        int y = getY();
+        int width = getWidth();
+        int height = getHeight();
+        if (textures.render(graphics, "frame", x, y, width, height, "normal")
+                || borderWidth == 0 || (borderColor >>> 24) == 0 || width <= 0 || height <= 0) {
+            return;
         }
-        try {
-            long parsed = Long.parseLong(hex, 16);
-            return (int) (hex.length() == 6 ? parsed | 0xFF000000L : parsed);
-        } catch (NumberFormatException exception) {
-            throw new IllegalArgumentException("Invalid fillColor: " + value, exception);
+        int border = Math.min(borderWidth, Math.min(width, height) / 2);
+        graphics.fill(x, y, x + width, y + border, borderColor);
+        graphics.fill(x, y + height - border, x + width, y + height, borderColor);
+        if (height > border * 2) {
+            graphics.fill(x, y + border, x + border, y + height - border, borderColor);
+            graphics.fill(x + width - border, y + border, x + width, y + height - border, borderColor);
         }
     }
 

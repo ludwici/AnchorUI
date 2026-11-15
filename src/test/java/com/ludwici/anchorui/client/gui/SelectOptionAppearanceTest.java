@@ -27,6 +27,25 @@ public class SelectOptionAppearanceTest {
     }
 
     @Test
+    public void optionColorsOverrideAnInheritedSpriteForTheSameState() {
+        SelectOptionAppearance appearance = SelectOptionAppearance.resolve(null, JsonParser.parseString("""
+                {
+                  "textures": {
+                    "option": {
+                      "selected": "minecraft:textures/block/stone.png",
+                      "hover": "minecraft:textures/block/stone.png"
+                    }
+                  },
+                  "selected": "#FF704996"
+                }
+                """));
+        assertEquals(Integer.valueOf(0xFF704996), appearance.backgroundColor("selected"));
+        org.junit.jupiter.api.Assertions.assertTrue(appearance.hasBackgroundVariant("selected"));
+        org.junit.jupiter.api.Assertions.assertFalse(appearance.hasTextureVariant("selected"));
+        org.junit.jupiter.api.Assertions.assertTrue(appearance.hasTextureVariant("hover"));
+    }
+
+    @Test
     public void rejectsMalformedInlineStyleFields() {
         for (String raw : new String[]{
                 "{\"background\":[]}",

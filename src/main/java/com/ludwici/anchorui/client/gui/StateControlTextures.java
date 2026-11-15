@@ -17,6 +17,8 @@ public final class StateControlTextures {
             "thumb", Set.of("normal", "off", "on", "offHover", "onHover", "offDisabled", "onDisabled"),
             "arrow", Set.of("normal", "closed", "open", "disabled"),
             "popup", Set.of("normal"),
+            "fill", Set.of("normal"),
+            "frame", Set.of("normal"),
             "option", Set.of("normal", "hover", "selected", "selectedHover", "disabled"),
             "tab", Set.of("normal", "hover", "selected", "selectedHover", "disabled")
     );
@@ -102,5 +104,23 @@ public final class StateControlTextures {
 
     public boolean has(String part) {
         return sprites.containsKey(part);
+    }
+
+    public boolean hasVariant(String part, String state) {
+        Map<String, TextureRegion> variants = sprites.get(part);
+        return variants != null && variants.containsKey(state);
+    }
+
+    public boolean renderExact(GuiGraphics graphics, String part, int x, int y, int width, int height, String state) {
+        Map<String, TextureRegion> variants = sprites.get(part);
+        if (variants == null || width <= 0 || height <= 0) {
+            return false;
+        }
+        TextureRegion texture = variants.get(state);
+        if (texture == null) {
+            return false;
+        }
+        texture.render(graphics, x, y, width, height);
+        return true;
     }
 }

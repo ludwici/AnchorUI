@@ -22,14 +22,15 @@ public final class PanelWidget extends AnchoredWidget {
 
     public PanelWidget(WidgetContext context, JsonObject settings, LoreStyle.Element style) {
         super(style.size.width > 0 ? style.size.width : 120, style.size.height > 0 ? style.size.height : 70, style);
-        fillColor = settings.has("fillColor") ? WidgetColors.parse(GsonHelper.getAsString(settings, "fillColor")) : style.background.color;
-        borderColor = WidgetColors.parse(GsonHelper.getAsString(settings, "borderColor", "#00000000"));
-        borderWidth = GsonHelper.getAsInt(settings, "borderWidth", 0);
-        radius = GsonHelper.getAsInt(settings, "radius", 0);
+        JsonObject appearance = style.resolvedSettings;
+        fillColor = appearance.has("fillColor") ? WidgetColors.parse(GsonHelper.getAsString(appearance, "fillColor")) : style.background.color;
+        borderColor = WidgetColors.parse(GsonHelper.getAsString(appearance, "borderColor", "#00000000"));
+        borderWidth = GsonHelper.getAsInt(appearance, "borderWidth", 0);
+        radius = GsonHelper.getAsInt(appearance, "radius", 0);
         if (borderWidth < 0 || radius < 0) {
             throw new IllegalArgumentException("Panel borderWidth and radius must not be negative");
         }
-        texture = settings.has("texture") ? new TextureRegion(context, settings) : null;
+        texture = appearance.has("texture") ? new TextureRegion(context, appearance) : null;
         active = false;
     }
 

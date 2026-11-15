@@ -4,6 +4,50 @@ Available on the 1.21.1 NeoForge branch: `anchorui:image`, `anchorui:panel`, and
 
 The same widgets work in JSON screens and in HUD documents. Flat `entities` documents continue to work as before.
 
+## Shared progress bar skins and frame layering
+
+`anchorui:progress` now uses the same resource-pack texture region, tint and nine-slice syntax as the interactive controls. A progress bar can have three independent drawable parts: `textures.background` (full track), `textures.fill` (filled amount only), and `textures.frame` (full outline drawn **after** the fill). Each part accepts a texture path or a texture object, including a nine-slice object. If a part has no texture, the existing `background.color`, `fillColor`, and optional `borderColor` / `borderWidth` work as solid-color fallbacks.
+
+A style file such as `assets/mypack/anchorui/style/status_bars.json` can define:
+
+```json
+{
+  "anchorui:progress": {
+    "padding": {
+      "left": 1,
+      "top": 1,
+      "right": 1,
+      "bottom": 1
+    },
+    "background": {
+      "color": "#AA231E27"
+    },
+    "borderColor": "#FFB8AAB7",
+    "borderWidth": 1,
+    "textures": {
+      "frame": {
+        "texture": "mypack:textures/gui/progress_frame.png",
+        "textureWidth": 48,
+        "textureHeight": 48,
+        "regionWidth": 48,
+        "regionHeight": 48,
+        "nineSlice": {
+          "left": 8,
+          "top": 8,
+          "right": 8,
+          "bottom": 8
+        }
+      },
+      "fill": "mypack:textures/gui/progress_fill.png"
+    }
+  }
+}
+```
+
+Choose `"style": "mypack:style/status_bars"` in the screen or HUD and set distinct `fillColor` / data bindings on each progress widget. When a texture is present for `fill`, the texture replaces the solid fill; for `frame`, it replaces the solid frame. The same resource can supply consistent width, padding, backgrounds and frames for multiple bars. Progress and panel visual properties now honor merged style values as well as per-widget overrides. The RPG HUD test fixture uses `anchorui:style/rpg_progress` to share its two bars' padding/background/frame.
+
+The F8 VISUAL / CONTENT inspector exposes progress track color, frame color and width, and the three texture paths alongside its preexisting fill color and value text toggle. Existing progress documents without these optional appearance properties retain their former rendering.
+
 ## Textures
 
 ```json

@@ -107,6 +107,12 @@ public final class WidgetEditorRegistry {
         register(WidgetTypeIds.CONTAINER, panel);
         register(WidgetTypeIds.PROGRESS, List.of(
                 Field.color("fillColor", "Fill", "#E85B60"),
+                Field.color("background.color", "Track color", "#00000000"),
+                Field.color("borderColor", "Frame color", "#00000000"),
+                Field.integer("borderWidth", "Frame width", 0, 0, 256, 1),
+                Field.texture("textures.background.normal", "Track texture"),
+                Field.texture("textures.fill.normal", "Fill texture"),
+                Field.texture("textures.frame.normal", "Frame texture"),
                 Field.bool("showText", "Show values", false),
                 Field.integer("size.width", "Width", 160, 1, 16384, 10),
                 Field.integer("size.height", "Height", 14, 1, 16384, 2)));

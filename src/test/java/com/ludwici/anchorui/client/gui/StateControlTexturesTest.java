@@ -56,6 +56,8 @@ public class StateControlTexturesTest {
                       "closed": "minecraft:textures/block/stone.png"
                     },
                     "popup": "minecraft:textures/block/stone.png",
+                    "fill": "minecraft:textures/block/stone.png",
+                    "frame": "minecraft:textures/block/stone.png",
                     "option": {
                       "normal": "minecraft:textures/block/stone.png",
                       "selected": "minecraft:textures/block/stone.png"
@@ -68,9 +70,13 @@ public class StateControlTexturesTest {
                   }
                 }
                 """));
-        for (String part : new String[]{"background", "indicator", "track", "thumb", "arrow", "popup", "option", "tab"}) {
+        for (String part : new String[]{"background", "indicator", "track", "thumb", "arrow", "popup", "option", "tab", "fill", "frame"}) {
             assertTrue(textures.has(part), part);
         }
+        assertTrue(textures.hasVariant("option", "selected"));
+        assertFalse(textures.hasVariant("option", "selectedHover"));
+        assertTrue(textures.hasVariant("fill", "normal"));
+        assertFalse(textures.hasVariant("fill", "hover"));
         assertFalse(textures.has("unknown"));
         assertFalse(new StateControlTextures(null, new JsonObject()).has("background"));
     }

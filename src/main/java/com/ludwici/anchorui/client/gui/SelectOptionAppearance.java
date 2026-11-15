@@ -120,6 +120,7 @@ public final class SelectOptionAppearance {
         if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isString()) {
             throw new IllegalArgumentException("Select option '" + key + "' must be a color or texture");
         }
+        textures.remove(variant);
         return WidgetColors.parse(value.getAsString());
     }
 
@@ -157,7 +158,30 @@ public final class SelectOptionAppearance {
         return textColor == null ? fallback : textColor;
     }
 
-    public boolean render(GuiGraphics graphics, int x, int y, int width, int height, String... states) {
-        return textures != null && textures.render(graphics, "option", x, y, width, height, states);
+    public Integer backgroundColor(String state) {
+        return switch (state) {
+            case "normal" -> background;
+            case "hover" -> hover;
+            case "selected" -> selected;
+            case "selectedHover" -> selectedHover;
+            default -> null;
+        };
+    }
+
+    public boolean hasBackgroundVariant(String state) {
+        return backgroundColor(state) != null || textures != null && textures.hasVariant("option", state);
+    }
+
+    public boolean hasTextureVariant(String state) {
+        return textures != null && textures.hasVariant("option", state);
+    }
+
+    public boolean renderBackgroundVariant(GuiGraphics graphics, int x, int y, int width, int height, String state) {
+        Integer color = backgroundColor(state);
+        if (color != null) {
+            graphics.fill(x, y, x + width, y + height, color);
+            return true;
+        }
+        return textures != null && textures.renderExact(graphics, "option", x, y, width, height, state);
     }
 }

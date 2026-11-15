@@ -413,7 +413,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         }
         for (PlacedWidget placed : placedWidgets) {
             if (placed.id().equals(id)) {
-                return LayoutInspectorControls.describe(id, placed.style().resolvedSettings, offsets, gridChild);
+                return LayoutInspectorControls.describe(id, placed.style().resolvedSettings, offsets, parentId != null, gridChild);
             }
         }
         return List.of();

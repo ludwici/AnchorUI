@@ -139,7 +139,8 @@ public final class ContainerLayout {
                     StackLayout.Rules rules = itemRules.getOrDefault(childId, StackLayout.Rules.DEFAULT);
                     if (!grid) {
                         if (unmanaged.contains(childId) || !rules.managed()
-                                || !WidgetContainers.contentId(container).equals(position.relativeTo)
+                                || (!container.equals(position.relativeTo)
+                                && !WidgetContainers.contentId(container).equals(position.relativeTo))
                                 || position.point != ElementAnchor.TOPLEFT
                                 || position.anchor != ElementAnchor.TOPLEFT) {
                             continue;
@@ -158,9 +159,30 @@ public final class ContainerLayout {
                     String childId = positioned.getKey();
                     var position = new com.ludwici.anchorui.api.style.PositionElement(
                             ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT,
-                            WidgetContainers.contentId(container), p.x(), p.y());
+                            container, padding.left + p.x(), padding.top + p.y());
                     effective.put(childId, new AnchorLayout.Frame(childId, position, p.width(), p.height()));
                     managed.add(childId);
+                }
+            }
+
+            for (var entry : parents.entrySet()) {
+                String childId = entry.getKey();
+                if (managed.contains(childId)) {
+                    continue;
+                }
+                AnchorLayout.Frame child = effective.get(childId);
+                PaddingElement parentPadding = containers.get(entry.getValue());
+                if (child == null || parentPadding == null) {
+                    continue;
+                }
+                var position = child.position();
+                if (entry.getValue().equals(position.relativeTo)
+                        && position.point == ElementAnchor.TOPLEFT
+                        && position.anchor == ElementAnchor.TOPLEFT) {
+                    var padded = new com.ludwici.anchorui.api.style.PositionElement(
+                            position.point, position.anchor, position.relativeTo,
+                            position.x + parentPadding.left, position.y + parentPadding.top);
+                    effective.put(childId, new AnchorLayout.Frame(childId, padded, child.width(), child.height()));
                 }
             }
 

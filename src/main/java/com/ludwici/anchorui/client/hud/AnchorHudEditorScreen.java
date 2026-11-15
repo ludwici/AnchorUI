@@ -768,7 +768,8 @@ public final class AnchorHudEditorScreen extends Screen {
             appendLine(lines, "CURRENT WIDGET", 0xFFFFCF64);
             appendLine(lines, "R at right: reset this field", 0xFF96AEBE);
             appendLine(lines, "id: " + active.id(), 0xFFE5EEF5);
-            appendEditableLine(lines, "parent: " + active.relativeTo(), AnchorHudManager.EditableProperty.PARENT, active);
+            appendEditableLine(lines, "anchor target: " + active.relativeTo(), AnchorHudManager.EditableProperty.PARENT, active);
+            appendLine(lines, "container: " + manager.getStructuralParent(active.id()), 0xFF96AEBE);
             appendEditableLine(lines, "point: " + active.point(), AnchorHudManager.EditableProperty.POINT, active);
             appendEditableLine(lines, "anchor: " + active.anchor(), AnchorHudManager.EditableProperty.ANCHOR, active);
             var bounds = active.bounds();

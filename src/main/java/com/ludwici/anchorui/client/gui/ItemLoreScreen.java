@@ -1417,10 +1417,6 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 graphics.enableScissor(clip.x(), clip.y(), clip.x() + clip.width(), clip.y() + clip.height());
             }
             try {
-                int color = placed.style().background.color;
-                if (!(widget instanceof AnchoredWidget) && (color >>> 24) != 0) {
-                    graphics.fill(widget.getX(), widget.getY(), widget.getRight(), widget.getBottom(), color);
-                }
                 WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
                 boolean mouseInside = !obscuredByPopup && widget.visible && !closingWithAnimation
                         && (clip == null || WidgetContainers.contains(clip, mouseX, mouseY));
@@ -1435,6 +1431,10 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                     if (animationState.opacity() < 1.0) {
                         graphics.flush();
                         graphics.setColor(1.0F, 1.0F, 1.0F, (float) animationState.opacity());
+                    }
+                    int color = placed.style().background.color;
+                    if (!(widget instanceof AnchoredWidget) && (color >>> 24) != 0) {
+                        graphics.fill(widget.getX(), widget.getY(), widget.getRight(), widget.getBottom(), color);
                     }
                     if (hiding) {
                         widget.visible = true;

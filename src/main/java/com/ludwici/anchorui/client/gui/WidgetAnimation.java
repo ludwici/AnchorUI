@@ -4,6 +4,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ludwici.anchorui.api.animation.UiAnimationSpec;
+import com.ludwici.anchorui.api.layout.AnchorLayout;
+import com.ludwici.anchorui.api.layout.WidgetTransforms;
 import com.ludwici.anchorui.api.animation.UiAnimationTimeline;
 import com.ludwici.anchorui.api.binding.BoundData;
 import com.ludwici.anchorui.api.binding.DataBindingSpec;
@@ -69,6 +71,21 @@ public final class WidgetAnimation {
             graphics.pose().scale((float) frame.scale(), (float) frame.scale(), 1.0F);
             graphics.pose().translate(-centerX, -centerY, 0.0);
         }
+    }
+
+    public static AnchorLayout.Bounds physicalBounds(AnchorLayout.Bounds logical,
+                                                      WidgetTransforms.Transform parent, UiAnimationSpec.Frame frame) {
+        double cx = logical.x() + logical.width() / 2.0;
+        double cy = logical.y() + logical.height() / 2.0;
+        double left = parent.x(frame.x() + cx + (logical.x() - cx) * frame.scale());
+        double top = parent.y(frame.y() + cy + (logical.y() - cy) * frame.scale());
+        double right = parent.x(frame.x() + cx + (logical.x() + logical.width() - cx) * frame.scale());
+        double bottom = parent.y(frame.y() + cy + (logical.y() + logical.height() - cy) * frame.scale());
+        int x = (int) Math.floor(left);
+        int y = (int) Math.floor(top);
+        return new AnchorLayout.Bounds(x, y,
+                Math.max(0, (int) Math.ceil(right) - x),
+                Math.max(0, (int) Math.ceil(bottom) - y));
     }
 
     public static double inverseX(AbstractWidget widget, UiAnimationSpec.Frame frame, double coordinate) {

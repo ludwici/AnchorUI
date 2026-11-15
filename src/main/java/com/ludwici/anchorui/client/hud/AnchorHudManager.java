@@ -247,6 +247,7 @@ public final class AnchorHudManager {
         candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(
                 "screen", ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
         candidate.set(id, 0, 0);
+        candidate.clearSettingOverride(id, "layoutItem", "enabled");
         return usePreviewLayout(candidate);
     }
 
@@ -595,6 +596,12 @@ public final class AnchorHudManager {
                 String parent = property == EditableProperty.PARENT ? defaults.relativeTo : current.relativeTo();
                 ElementAnchor point = property == EditableProperty.POINT ? defaults.point : current.point();
                 ElementAnchor anchor = property == EditableProperty.ANCHOR ? defaults.anchor : current.anchor();
+                if (property == EditableProperty.PARENT) {
+                    HudLayoutOffsets candidate = editingOffsets.copy();
+                    candidate.clearContainerParent(id);
+                    candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(parent, point, anchor));
+                    return usePreviewLayout(candidate);
+                }
                 return changePreviewAnchor(id, new HudLayoutOffsets.AnchorOverride(parent, point, anchor));
             }
         }

@@ -71,8 +71,8 @@ public class StackLayoutTest {
                 {"layout":{"type":"row","gap":10,"justify":"space_between","align":"center"}}
                 """));
         var result = resolve(List.of(frame(parent, "screen", 10, 20, 220, 70),
-                        frame("demo:a", parent + "/__content", 0, 0, 30, 12),
-                        frame("demo:b", parent + "/__content", 0, 0, 50, 20)),
+                        frame("demo:a", parent, 0, 0, 30, 12),
+                        frame("demo:b", parent, 0, 0, 50, 20)),
                 Map.of(parent, new PaddingElement(10, 8, 10, 8)), Map.of(),
                 Map.of("demo:a", parent, "demo:b", parent), Map.of(parent, layout), Set.of(), Set.of());
         assertEquals(new AnchorLayout.Bounds(20, 49, 30, 12), result.bounds().get("demo:a"));
@@ -86,8 +86,8 @@ public class StackLayoutTest {
                 {"layout":{"type":"column","gap":5,"justify":"end","align":"end"}}
                 """));
         var result = resolve(List.of(frame(parent, "screen", 0, 0, 100, 80),
-                        frame("demo:a", parent + "/__content", 0, 0, 30, 10),
-                        frame("demo:b", parent + "/__content", 0, 0, 40, 15)),
+                        frame("demo:a", parent, 0, 0, 30, 10),
+                        frame("demo:b", parent, 0, 0, 40, 15)),
                 Map.of(parent, new PaddingElement()), Map.of(),
                 Map.of("demo:a", parent, "demo:b", parent), Map.of(parent, layout), Set.of(), Set.of());
         assertEquals(new AnchorLayout.Bounds(70, 50, 30, 10), result.bounds().get("demo:a"));
@@ -101,8 +101,8 @@ public class StackLayoutTest {
                 {"layout":{"type":"row","gap":8,"align":"center","justify":"center"}}
                 """));
         var result = resolve(List.of(frame(row, "screen", 30, 40, 1, 1),
-                        frame("demo:a", row + "/__content", 0, 0, 30, 12),
-                        frame("demo:b", row + "/__content", 0, 0, 50, 20)),
+                        frame("demo:a", row, 0, 0, 30, 12),
+                        frame("demo:b", row, 0, 0, 50, 20)),
                 Map.of(row, new PaddingElement(4, 4, 4, 4)),
                 Map.of(row, new ContainerLayout.AutoSize(true, true)),
                 Map.of("demo:a", row, "demo:b", row), Map.of(row, rowLayout), Set.of(), Set.of());
@@ -115,9 +115,9 @@ public class StackLayoutTest {
     public void hiddenChildrenCollapseOnlyWhenExplicitlyEnabled() {
         String parent = "demo:list";
         var frames = List.of(frame(parent, "screen", 0, 0, 100, 90),
-                frame("demo:a", parent + "/__content", 0, 0, 30, 10),
-                frame("demo:b", parent + "/__content", 0, 0, 40, 15),
-                frame("demo:c", parent + "/__content", 0, 0, 20, 11));
+                frame("demo:a", parent, 0, 0, 30, 10),
+                frame("demo:b", parent, 0, 0, 40, 15),
+                frame("demo:c", parent, 0, 0, 20, 11));
         var parents = Map.of("demo:a", parent, "demo:b", parent, "demo:c", parent);
         var collapse = StackLayout.Config.parse(json("""
                 {"layout":{"type":"column","gap":4,"collapseHidden":true}}
@@ -139,8 +139,8 @@ public class StackLayoutTest {
     public void collapsedAutoSizeOmitsHiddenChildSizes() {
         String parent = "demo:auto";
         var result = resolve(List.of(frame(parent, "screen", 0, 0, 1, 1),
-                        frame("demo:small", parent + "/__content", 0, 0, 30, 10),
-                        frame("demo:large", parent + "/__content", 0, 0, 250, 40)),
+                        frame("demo:small", parent, 0, 0, 30, 10),
+                        frame("demo:large", parent, 0, 0, 250, 40)),
                 Map.of(parent, new PaddingElement(2, 2)),
                 Map.of(parent, new ContainerLayout.AutoSize(true, true)),
                 Map.of("demo:small", parent, "demo:large", parent),
@@ -154,9 +154,9 @@ public class StackLayoutTest {
     public void stretchAndUnmanagedManualAnchorsRemainIndependent() {
         String parent = "demo:panel";
         var result = resolve(List.of(frame(parent, "screen", 10, 10, 160, 60),
-                        frame("demo:a", parent + "/__content", 2, 3, 20, 10),
-                        frame("demo:manual", parent + "/__content", 5, 7, 12, 11),
-                        frame("demo:b", parent + "/__content", 0, 0, 40, 15)),
+                        frame("demo:a", parent, 2, 3, 20, 10),
+                        frame("demo:manual", parent, 5, 7, 12, 11),
+                        frame("demo:b", parent, 0, 0, 40, 15)),
                 Map.of(parent, new PaddingElement(0, 0)),
                 Map.of(), Map.of("demo:a", parent, "demo:manual", parent, "demo:b", parent),
                 Map.of(parent, StackLayout.Config.parse(json("""
@@ -172,10 +172,10 @@ public class StackLayoutTest {
         String outer = "demo:outer";
         String inner = "demo:inner";
         var frames = List.of(frame(outer, "screen", 20, 20, 1, 1),
-                frame(inner, outer + "/__content", 0, 0, 1, 1),
-                frame("demo:text1", inner + "/__content", 0, 0, 40, 12),
-                frame("demo:text2", inner + "/__content", 0, 0, 10, 15),
-                frame("demo:button", outer + "/__content", 0, 0, 20, 10));
+                frame(inner, outer, 0, 0, 1, 1),
+                frame("demo:text1", inner, 0, 0, 40, 12),
+                frame("demo:text2", inner, 0, 0, 10, 15),
+                frame("demo:button", outer, 0, 0, 20, 10));
         var result = resolve(frames,
                 Map.of(outer, new PaddingElement(1, 1), inner, new PaddingElement(2, 2)),
                 Map.of(outer, new ContainerLayout.AutoSize(true, true),
@@ -199,7 +199,7 @@ public class StackLayoutTest {
         var explicit = new AnchorLayout.Frame("demo:external",
                 new PositionElement(ElementAnchor.CENTER, ElementAnchor.CENTER, "screen", 0, 0), 30, 12);
         var result = resolve(List.of(frame(panel, "screen", 10, 10, 200, 70), explicit,
-                        frame("demo:first", panel + "/__content", 0, 0, 20, 12)),
+                        frame("demo:first", panel, 0, 0, 20, 12)),
                 Map.of(panel, new PaddingElement()), Map.of(),
                 Map.of("demo:first", panel, "demo:external", panel),
                 Map.of(panel, StackLayout.Config.parse(json("""

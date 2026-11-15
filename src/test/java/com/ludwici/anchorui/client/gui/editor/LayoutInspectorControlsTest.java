@@ -63,17 +63,17 @@ public class LayoutInspectorControlsTest {
     @Test
     public void childLayoutItemSupportsFlexBoundsAndManualOptOut() {
         var source = json("""
-                {"type":"anchorui:button","__anchorui_container_parent":"test:root",
+                {"type":"anchorui:button",
                  "layoutItem":{"grow":2,"shrink":1,"minWidth":30,"enabled":true}}
                 """);
         var overrides = new HudLayoutOffsets();
-        var controls = LayoutInspectorControls.describe("test:child", source, overrides);
+        var controls = LayoutInspectorControls.describe("test:child", source, overrides, true, false);
         assertEquals("2", find(controls, "layoutItem.grow").value());
         assertEquals("30", find(controls, "layoutItem.minWidth").value());
         assertEquals("16384", find(controls, "layoutItem.maxWidth").value());
         assertEquals(3.0, LayoutInspectorControls.stepped(find(controls, "layoutItem.grow"), 1).getAsDouble());
         overrides.setSettingOverride("test:child", "layoutItem", "enabled", new JsonPrimitive(false));
-        var disabled = LayoutInspectorControls.describe("test:child", source, overrides);
+        var disabled = LayoutInspectorControls.describe("test:child", source, overrides, true, false);
         assertEquals(1, disabled.size());
         assertEquals("false", find(disabled, "layoutItem.enabled").value());
         assertTrue(find(disabled, "layoutItem.enabled").modified());
@@ -81,17 +81,17 @@ public class LayoutInspectorControlsTest {
     }
 
     @Test
-    public void legacyFalseLayoutItemCanBeEnabledThroughAnOverride() {
+    public void falseLayoutItemCanBeEnabledThroughAnOverride() {
         var source = json("""
-                {"type":"anchorui:text","__anchorui_container_parent":"test:root","layoutItem":false}
+                {"type":"anchorui:text","layoutItem":false}
                 """);
         HudLayoutOffsets overrides = new HudLayoutOffsets();
-        var field = find(LayoutInspectorControls.describe("test:child", source, overrides), "layoutItem.enabled");
+        var field = find(LayoutInspectorControls.describe("test:child", source, overrides, true, false), "layoutItem.enabled");
         assertEquals("false", field.value());
         overrides.setSettingOverride("test:child", field.section(), field.field(), LayoutInspectorControls.stepped(field, 1));
         assertTrue(overrides.effectiveSettings("test:child", source)
                 .getAsJsonObject("layoutItem").get("enabled").getAsBoolean());
-        assertEquals("0", find(LayoutInspectorControls.describe("test:child", source, overrides), "layoutItem.grow").value());
+        assertEquals("0", find(LayoutInspectorControls.describe("test:child", source, overrides, true, false), "layoutItem.grow").value());
     }
 
     @Test

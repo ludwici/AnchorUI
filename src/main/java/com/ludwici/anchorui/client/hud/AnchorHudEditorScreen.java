@@ -2,6 +2,7 @@ package com.ludwici.anchorui.client.hud;
 
 import com.google.gson.JsonObject;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
+import com.ludwici.anchorui.api.layout.WidgetContainers;
 import com.ludwici.anchorui.KeyRegistry;
 import com.ludwici.anchorui.client.gui.editor.WidgetListPanel;
 import com.ludwici.anchorui.client.gui.editor.LayoutInspectorControls;
@@ -95,6 +96,8 @@ public final class AnchorHudEditorScreen extends Screen {
     private boolean compact;
     private boolean inspectorCollapsed;
     private boolean choosingParent;
+    private String pendingContainer;
+    private final List<Button> parentChoiceButtons = new ArrayList<>();
     private boolean draggingWidget;
     private boolean draggingPanel;
     private NativeContainerScrollPanel inspectorScrollBar;
@@ -213,6 +216,70 @@ public final class AnchorHudEditorScreen extends Screen {
         addControl(Button.builder(Component.literal("Save"), button -> saveAndClose()).bounds(left, actionsY + BUTTON_STEP * 3, halfWidth, BUTTON_HEIGHT).build());
         addControl(Button.builder(Component.literal("Cancel"), button -> onClose()).bounds(right, actionsY + BUTTON_STEP * 3, halfWidth, BUTTON_HEIGHT).build());
         createAppearanceInput();
+        createParentChoices();
+    }
+
+    private void chooseParentTarget(String id) {
+        if (selected == null || selected.equals(id)) {
+            status = "Choose another widget";
+            return;
+        }
+        if (manager.isPreviewContainer(id)) {
+            pendingContainer = id;
+            choosingParent = false;
+            status = "Choose how to attach to " + id;
+            return;
+        }
+        boolean success = manager.setPreviewParent(selected, id);
+        status = success ? "Anchor target: " + id : "Invalid or circular parent: " + id;
+        if (success) {
+            choosingParent = false;
+        }
+        resetInspectorScroll();
+    }
+
+    private void createParentChoices() {
+        parentChoiceButtons.clear();
+        int boxWidth = Math.min(276, Math.max(170, width - 20));
+        int left = (width - boxWidth) / 2;
+        int top = Math.max(10, height / 2 - 65);
+        String[] labels = {"Anchor to container", "Anchor to content area", "Move into container", "Cancel"};
+        for (int index = 0; index < labels.length; index++) {
+            final int mode = index;
+            Button button = Button.builder(Component.literal(labels[index]), pressed -> applyParentChoice(mode))
+                    .bounds(left + 8, top + 25 + index * 23, boxWidth - 16, 20).build();
+            parentChoiceButtons.add(addRenderableWidget(button));
+        }
+    }
+
+    private void applyParentChoice(int mode) {
+        if (mode == 3) {
+            pendingContainer = null;
+            choosingParent = false;
+            status = "Parent selection cancelled";
+            return;
+        }
+        if (pendingContainer == null || selected == null) {
+            return;
+        }
+        String container = pendingContainer;
+        boolean success = switch (mode) {
+            case 0 -> manager.setPreviewParent(selected, container);
+            case 1 -> manager.setPreviewParent(selected, WidgetContainers.contentId(container));
+            case 2 -> manager.movePreviewIntoContainer(selected, container);
+            default -> false;
+        };
+        if (success) {
+            pendingContainer = null;
+            status = switch (mode) {
+                case 0 -> "Anchor target: " + container;
+                case 1 -> "Anchor target: " + WidgetContainers.contentId(container);
+                default -> "Moved into " + container + " (automatic layout)";
+            };
+            resetInspectorScroll();
+        } else {
+            status = "Invalid parent choice (cycle or layout constraints)";
+        }
     }
 
     private Button addControl(Button button) {
@@ -297,17 +364,7 @@ public final class AnchorHudEditorScreen extends Screen {
 
     private void selectFromList(WidgetListPanel.Entry entry) {
         if (choosingParent && selected != null) {
-            if (selected.equals(entry.id())) {
-                status = "Choose another widget as parent";
-                return;
-            }
-            if (manager.setPreviewParent(selected, entry.id())) {
-                choosingParent = false;
-                status = "Parent set to " + entry.id();
-                inspectorScroll = 0;
-            } else {
-                status = "Invalid or circular parent: " + entry.id();
-            }
+            chooseParentTarget(entry.id());
             return;
         }
         selectWidget(null);
@@ -461,7 +518,19 @@ public final class AnchorHudEditorScreen extends Screen {
                 default -> "IDs ALL";
             }));
             for (Button control : controls) {
-                control.visible = !compact && !inspectorCollapsed && editingAppearance == null;
+                control.visible = !compact && !inspectorCollapsed
+                        && editingAppearance == null && pendingContainer == null;
+            }
+            for (Button button : parentChoiceButtons) {
+                button.visible = pendingContainer != null && editingAppearance == null;
+            }
+            if (pendingContainer != null) {
+                int boxWidth = Math.min(276, Math.max(170, width - 20));
+                int left = (width - boxWidth) / 2;
+                int top = Math.max(10, height / 2 - 65);
+                graphics.fill(left - 2, top - 2, left + boxWidth + 2, top + 122, 0xFF162332);
+                graphics.drawString(font, font.plainSubstrByWidth("Parent: " + pendingContainer, boxWidth - 14),
+                        left + 8, top + 8, SELECTED_COLOR, false);
             }
             if (editingAppearance != null) {
                 int modalX = appearanceInput.getX() - 8;
@@ -834,6 +903,10 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (pendingContainer != null) {
+            super.mouseClicked(mouseX, mouseY, button);
+            return true;
+        }
         if (editingAppearance != null) {
             super.mouseClicked(mouseX, mouseY, button);
             return true;
@@ -944,18 +1017,7 @@ public final class AnchorHudEditorScreen extends Screen {
         AnchorHudManager.HudHandle clicked = clickedHandle(mouseX, mouseY);
         VanillaHudGeometry.Reference vanilla = clicked == null ? clickedVanillaHandle(mouseX, mouseY) : null;
         if (choosingParent && selected != null) {
-            String parent = clicked != null ? clicked.id() : vanilla != null ? vanilla.id() : "screen";
-            if (selected.equals(parent)) {
-                status = "Choose another widget or empty world";
-                return true;
-            }
-            if (manager.setPreviewParent(selected, parent)) {
-                choosingParent = false;
-                status = "Parent set to " + parent;
-            } else {
-                status = "Invalid or circular parent: " + parent;
-            }
-            resetInspectorScroll();
+            chooseParentTarget(clicked != null ? clicked.id() : vanilla != null ? vanilla.id() : "screen");
             return true;
         }
         if (clicked != null) {
@@ -1068,6 +1130,13 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (pendingContainer != null) {
+            if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                pendingContainer = null;
+                choosingParent = false;
+            }
+            return true;
+        }
         if (editingAppearance != null) {
             if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
                 closeAppearanceInput();

@@ -224,7 +224,7 @@ public final class AnchorHudEditorScreen extends Screen {
             status = "Choose another widget";
             return;
         }
-        if (manager.isPreviewContainer(id)) {
+        if ("screen".equals(id) || manager.isPreviewContainer(id)) {
             pendingContainer = id;
             choosingParent = false;
             status = "Choose how to attach to " + id;
@@ -263,10 +263,12 @@ public final class AnchorHudEditorScreen extends Screen {
             return;
         }
         String container = pendingContainer;
+        boolean root = "screen".equals(container);
         boolean success = switch (mode) {
             case 0 -> manager.setPreviewParent(selected, container);
-            case 1 -> manager.setPreviewParent(selected, WidgetContainers.contentId(container));
-            case 2 -> manager.movePreviewIntoContainer(selected, container);
+            case 1 -> !root && manager.setPreviewParent(selected, WidgetContainers.contentId(container));
+            case 2 -> root ? manager.movePreviewToRoot(selected)
+                    : manager.movePreviewIntoContainer(selected, container);
             default -> false;
         };
         if (success) {
@@ -274,7 +276,7 @@ public final class AnchorHudEditorScreen extends Screen {
             status = switch (mode) {
                 case 0 -> "Anchor target: " + container;
                 case 1 -> "Anchor target: " + WidgetContainers.contentId(container);
-                default -> "Moved into " + container + " (automatic layout)";
+                default -> root ? "Moved to screen root" : "Moved into " + container + " (automatic layout)";
             };
             resetInspectorScroll();
         } else {
@@ -521,8 +523,15 @@ public final class AnchorHudEditorScreen extends Screen {
                 control.visible = !compact && !inspectorCollapsed
                         && editingAppearance == null && pendingContainer == null;
             }
-            for (Button button : parentChoiceButtons) {
-                button.visible = pendingContainer != null && editingAppearance == null;
+            for (int index = 0; index < parentChoiceButtons.size(); index++) {
+                Button button = parentChoiceButtons.get(index);
+                boolean root = "screen".equals(pendingContainer);
+                button.visible = pendingContainer != null && editingAppearance == null && !(root && index == 1);
+                if (index == 0) {
+                    button.setMessage(Component.literal(root ? "Anchor to screen" : "Anchor to container"));
+                } else if (index == 2) {
+                    button.setMessage(Component.literal(root ? "Move to screen (root)" : "Move into container"));
+                }
             }
             if (pendingContainer != null) {
                 int boxWidth = Math.min(276, Math.max(170, width - 20));

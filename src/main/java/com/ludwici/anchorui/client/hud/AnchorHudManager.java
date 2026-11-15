@@ -251,7 +251,7 @@ public final class AnchorHudManager {
                     candidate.set(id, 0, 0);
                 } else {
                     candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(
-                            WidgetContainers.contentId(containerId), ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
+                            containerId, ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
                     candidate.set(id, -placed.position().x, -placed.position().y);
                     candidate.setSettingOverride(id, "layoutItem", "enabled", new com.google.gson.JsonPrimitive(true));
                 }

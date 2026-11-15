@@ -1,6 +1,6 @@
 # AnchorUI — Roadmap and Decision Log
 
-> Status reviewed against the `1.21.1` NeoForge branch on **2026-11-12**. This is the roadmap for the **UI framework**, not for games, quests, NPC conversations, or other systems built on top of it. Checked items describe functionality already present; unchecked items remain work or QA.
+> Status reviewed against the `1.21.1` NeoForge branch on **2026-11-15**. This is the roadmap for the **UI framework**, not for games, quests, NPC conversations, or other systems built on top of it. Checked items describe functionality already present; unchecked items remain work or QA.
 
 ## 1. Purpose and boundaries
 
@@ -86,6 +86,9 @@ The completed functionality above does **not** imply finished visual consistency
 - [x] Add a component-aware **VISUAL / CONTENT** inspector to HUD and screen F8 editors: editable text, basic colors, texture resource paths, sizes, basic widget styles and typed controls.
 - [x] Register custom editable widget fields through an explicit Java `WidgetEditorRegistry`; persist appearance overrides separately from resource packs and validate edits.
 - [x] Rebuild edited widget visuals on explicit changes, preserving screen Local UI State, with rollback for invalid widget configurations.
+- [x] Add per-choice Select styles with color/texture state precedence over shared row skins.
+- [x] Add `progress` track/fill/frame texture parts and per-widget text/color/frame overrides, and make Panel and Progress visual settings inherit from shared style resources.
+- [x] Share both RPG HUD bar backgrounds, padding and border styling through `anchorui:style/rpg_progress`, with focused geometry/style tests (in-game rendering QA remains).
 - [ ] In-game QA for appearance editing, resource reload, modal focus and custom Java widget codecs.
 - [ ] Unify visual style inheritance and appearance across progress bars, buttons, panels and interactive controls, including hover/disabled/focused states where appropriate.
 - [ ] Verify matching borders/frames on RPG HUD progress bars; keep the earlier second-bar regression in the QA suite.

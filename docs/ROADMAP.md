@@ -1,6 +1,6 @@
 # AnchorUI — Product Direction (NeoForge 1.21.1)
 
-See [the canonical roadmap](../ROADMAP.md) for completed items, detailed priorities and acceptance criteria. Status last reviewed **2026-11-12**.
+See [the canonical roadmap](../ROADMAP.md) for completed items, detailed priorities and acceptance criteria. Status last reviewed **2026-11-15**.
 
 ## Framework mission
 
@@ -27,7 +27,7 @@ AnchorUI provides reusable, JSON-driven tools for assembling Minecraft HUDs and 
 
 1. **Conditional content and action guards — core implemented:** `anchorui:cases` and action-time `when` now support compiled Conditions, named templates and Template Lists. Remaining work is client QA and the future hidden-space collapse policy.
 2. **Automatic layouts — row/column/grid and flex delivered:** normal panels and containers now support `row`, `column`, generic `grid`, weighted `layoutItem.grow/shrink`, min/max sizes, `wrap`/`lineGap`, per-cell alignment, `collapseHidden` and `autoSize`, while preserving manual anchors. Next: in-game QA (GUI scales, scrolling, focus and editor overrides).
-3. **Style and input fidelity:** consistent progress-bar/widget frames, texture/style inheritance, blur/render order, missing-asset errors, resource reload and keyboard/focus behavior.
+3. **Style and input fidelity:** shared progress track/fill/frame styles, RPG bar frame parity and Select option style precedence now implemented; remaining work includes client visual QA, other widget state parity, blur/render order, missing-asset errors, resource reload and keyboard/focus behavior.
 4. **Lifecycle and navigation:** optional general-purpose screen-state handoff, predictable focus and reopen behavior; no dialogue-specific state machine.
 5. **Declarative animations:** generic fade/slide/transition effects that respect transforms, clipping and input.
 6. **Ongoing quality:** API stabilization, dirty/invalidation-aware data and layout performance, automated/client QA, GitBook documentation and future supported-branch CI.

@@ -103,6 +103,36 @@ public class UiAnimationTimelineTest {
     }
 
     @Test
+    public void editorPresetsApplyPerTriggerAndNoneCanDisableInheritedAnimation() {
+        UiAnimationSpec entry = spec("""
+                {
+                  "animation": {
+                    "open": {"preset":"fade"},
+                    "show": {"preset":"slideLeft","duration":400,"easing":"easeOut"},
+                    "hide": {"preset":"slideUp"},
+                    "close": {"preset":"zoom"}
+                  }
+                }
+                """);
+        assertEquals(300L, entry.track(UiAnimationSpec.Trigger.OPEN).durationMillis());
+        assertEquals(0.0, entry.track(UiAnimationSpec.Trigger.OPEN).from().opacity(), 0.000001);
+        assertEquals(-32.0, entry.track(UiAnimationSpec.Trigger.SHOW).from().x(), 0.000001);
+        assertEquals(-24.0, entry.track(UiAnimationSpec.Trigger.HIDE).to().y(), 0.000001);
+        assertEquals(0.82, entry.track(UiAnimationSpec.Trigger.CLOSE).to().scale(), 0.000001);
+
+        var defaults = JsonParser.parseString("""
+                {"open": {"duration":500,"opacity":[0,1]}}
+                """).getAsJsonObject();
+        var override = JsonParser.parseString("""
+                {"animation":{"open":{"preset":"none"}}}
+                """).getAsJsonObject();
+        UiAnimationSpec disabled = UiAnimationSpec.parse(override, defaults);
+        assertEquals(null, disabled.track(UiAnimationSpec.Trigger.OPEN));
+        assertThrows(IllegalArgumentException.class,
+                () -> spec("{\"animation\":{\"open\":{\"preset\":\"unknown\"}}}"));
+    }
+
+    @Test
     public void localAnimationOverridesScreenWideDefaultsByTrigger() {
         var root = JsonParser.parseString("""
                 {

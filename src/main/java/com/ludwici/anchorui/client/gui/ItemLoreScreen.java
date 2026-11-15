@@ -399,9 +399,20 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
 
     public List<LayoutInspectorControls.Control> editorLayoutControls(String id) {
         HudLayoutOffsets offsets = currentScreenOffsets();
+        String parentId = containerParents.get(id);
+        boolean gridChild = false;
+        for (PlacedWidget placed : placedWidgets) {
+            if (placed.id().equals(parentId)) {
+                JsonObject settings = offsets.hasSettingOverrides(parentId)
+                        ? offsets.effectiveSettings(parentId, placed.style().resolvedSettings)
+                        : placed.style().resolvedSettings;
+                gridChild = ContainerAutoLayout.parse(settings) instanceof com.ludwici.anchorui.api.layout.GridLayout.Config;
+                break;
+            }
+        }
         for (PlacedWidget placed : placedWidgets) {
             if (placed.id().equals(id)) {
-                return LayoutInspectorControls.describe(id, placed.style().resolvedSettings, offsets);
+                return LayoutInspectorControls.describe(id, placed.style().resolvedSettings, offsets, gridChild);
             }
         }
         return List.of();

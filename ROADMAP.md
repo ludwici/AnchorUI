@@ -120,14 +120,16 @@ The completed functionality above does **not** imply finished visual consistency
 
 ### Stage 5 — Declarative animation primitives
 
-**Priority: medium, after stable layout/visibility behavior.**
+**Status: implementation available for screens and HUD; final in-client QA remains.**
 
-- [ ] Provide general-purpose fade, slide and interpolation primitives for widgets and screens.
-- [ ] Define triggers on open/close, state changes and visibility/data changes, plus easing and duration configuration.
-- [ ] Maintain correct anchors, clipping, transformed hitboxes, scroll and editor behavior during animations.
-- [ ] Avoid global per-tick scans and per-frame tree recreation; add performance tests.
+- [x] Implement generic fade, slide, opacity and scale interpolation on screen and HUD widgets without changing anchored layout coordinates.
+- [x] Support open, close (screens), show, hide and bound-state `change` triggers, with configurable durations and easing; add reusable JSON presets.
+- [x] Map pointer hitboxes, hover, click, release, drag and wheel input through animated transforms; preserve clipping and stable static F8 preview.
+- [x] Offer Open/Show/Hide/Close effect, duration and easing in both F8 inspectors. Persist per-widget overrides through existing Save/Cancel/Reset behavior.
+- [x] Avoid global tick handlers and per-frame widget-tree recreation. Update only configured animated screen widgets; for HUD widgets piggyback on existing HUD rendering.
+- [ ] Finish in-game testing of nested scrolling, clipped animated children, popups, GUI scales, editor overrides and high-widget-count performance; see [Stage 5 QA](docs/QA_STAGE_5.md).
 
-**Done when:** mod/resource-pack UI authors can add visual transitions without dedicated Java rendering code.
+**Done when:** resource-pack authors can create general visual transitions without dedicated Java rendering code, and in-client animation regression checks have passed.
 
 ### Stage 6 — API, performance, documentation and release quality
 

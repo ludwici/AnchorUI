@@ -2,6 +2,7 @@ package com.ludwici.anchorui.client.hud;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.ludwici.anchorui.api.layout.WidgetContainers;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,8 +15,22 @@ public final class HudInspectorProperties {
     public static List<String> flatten(JsonObject settings) {
         List<String> lines = new ArrayList<>();
         if (settings != null) {
+            String structuralParent = WidgetContainers.parent(settings);
             for (Map.Entry<String, JsonElement> field : settings.entrySet()) {
-                flatten(lines, field.getKey(), field.getValue());
+                if (field.getKey().startsWith("__")) {
+                    continue;
+                }
+                if ("position".equals(field.getKey()) && structuralParent != null
+                        && field.getValue().isJsonObject()) {
+                    JsonObject position = field.getValue().getAsJsonObject().deepCopy();
+                    if (position.has("relativeTo")
+                            && WidgetContainers.contentId(structuralParent).equals(position.get("relativeTo").getAsString())) {
+                        position.remove("relativeTo");
+                    }
+                    flatten(lines, "position", position);
+                } else {
+                    flatten(lines, field.getKey(), field.getValue());
+                }
             }
         }
         return List.copyOf(lines);

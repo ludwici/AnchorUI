@@ -105,6 +105,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     private List<PlacedWidget> visibilityOrder = List.of();
     private final Map<String, UiEventBindings> widgetEventBindings = new HashMap<>();
     private final Map<String, WidgetAnimation> widgetAnimations = new HashMap<>();
+    private final Map<String, String> animationDefinitions = new HashMap<>();
     private boolean closingWithAnimation;
     private long animationCloseDeadline;
     private final Map<String, ItemContext> widgetItemContexts = new HashMap<>();
@@ -1045,7 +1046,11 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         Set<String> animationIds = new HashSet<>();
         for (PlacedWidget placed : created) {
             animationIds.add(placed.id());
-            if (!widgetAnimations.containsKey(placed.id())) {
+            String localAnimation = placed.style().resolvedSettings.has("animation") ? placed.style().resolvedSettings.get("animation").toString() : "";
+            String animationDefinition = loreEntity.animation + "|" + localAnimation;
+            if (!animationDefinition.equals(animationDefinitions.get(placed.id()))) {
+                widgetAnimations.remove(placed.id());
+                animationDefinitions.put(placed.id(), animationDefinition);
                 try {
                     WidgetAnimation animation = WidgetAnimation.parse(placed.style().resolvedSettings, loreEntity.animation, placed.context());
                     if (animation != null) {
@@ -1057,6 +1062,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             }
         }
         widgetAnimations.keySet().retainAll(animationIds);
+        animationDefinitions.keySet().retainAll(animationIds);
         if (!applyScreenOffsets(currentScreenOffsets(), warnings)) {
             if (currentScreenOffsets().sameAs(new HudLayoutOffsets()) || !applyScreenOffsets(new HudLayoutOffsets(), warnings)) {
                 layoutError = lastLayoutFailure;

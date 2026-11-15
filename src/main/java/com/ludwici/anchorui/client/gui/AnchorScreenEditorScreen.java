@@ -745,8 +745,13 @@ public final class AnchorScreenEditorScreen extends Screen {
         }
         List<AppearanceInspectorControls.Control> appearanceControls = target.editorAppearanceControls(selected.id());
         if (!appearanceControls.isEmpty()) {
+            boolean animationSection = false;
             appendInspectorLine(lines, "VISUAL / CONTENT", SELECTED, null, false);
             for (AppearanceInspectorControls.Control control : appearanceControls) {
+                if (!animationSection && control.field().path().startsWith("animation.")) {
+                    animationSection = true;
+                    appendInspectorLine(lines, "ANIMATION", SELECTED, null, false);
+                }
                 String label = control.booleanField() ? control.field().label() : control.field().label() + ": " + control.value();
                 String clipped = font.plainSubstrByWidth(label, Math.max(38, (int) ((inspectorWidth - 98) / INSPECTOR_SCALE)));
                 lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(), control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null, control.modified(), null, control));

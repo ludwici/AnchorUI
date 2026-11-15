@@ -835,8 +835,13 @@ public final class AnchorHudEditorScreen extends Screen {
             }
             List<AppearanceInspectorControls.Control> appearanceControls = manager.getAppearanceControls(active.id());
             if (!appearanceControls.isEmpty()) {
+                boolean animationSection = false;
                 appendLine(lines, "VISUAL / CONTENT", 0xFFFFCF64);
                 for (AppearanceInspectorControls.Control control : appearanceControls) {
+                    if (!animationSection && control.field().path().startsWith("animation.")) {
+                        animationSection = true;
+                        appendLine(lines, "ANIMATION", 0xFFFFCF64);
+                    }
                     String label = control.booleanField() ? control.field().label() : control.field().label() + ": " + control.value();
                     int available = Math.max(38, (int) ((panelWidth - 98) / INSPECTOR_SCALE));
                     String clipped = font.plainSubstrByWidth(label, available);

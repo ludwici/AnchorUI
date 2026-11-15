@@ -64,7 +64,7 @@ public final class LayoutInspectorControls {
                 controls.add(control(overrides, id, "layout", "collapseHidden", "Collapse", value(effective, "layout", "collapseHidden", "false")));
             }
         }
-        if (structuralChild || effective.has(WidgetContainers.PARENT_FIELD) || gridChild) {
+        if (structuralChild || gridChild) {
             String enabled = value(effective, "layoutItem", "enabled", "true");
             if (!gridChild) {
                 controls.add(control(overrides, id, "layoutItem", "enabled", "Auto item", enabled));

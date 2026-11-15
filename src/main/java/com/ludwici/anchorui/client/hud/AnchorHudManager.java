@@ -108,6 +108,7 @@ public final class AnchorHudManager {
     private final Map<String, NativeContainerScrollPanel> nativeScrollPanels = new LinkedHashMap<>();
     private NativeContainerScrollPanel draggedScrollPanel;
     private Map<String, String> containerParents = Map.of();
+    private Map<String, PaddingElement> containerPaddings = Map.of();
     private Map<String, WidgetTransforms.Group> containerGroups = Map.of();
     private Set<String> clippingContainers = Set.of();
     private final Set<String> renderFailures = new HashSet<>();
@@ -415,7 +416,7 @@ public final class AnchorHudManager {
 
     private void updateScrolledTransforms() {
         transforms = WidgetTransforms.resolve(layoutBounds, containerParents, containerGroups, scrollOffsets);
-        clipBounds = WidgetContainers.clips(layoutBounds, containerParents, clippingContainers, transforms);
+        clipBounds = WidgetContainers.clips(layoutBounds, containerParents, clippingContainers, containerPaddings, transforms);
         refreshNativeScrollPanels();
     }
 
@@ -426,7 +427,7 @@ public final class AnchorHudManager {
                 continue;
             }
             ContainerScroll.Limits limits = scrollLimits.get(placed.id());
-            AnchorLayout.Bounds content = layoutBounds.get(WidgetContainers.contentId(placed.id()));
+            AnchorLayout.Bounds content = WidgetContainers.contentBounds(layoutBounds.get(placed.id()), containerPaddings.get(placed.id()));
             if (limits == null || limits.y() == 0 || content == null) {
                 continue;
             }
@@ -528,7 +529,7 @@ public final class AnchorHudManager {
             if (clip != null && !WidgetContainers.contains(clip, mouseX, mouseY)) {
                 continue;
             }
-            AnchorLayout.Bounds content = layoutBounds.get(WidgetContainers.contentId(placed.id()));
+            AnchorLayout.Bounds content = WidgetContainers.contentBounds(layoutBounds.get(placed.id()), containerPaddings.get(placed.id()));
             if (content == null) {
                 continue;
             }
@@ -1028,7 +1029,7 @@ public final class AnchorHudManager {
                 boolean panel = widget instanceof com.ludwici.anchorui.client.gui.PanelWidget;
                 created.add(new PlacedWidget(definition.id(), widget, style, anchored,
                         widget.visible, widget.active, context, visibleWhen, enabledWhen,
-                        entity.widgetParents.getOrDefault(definition.id(), WidgetContainers.parent(element.settings)),
+                        entity.widgetParents.get(definition.id()),
                         panel && (WidgetContainers.clipChildren(element.settings) || style.scroll.enabled()),
                         panel ? WidgetContainers.group(element.settings) : null,
                         panel ? style.autoSize : ContainerLayout.AutoSize.NONE,
@@ -1077,18 +1078,23 @@ public final class AnchorHudManager {
                 }
             }
             Map<String, ContainerScroll.Config> configurations = new LinkedHashMap<>();
+            Map<String, PaddingElement> paddings = new LinkedHashMap<>();
             for (PlacedWidget placed : widgets) {
+                if (placed.widget() instanceof com.ludwici.anchorui.client.gui.PanelWidget) {
+                    paddings.put(placed.id(), placed.style().padding);
+                }
                 if (placed.scroll().enabled()) {
                     configurations.put(placed.id(), placed.scroll());
                 }
             }
-            scrollLimits = ContainerScroll.measure(bounds, parents, configurations);
+            scrollLimits = ContainerScroll.measure(bounds, parents, configurations, paddings);
             scrollOffsets.keySet().retainAll(scrollLimits.keySet());
             for (var entry : scrollLimits.entrySet()) {
                 ContainerScroll.Offset previous = scrollOffsets.getOrDefault(entry.getKey(), ContainerScroll.Offset.ZERO);
                 scrollOffsets.put(entry.getKey(), entry.getValue().clamp(previous));
             }
             containerParents = Map.copyOf(parents);
+            containerPaddings = Map.copyOf(paddings);
             visibilityOrder = WidgetContainers.parentFirst(widgets, PlacedWidget::id, parents);
             containerGroups = Map.copyOf(groups);
             this.clippingContainers = Set.copyOf(clippingContainers);

@@ -120,6 +120,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     private final Map<String, NativeContainerScrollPanel> nativeScrollPanels = new LinkedHashMap<>();
     private NativeContainerScrollPanel draggedScrollPanel;
     private Map<String, String> containerParents = Map.of();
+    private Map<String, PaddingElement> containerPaddings = Map.of();
     private Map<String, WidgetTransforms.Group> containerGroups = Map.of();
     private Set<String> clippingContainers = Set.of();
     private String lastLayoutFailure;
@@ -630,7 +631,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                         }
                     });
             Map<String, AnchorLayout.Bounds> bounds = result.bounds();
-            Map<String, ContainerScroll.Limits> limits = ContainerScroll.measure(bounds, parents, scrollConfigs);
+            Map<String, ContainerScroll.Limits> limits = ContainerScroll.measure(bounds, parents, scrollConfigs, containers);
             scrollOffsets.keySet().retainAll(limits.keySet());
             for (var entry : limits.entrySet()) {
                 ContainerScroll.Offset previous = scrollOffsets.getOrDefault(entry.getKey(), ContainerScroll.Offset.ZERO);
@@ -646,6 +647,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             visibilityOrder = WidgetContainers.parentFirst(placedWidgets, PlacedWidget::id, parents);
             scrollLimits = limits;
             containerParents = Map.copyOf(parents);
+            containerPaddings = Map.copyOf(containers);
             containerGroups = Map.copyOf(groups);
             clippingContainers = Set.copyOf(clipping);
             Set<String> collapsing = new HashSet<>();
@@ -668,7 +670,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
 
     private void updateScrolledTransforms() {
         transforms = WidgetTransforms.resolve(layoutBounds, containerParents, containerGroups, scrollOffsets);
-        clipBounds = WidgetContainers.clips(layoutBounds, containerParents, clippingContainers, transforms);
+        clipBounds = WidgetContainers.clips(layoutBounds, containerParents, clippingContainers, containerPaddings, transforms);
         refreshNativeScrollPanels();
     }
 
@@ -679,7 +681,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 continue;
             }
             ContainerScroll.Limits limits = scrollLimits.get(placed.id());
-            AnchorLayout.Bounds content = layoutBounds.get(WidgetContainers.contentId(placed.id()));
+            AnchorLayout.Bounds content = WidgetContainers.contentBounds(layoutBounds.get(placed.id()), containerPaddings.get(placed.id()));
             if (limits == null || limits.y() == 0 || content == null) {
                 continue;
             }
@@ -757,7 +759,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             if (!placed.widget().visible || !enabledScratch.getOrDefault(placed.id(), false) || !placed.scroll().enabled() || !insideClip(placed, mouseX, mouseY)) {
                 continue;
             }
-            AnchorLayout.Bounds content = layoutBounds.get(WidgetContainers.contentId(placed.id()));
+            AnchorLayout.Bounds content = WidgetContainers.contentBounds(layoutBounds.get(placed.id()), containerPaddings.get(placed.id()));
             if (content == null) {
                 continue;
             }
@@ -865,7 +867,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 continue;
             }
             ContainerScroll.Limits limits = scrollLimits.get(placed.id());
-            AnchorLayout.Bounds content = layoutBounds.get(WidgetContainers.contentId(placed.id()));
+            AnchorLayout.Bounds content = WidgetContainers.contentBounds(layoutBounds.get(placed.id()), containerPaddings.get(placed.id()));
             if (limits == null || content == null) {
                 continue;
             }
@@ -1130,7 +1132,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         boolean panel = widget instanceof PanelWidget;
         created.add(new PlacedWidget(id, widget, settings, position, context,
                 visibleWhen, enabledWhen, widget.visible, widget.active,
-                resolvedWidgetParents.getOrDefault(id, WidgetContainers.parent(element.settings)),
+                resolvedWidgetParents.get(id),
                 panel && (WidgetContainers.clipChildren(element.settings) || settings.scroll.enabled()),
                 panel ? WidgetContainers.group(element.settings) : null,
                 panel ? settings.autoSize : ContainerLayout.AutoSize.NONE,

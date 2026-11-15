@@ -23,6 +23,9 @@ public final class WidgetIds {
             namespace = value.substring(0, separator);
             path = value.substring(separator + 1);
         }
+        if (path.endsWith("/__content")) {
+            throw new IllegalArgumentException("Unsupported internal widget ID: " + value + "; use the panel ID instead");
+        }
         if (namespace == null || !NAMESPACE.matcher(namespace).matches() || !PATH.matcher(path).matches()) {
             throw new IllegalArgumentException("Invalid widget id: " + value);
         }

@@ -13,7 +13,7 @@ public final class HudInspectorProperties {
     }
 
     public static List<String> flatten(JsonObject settings) {
-        return flatten(settings, settings == null ? null : WidgetContainers.parent(settings));
+        return flatten(settings, null);
     }
 
     public static List<String> flatten(JsonObject settings, String structuralParent) {
@@ -27,8 +27,7 @@ public final class HudInspectorProperties {
                         && field.getValue().isJsonObject()) {
                     JsonObject position = field.getValue().getAsJsonObject().deepCopy();
                     if (position.has("relativeTo")
-                            && (WidgetContainers.contentId(structuralParent).equals(position.get("relativeTo").getAsString())
-                            || structuralParent.equals(position.get("relativeTo").getAsString()))) {
+                            && structuralParent.equals(position.get("relativeTo").getAsString())) {
                         position.remove("relativeTo");
                     }
                     flatten(lines, "position", position);

@@ -128,7 +128,7 @@ public final class TemplateListExpander {
                 parentId = ids.getOrDefault(parentId, parentId);
                 if (widgetIndex == 0 || !nested) {
                     TemplateListLayoutRegistry.Cell cell = layout.place(index);
-                    position.addProperty("relativeTo", WidgetContainers.contentId(listId));
+                    position.addProperty("relativeTo", listId);
                     int offsetX = GsonHelper.getAsInt(position, "x", 0);
                     int offsetY = GsonHelper.getAsInt(position, "y", 0);
                     position.addProperty("x", addCoordinate(cell.x(), offsetX));
@@ -169,14 +169,6 @@ public final class TemplateListExpander {
         String value = ids.get(reference);
         if (value != null) {
             return value;
-        }
-        String suffix = "/__content";
-        if (reference.endsWith(suffix)) {
-            String parent = reference.substring(0, reference.length() - suffix.length());
-            String renamed = ids.get(parent);
-            if (renamed != null) {
-                return WidgetContainers.contentId(renamed);
-            }
         }
         return reference;
     }

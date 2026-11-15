@@ -234,4 +234,27 @@ public class WidgetDocumentResolverTest {
         assertFalse(sourceChild.has("layoutItem"));
     }
 
+    @Test
+    public void bundledAnchorDemoLoadsWithValidNamespacedModelId() {
+        JsonObject document = resource("assets/anchorui/anchorui/test/anchors.json");
+        JsonObject expanded = WidgetDocumentResolver.resolve(document, "anchorui", Map.of());
+        var elements = expanded.getAsJsonArray("entities");
+        assertEquals(3, elements.size());
+        assertEquals("anchorui:item_model", elements.get(1).getAsJsonObject().get("id").getAsString());
+        assertEquals("anchorui:item_model",
+                elements.get(2).getAsJsonObject().getAsJsonObject("position").get("relativeTo").getAsString());
+    }
+
+    @Test
+    public void removedContentAnchorIsRejectedInsteadOfSilentlyFallingBack() {
+        JsonObject document = json("""
+                {"entities":[
+                  {"type":"anchorui:panel","id":"panel"},
+                  {"type":"anchorui:text","id":"child","position":{"relativeTo":"panel/__content"}}
+                ]}
+                """);
+        assertThrows(IllegalArgumentException.class,
+                () -> WidgetDocumentResolver.resolve(document, "test", Map.of()));
+    }
+
 }

@@ -131,7 +131,7 @@ For **author-written UI JSON**, simply put widgets in the parent's `children` ar
 
 For row/column, the editor sets the Panel itself as the anchor and automatically applies its padding. Selecting an ordinary non-Panel widget remains an advanced anchor-target operation. When clicking on the screen in Parent mode, the editor prioritizes Panels over their overlapping children. Invalid cycles are rejected, and resetting Parent restores the authored hierarchy.
 
-The **SOURCE JSON [+]** section is collapsed by default. The document resolver no longer injects `__anchorui_container_parent` into each child; the parent relation comes from `children` and is carried separately. Automatic Panel targets and legacy internal references are hidden from the inspector.
+The **SOURCE JSON [+]** section is collapsed by default. The document resolver no longer injects `__anchorui_container_parent` into each child; the parent relation comes from `children` and is carried separately. Automatic parent-relative positions are hidden from the inspector; the removed `/__content` references are rejected during document resolution.
 
 ### Visual widget editing: text, colors, textures and sizes
 

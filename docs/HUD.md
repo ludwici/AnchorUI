@@ -273,7 +273,7 @@ In the F8 HUD editor, select a widget, press **Pick parent**, then click a panel
 
 The inspector displays the **Panel parent** as a single field. F8 Parent selection prioritizes Panels even when their children overlap them. Structural moves persist locally and are reversible through Cancel, Parent reset or Reset all; circular relationships are rejected.
 
-The **SOURCE JSON [+]** group starts collapsed. The renderer no longer injects `__anchorui_container_parent` into nested widget settings and automatically binds children to their Panel, including its padding. Legacy `/__content` references remain supported but are not needed in new resource packs.
+The **SOURCE JSON [+]** group starts collapsed. The renderer no longer injects `__anchorui_container_parent` into nested widget settings and automatically binds children to their Panel, including its padding. Legacy `/__content` references are not supported. Point `relativeTo` at the parent Panel ID instead.
 
 ### Visual and content properties in the HUD editor
 

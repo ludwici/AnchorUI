@@ -50,7 +50,8 @@ public class Events {
             AnchorWidgetRegistry.register(WidgetTypeIds.TEMPLATE_LIST, (context, element, style) -> new PanelWidget(context, element.settings, style));
             AnchorWidgetRegistry.register(WidgetTypeIds.TEXT, (context, element, style) -> {
                 BoundText binding = BoundText.parse(element.settings.get("text"));
-                return binding.isDynamic() ? new BoundTextWidget(context, binding, style) : new AnchoredTextWidget(element.text, context.font(), style);
+                return binding.isDynamic() ? new BoundTextWidget(context, binding, style)
+                        : new AnchoredTextWidget(element.text, context.font(), style, context.screen());
             });
             AnchorWidgetRegistry.register(WidgetTypeIds.MODEL, (context, element, style) -> new ItemModelWidget(context.resolveItem(element.path), element.scale, style));
             AnchorWidgetRegistry.register(WidgetTypeIds.IMAGE, (context, element, style) -> new ImageWidget(context, element.settings, style));

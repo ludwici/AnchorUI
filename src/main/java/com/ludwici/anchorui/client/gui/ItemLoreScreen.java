@@ -50,6 +50,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
@@ -110,6 +111,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     private boolean lifecycleActive;
     private boolean transitioningToEditor;
     private String focusedWidgetId;
+    private Style queuedRichTextTooltip;
     private final Map<String, Boolean> visibilityScratch = new HashMap<>();
     private final Map<String, Boolean> enabledScratch = new HashMap<>();
     private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
@@ -1303,6 +1305,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     }
 
     private void renderInterfaceWidgets(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        queuedRichTextTooltip = null;
         for (PlacedWidget placed : placedWidgets) {
             AbstractWidget widget = placed.widget();
             if (!widget.visible) {
@@ -1340,6 +1343,28 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         }
         renderScrollIndicators(graphics, mouseX, mouseY, partialTick);
         renderWidgetPopups(graphics, mouseX, mouseY);
+        renderQueuedRichTextTooltip(graphics, mouseX, mouseY);
+    }
+
+    void queueRichTextTooltip(Style hoveredStyle) {
+        if (hoveredStyle != null && hoveredStyle.getHoverEvent() != null) {
+            queuedRichTextTooltip = hoveredStyle;
+        }
+    }
+
+    private void renderQueuedRichTextTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
+        Style hovered = queuedRichTextTooltip;
+        queuedRichTextTooltip = null;
+        if (hovered == null || mouseX < 0 || mouseY < 0) {
+            return;
+        }
+        graphics.pose().pushPose();
+        try {
+            graphics.pose().translate(0, 0, 600);
+            graphics.renderComponentHoverEffect(minecraft.font, hovered, mouseX, mouseY);
+        } finally {
+            graphics.pose().popPose();
+        }
     }
 
     void closeOtherWidgetPopups(AbstractWidget owner) {

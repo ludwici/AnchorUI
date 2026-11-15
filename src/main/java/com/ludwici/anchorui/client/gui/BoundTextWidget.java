@@ -67,9 +67,13 @@ public final class BoundTextWidget extends AnchoredWidget {
             if (mouseX >= lineX && mouseX < lineX + font.width(line) && mouseY >= lineY && mouseY < lineY + font.lineHeight) {
                 var hovered = RichTextHover.styleAt(font, line, mouseX - lineX);
                 if (hovered != null && hovered.getHoverEvent() != null) {
-                    graphics.disableScissor();
-                    graphics.renderComponentHoverEffect(font, hovered, mouseX, mouseY);
-                    graphics.enableScissor(x, y, x + innerWidth, y + innerHeight);
+                    if (context.screen() instanceof ItemLoreScreen ui) {
+                        ui.queueRichTextTooltip(hovered);
+                    } else {
+                        graphics.disableScissor();
+                        graphics.renderComponentHoverEffect(font, hovered, mouseX, mouseY);
+                        graphics.enableScissor(x, y, x + innerWidth, y + innerHeight);
+                    }
                 }
             }
         }

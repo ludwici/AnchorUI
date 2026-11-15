@@ -5,6 +5,7 @@ import com.ludwici.anchorui.api.style.LoreStyle;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.CommonComponents;
@@ -17,6 +18,7 @@ import java.util.List;
 
 public class AnchoredTextWidget extends AnchoredWidget {
     private final Font font;
+    private final Screen screen;
     private final Component message;
     private final StringWidget singleLine;
     private final List<FormattedCharSequence> lines;
@@ -24,12 +26,21 @@ public class AnchoredTextWidget extends AnchoredWidget {
     private final int lineHeight;
 
     public AnchoredTextWidget(String text, Font font, LoreStyle.Element style) {
-        this(LoreParser.parseComponent(text), font, style);
+        this(LoreParser.parseComponent(text), font, style, null);
+    }
+
+    public AnchoredTextWidget(String text, Font font, LoreStyle.Element style, Screen screen) {
+        this(LoreParser.parseComponent(text), font, style, screen);
     }
 
     public AnchoredTextWidget(Component message, Font font, LoreStyle.Element style) {
+        this(message, font, style, null);
+    }
+
+    public AnchoredTextWidget(Component message, Font font, LoreStyle.Element style, Screen screen) {
         super(measureWidth(message, font, style), measureHeight(message, font, style), style);
         this.font = font;
+        this.screen = screen;
         this.message = message;
         this.multiline = isMultiline(message, style);
         this.lineHeight = font.lineHeight + 2;
@@ -123,7 +134,7 @@ public class AnchoredTextWidget extends AnchoredWidget {
         }
         graphics.disableScissor();
         if (hovered != null && hovered.getHoverEvent() != null) {
-            graphics.renderComponentHoverEffect(font, hovered, mouseX, mouseY);
+            renderRichTooltip(graphics, hovered, mouseX, mouseY);
         }
     }
 
@@ -145,6 +156,14 @@ public class AnchoredTextWidget extends AnchoredWidget {
         }
         Style hovered = RichTextHover.styleAt(font, rendered, mouseX - textX);
         if (hovered != null && hovered.getHoverEvent() != null) {
+            renderRichTooltip(graphics, hovered, mouseX, mouseY);
+        }
+    }
+
+    private void renderRichTooltip(GuiGraphics graphics, Style hovered, int mouseX, int mouseY) {
+        if (screen instanceof ItemLoreScreen ui) {
+            ui.queueRichTextTooltip(hovered);
+        } else {
             graphics.renderComponentHoverEffect(font, hovered, mouseX, mouseY);
         }
     }

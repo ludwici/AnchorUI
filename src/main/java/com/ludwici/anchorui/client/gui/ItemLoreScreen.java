@@ -105,6 +105,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     private List<PlacedWidget> visibilityOrder = List.of();
     private final Map<String, UiEventBindings> widgetEventBindings = new HashMap<>();
     private final Map<String, WidgetAnimation> widgetAnimations = new HashMap<>();
+    private final Map<String, AbstractWidget> animatedWidgetTargets = new HashMap<>();
     private final Map<String, String> animationDefinitions = new HashMap<>();
     private boolean closingWithAnimation;
     private long animationCloseDeadline;
@@ -1063,6 +1064,12 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         }
         widgetAnimations.keySet().retainAll(animationIds);
         animationDefinitions.keySet().retainAll(animationIds);
+        animatedWidgetTargets.clear();
+        for (PlacedWidget placed : created) {
+            if (widgetAnimations.containsKey(placed.id())) {
+                animatedWidgetTargets.put(placed.id(), placed.widget());
+            }
+        }
         if (!applyScreenOffsets(currentScreenOffsets(), warnings)) {
             if (currentScreenOffsets().sameAs(new HudLayoutOffsets()) || !applyScreenOffsets(new HudLayoutOffsets(), warnings)) {
                 layoutError = lastLayoutFailure;
@@ -1364,10 +1371,10 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     }
 
     private void updateAnimations(long now) {
-        for (PlacedWidget placed : placedWidgets) {
-            WidgetAnimation animation = widgetAnimations.get(placed.id());
-            if (animation != null) {
-                animation.update(placed.widget().visible, now);
+        for (var entry : widgetAnimations.entrySet()) {
+            AbstractWidget widget = animatedWidgetTargets.get(entry.getKey());
+            if (widget != null) {
+                entry.getValue().update(widget.visible, now);
             }
         }
     }

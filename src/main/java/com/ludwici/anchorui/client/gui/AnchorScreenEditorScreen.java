@@ -16,6 +16,7 @@ import com.ludwici.anchorui.client.gui.editor.EditorDropdown;
 import com.ludwici.anchorui.api.widget.WidgetEditorRegistry;
 import com.ludwici.anchorui.client.gui.editor.AppearanceInspectorControls;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorCheckbox;
+import com.ludwici.anchorui.client.gui.editor.EditorColorPicker;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -85,6 +86,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     private Button appearanceApply;
     private Button appearanceCancel;
     private AppearanceInspectorControls.Control editingAppearance;
+    private EditorColorPicker colorPickerDialog;
     private String editingAppearanceId;
     private List<String> sourceProperties = List.of();
     private boolean sourceExpanded;
@@ -478,7 +480,7 @@ public final class AnchorScreenEditorScreen extends Screen {
                             0xFFFFD16B, false);
                 }
             }
-            if (editingAppearance != null) {
+            if (editingAppearance != null && colorPickerDialog == null) {
                 int modalX = appearanceInput.getX() - 8;
                 int modalY = appearanceInput.getY() - 23;
                 graphics.fill(modalX - 1, modalY - 1, modalX + appearanceInput.getWidth() + 17, modalY + 86, 0xFF162332);
@@ -493,6 +495,9 @@ public final class AnchorScreenEditorScreen extends Screen {
             widgetList.render(graphics, font, mouseX, mouseY, frameEntries,
                     selected == null ? null : selected.id(), pickingParent);
             editorDropdown.render(graphics, font, mouseX, mouseY);
+            if (colorPickerDialog != null) {
+                colorPickerDialog.render(graphics, font, mouseX, mouseY, partialTick, width, height, status);
+            }
         } finally {
             graphics.pose().popPose();
         }
@@ -605,6 +610,18 @@ public final class AnchorScreenEditorScreen extends Screen {
         editingAppearance = control;
         editingAppearanceId = id;
         appearanceInput.setValue(control.value());
+        if (control.field().kind() == WidgetEditorRegistry.Kind.COLOR) {
+            colorPickerDialog = new EditorColorPicker(this, control.field().label(), control.value(), width, height,
+                    value -> {
+                        appearanceInput.setValue(value);
+                        commitAppearance();
+                    }, this::closeAppearanceInput);
+            appearanceInput.visible = false;
+            appearanceApply.visible = false;
+            appearanceCancel.visible = false;
+            updateControls();
+            return;
+        }
         appearanceInput.visible = true;
         appearanceApply.visible = true;
         appearanceCancel.visible = true;
@@ -614,6 +631,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     }
 
     private void closeAppearanceInput() {
+        colorPickerDialog = null;
         editingAppearance = null;
         editingAppearanceId = null;
         if (appearanceInput != null) {
@@ -649,8 +667,16 @@ public final class AnchorScreenEditorScreen extends Screen {
         int reset = panelX() + inspectorWidth - 24;
         boolean choice = control.field().kind() == WidgetEditorRegistry.Kind.CHOICE;
         boolean checkbox = control.booleanField();
+        boolean colorField = control.field().kind() == WidgetEditorRegistry.Kind.COLOR;
         if (checkbox) {
             EditorInspectorCheckbox.render(graphics, next, lineY, Boolean.parseBoolean(control.value()));
+        } else if (colorField) {
+            graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF718699);
+            try {
+                graphics.fill(next + 2, lineY + 2, next + 12, lineY + 9, ColorPickerColor.parse(control.value()));
+            } catch (IllegalArgumentException exception) {
+                graphics.fill(next + 2, lineY + 2, next + 12, lineY + 9, 0xFF3D4550);
+            }
         } else if (control.textual() || choice) {
             graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF40566A);
             graphics.drawString(font, choice ? "▼" : "E", next + 2, lineY + 1, 0xFFE5EEF5, false);
@@ -792,6 +818,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (colorPickerDialog != null) {
+            return colorPickerDialog.mouseClicked(mouseX, mouseY, button);
+        }
         if (editorDropdown.isOpen()) {
             return editorDropdown.mouseClicked(mouseX, mouseY, button);
         }
@@ -923,6 +952,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (colorPickerDialog != null) {
+            return colorPickerDialog.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        }
         if (inspectorScrollBar != null && inspectorScrollBar.isDraggingBar()) {
             inspectorScrollBar.mouseDragged(mouseX, mouseY, button, dragX, dragY);
             inspectorScroll = inspectorScrollBar.logicalOffset();
@@ -966,6 +998,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (colorPickerDialog != null) {
+            return colorPickerDialog.mouseReleased(mouseX, mouseY, button);
+        }
         if (inspectorScrollBar != null && inspectorScrollBar.isDraggingBar()) {
             inspectorScrollBar.mouseReleased(mouseX, mouseY, button);
             inspectorScroll = inspectorScrollBar.logicalOffset();
@@ -993,6 +1028,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (colorPickerDialog != null) {
+            return true;
+        }
         if (editorDropdown.mouseScrolled(mouseX, mouseY, scrollY)) {
             return true;
         }
@@ -1014,6 +1052,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (colorPickerDialog != null) {
+            return colorPickerDialog.keyPressed(keyCode, scanCode, modifiers);
+        }
         if (editorDropdown.keyPressed(keyCode)) {
             return true;
         }
@@ -1075,6 +1116,14 @@ public final class AnchorScreenEditorScreen extends Screen {
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (colorPickerDialog != null) {
+            return colorPickerDialog.charTyped(codePoint, modifiers);
+        }
+        return super.charTyped(codePoint, modifiers);
     }
 
     @Override

@@ -47,6 +47,7 @@ public class AppearanceInspectorControlsTest {
     @Test
     public void validatesAppearancePropertiesAndStepsTypedValues() {
         var color = WidgetEditorRegistry.Field.color("fillColor", "Fill", "#112233");
+        assertEquals(WidgetEditorRegistry.Kind.COLOR, color.kind());
         var texture = WidgetEditorRegistry.Field.texture("texture", "Texture");
         var text = WidgetEditorRegistry.Field.text("text", "Label", "");
         assertEquals("#FFAA22", AppearanceInspectorControls.parse(color, "#ffaa22").getAsString());

@@ -12,6 +12,8 @@ import com.ludwici.anchorui.client.hud.HudSnap;
 import com.ludwici.anchorui.client.gui.NativeContainerScrollPanel;
 import com.ludwici.anchorui.client.gui.editor.WidgetListPanel;
 import com.ludwici.anchorui.client.gui.editor.LayoutInspectorControls;
+import com.ludwici.anchorui.client.gui.editor.EditorDropdown;
+import com.ludwici.anchorui.api.widget.WidgetEditorRegistry;
 import com.ludwici.anchorui.client.gui.editor.AppearanceInspectorControls;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphics;
@@ -35,6 +37,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     private static final int INSPECTOR_LINE_HEIGHT = 11;
     private static final int RESET_SIZE = 11;
     private static final float INSPECTOR_SCALE = 0.83F;
+    private static final List<String> ANCHOR_CHOICES = java.util.Arrays.stream(ElementAnchor.values()).map(ElementAnchor::name).toList();
 
     private record InspectorLine(FormattedCharSequence text, int color, AnchorHudManager.EditableProperty property,
                                  boolean modified, LayoutInspectorControls.Control layoutControl,
@@ -73,6 +76,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     private List<ItemLoreScreen.EditorHandle> frameHandles = List.of();
     private List<WidgetListPanel.Entry> frameEntries = List.of();
     private final List<Button> controls = new ArrayList<>();
+    private final EditorDropdown editorDropdown = new EditorDropdown();
     private final List<ResetHitbox> resetHitboxes = new ArrayList<>();
     private final List<LayoutHitbox> layoutHitboxes = new ArrayList<>();
     private final List<AppearanceHitbox> appearanceHitboxes = new ArrayList<>();
@@ -126,6 +130,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             target.beginScreenEditing();
         }
         controls.clear();
+        editorDropdown.close();
         widgetList.resize(width, height);
         inspectorWidth = Math.min(WIDTH, Math.max(150, width - 116));
         if (panelLeft < 0) {
@@ -143,8 +148,8 @@ public final class AnchorScreenEditorScreen extends Screen {
         add(x + 114, y + 29, 100, "Cancel", button -> cancel());
         hide = add(x + 7, y + 53, 100, "Hide", button -> toggleHidden());
         reset = add(x + 114, y + 53, 100, "Reset", button -> reset());
-        point = add(x + 7, y + 77, 100, "Point", button -> cyclePoint());
-        anchor = add(x + 114, y + 77, 100, "Anchor", button -> cycleAnchor());
+        point = add(x + 7, y + 77, 100, "Point ▼", button -> openAnchorDropdown(true));
+        anchor = add(x + 114, y + 77, 100, "Anchor ▼", button -> openAnchorDropdown(false));
         parent = add(x + 7, y + 101, 100, "Parent", button -> pickParent());
         add(x + 114, y + 101, 100, "Reset all", button -> resetAll());
         positionControls();
@@ -194,6 +199,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             widgetList.setCollapsed(true);
         }
         inspectorCollapsed = !inspectorCollapsed;
+        editorDropdown.close();
         draggingPanel = false;
         updateControls();
     }
@@ -225,6 +231,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     private void select(String id) {
         String previousId = selected == null ? null : selected.id();
         if (!java.util.Objects.equals(id, previousId)) {
+            editorDropdown.close();
             inspectedId = null;
             sourceProperties = List.of();
             sourceExpanded = false;
@@ -333,29 +340,56 @@ public final class AnchorScreenEditorScreen extends Screen {
         refreshSelection();
     }
 
-    private void cyclePoint() {
-        if (selected != null) {
-            ElementAnchor[] values = ElementAnchor.values();
-            ElementAnchor next = values[(selected.point().ordinal() + 1) % values.length];
-            if (!target.editorAnchor(selected.id(), selected.relativeTo(), next, selected.anchor())) {
-                status = "Invalid point";
-            }
-            refreshSelection();
+    private void openAnchorDropdown(boolean pointChoice) {
+        if (selected == null) {
+            return;
         }
+        String id = selected.id();
+        Button origin = pointChoice ? point : anchor;
+        String current = (pointChoice ? selected.point() : selected.anchor()).name();
+        editorDropdown.open(origin.getX(), origin.getY(), origin.getWidth(), origin.getHeight(),
+                width, height, ANCHOR_CHOICES, current, value -> {
+                    if (selected == null || !id.equals(selected.id())) {
+                        return;
+                    }
+                    ElementAnchor chosen = ElementAnchor.fromString(value);
+                    boolean changed = target.editorAnchor(id, selected.relativeTo(),
+                            pointChoice ? chosen : selected.point(),
+                            pointChoice ? selected.anchor() : chosen);
+                    status = changed ? "" : "Invalid anchor position";
+                    refreshSelection();
+                });
     }
 
-    private void cycleAnchor() {
-        if (selected != null) {
-            ElementAnchor[] values = ElementAnchor.values();
-            ElementAnchor next = values[(selected.anchor().ordinal() + 1) % values.length];
-            if (!target.editorAnchor(selected.id(), selected.relativeTo(), selected.point(), next)) {
-                status = "Invalid anchor";
-            }
-            refreshSelection();
+    private void openLayoutDropdown(LayoutHitbox hitbox) {
+        if (selected == null) {
+            return;
         }
+        String id = selected.id();
+        LayoutInspectorControls.Control control = hitbox.control();
+        String current = control.value().replace("anchorui:", "");
+        editorDropdown.open(hitbox.x() - 106, hitbox.y(), 14, RESET_SIZE, width, height,
+                LayoutInspectorControls.choices(control), current, value -> {
+                    status = target.editorSetLayout(id, control, value) ? "" : "Invalid layout value or constraints";
+                    refreshSelection();
+                });
+    }
+
+    private void openAppearanceDropdown(AppearanceHitbox hitbox) {
+        if (selected == null) {
+            return;
+        }
+        String id = selected.id();
+        AppearanceInspectorControls.Control control = hitbox.control();
+        editorDropdown.open(hitbox.x() - 106, hitbox.y(), 14, RESET_SIZE, width, height,
+                control.field().choices(), control.value(), value -> {
+                    status = target.editorSetAppearance(id, control, value) ? "" : target.screenSaveError();
+                    refreshSelection();
+                });
     }
 
     private void pickParent() {
+        editorDropdown.close();
         pickingParent = !pickingParent;
         status = pickingParent ? "Pick a container to add the widget, or empty space for screen" : "";
         updateControls();
@@ -457,6 +491,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             super.render(graphics, mouseX, mouseY, partialTick);
             widgetList.render(graphics, font, mouseX, mouseY, frameEntries,
                     selected == null ? null : selected.id(), pickingParent);
+            editorDropdown.render(graphics, font, mouseX, mouseY);
         } finally {
             graphics.pose().popPose();
         }
@@ -519,17 +554,25 @@ public final class AnchorScreenEditorScreen extends Screen {
         int first = panelX() + inspectorWidth - 79;
         int next = panelX() + inspectorWidth - 61;
         int reset = panelX() + inspectorWidth - 24;
-        graphics.fill(first, lineY, first + 14, lineY + RESET_SIZE, 0xFF40566A);
-        graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF40566A);
-        graphics.drawString(font, "-", first + 4, lineY + 1, 0xFFE5EEF5, false);
-        graphics.drawString(font, "+", next + 3, lineY + 1, 0xFFE5EEF5, false);
+        boolean choice = !LayoutInspectorControls.choices(control).isEmpty();
+        if (choice) {
+            graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF40566A);
+            graphics.drawString(font, "▼", next + 2, lineY + 1, 0xFFE5EEF5, false);
+        } else {
+            graphics.fill(first, lineY, first + 14, lineY + RESET_SIZE, 0xFF40566A);
+            graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF40566A);
+            graphics.drawString(font, "-", first + 4, lineY + 1, 0xFFE5EEF5, false);
+            graphics.drawString(font, "+", next + 3, lineY + 1, 0xFFE5EEF5, false);
+        }
         graphics.fill(reset, lineY, reset + 14, lineY + RESET_SIZE,
                 control.modified() ? 0xFF3D6273 : 0xFF40505D);
         graphics.drawString(font, "R", reset + 3, lineY + 1,
                 control.modified() ? 0xFFECF8FF : 0xFF80919E, false);
         if (lineY >= top && lineY + RESET_SIZE <= bottom) {
-            layoutHitboxes.add(new LayoutHitbox(control, -1, first, lineY));
-            layoutHitboxes.add(new LayoutHitbox(control, 1, next, lineY));
+            if (!choice) {
+                layoutHitboxes.add(new LayoutHitbox(control, -1, first, lineY));
+            }
+            layoutHitboxes.add(new LayoutHitbox(control, choice ? 2 : 1, next, lineY));
             if (control.modified()) {
                 layoutHitboxes.add(new LayoutHitbox(control, 0, reset, lineY));
             }
@@ -554,6 +597,7 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     private void openAppearanceInput(String id, AppearanceInspectorControls.Control control) {
         status = "";
+        editorDropdown.close();
         editingAppearance = control;
         editingAppearanceId = id;
         appearanceInput.setValue(control.value());
@@ -599,9 +643,10 @@ public final class AnchorScreenEditorScreen extends Screen {
         int left = panelX() + inspectorWidth - 79;
         int next = panelX() + inspectorWidth - 61;
         int reset = panelX() + inspectorWidth - 24;
-        if (control.textual()) {
+        boolean choice = control.field().kind() == WidgetEditorRegistry.Kind.CHOICE;
+        if (control.textual() || choice) {
             graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF40566A);
-            graphics.drawString(font, "E", next + 3, lineY + 1, 0xFFE5EEF5, false);
+            graphics.drawString(font, choice ? "▼" : "E", next + 2, lineY + 1, 0xFFE5EEF5, false);
         } else {
             graphics.fill(left, lineY, left + 14, lineY + RESET_SIZE, 0xFF40566A);
             graphics.fill(next, lineY, next + 14, lineY + RESET_SIZE, 0xFF40566A);
@@ -613,10 +658,10 @@ public final class AnchorScreenEditorScreen extends Screen {
         graphics.drawString(font, "R", reset + 3, lineY + 1,
                 control.modified() ? 0xFFECF8FF : 0xFF80919E, false);
         if (lineY >= top && lineY + RESET_SIZE <= bottom) {
-            if (!control.textual()) {
+            if (!control.textual() && !choice) {
                 appearanceHitboxes.add(new AppearanceHitbox(control, -1, left, lineY));
             }
-            appearanceHitboxes.add(new AppearanceHitbox(control, control.textual() ? 2 : 1, next, lineY));
+            appearanceHitboxes.add(new AppearanceHitbox(control, choice ? 3 : control.textual() ? 2 : 1, next, lineY));
             if (control.modified()) {
                 appearanceHitboxes.add(new AppearanceHitbox(control, 0, reset, lineY));
             }
@@ -740,6 +785,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (editorDropdown.isOpen()) {
+            return editorDropdown.mouseClicked(mouseX, mouseY, button);
+        }
         if (editingAppearance != null) {
             super.mouseClicked(mouseX, mouseY, button);
             return true;
@@ -790,6 +838,8 @@ public final class AnchorScreenEditorScreen extends Screen {
                             refreshSelection();
                         } else if (hitbox.direction() == 2) {
                             openAppearanceInput(selected.id(), hitbox.control());
+                        } else if (hitbox.direction() == 3) {
+                            openAppearanceDropdown(hitbox);
                         } else {
                             try {
                                 String value = AppearanceInspectorControls.stepped(hitbox.control(), hitbox.direction()).getAsString();
@@ -805,6 +855,10 @@ public final class AnchorScreenEditorScreen extends Screen {
                 }
                 for (LayoutHitbox hitbox : layoutHitboxes) {
                     if (hitbox.contains(mouseX, mouseY)) {
+                        if (hitbox.direction() == 2) {
+                            openLayoutDropdown(hitbox);
+                            return true;
+                        }
                         boolean changed = selected != null && (hitbox.direction() == 0
                                 ? target.editorResetLayout(selected.id(), hitbox.control())
                                 : target.editorAdjustLayout(selected.id(), hitbox.control(), hitbox.direction()));
@@ -932,6 +986,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (editorDropdown.mouseScrolled(mouseX, mouseY, scrollY)) {
+            return true;
+        }
         if (!compact && widgetList.scroll(mouseX, mouseY, scrollY, frameEntries)) {
             return true;
         }
@@ -950,6 +1007,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (editorDropdown.keyPressed(keyCode)) {
+            return true;
+        }
         if (editingAppearance != null) {
             if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
                 closeAppearanceInput();
@@ -976,6 +1036,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_TAB) {
+            editorDropdown.close();
             compact = !compact;
             draggingPanel = false;
             updateControls();

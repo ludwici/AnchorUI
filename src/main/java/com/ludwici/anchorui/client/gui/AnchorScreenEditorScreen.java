@@ -280,6 +280,22 @@ public final class AnchorScreenEditorScreen extends Screen {
         return null;
     }
 
+    private ItemLoreScreen.EditorHandle hitParentPanel(double x, double y) {
+        for (int index = frameHandles.size() - 1; index >= 0; index--) {
+            ItemLoreScreen.EditorHandle handle = frameHandles.get(index);
+            if (!target.editorIsContainer(handle.id()) || selected != null && selected.id().equals(handle.id())) {
+                continue;
+            }
+            AnchorLayout.Bounds bounds = handle.bounds();
+            if (bounds.width() > 0 && bounds.height() > 0
+                    && x >= bounds.x() && x < bounds.x() + bounds.width()
+                    && y >= bounds.y() && y < bounds.y() + bounds.height()) {
+                return handle;
+            }
+        }
+        return null;
+    }
+
     private void refreshSelection() {
         if (selected != null) {
             select(selected.id());
@@ -826,7 +842,8 @@ public final class AnchorScreenEditorScreen extends Screen {
         }
         ItemLoreScreen.EditorHandle hit = hit(mouseX, mouseY);
         if (pickingParent && selected != null) {
-            chooseParentTarget(hit == null ? "screen" : hit.id());
+            ItemLoreScreen.EditorHandle panel = hitParentPanel(mouseX, mouseY);
+            chooseParentTarget(panel == null ? "screen" : panel.id());
             return true;
         }
         select(hit == null ? null : hit.id());

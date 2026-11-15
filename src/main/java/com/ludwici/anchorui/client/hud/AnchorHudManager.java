@@ -245,6 +245,7 @@ public final class AnchorHudManager {
         candidate.setContainerParent(id, "screen");
         candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(
                 "screen", ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
+        candidate.set(id, 0, 0);
         return usePreviewLayout(candidate);
     }
 

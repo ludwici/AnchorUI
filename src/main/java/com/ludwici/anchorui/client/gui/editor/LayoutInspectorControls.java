@@ -106,6 +106,18 @@ public final class LayoutInspectorControls {
         return fallback;
     }
 
+    public static List<String> choices(Control control) {
+        if ("layout".equals(control.section())) {
+            return switch (control.field()) {
+                case "type" -> List.of("none", "row", "column", "grid");
+                case "align", "justifyItems", "alignItems" -> List.of("start", "center", "end", "stretch");
+                case "justify" -> List.of("start", "center", "end", "space_between");
+                default -> List.of();
+            };
+        }
+        return List.of();
+    }
+
     public static JsonElement stepped(Control control, int direction) {
         Objects.requireNonNull(control, "Control must not be null");
         if (direction == 0) {

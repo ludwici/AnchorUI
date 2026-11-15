@@ -34,6 +34,12 @@ public final class AppearanceInspectorControls {
             JsonElement source = read(settings, field.path());
             String value = source != null && source.isJsonPrimitive()
                     ? source.getAsString() : field.fallback().getAsString();
+            if (field.path().startsWith("animation.") && field.path().endsWith(".preset") && source == null) {
+                String trackPath = field.path().substring(0, field.path().lastIndexOf('.'));
+                if (read(settings, trackPath) instanceof JsonObject track && !track.isEmpty()) {
+                    value = "custom";
+                }
+            }
             JsonElement override = offsets.settingOverride(id, "appearance", field.path());
             if (override != null) {
                 value = override.getAsString();

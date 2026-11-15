@@ -106,7 +106,11 @@ public final class UiAnimationSpec {
             if (!entry.getValue().isJsonObject()) {
                 throw new IllegalArgumentException("animation." + key + " must be an object");
             }
-            parsed.put(trigger, parseTrack(entry.getValue().getAsJsonObject(), key));
+            JsonObject track = entry.getValue().getAsJsonObject();
+            if (track.has("preset") && "none".equals(track.get("preset").getAsString())) {
+                continue;
+            }
+            parsed.put(trigger, parseTrack(track, key));
         }
         JsonElement watch = result.get("watch");
         if (watch != null && !parsed.containsKey(Trigger.CHANGE)) {
@@ -121,17 +125,25 @@ public final class UiAnimationSpec {
     private static Track parseTrack(JsonObject raw, String trigger) {
         for (var entry : raw.entrySet()) {
             if (!switch (entry.getKey()) {
-                case "duration", "easing", "opacity", "x", "y", "scale" -> true;
+                case "duration", "easing", "opacity", "x", "y", "scale", "preset" -> true;
                 default -> false;
             }) {
                 throw new IllegalArgumentException("Unknown animation." + trigger + " property '" + entry.getKey() + "'");
             }
         }
-        if (!raw.has("duration") || !raw.get("duration").isJsonPrimitive()
-                || !raw.getAsJsonPrimitive("duration").isNumber()) {
+        String preset = raw.has("preset") ? raw.get("preset").getAsString() : "custom";
+        if (!java.util.Set.of("none", "custom", "fade", "slideLeft", "slideRight", "slideUp", "zoom").contains(preset)) {
+            throw new IllegalArgumentException("Unknown animation preset '" + preset + "'");
+        }
+        if (preset.equals("custom") && (!raw.has("duration") || !raw.get("duration").isJsonPrimitive()
+                || !raw.getAsJsonPrimitive("duration").isNumber())) {
             throw new IllegalArgumentException("animation." + trigger + ".duration requires milliseconds");
         }
-        double ms = raw.get("duration").getAsDouble();
+        if (raw.has("duration") && (!raw.get("duration").isJsonPrimitive()
+                || !raw.getAsJsonPrimitive("duration").isNumber())) {
+            throw new IllegalArgumentException("animation." + trigger + ".duration requires milliseconds");
+        }
+        double ms = raw.has("duration") ? raw.get("duration").getAsDouble() : 300;
         if (!Double.isFinite(ms) || ms < 1 || ms > 10000 || ms != Math.floor(ms)) {
             throw new IllegalArgumentException("animation." + trigger + ".duration must be 1..10000 integer milliseconds");
         }
@@ -144,10 +156,24 @@ public final class UiAnimationSpec {
             case "outCubic" -> Easing.OUT_CUBIC;
             default -> throw new IllegalArgumentException("Unknown animation easing '" + easingName + "'");
         };
+        boolean exiting = trigger.equals("hide") || trigger.equals("close");
         double[] opacity = pair(raw, "opacity", 1.0, 0.0, 1.0);
         double[] x = pair(raw, "x", 0.0, -4096.0, 4096.0);
         double[] y = pair(raw, "y", 0.0, -4096.0, 4096.0);
         double[] scale = pair(raw, "scale", 1.0, 0.01, 4.0);
+        if (!raw.has("opacity") && preset.equals("fade")) {
+            opacity = exiting ? new double[]{1.0, 0.0} : new double[]{0.0, 1.0};
+        }
+        if (!raw.has("x") && (preset.equals("slideLeft") || preset.equals("slideRight"))) {
+            double distance = preset.equals("slideLeft") ? -32 : 32;
+            x = exiting ? new double[]{0.0, distance} : new double[]{distance, 0.0};
+        }
+        if (!raw.has("y") && preset.equals("slideUp")) {
+            y = exiting ? new double[]{0.0, -24.0} : new double[]{24.0, 0.0};
+        }
+        if (!raw.has("scale") && preset.equals("zoom")) {
+            scale = exiting ? new double[]{1.0, 0.82} : new double[]{0.82, 1.0};
+        }
         return new Track((long) ms, easing, new Frame(opacity[0], x[0], y[0], scale[0]), new Frame(opacity[1], x[1], y[1], scale[1]));
     }
 

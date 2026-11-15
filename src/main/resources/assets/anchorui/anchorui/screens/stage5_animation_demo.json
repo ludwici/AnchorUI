@@ -22,20 +22,22 @@
         "width": 310,
         "height": 24
       },
-      "animation": {
-        "open": {
+      "animations": [
+        {
+          "id": "open_effect",
+          "trigger": "open",
           "duration": 700,
           "easing": "easeOut",
-          "opacity": [
-            0,
-            1
-          ],
-          "y": [
-            -25,
-            0
-          ]
+          "from": {
+            "opacity": 0,
+            "y": -25
+          },
+          "to": {
+            "opacity": 1,
+            "y": 0
+          }
         }
-      }
+      ]
     },
     {
       "type": "anchorui:text",
@@ -54,20 +56,22 @@
         "width": 300,
         "height": 20
       },
-      "animation": {
-        "open": {
+      "animations": [
+        {
+          "id": "open_effect",
+          "trigger": "open",
           "duration": 700,
           "easing": "easeInOut",
-          "opacity": [
-            0,
-            1
-          ],
-          "x": [
-            50,
-            0
-          ]
+          "from": {
+            "opacity": 0,
+            "x": 50
+          },
+          "to": {
+            "opacity": 1,
+            "x": 0
+          }
         }
-      }
+      ]
     },
     {
       "type": "anchorui:button",
@@ -88,24 +92,24 @@
         "type": "anchorui:toggle_state",
         "key": "visible"
       },
-      "animation": {
-        "open": {
+      "animations": [
+        {
+          "id": "open_effect",
+          "trigger": "open",
           "duration": 450,
           "easing": "outCubic",
-          "opacity": [
-            0,
-            1
-          ],
-          "x": [
-            -95,
-            0
-          ],
-          "scale": [
-            0.9,
-            1
-          ]
+          "from": {
+            "opacity": 0,
+            "x": -95,
+            "scale": 0.9
+          },
+          "to": {
+            "opacity": 1,
+            "x": 0,
+            "scale": 1
+          }
         }
-      }
+      ]
     },
     {
       "type": "anchorui:button",
@@ -126,24 +130,24 @@
         "type": "anchorui:toggle_state",
         "key": "pulse"
       },
-      "animation": {
-        "open": {
+      "animations": [
+        {
+          "id": "open_effect",
+          "trigger": "open",
           "duration": 450,
           "easing": "outCubic",
-          "opacity": [
-            0,
-            1
-          ],
-          "x": [
-            95,
-            0
-          ],
-          "scale": [
-            0.9,
-            1
-          ]
+          "from": {
+            "opacity": 0,
+            "x": 95,
+            "scale": 0.9
+          },
+          "to": {
+            "opacity": 1,
+            "x": 0,
+            "scale": 1
+          }
         }
-      }
+      ]
     },
     {
       "type": "anchorui:panel",
@@ -167,56 +171,67 @@
         "path": "visible",
         "fallback": false
       },
-      "animation": {
-        "open": {
+      "animations": [
+        {
+          "id": "entrance_fade",
+          "trigger": "open",
           "duration": 480,
           "easing": "easeOut",
-          "opacity": [
-            0,
-            1
-          ],
-          "y": [
-            12,
-            0
-          ],
-          "scale": [
-            0.85,
-            1
-          ]
+          "from": {
+            "opacity": 0
+          },
+          "to": {
+            "opacity": 1
+          }
         },
-        "show": {
+        {
+          "id": "entrance_motion",
+          "trigger": "open",
+          "duration": 580,
+          "delay": 180,
+          "easing": "easeOut",
+          "from": {
+            "y": 12,
+            "scale": 0.85
+          },
+          "to": {
+            "y": 0,
+            "scale": 1
+          }
+        },
+        {
+          "id": "show_effect",
+          "trigger": "show",
           "duration": 350,
           "easing": "easeOut",
-          "opacity": [
-            0,
-            1
-          ],
-          "y": [
-            12,
-            0
-          ],
-          "scale": [
-            0.85,
-            1
-          ]
+          "from": {
+            "opacity": 0,
+            "y": 12,
+            "scale": 0.85
+          },
+          "to": {
+            "opacity": 1,
+            "y": 0,
+            "scale": 1
+          }
         },
-        "hide": {
+        {
+          "id": "hide_effect",
+          "trigger": "hide",
           "duration": 330,
           "easing": "easeIn",
-          "opacity": [
-            1,
-            0
-          ],
-          "y": [
-            0,
-            -12
-          ],
-          "scale": [
-            1,
-            0.85
-          ]
+          "from": {
+            "opacity": 1,
+            "y": 0,
+            "scale": 1
+          },
+          "to": {
+            "opacity": 0,
+            "y": -12,
+            "scale": 0.85
+          }
         }
-      }
+      ]
     },
     {
       "type": "anchorui:text",
@@ -239,32 +254,44 @@
         "path": "visible",
         "fallback": false
       },
-      "animation": {
-        "open": {
+      "animations": [
+        {
+          "id": "open_effect",
+          "trigger": "open",
           "duration": 480,
           "easing": "easeOut",
-          "opacity": [
-            0,
-            1
-          ]
+          "from": {
+            "opacity": 0
+          },
+          "to": {
+            "opacity": 1
+          }
         },
-        "show": {
+        {
+          "id": "show_effect",
+          "trigger": "show",
           "duration": 350,
           "easing": "easeOut",
-          "opacity": [
-            0,
-            1
-          ]
+          "from": {
+            "opacity": 0
+          },
+          "to": {
+            "opacity": 1
+          }
         },
-        "hide": {
+        {
+          "id": "hide_effect",
+          "trigger": "hide",
           "duration": 330,
           "easing": "easeIn",
-          "opacity": [
-            1,
-            0
-          ]
+          "from": {
+            "opacity": 1
+          },
+          "to": {
+            "opacity": 0
+          }
         }
-      }
+      ]
     },
     {
       "type": "anchorui:text",
@@ -283,37 +310,41 @@
         "width": 230,
         "height": 20
       },
-      "animation": {
-        "open": {
+      "animations": [
+        {
+          "id": "open_effect",
+          "trigger": "open",
           "duration": 550,
           "easing": "easeOut",
-          "opacity": [
-            0,
-            1
-          ]
+          "from": {
+            "opacity": 0
+          },
+          "to": {
+            "opacity": 1
+          }
         },
-        "watch": {
-          "bind": "anchorui:ui.state",
-          "path": "pulse",
-          "fallback": false
-        },
-        "change": {
+        {
+          "id": "change_effect",
+          "trigger": "change",
           "duration": 450,
           "easing": "outCubic",
-          "scale": [
-            1.32,
-            1
-          ],
-          "y": [
-            -5,
-            0
-          ],
-          "opacity": [
-            0.5,
-            1
-          ]
+          "from": {
+            "opacity": 0.5,
+            "y": -5,
+            "scale": 1.32
+          },
+          "to": {
+            "opacity": 1,
+            "y": 0,
+            "scale": 1
+          },
+          "watch": {
+            "bind": "anchorui:ui.state",
+            "path": "pulse",
+            "fallback": false
+          }
         }
-      }
+      ]
     },
     {
       "type": "anchorui:button",
@@ -331,36 +362,38 @@
         "height": 22
       },
       "onClick": "anchorui:close_screen",
-      "animation": {
-        "open": {
+      "animations": [
+        {
+          "id": "open_effect",
+          "trigger": "open",
           "duration": 600,
           "easing": "outCubic",
-          "opacity": [
-            0,
-            1
-          ],
-          "scale": [
-            0.8,
-            1
-          ]
+          "from": {
+            "opacity": 0,
+            "scale": 0.8
+          },
+          "to": {
+            "opacity": 1,
+            "scale": 1
+          }
         },
-        "close": {
+        {
+          "id": "close_effect",
+          "trigger": "close",
           "duration": 500,
           "easing": "easeIn",
-          "opacity": [
-            1,
-            0
-          ],
-          "y": [
-            0,
-            20
-          ],
-          "scale": [
-            1,
-            0.85
-          ]
+          "from": {
+            "opacity": 1,
+            "y": 0,
+            "scale": 1
+          },
+          "to": {
+            "opacity": 0,
+            "y": 20,
+            "scale": 0.85
+          }
         }
-      }
+      ]
     },
     {
       "type": "anchorui:text",

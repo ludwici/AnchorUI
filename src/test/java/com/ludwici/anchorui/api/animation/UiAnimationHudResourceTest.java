@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UiAnimationHudResourceTest {
     @Test
-    public void hudDemoUsesNamedAnimationTestGroupAndTypedWatch() throws Exception {
+    public void hudDemoHasNamedConcurrentTracksAndIndependentHealthWatch() throws Exception {
         String path = "assets/anchorui/anchorui/hud/stage5_animation_hud.json";
         var stream = getClass().getClassLoader().getResourceAsStream(path);
         assertNotNull(stream);
@@ -25,7 +25,11 @@ public class UiAnimationHudResourceTest {
             for (var entity : doc.getAsJsonArray("entities")) {
                 JsonObject widget = entity.getAsJsonObject();
                 UiAnimationSpec spec = UiAnimationSpec.parse(widget);
-                assertNotNull(spec.track(UiAnimationSpec.Trigger.OPEN));
+                assertTrue(spec.tracks().stream().anyMatch(track -> track.trigger() == UiAnimationSpec.Trigger.OPEN));
+                if (widget.get("id").getAsString().contains("health")) {
+                    assertTrue(spec.tracks().stream().anyMatch(track -> track.trigger() == UiAnimationSpec.Trigger.CHANGE && track.watch() != null));
+                    assertTrue(spec.tracks().stream().anyMatch(track -> track.delayMillis() > 0));
+                }
                 count++;
             }
             assertEquals(3, count);

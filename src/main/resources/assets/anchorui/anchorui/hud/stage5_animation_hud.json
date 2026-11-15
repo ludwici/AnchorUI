@@ -20,20 +20,22 @@
         "width": 180,
         "height": 18
       },
-      "animation": {
-        "open": {
+      "animations": [
+        {
+          "id": "open_effect",
+          "trigger": "open",
           "duration": 550,
           "easing": "easeOut",
-          "opacity": [
-            0,
-            1
-          ],
-          "x": [
-            60,
-            0
-          ]
+          "from": {
+            "opacity": 0,
+            "x": 60
+          },
+          "to": {
+            "opacity": 1,
+            "x": 0
+          }
         }
-      }
+      ]
     },
     {
       "type": "anchorui:progress",
@@ -59,32 +61,49 @@
         "fallback": 20
       },
       "showText": true,
-      "animation": {
-        "open": {
+      "animations": [
+        {
+          "id": "entrance_fade",
+          "trigger": "open",
           "duration": 650,
           "easing": "outCubic",
-          "opacity": [
-            0,
-            1
-          ],
-          "x": [
-            40,
-            0
-          ]
+          "from": {
+            "opacity": 0
+          },
+          "to": {
+            "opacity": 1
+          }
         },
-        "watch": {
-          "bind": "anchorui:player.health",
-          "fallback": 20
+        {
+          "id": "entrance_motion",
+          "trigger": "open",
+          "duration": 750,
+          "delay": 180,
+          "easing": "outCubic",
+          "from": {
+            "x": 40
+          },
+          "to": {
+            "x": 0
+          }
         },
-        "change": {
+        {
+          "id": "change_effect",
+          "trigger": "change",
           "duration": 360,
           "easing": "easeOut",
-          "scale": [
-            1.1,
-            1
-          ]
+          "from": {
+            "scale": 1.1
+          },
+          "to": {
+            "scale": 1
+          },
+          "watch": {
+            "bind": "anchorui:player.health",
+            "fallback": 20
+          }
         }
-      }
+      ]
     },
     {
       "type": "anchorui:progress",
@@ -107,20 +126,22 @@
       },
       "max": 20,
       "showText": true,
-      "animation": {
-        "open": {
+      "animations": [
+        {
+          "id": "open_effect",
+          "trigger": "open",
           "duration": 760,
           "easing": "easeOut",
-          "opacity": [
-            0,
-            1
-          ],
-          "y": [
-            15,
-            0
-          ]
+          "from": {
+            "opacity": 0,
+            "y": 15
+          },
+          "to": {
+            "opacity": 1,
+            "y": 0
+          }
         }
-      }
+      ]
     }
   ]
 }

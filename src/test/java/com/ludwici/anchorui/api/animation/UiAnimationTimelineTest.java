@@ -1,10 +1,14 @@
 package com.ludwici.anchorui.api.animation;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -14,138 +18,125 @@ public class UiAnimationTimelineTest {
     }
 
     @Test
-    public void openFadeSlideAndScaleCompleteWithoutChangingLayoutCoordinates() {
-        UiAnimationSpec s = spec("""
+    public void combinesUnlimitedTracksAndWaitsForDelay() {
+        UiAnimationSpec parsed = spec("""
                 {
-                  "animation": {
-                    "open": {
-                      "duration": 200,
-                      "easing": "linear",
-                      "opacity": [0, 1],
-                      "x": [-20, 0],
-                      "y": [10, 0],
-                      "scale": [0.8, 1]
-                    }
-                  }
+                  "animations": [
+                    {"id":"fade","trigger":"open","duration":200,"from":{"opacity":0},"to":{"opacity":1}},
+                    {"id":"slide","trigger":"open","duration":200,"delay":100,"from":{"x":-20},"to":{"x":0}},
+                    {"id":"zoom","trigger":"open","duration":200,"from":{"scale":0.8},"to":{"scale":1}},
+                    {"id":"shift","trigger":"open","duration":200,"from":{"y":10},"to":{"y":0}}
+                  ]
                 }
                 """);
-        UiAnimationTimeline t = new UiAnimationTimeline(s);
-        t.update(true, null, 1000000L);
-        var first = t.sample(1000000L);
-        assertEquals(0.0, first.opacity(), 0.00001);
-        assertEquals(-20.0, first.x(), 0.00001);
-        var half = t.sample(101000000L);
-        assertEquals(0.5, half.opacity(), 0.00001);
-        assertEquals(-10.0, half.x(), 0.00001);
-        assertEquals(5.0, half.y(), 0.00001);
-        assertEquals(0.9, half.scale(), 0.00001);
-        assertEquals(1.0, t.sample(201000000L).opacity(), 0.00001);
-        assertTrue(t.finished(201000000L));
-        assertEquals(40.0, half.inverseX(27.0, 10), 0.00001);
+        assertEquals(4, parsed.tracks().size());
+        UiAnimationTimeline timeline = new UiAnimationTimeline(parsed);
+        timeline.update(true, Map.of(), 0L);
+        assertEquals(0.0, timeline.sample(0L).opacity(), 0.00001);
+        assertEquals(0.0, timeline.sample(0L).x(), 0.00001);
+        assertEquals(0.5, timeline.sample(100000000L).opacity(), 0.00001);
+        assertEquals(-20.0, timeline.sample(100000000L).x(), 0.00001);
+        assertEquals(-10.0, timeline.sample(200000000L).x(), 0.00001);
+        assertEquals(0.9, timeline.sample(100000000L).scale(), 0.00001);
+        assertTrue(timeline.finished(300000000L));
+        assertEquals(1.0, timeline.sample(300000000L).opacity(), 0.00001);
+        assertEquals(0.0, timeline.sample(300000000L).x(), 0.00001);
     }
 
     @Test
-    public void hidingPreservesVisualFrameButNeverRestoresVisibility() {
-        UiAnimationTimeline t = new UiAnimationTimeline(spec("""
-                {
-                  "animation": {
-                    "hide": {
-                      "duration": 100,
-                      "opacity": [1, 0],
-                      "y": [0, 8]
-                    }
-                  }
-                }
+    public void delayDoesNotChangeOpacityUntilStarting() {
+        UiAnimationTimeline timeline = new UiAnimationTimeline(spec("""
+                {"animations":[{"id":"late","trigger":"open","delay":250,"duration":100,"preset":"fade"}]}
                 """));
-        t.update(true, null, 0L);
-        t.update(false, null, 100000000L);
-        assertTrue(t.renderWhenHidden(140000000L));
-        assertEquals(0.6, t.sample(140000000L).opacity(), 0.00001);
-        assertFalse(t.renderWhenHidden(200000000L));
-        t.update(true, null, 210000000L);
-        assertFalse(t.renderWhenHidden(210000000L));
+        timeline.update(true, Map.of(), 0L);
+        assertEquals(1.0, timeline.sample(200000000L).opacity(), 0.00001);
+        assertEquals(0.0, timeline.sample(250000000L).opacity(), 0.00001);
+        assertEquals(0.5, timeline.sample(300000000L).opacity(), 0.00001);
+        assertEquals(1.0, timeline.sample(350000000L).opacity(), 0.00001);
     }
 
     @Test
-    public void changeWatchOnlyTriggersOnChangedSnapshot() {
-        var doc = JsonParser.parseString("""
-                {
-                  "animation": {
-                    "watch": {"bind": "anchorui:ui.state", "path": "counter", "fallback": 0},
-                    "change": {"duration": 100, "scale": [1.2, 1]}
-                  }
-                }
-                """).getAsJsonObject();
-        UiAnimationSpec s = UiAnimationSpec.parse(doc);
-        UiAnimationTimeline t = new UiAnimationTimeline(s);
-        t.update(true, JsonParser.parseString("0"), 0);
-        assertEquals(1.0, t.sample(10000000L).scale(), 0.00001);
-        t.update(true, JsonParser.parseString("1"), 20000000L);
-        assertEquals(1.2, t.sample(20000000L).scale(), 0.00001);
-        t.update(true, JsonParser.parseString("1"), 40000000L);
-        assertEquals(1.1, t.sample(70000000L).scale(), 0.00001);
-        t.update(true, JsonParser.parseString("2"), 70000000L);
-        assertEquals(1.1, t.sample(70000000L).scale(), 0.00001);
+    public void hideWaitsForDelayedExitAndPreventsPersistentHiddenRendering() {
+        UiAnimationTimeline timeline = new UiAnimationTimeline(spec("""
+                {"animations":[{"id":"hide","trigger":"hide","delay":100,"duration":100,"preset":"fade"}]}
+                """));
+        timeline.update(true, Map.of(), 0L);
+        timeline.update(false, Map.of(), 200000000L);
+        assertTrue(timeline.renderWhenHidden(340000000L));
+        assertEquals(0.6, timeline.sample(340000000L).opacity(), 0.00001);
+        assertFalse(timeline.renderWhenHidden(400000000L));
+        timeline.update(true, Map.of(), 410000000L);
+        assertEquals(1.0, timeline.sample(410000000L).opacity(), 0.00001);
     }
 
     @Test
-    public void invalidConfigIsExplicitlyRejected() {
-        for (String invalid : new String[]{
-                "{\"animation\":{\"open\":{\"duration\":0}}}",
-                "{\"animation\":{\"open\":{\"duration\":50,\"opacity\":[-1,1]}}}",
-                "{\"animation\":{\"open\":{\"duration\":50,\"scale\":[0,1]}}}",
-                "{\"animation\":{\"open\":{\"duration\":50,\"easing\":\"bounce\"}}}",
-                "{\"animation\":{\"strange\":{\"duration\":50}}}",
-                "{\"animation\":{\"change\":{\"duration\":50}}}"
+    public void changeTracksWatchIndependentDataAndDoNotCancelOtherTracks() {
+        UiAnimationTimeline timeline = new UiAnimationTimeline(spec("""
+                {"animations":[
+                  {"id":"hp","trigger":"change","duration":100,"from":{"scale":1.2},"watch":{"bind":"demo:health"}},
+                  {"id":"mana","trigger":"change","delay":40,"duration":100,"from":{"x":20},"watch":{"bind":"demo:mana"}}
+                ]}
+                """));
+        timeline.update(true, Map.of("hp", JsonParser.parseString("20"), "mana", JsonParser.parseString("10")), 0L);
+        timeline.update(true, Map.of("hp", JsonParser.parseString("15"), "mana", JsonParser.parseString("10")), 100000000L);
+        assertEquals(1.2, timeline.sample(100000000L).scale(), 0.00001);
+        timeline.update(true, Map.of("hp", JsonParser.parseString("15"), "mana", JsonParser.parseString("9")), 150000000L);
+        assertEquals(1.1, timeline.sample(150000000L).scale(), 0.00001);
+        assertEquals(0.0, timeline.sample(150000000L).x(), 0.00001);
+        assertEquals(20.0, timeline.sample(190000000L).x(), 0.00001);
+        assertEquals(1.0, timeline.sample(250000000L).scale(), 0.00001);
+    }
+
+    @Test
+    public void retriggerUsesCurrentFrameRatherThanJumpingToFirstKeyframe() {
+        UiAnimationTimeline timeline = new UiAnimationTimeline(spec("""
+                {"animations":[{"id":"pulse","trigger":"change","duration":100,"from":{"scale":1.2},"watch":{"bind":"demo:health"}}]}
+                """));
+        timeline.update(true, Map.of("pulse", JsonParser.parseString("0")), 0L);
+        timeline.update(true, Map.of("pulse", JsonParser.parseString("1")), 20000000L);
+        assertEquals(1.1, timeline.sample(70000000L).scale(), 0.00001);
+        timeline.update(true, Map.of("pulse", JsonParser.parseString("2")), 70000000L);
+        assertEquals(1.1, timeline.sample(70000000L).scale(), 0.00001);
+    }
+
+    @Test
+    public void closeDurationIncludesLongestDelay() {
+        UiAnimationTimeline timeline = new UiAnimationTimeline(spec("""
+                {"animations":[
+                    {"id":"a","trigger":"close","delay":200,"duration":400,"preset":"fade"},
+                    {"id":"b","trigger":"close","delay":100,"duration":1000,"preset":"zoom"}
+                ]}
+                """));
+        assertEquals(1100L, timeline.closeDurationMillis());
+    }
+
+    @Test
+    public void catchesMalformedListsAndNoLongerAcceptsLegacyAnimation() {
+        for (String json : new String[]{
+                "{\"animation\":{\"open\":{\"duration\":100}}}",
+                "{\"animations\":{}}",
+                "{\"animations\":[{\"id\":\"same\"},{\"id\":\"same\"}]}",
+                "{\"animations\":[{\"id\":\"bad\",\"delay\":-1}]}",
+                "{\"animations\":[{\"id\":\"bad\",\"delay\":60001}]}",
+                "{\"animations\":[{\"id\":\"bad\",\"duration\":0}]}",
+                "{\"animations\":[{\"id\":\"bad\",\"preset\":\"boing\"}]}",
+                "{\"animations\":[{\"id\":\"bad\",\"trigger\":\"change\"}]}",
+                "{\"animations\":[{\"id\":\"bad\",\"from\":{\"scale\":0}}]}"
         }) {
-            assertThrows(IllegalArgumentException.class, () -> spec(invalid));
+            assertThrows(IllegalArgumentException.class, () -> spec(json));
         }
     }
 
     @Test
-    public void editorPresetsApplyPerTriggerAndNoneCanDisableInheritedAnimation() {
-        UiAnimationSpec entry = spec("""
-                {
-                  "animation": {
-                    "open": {"preset":"fade"},
-                    "show": {"preset":"slideLeft","duration":400,"easing":"easeOut"},
-                    "hide": {"preset":"slideUp"},
-                    "close": {"preset":"zoom"}
-                  }
-                }
-                """);
-        assertEquals(300L, entry.track(UiAnimationSpec.Trigger.OPEN).durationMillis());
-        assertEquals(0.0, entry.track(UiAnimationSpec.Trigger.OPEN).from().opacity(), 0.000001);
-        assertEquals(-32.0, entry.track(UiAnimationSpec.Trigger.SHOW).from().x(), 0.000001);
-        assertEquals(-24.0, entry.track(UiAnimationSpec.Trigger.HIDE).to().y(), 0.000001);
-        assertEquals(0.82, entry.track(UiAnimationSpec.Trigger.CLOSE).to().scale(), 0.000001);
-
+    public void localListOverridesDocumentDefaultsAndCanBeEmpty() {
         var defaults = JsonParser.parseString("""
-                {"open": {"duration":500,"opacity":[0,1]}}
-                """).getAsJsonObject();
-        var override = JsonParser.parseString("""
-                {"animation":{"open":{"preset":"none"}}}
-                """).getAsJsonObject();
-        UiAnimationSpec disabled = UiAnimationSpec.parse(override, defaults);
-        assertEquals(null, disabled.track(UiAnimationSpec.Trigger.OPEN));
-        assertThrows(IllegalArgumentException.class, () -> spec("{\"animation\":{\"open\":{\"preset\":\"unknown\"}}}"));
-    }
-
-    @Test
-    public void localAnimationOverridesScreenWideDefaultsByTrigger() {
-        var root = JsonParser.parseString("""
-                {
-                  "open": {"duration": 200, "opacity": [0, 1]},
-                  "close": {"duration": 100, "opacity": [1, 0]}
-                }
-                """).getAsJsonObject();
+                [{"id":"default","trigger":"open","preset":"fade"}]
+                """).getAsJsonArray();
         var local = JsonParser.parseString("""
-                {
-                  "animation": {"open": {"duration": 30, "x": [-8, 0]}}
-                }
+                {"animations":[{"id":"custom","trigger":"show","preset":"zoom"}]}
                 """).getAsJsonObject();
-        UiAnimationSpec s = UiAnimationSpec.parse(local, root);
-        assertEquals(30L, s.track(UiAnimationSpec.Trigger.OPEN).durationMillis());
-        assertEquals(100L, s.track(UiAnimationSpec.Trigger.CLOSE).durationMillis());
+        assertEquals("custom", UiAnimationSpec.parse(local, defaults).tracks().getFirst().id());
+        assertEquals(0, UiAnimationSpec.parse(JsonParser.parseString("{\"animations\":[]}").getAsJsonObject(), defaults).tracks().size());
+        assertEquals("default", UiAnimationSpec.parse(JsonParser.parseString("{}").getAsJsonObject(), defaults).tracks().getFirst().id());
     }
 }

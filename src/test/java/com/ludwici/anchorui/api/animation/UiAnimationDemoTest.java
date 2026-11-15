@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UiAnimationDemoTest {
     @Test
-    public void bundledDemoExercisesOpenShowHideChangeAndClose() throws Exception {
+    public void bundledDemoExercisesConcurrentOpenShowHideChangeCloseAndDelay() throws Exception {
         String path = "assets/anchorui/anchorui/screens/stage5_animation_demo.json";
         var stream = getClass().getClassLoader().getResourceAsStream(path);
         assertNotNull(stream);
@@ -24,24 +24,32 @@ public class UiAnimationDemoTest {
             assertEquals("anchorui:style/default", screen.get("style").getAsString());
             assertTrue(screen.getAsJsonObject("state").get("visible").getAsBoolean());
             Set<UiAnimationSpec.Trigger> triggers = new HashSet<>();
-            int animatedWidgets = 0;
+            int count = 0;
+            int delayed = 0;
+            int concurrent = 0;
             for (var raw : screen.getAsJsonArray("entities")) {
                 JsonObject element = raw.getAsJsonObject();
-                if (!element.has("animation")) {
+                if (!element.has("animations")) {
                     continue;
                 }
-                UiAnimationSpec animation = UiAnimationSpec.parse(element);
-                animatedWidgets++;
-                for (var trigger : UiAnimationSpec.Trigger.values()) {
-                    if (animation.track(trigger) != null) {
-                        triggers.add(trigger);
+                UiAnimationSpec parsed = UiAnimationSpec.parse(element);
+                count++;
+                long simultaneous = parsed.tracks().stream().filter(track -> track.trigger() == UiAnimationSpec.Trigger.OPEN).count();
+                if (simultaneous > 1) {
+                    concurrent++;
+                }
+                for (var track : parsed.tracks()) {
+                    triggers.add(track.trigger());
+                    if (track.delayMillis() > 0) {
+                        delayed++;
                     }
                 }
             }
-            assertEquals(8, animatedWidgets);
+            assertEquals(8, count);
+            assertEquals(1, concurrent);
+            assertTrue(delayed > 0);
             assertEquals(Set.of(UiAnimationSpec.Trigger.OPEN, UiAnimationSpec.Trigger.SHOW,
-                    UiAnimationSpec.Trigger.HIDE, UiAnimationSpec.Trigger.CHANGE,
-                    UiAnimationSpec.Trigger.CLOSE), triggers);
+                    UiAnimationSpec.Trigger.HIDE, UiAnimationSpec.Trigger.CHANGE, UiAnimationSpec.Trigger.CLOSE), triggers);
         }
     }
 }

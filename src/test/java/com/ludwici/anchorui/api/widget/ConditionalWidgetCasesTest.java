@@ -97,16 +97,19 @@ public class ConditionalWidgetCasesTest {
                 }]}
                 """);
 
-        JsonArray result = WidgetDocumentResolver.resolve(document, "test", templates).getAsJsonArray("entities");
+        JsonObject expanded = WidgetDocumentResolver.resolve(document, "test", templates);
+        JsonArray result = expanded.getAsJsonArray("entities");
         assertEquals(4, result.size());
         JsonObject first = result.get(1).getAsJsonObject();
         assertEquals("test:switcher/case_0", first.get("id").getAsString());
         assertEquals("anchorui:panel", first.get("type").getAsString());
-        assertEquals("test:root", first.get(WidgetContainers.PARENT_FIELD).getAsString());
-        assertEquals("test:root/__content", first.getAsJsonObject("position").get("relativeTo").getAsString());
+        assertEquals("test:root", expanded.getAsJsonObject("widgetParents")
+                .get(first.get("id").getAsString()).getAsString());
+        assertEquals("test:root", first.getAsJsonObject("position").get("relativeTo").getAsString());
         JsonObject child = result.get(2).getAsJsonObject();
-        assertEquals("test:switcher/case_0", child.get(WidgetContainers.PARENT_FIELD).getAsString());
-        assertEquals("test:switcher/case_0/__content", child.getAsJsonObject("position").get("relativeTo").getAsString());
+        assertEquals("test:switcher/case_0", expanded.getAsJsonObject("widgetParents")
+                .get(child.get("id").getAsString()).getAsString());
+        assertEquals("test:switcher/case_0", child.getAsJsonObject("position").get("relativeTo").getAsString());
         assertEquals("test:switcher/case_1", result.get(3).getAsJsonObject().get("id").getAsString());
         assertTrue(visible(first, true, false, false));
         assertFalse(visible(result.get(3).getAsJsonObject(), true, false, false));
@@ -151,7 +154,8 @@ public class ConditionalWidgetCasesTest {
         for (int index = 0; index < result.size(); index++) {
             JsonObject widget = result.get(index).settings();
             int rowIndex = index / 2;
-            assertEquals("test:list", widget.get(WidgetContainers.PARENT_FIELD).getAsString());
+            assertEquals("test:list", result.get(index).parentId());
+            assertFalse(widget.has(WidgetContainers.PARENT_FIELD));
             assertEquals("test:list/__content", widget.getAsJsonObject("position").get("relativeTo").getAsString());
             assertEquals(34 * rowIndex, widget.getAsJsonObject("position").get("y").getAsInt());
             assertEquals(rowIndex, result.get(index).itemContext().index());

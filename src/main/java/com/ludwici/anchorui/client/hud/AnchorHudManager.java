@@ -209,6 +209,45 @@ public final class AnchorHudManager {
         return changePreviewAnchor(id, new HudLayoutOffsets.AnchorOverride(parent, handle.point(), handle.anchor()));
     }
 
+    public boolean isPreviewContainer(String id) {
+        for (PlacedWidget placed : widgets) {
+            if (placed.id().equals(id)) {
+                return placed.widget() instanceof com.ludwici.anchorui.client.gui.PanelWidget;
+            }
+        }
+        return false;
+    }
+
+    public boolean movePreviewIntoContainer(String id, String containerId) {
+        if (editingOffsets == null || !isCustomWidget(id) || id.equals(containerId)
+                || !isPreviewContainer(containerId)) {
+            return false;
+        }
+        for (PlacedWidget placed : widgets) {
+            if (placed.id().equals(id)) {
+                HudLayoutOffsets candidate = editingOffsets.copy();
+                candidate.setContainerParent(id, containerId);
+                candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(
+                        WidgetContainers.contentId(containerId), ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
+                candidate.set(id, -placed.position().x, -placed.position().y);
+                candidate.setSettingOverride(id, "layoutItem", "enabled", new com.google.gson.JsonPrimitive(true));
+                return usePreviewLayout(candidate);
+            }
+        }
+        return false;
+    }
+
+    public boolean movePreviewToRoot(String id) {
+        if (editingOffsets == null || !isCustomWidget(id)) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingOffsets.copy();
+        candidate.setContainerParent(id, "screen");
+        candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(
+                "screen", ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
+        return usePreviewLayout(candidate);
+    }
+
     private HudHandle handle(String id) {
         if (editingOffsets == null) {
             return null;
@@ -288,8 +327,9 @@ public final class AnchorHudManager {
                     autoSizes.put(placed.id(), placed.autoSize());
                 }
             }
-            if (placed.containerParent() != null) {
-                parents.put(placed.id(), placed.containerParent());
+            String structuralParent = offsets.containerParent(placed.id(), placed.containerParent());
+            if (structuralParent != null) {
+                parents.put(placed.id(), structuralParent);
             }
             StackLayout.Rules rules = StackLayout.Rules.parse(currentSettings);
             itemRules.put(placed.id(), rules);
@@ -331,8 +371,9 @@ public final class AnchorHudManager {
         Set<String> hidden = new HashSet<>();
         Map<String, String> parents = new LinkedHashMap<>();
         for (PlacedWidget placed : widgets) {
-            if (placed.containerParent() != null) {
-                parents.put(placed.id(), placed.containerParent());
+            String structuralParent = offsets.containerParent(placed.id(), placed.containerParent());
+            if (structuralParent != null) {
+                parents.put(placed.id(), structuralParent);
             }
             if (!placed.widget().visible) {
                 hidden.add(placed.id());
@@ -504,7 +545,7 @@ public final class AnchorHudManager {
         visibilityScratch.clear();
         enabledScratch.clear();
         for (PlacedWidget placed : widgets) {
-            String parent = placed.containerParent();
+            String parent = offsets.containerParent(placed.id(), placed.containerParent());
             boolean parentVisible = parent == null || visibilityScratch.getOrDefault(parent, false);
             boolean parentEnabled = parent == null || enabledScratch.getOrDefault(parent, false);
             boolean visible = parentVisible && placed.baseVisible() && !offsets.isHidden(placed.id())
@@ -725,7 +766,7 @@ public final class AnchorHudManager {
             String type = registry.definition(placed.id())
                     .map(definition -> definition.type.toString()).orElse("");
             entries.add(new WidgetListPanel.Entry(placed.id(), placed.widget().visible, false,
-                    type, placed.containerParent()));
+                    type, currentOffsets().containerParent(placed.id(), placed.containerParent())));
         }
         return List.copyOf(entries);
     }
@@ -977,8 +1018,9 @@ public final class AnchorHudManager {
             Map<String, WidgetTransforms.Group> groups = new LinkedHashMap<>();
             Set<String> clippingContainers = new HashSet<>();
             for (PlacedWidget placed : widgets) {
-                if (placed.containerParent() != null) {
-                    parents.put(placed.id(), placed.containerParent());
+                String structuralParent = currentOffsets().containerParent(placed.id(), placed.containerParent());
+                if (structuralParent != null) {
+                    parents.put(placed.id(), structuralParent);
                 }
                 if (placed.clipChildren()) {
                     clippingContainers.add(placed.id());

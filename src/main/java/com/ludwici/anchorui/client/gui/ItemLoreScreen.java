@@ -429,6 +429,16 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         return useCandidate(candidate);
     }
 
+    public boolean editorSetLayout(String id, LayoutInspectorControls.Control control, String value) {
+        if (editingScreenOffsets == null || !layoutBounds.containsKey(id)
+                || !LayoutInspectorControls.choices(control).contains(value)) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingScreenOffsets.copy();
+        candidate.setSettingOverride(id, control.section(), control.field(), new com.google.gson.JsonPrimitive(value));
+        return useCandidate(candidate);
+    }
+
     public boolean editorResetLayout(String id, LayoutInspectorControls.Control control) {
         if (editingScreenOffsets == null || !layoutBounds.containsKey(id)) {
             return false;

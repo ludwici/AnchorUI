@@ -7,6 +7,8 @@ import net.minecraft.util.GsonHelper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 public class LoreEntity {
     public final String title;
@@ -21,6 +23,7 @@ public class LoreEntity {
     public final boolean hasExplicitWidgets;
     public final List<LoreComponent> components = new ArrayList<>();
     public final List<UiElement> entities = new ArrayList<>();
+    public final Map<String, String> widgetParents = new LinkedHashMap<>();
 
     public LoreEntity(JsonObject root) {
         this(root, "anchorui");
@@ -43,6 +46,12 @@ public class LoreEntity {
         if (root.has("lore")) {
             for (var entry : GsonHelper.getAsJsonArray(root, "lore")) {
                 components.add(new LoreComponent(entry.getAsJsonObject()));
+            }
+        }
+        if (root.has("widgetParents")) {
+            JsonObject parentDefinitions = GsonHelper.getAsJsonObject(root, "widgetParents");
+            for (var entry : parentDefinitions.entrySet()) {
+                widgetParents.put(entry.getKey(), entry.getValue().getAsString());
             }
         }
         if (root.has("entities")) {

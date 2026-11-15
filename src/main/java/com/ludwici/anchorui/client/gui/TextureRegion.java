@@ -1,6 +1,7 @@
 package com.ludwici.anchorui.client.gui;
 
 import com.google.gson.JsonObject;
+import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.api.layout.NineSlice;
 import com.ludwici.anchorui.api.widget.WidgetContext;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -9,8 +10,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.GsonHelper;
 
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class TextureRegion {
+    private static final Set<ResourceLocation> MISSING_WARNED = ConcurrentHashMap.newKeySet();
     private final ResourceLocation texture;
     private final int textureWidth;
     private final int textureHeight;
@@ -32,7 +36,15 @@ public final class TextureRegion {
         String qualified = path.contains(":") ? path : context.entity().namespace + ":" + path;
         texture = ResourceLocation.tryParse(qualified);
         if (texture == null) {
-            throw new IllegalArgumentException("Invalid image texture: " + path);
+            throw new IllegalArgumentException("Invalid texture resource identifier '" + path
+                    + "'; expected namespace:path");
+        }
+        if (context.minecraft() != null && context.minecraft().getResourceManager() != null
+                && context.minecraft().getResourceManager().getResource(texture).isEmpty()
+                && MISSING_WARNED.add(texture)) {
+            AnchorUI.LOGGER.warn("AnchorUI missing texture resource '{}'. Expected asset path assets/{}/{}. "
+                    + "Check the active resource packs and reload with F3+T after fixing the asset.",
+                    texture, texture.getNamespace(), texture.getPath());
         }
         textureWidth = GsonHelper.getAsInt(settings, "textureWidth", 256);
         textureHeight = GsonHelper.getAsInt(settings, "textureHeight", 256);
@@ -42,7 +54,10 @@ public final class TextureRegion {
         sourceHeight = GsonHelper.getAsInt(settings, "regionHeight", textureHeight - v);
         if (textureWidth <= 0 || textureHeight <= 0 || u < 0 || v < 0 || sourceWidth <= 0 || sourceHeight <= 0
                 || (long) u + sourceWidth > textureWidth || (long) v + sourceHeight > textureHeight) {
-            throw new IllegalArgumentException("Invalid texture region");
+            throw new IllegalArgumentException("Invalid texture region for '" + texture
+                    + "' (textureWidth=" + textureWidth + ", textureHeight=" + textureHeight
+                    + ", u=" + u + ", v=" + v + ", regionWidth=" + sourceWidth
+                    + ", regionHeight=" + sourceHeight + ")");
         }
         tint = WidgetColors.parse(GsonHelper.getAsString(settings, "tint", "#FFFFFFFF"));
         if (settings.has("nineSlice")) {
@@ -54,6 +69,10 @@ public final class TextureRegion {
         } else {
             nineSlice = null;
         }
+    }
+
+    public static void clearMissingResourceWarnings() {
+        MISSING_WARNED.clear();
     }
 
     public void render(GuiGraphics graphics, int x, int y, int width, int height) {

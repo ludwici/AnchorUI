@@ -1115,12 +1115,15 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         try {
             widget = factory.create(context, element, settings);
         } catch (WidgetConfigException exception) {
-            AnchorUI.LOGGER.warn("{}", exception.getMessage());
-            warnings.add(exception.getMessage());
+            AnchorUI.LOGGER.warn("Invalid AnchorUI widget '{}' (type '{}'): {}",
+                    id, element.type, exception.getMessage());
+            warnings.add("Invalid widget '" + id + "' (" + element.type + "): " + exception.getMessage());
             return;
         } catch (RuntimeException exception) {
             AnchorUI.LOGGER.error("Anchor UI widget factory failed: type='{}', id='{}'", element.type, id, exception);
-            warnings.add("Widget factory failed for '" + id + "' (" + element.type + "): " + exception.getClass().getSimpleName());
+            warnings.add("Widget factory failed for '" + id + "' (" + element.type + "): "
+                    + (exception.getMessage() == null || exception.getMessage().isBlank()
+                    ? exception.getClass().getSimpleName() : exception.getMessage()));
             return;
         }
         if (widget == null) {

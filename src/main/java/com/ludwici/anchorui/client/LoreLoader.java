@@ -7,6 +7,7 @@ import com.ludwici.anchorui.api.LoreEntity;
 import com.ludwici.anchorui.api.widget.WidgetDefinitionRegistry;
 import com.ludwici.anchorui.api.widget.WidgetDocumentResolver;
 import com.ludwici.anchorui.api.style.LoreStyle;
+import com.ludwici.anchorui.client.gui.TextureRegion;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
@@ -16,6 +17,8 @@ import net.minecraft.util.profiling.ProfilerFiller;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.LinkedHashMap;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.ludwici.anchorui.AnchorUI.GSON;
 
@@ -26,6 +29,7 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
     private WidgetDefinitionRegistry definitions = new WidgetDefinitionRegistry(Map.of());
     private volatile Map<ResourceLocation, HudDocument> hudDocuments = Map.of();
     private volatile long revision;
+    private final Set<ResourceLocation> warnedMissingStyles = ConcurrentHashMap.newKeySet();
 
     public record HudDocument(LoreEntity entity, boolean testOnly, String testGroup) {
     }
@@ -36,6 +40,8 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
 
     @Override
     protected void apply(Map<ResourceLocation, JsonElement> objects, ResourceManager resourceManager, ProfilerFiller profiler) {
+        warnedMissingStyles.clear();
+        TextureRegion.clearMissingResourceWarnings();
         Map<ResourceLocation, JsonObject> rawDocuments = new LinkedHashMap<>();
         Map<ResourceLocation, JsonObject> rawDefinitions = new LinkedHashMap<>();
         Map<ResourceLocation, JsonObject> rawTemplates = new LinkedHashMap<>();
@@ -43,6 +49,11 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
         Map<ResourceLocation, LoreStyle> loadedStyles = new HashMap<>();
         for (var entry : objects.entrySet()) {
             ResourceLocation resource = entry.getKey();
+            if (!entry.getValue().isJsonObject()) {
+                AnchorUI.LOGGER.error("Invalid Anchor UI resource '{}': expected a JSON object, got {}",
+                        resource, entry.getValue());
+                continue;
+            }
             JsonObject json = entry.getValue().getAsJsonObject();
             if (resource.getPath().startsWith("style/")) {
                 loadedStyles.put(resource, new LoreStyle(json));
@@ -109,6 +120,11 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
         }
         LoreStyle style = key == null ? null : styles.get(key);
         if (style == null) {
+            if (id != null && !id.isBlank() && key != null && warnedMissingStyles.add(key)) {
+                AnchorUI.LOGGER.warn("Missing Anchor UI style '{}'; using anchorui:style/default. "
+                        + "Expected asset: assets/{}/anchorui/{}.json",
+                        key, key.getNamespace(), key.getPath());
+            }
             style = styles.get(ResourceLocation.fromNamespaceAndPath("anchorui", "style/default"));
         }
         return style == null ? new LoreStyle(new com.google.gson.JsonObject()) : style;

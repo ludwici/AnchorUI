@@ -1,0 +1,384 @@
+{
+  "style": "anchorui:style/default",
+  "state": {
+    "visible": true,
+    "pulse": false
+  },
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:anim_title",
+      "text": "<b>STAGE 5 — ANIMATIONS</b>",
+      "align": "center",
+      "color": "#FFF1E0B8",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -102
+      },
+      "size": {
+        "width": 310,
+        "height": 24
+      },
+      "animation": {
+        "open": {
+          "duration": 700,
+          "easing": "easeOut",
+          "opacity": [
+            0,
+            1
+          ],
+          "y": [
+            -25,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:anim_subtitle",
+      "text": "Fade / slide / scale / state / close",
+      "align": "center",
+      "color": "#FFB9CCD9",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -76
+      },
+      "size": {
+        "width": 300,
+        "height": 20
+      },
+      "animation": {
+        "open": {
+          "duration": 700,
+          "easing": "easeInOut",
+          "opacity": [
+            0,
+            1
+          ],
+          "x": [
+            50,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:anim_toggle_visibility",
+      "text": "Toggle panel",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": -72,
+        "y": -40
+      },
+      "size": {
+        "width": 133,
+        "height": 22
+      },
+      "onClick": {
+        "type": "anchorui:toggle_state",
+        "key": "visible"
+      },
+      "animation": {
+        "open": {
+          "duration": 450,
+          "easing": "outCubic",
+          "opacity": [
+            0,
+            1
+          ],
+          "x": [
+            -95,
+            0
+          ],
+          "scale": [
+            0.9,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:anim_toggle_pulse",
+      "text": "Trigger pulse",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 72,
+        "y": -40
+      },
+      "size": {
+        "width": 133,
+        "height": 22
+      },
+      "onClick": {
+        "type": "anchorui:toggle_state",
+        "key": "pulse"
+      },
+      "animation": {
+        "open": {
+          "duration": 450,
+          "easing": "outCubic",
+          "opacity": [
+            0,
+            1
+          ],
+          "x": [
+            95,
+            0
+          ],
+          "scale": [
+            0.9,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "type": "anchorui:panel",
+      "id": "anchorui:anim_panel",
+      "fillColor": "#DF263C50",
+      "borderColor": "#FFD8B77D",
+      "borderWidth": 1,
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 4
+      },
+      "size": {
+        "width": 242,
+        "height": 44
+      },
+      "visibleWhen": {
+        "bind": "anchorui:ui.state",
+        "path": "visible",
+        "fallback": false
+      },
+      "animation": {
+        "open": {
+          "duration": 480,
+          "easing": "easeOut",
+          "opacity": [
+            0,
+            1
+          ],
+          "y": [
+            12,
+            0
+          ],
+          "scale": [
+            0.85,
+            1
+          ]
+        },
+        "show": {
+          "duration": 350,
+          "easing": "easeOut",
+          "opacity": [
+            0,
+            1
+          ],
+          "y": [
+            12,
+            0
+          ],
+          "scale": [
+            0.85,
+            1
+          ]
+        },
+        "hide": {
+          "duration": 330,
+          "easing": "easeIn",
+          "opacity": [
+            1,
+            0
+          ],
+          "y": [
+            0,
+            -12
+          ],
+          "scale": [
+            1,
+            0.85
+          ]
+        }
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:anim_panel_label",
+      "text": "Panel is visible",
+      "align": "center",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 4
+      },
+      "size": {
+        "width": 220,
+        "height": 18
+      },
+      "visibleWhen": {
+        "bind": "anchorui:ui.state",
+        "path": "visible",
+        "fallback": false
+      },
+      "animation": {
+        "open": {
+          "duration": 480,
+          "easing": "easeOut",
+          "opacity": [
+            0,
+            1
+          ]
+        },
+        "show": {
+          "duration": 350,
+          "easing": "easeOut",
+          "opacity": [
+            0,
+            1
+          ]
+        },
+        "hide": {
+          "duration": 330,
+          "easing": "easeIn",
+          "opacity": [
+            1,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:anim_pulse",
+      "text": "Pulse state: {{anchorui:ui.state#pulse}}",
+      "align": "center",
+      "color": "#FFA8DCF8",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 51
+      },
+      "size": {
+        "width": 230,
+        "height": 20
+      },
+      "animation": {
+        "open": {
+          "duration": 550,
+          "easing": "easeOut",
+          "opacity": [
+            0,
+            1
+          ]
+        },
+        "watch": {
+          "bind": "anchorui:ui.state",
+          "path": "pulse",
+          "fallback": false
+        },
+        "change": {
+          "duration": 450,
+          "easing": "outCubic",
+          "scale": [
+            1.32,
+            1
+          ],
+          "y": [
+            -5,
+            0
+          ],
+          "opacity": [
+            0.5,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "type": "anchorui:button",
+      "id": "anchorui:anim_close",
+      "text": "Close with fade",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 88
+      },
+      "size": {
+        "width": 170,
+        "height": 22
+      },
+      "onClick": "anchorui:close_screen",
+      "animation": {
+        "open": {
+          "duration": 600,
+          "easing": "outCubic",
+          "opacity": [
+            0,
+            1
+          ],
+          "scale": [
+            0.8,
+            1
+          ]
+        },
+        "close": {
+          "duration": 500,
+          "easing": "easeIn",
+          "opacity": [
+            1,
+            0
+          ],
+          "y": [
+            0,
+            20
+          ],
+          "scale": [
+            1,
+            0.85
+          ]
+        }
+      }
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:anim_qa_note",
+      "text": "Reopen to replay. Use F8 for editor preview.",
+      "align": "center",
+      "color": "#FF9CABB9",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 116
+      },
+      "size": {
+        "width": 310,
+        "height": 18
+      }
+    }
+  ]
+}

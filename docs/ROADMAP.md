@@ -14,6 +14,7 @@ AnchorUI provides reusable, JSON-driven tools for assembling Minecraft HUDs and 
 - [x] Opt-in row, column and general grid layouts on ordinary containers, including flex grow/shrink, wrapping, alignment, gaps, min/max dimensions, reactive hidden-child collapse and stable preferred widget sizes.
 - [x] HUD and screen editors with saving, snapping, parent selection, reset and read-only vanilla HUD anchors.
 - [x] Component-aware visual F8 editing for text, colors, button/controls skin paths and sizing, with safe Java-registered editor fields, live previews and local override persistence.
+- [x] F8 parent picker now separates outer frame anchors, padded content anchors, and saved structural moves into row/column/grid (including root detach); source JSON sections are collapsed by default.
 - [x] Typed Data Bindings, formatted text, nested paths, Java `DataValueRegistry` and mutable/push-style providers.
 - [x] Compiled `visibleWhen`/`enabledWhen` Conditions with typed operations and Java-registered operators.
 - [x] Screen events, Java action registration and typed action arguments.

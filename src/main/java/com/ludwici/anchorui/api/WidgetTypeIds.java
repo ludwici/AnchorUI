@@ -13,6 +13,7 @@ public final class WidgetTypeIds {
     public static final ResourceLocation SWITCH = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "switch");
     public static final ResourceLocation SELECT = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "select");
     public static final ResourceLocation TABS = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "tabs");
+    public static final ResourceLocation COLOR_PICKER = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "color_picker");
     public static final ResourceLocation DATA_LIST = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "data_list");
     public static final ResourceLocation TEMPLATE_LIST = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "template_list");
     public static final ResourceLocation IMAGE = ResourceLocation.fromNamespaceAndPath(AnchorUI.MODID, "image");

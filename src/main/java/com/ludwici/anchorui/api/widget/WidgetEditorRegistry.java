@@ -119,6 +119,13 @@ public final class WidgetEditorRegistry {
                 Field.bool("showText", "Show values", false),
                 Field.integer("size.width", "Width", 160, 1, 16384, 10),
                 Field.integer("size.height", "Height", 14, 1, 16384, 2)));
+        register(WidgetTypeIds.COLOR_PICKER, List.of(
+                Field.text("text", "Label", "Color"),
+                Field.color("color", "Text color", "#FFE278"),
+                Field.color("fillColor", "Background", "#D923354A"),
+                Field.color("borderColor", "Border", "#FF718699"),
+                Field.integer("size.width", "Width", 288, 240, 16384, 10),
+                Field.integer("size.height", "Height", 166, 152, 16384, 10)));
         register(WidgetTypeIds.IMAGE, List.of(
                 Field.texture("texture", "Texture"),
                 Field.color("tint", "Tint", "#FFFFFFFF"),

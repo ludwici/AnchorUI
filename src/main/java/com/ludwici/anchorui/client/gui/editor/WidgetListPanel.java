@@ -372,6 +372,9 @@ public final class WidgetListPanel {
         if (type.endsWith(":template_list") || type.endsWith(":data_list")) {
             return "[L] ";
         }
+        if (type.endsWith(":color_picker")) {
+            return "[C] ";
+        }
         if (type.endsWith(":checkbox") || type.endsWith(":switch")) {
             return "[C] ";
         }

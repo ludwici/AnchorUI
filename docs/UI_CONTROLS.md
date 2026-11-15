@@ -1,6 +1,6 @@
 # Built-in Interactive Controls (NeoForge 1.21.1)
 
-AnchorUI provides four ready-to-use screen widgets that read and update **Local UI State** without any custom Java widget:
+AnchorUI provides five ready-to-use screen widgets that read and update **Local UI State** without any custom Java widget:
 
 | Widget type | Behavior | State type |
 | --- | --- | --- |
@@ -8,6 +8,7 @@ AnchorUI provides four ready-to-use screen widgets that read and update **Local 
 | `anchorui:switch` | On/off switch with a label | Boolean |
 | `anchorui:select` | Dropdown selection list with keyboard and mouse input | String or number |
 | `anchorui:tabs` | Horizontal row of selectable tabs | String or number |
+| `anchorui:color_picker` | Hue/saturation picker with HEX and RGB editing | String (color) |
 
 These controls require a standard AnchorUI **Screen**, not a display-only HUD. Define every `stateKey` at the root of the screen's `state` object. Each control reads the latest state on render, and updating it immediately makes the new value available to text Data Bindings and Conditions.
 
@@ -96,7 +97,7 @@ Or display a chosen value with `"text": "Difficulty: {{anchorui:ui.state#difficu
 }
 ```
 
-String and numeric options are allowed (including numeric page IDs). The corresponding state key must already contain a matching value of the same JSON type. The selected value must appear among the options at construction time. Duplicate values, unsupported types, absent keys and mismatched state types cause a descriptive configuration error. `checkbox` and `switch` require a boolean state key. All four widgets require `stateKey`.
+String and numeric options are allowed (including numeric page IDs). The corresponding state key must already contain a matching value of the same JSON type. The selected value must appear among the options at construction time. Duplicate values, unsupported types, absent keys and mismatched state types cause a descriptive configuration error. `checkbox` and `switch` require a boolean state key. All five widgets require `stateKey`.
 
 No arbitrary values or scripts are evaluated from JSON. State changes are client-side presentation behavior only.
 
@@ -153,6 +154,50 @@ Use an inline `style` object to avoid a separate file. Inline `{"ref": "mypack:r
 ```text
 /anchorui screen open anchorui:ui_controls_textured_demo
 ```
+
+## Color picker
+
+`anchorui:color_picker` is a complete screen widget with a saturation/brightness square, a vertical hue slider, a live color preview, and two text fields. It integrates with **Local UI State** and `onChange`, just like other interactive controls. It requires a **string** state key, and is intended for screens rather than display-only HUDs.
+
+To test the bundled example:
+
+```text
+/anchorui screen open anchorui:color_picker_demo
+```
+
+A minimal widget definition in a screen JSON:
+
+```json
+{
+  "state": {
+    "accent": "#FF5A9BCC"
+  },
+  "entities": [
+    {
+      "type": "anchorui:color_picker",
+      "id": "mypack:accent_picker",
+      "text": "Accent color",
+      "stateKey": "accent",
+      "size": {
+        "width": 288,
+        "height": 166
+      },
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen"
+      },
+      "onChange": "mypack:color_changed"
+    }
+  ]
+}
+```
+
+The widget accepts `#RRGGBB` (opaque) and `#AARRGGBB` (with alpha) in the **HEX** field. The **RGB** field accepts three decimal integer channels from 0 to 255, written `255, 128, 64` or `rgb(255, 128, 64)`. RGB editing and dragging the palette preserve the current alpha; use the eight-digit HEX form to change transparency.
+
+Choose a color by dragging within the square or hue strip, or type a value and press **Enter** to apply it. Tab moves from HEX to RGB. Clicking outside an edited field applies a valid value. Invalid entries show a validation message and do not modify Local UI State. Values written to state are canonical upper-case HEX strings (`#RRGGBB` when opaque, `#AARRGGBB` otherwise). Bound text and Conditions can read the value using `anchorui:ui.state#accent`, and registered `onChange` actions receive the new HEX string as `event.value()` only when the color changes.
+
+The default width is 288, height is 166; minimum dimensions are 240×152. `fillColor` and `borderColor` can be customized directly or through a shared style file; both colors and widget size can be edited in F8. Color selection and text editing work without JSON scripts or tick-based rebuilds.
 
 ## Action button appearance (opt-in)
 

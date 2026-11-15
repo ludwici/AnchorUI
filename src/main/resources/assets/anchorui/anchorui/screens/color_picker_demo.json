@@ -1,0 +1,63 @@
+{
+  "state": {
+    "selectedColor": "#E85B60"
+  },
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:color_picker_heading",
+      "text": "<b>COLOR PICKER DEMO</b>",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": -108
+      },
+      "size": {
+        "width": 290,
+        "height": 18
+      },
+      "align": "center",
+      "color": "#FFFFFFFF"
+    },
+    {
+      "type": "anchorui:color_picker",
+      "id": "anchorui:color_picker_demo",
+      "text": "Accent color",
+      "stateKey": "selectedColor",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "width": 288,
+        "height": 166
+      },
+      "fillColor": "#DD1A2838",
+      "borderColor": "#FF8EBDD7",
+      "onChange": "anchorui_test:event_notice"
+    },
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:color_picker_value",
+      "text": "Selected: {{anchorui:ui.state#selectedColor}}",
+      "position": {
+        "point": "CENTER",
+        "anchor": "CENTER",
+        "relativeTo": "screen",
+        "x": 0,
+        "y": 103
+      },
+      "size": {
+        "width": 288,
+        "height": 20
+      },
+      "align": "center",
+      "color": "#FFFFFFFF"
+    }
+  ]
+}

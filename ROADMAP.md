@@ -69,6 +69,8 @@ The completed functionality above does **not** imply finished visual consistency
 - [x] Add optional row/column `wrap` and `lineGap`, with per-line distribution and natural cross-axis auto-sizing.
 - [x] Add independent panel/container `grid` with columns, configurable gaps/cell sizes, per-cell align/stretch and hidden-cell reflow.
 - [x] Make every direct structural Grid child automatically managed by its parent settings, regardless of legacy child anchors or `layoutItem.enabled`; simplify F8 Parent to direct container insertion and hide generated internal context fields.
+- [x] Treat `anchorui:panel` as a default parent without additional authored container/context nodes; keep nested hierarchy outside per-widget JSON, use Panel IDs for child anchors and apply padding in layout resolution. Preserve old `/__content` references for compatibility.
+- [x] Preserve Screen Editor inspector scroll when changing values via `+`/`-` with SOURCE JSON collapsed; show one parent label instead of duplicated internal parent/anchor details.
 - [x] Add focused geometry tests for constrained flex, wrapping in both axes, grid auto sizing, cell alignment and hidden cells.
 - [ ] Consider later CSS-like features only when demanded by use cases: grid spans, named tracks, richer responsive constraints and fine-grained incremental layout. These are not part of the first generic Grid release.
 - [x] Update HUD and screen F8 editors to inspect and edit row/column/grid/flex layout fields using persisted per-widget overrides, and browse nested widget structure in a collapsible hierarchy.

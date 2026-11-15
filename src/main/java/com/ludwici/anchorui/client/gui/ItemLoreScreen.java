@@ -1398,6 +1398,15 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         if (hovered == null || mouseX < 0 || mouseY < 0) {
             return;
         }
+        for (PlacedWidget placed : placedWidgets) {
+            if (placed.widget() instanceof UiPopupWidget popup && popup.isPopupOpen()) {
+                WidgetTransforms.Transform transform = transforms.getOrDefault(
+                        placed.id(), WidgetTransforms.IDENTITY);
+                if (popup.containsPopup(transform.inverseX(mouseX), transform.inverseY(mouseY))) {
+                    return;
+                }
+            }
+        }
         graphics.pose().pushPose();
         try {
             graphics.pose().translate(0, 0, 600);
@@ -1631,8 +1640,15 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             candidates.add(new UiFocusTraversal.Candidate(placed.id(), widget.visible, widget.active,
                     physical, clipBounds.get(placed.id())));
         }
+        String currentId = null;
+        for (PlacedWidget placed : placedWidgets) {
+            if (placed.widget() == current) {
+                currentId = placed.id();
+                break;
+            }
+        }
         String next = UiFocusTraversal.next(candidates, new AnchorLayout.Bounds(0, 0, width, height),
-                focusedWidgetId, (modifiers & GLFW.GLFW_MOD_SHIFT) != 0);
+                currentId, (modifiers & GLFW.GLFW_MOD_SHIFT) != 0);
         if (next == null) {
             setFocused(null);
         } else {

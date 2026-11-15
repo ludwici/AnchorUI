@@ -1,0 +1,35 @@
+name: Format Java Method Calls
+
+on:
+  push:
+    branches:
+      - "1.21.1"
+    paths:
+      - "tools/format_java_calls.py"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.ref == 'refs/heads/1.21.1'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: "1.21.1"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Normalize wrapped calls in method bodies
+        run: python3 tools/format_java_calls.py
+      - name: Commit formatted Java sources
+        run: |
+          if ! git diff --quiet -- src; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add src
+            git commit -m "Format method calls onto one line across Java sources"
+            git push origin HEAD:1.21.1
+          fi

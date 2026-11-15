@@ -18,13 +18,15 @@ public class NestedWidgetDocumentTest {
                     {"type":"anchorui:panel","id":"panel","children":[{"type":"anchorui:text","text":"Two"}]}
                 ]}]}
                 """).getAsJsonObject();
-        var result = WidgetDocumentResolver.resolve(document, "example", Map.of()).getAsJsonArray("entities");
+        var resolved = WidgetDocumentResolver.resolve(document, "example", Map.of());
+        var result = resolved.getAsJsonArray("entities");
         assertEquals(4, result.size());
         assertEquals("example:outer", result.get(0).getAsJsonObject().get("id").getAsString());
-        assertEquals("example:outer/__content", result.get(1).getAsJsonObject().getAsJsonObject("position").get("relativeTo").getAsString());
-        assertEquals("example:panel/__content", result.get(3).getAsJsonObject().getAsJsonObject("position").get("relativeTo").getAsString());
+        assertEquals("example:outer", result.get(1).getAsJsonObject().getAsJsonObject("position").get("relativeTo").getAsString());
+        assertEquals("example:panel", result.get(3).getAsJsonObject().getAsJsonObject("position").get("relativeTo").getAsString());
         assertEquals("example:panel/child_0", result.get(3).getAsJsonObject().get("id").getAsString());
-        assertEquals("example:panel", result.get(3).getAsJsonObject().get("__anchorui_container_parent").getAsString());
+        assertEquals("example:panel", resolved.getAsJsonObject("widgetParents")
+                .get(result.get(3).getAsJsonObject().get("id").getAsString()).getAsString());
     }
 
     @Test
@@ -43,9 +45,12 @@ public class NestedWidgetDocumentTest {
         var template = JsonParser.parseString("""
                 {"type":"anchorui:text","text":"Original"}
                 """).getAsJsonObject();
-        var result = WidgetDocumentResolver.resolve(document, "demo", Map.of("mod:label", template)).getAsJsonArray("entities");
+        var resolved = WidgetDocumentResolver.resolve(document, "demo", Map.of("mod:label", template));
+        var result = resolved.getAsJsonArray("entities");
         assertEquals("demo:own", result.get(1).getAsJsonObject().get("id").getAsString());
         assertEquals("Custom", result.get(1).getAsJsonObject().get("text").getAsString());
-        assertTrue(result.get(1).getAsJsonObject().has("__anchorui_container_parent"));
+        assertEquals("demo:outer", resolved.getAsJsonObject("widgetParents")
+                .get(result.get(1).getAsJsonObject().get("id").getAsString()).getAsString());
+        assertTrue(!result.get(1).getAsJsonObject().has("__anchorui_container_parent"));
     }
 }

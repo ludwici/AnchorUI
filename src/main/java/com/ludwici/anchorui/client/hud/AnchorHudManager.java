@@ -684,9 +684,21 @@ public final class AnchorHudManager {
     }
 
     public List<LayoutInspectorControls.Control> getLayoutControls(String id) {
+        HudLayoutOffsets offsets = currentOffsets();
+        String parentId = containerParents.get(id);
+        boolean gridChild = false;
+        for (PlacedWidget placed : widgets) {
+            if (placed.id().equals(parentId)) {
+                JsonObject settings = offsets.hasSettingOverrides(parentId)
+                        ? offsets.effectiveSettings(parentId, placed.style().resolvedSettings)
+                        : placed.style().resolvedSettings;
+                gridChild = ContainerAutoLayout.parse(settings) instanceof com.ludwici.anchorui.api.layout.GridLayout.Config;
+                break;
+            }
+        }
         for (PlacedWidget placed : widgets) {
             if (placed.id().equals(id)) {
-                return LayoutInspectorControls.describe(id, placed.style().resolvedSettings, currentOffsets());
+                return LayoutInspectorControls.describe(id, placed.style().resolvedSettings, offsets, gridChild);
             }
         }
         return List.of();

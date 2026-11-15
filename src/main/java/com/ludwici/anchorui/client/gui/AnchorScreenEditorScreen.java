@@ -690,7 +690,8 @@ public final class AnchorScreenEditorScreen extends Screen {
         appendInspectorLine(lines, "CURRENT WIDGET", SELECTED, null, false);
         appendInspectorLine(lines, "R: reset individual property", 0xFF96AEBE, null, false);
         appendInspectorLine(lines, "id: " + selected.id(), 0xFFE5EEF5, null, false);
-        appendProperty(lines, "parent: " + selected.relativeTo(), AnchorHudManager.EditableProperty.PARENT);
+        appendProperty(lines, "anchor target: " + selected.relativeTo(), AnchorHudManager.EditableProperty.PARENT);
+        appendInspectorLine(lines, "container: " + target.editorStructuralParent(selected.id()), 0xFF96AEBE, null, false);
         appendProperty(lines, "point: " + selected.point(), AnchorHudManager.EditableProperty.POINT);
         appendProperty(lines, "anchor: " + selected.anchor(), AnchorHudManager.EditableProperty.ANCHOR);
         AnchorLayout.Bounds bounds = selected.bounds();

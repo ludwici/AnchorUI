@@ -232,7 +232,7 @@ The inspector buttons follow their lines when scrolling. A grey reset button mea
 Both the HUD editor and the F8 **screen editor** now show live **COMPONENT / LAYOUT** fields when a selected widget is an AnchorUI panel/container or an element structurally nested inside one.
 
 - Select a **panel or container** to change its `layout` mode (`none`, `row`, `column`, `grid`), gaps, alignment/distribution, wrapping, line gap, column count, per-cell sizing and `collapseHidden`. Only fields applicable to the active layout appear.
-- Select a **child widget** to edit `layoutItem.enabled` (manual versus auto-managed), `grow`, `shrink` and per-axis minimum/maximum dimensions. These are generic container properties; the widget's own custom Java configuration remains in the read-only JSON section.
+- Select a **row/column child** to edit `layoutItem.enabled`, `grow`, `shrink` and min/max dimensions. A **Grid child** is always managed by its Grid; its inspector exposes only optional min/max sizing rather than a misleading Auto item toggle.
 - Use **- / +** beside a value to move through enum options, toggle booleans or change numeric fields in small steps; use the small **R** to remove just that field's override. Modified values are highlighted. Invalid settings (for instance, a minimum larger than a maximum or a cyclic layout) are rejected, leaving the current preview intact.
 - Changes reflow the existing widget instances immediately, including the bounds shown by F8, container scroll limits and anchored descendants. The parent/point/anchor editor controls and magnetic dragging still work.
 - **Save** persists these settings as client-side overrides, not as changes to the mod/resource-pack JSON. **Cancel** discards them. Legacy layout files without these fields continue to load.
@@ -263,19 +263,17 @@ For example, editing a panel's layout and one child may produce:
 
 The overrides are merged with resource-defined layout settings. A field reset reverts to the inherited resource/style value; it does **not** erase other fields. The original `config/anchorui/hud-layout.json` schema stays at version 1, and the screen editor uses its existing per-screen file location. No arbitrary widget types, textures or gameplay configuration are added by the editor.
 
-### Parent picker: frame, content, and actual layout membership
+### Move a widget into a container
 
-In the F8 HUD editor, select a widget, press **Pick parent**, then click another widget or choose its row from Widgets. If it is an AnchorUI panel/container, the editor now offers:
+In the F8 HUD editor, select a widget, press **Pick parent**, then click a panel/container (or its entry in Widgets). It is **immediately moved into that container**. No secondary menu is needed.
 
-- **Anchor to container:** reference the outer panel's frame (`relativeTo: mymod:panel`).
-- **Anchor to content area:** reference the padded internal frame (`relativeTo: mymod:panel/__content`) without changing structural membership.
-- **Move into container:** change the actual structural parent to `mymod:panel`, anchor to its `/__content` frame using TOPLEFT, and make the child participate in row/column/grid placement. Clipping, scroll position and visibility now follow the new structural container.
+- For a **Grid**, every direct child automatically occupies a cell according to the Grid's `columns`, gaps, cell sizes and alignment. No extra `relativeTo`, `/__content` or `layoutItem.enabled` is necessary. Explicit source child positions are ignored by the Grid.
+- For a **row/column**, the editor supplies the top-left content anchor used by the existing stack placement rules.
+- Click empty world in parent-selection mode to detach the widget back to the screen root. Clicking a regular widget or vanilla HUD reference still allows an advanced anchor-target relationship.
 
-Click empty world while picking a parent to choose between **Anchor to screen** and **Move to screen (root)**. The latter removes structural membership. The inspector shows **anchor target** and **container** separately so it is clear whether a widget is only positioned relative to a panel or is truly in its layout.
+The inspector distinguishes the structural **container** from an advanced coordinate anchor. Structural moves persist in `containerParent` client overrides and are reversible through Cancel, Parent reset or Reset all. Circular parent relationships are rejected.
 
-Moves are stored as a `containerParent` override beside the existing `relativeTo`, `point` and `anchor` fields. They remain local to the HUD layout file, can be undone using Cancel, and survive Save/reopen. Circular structural parents are rejected. Resetting the **Parent** property restores the authored structural relationship.
-
-The **SOURCE JSON [+]** group in both F8 inspectors is now **collapsed by default**. Click its heading to expand the original read-only configuration and click it again to hide the details; this does not change the widget or source resource pack.
+The **SOURCE JSON [+]** group starts collapsed, and opening it does not show generated `__anchorui_*` or automatic `/__content` fields. User resource packs only need to place Grid widgets inside `children`.
 
 ### Visual and content properties in the HUD editor
 

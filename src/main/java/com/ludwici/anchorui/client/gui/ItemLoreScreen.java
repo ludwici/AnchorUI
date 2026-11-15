@@ -98,6 +98,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     private String screenSaveError = "";
     private WidgetInstanceRegistry widgetRegistry = new WidgetInstanceRegistry();
     private List<PlacedWidget> placedWidgets = List.of();
+    private List<PlacedWidget> visibilityOrder = List.of();
     private final Map<String, UiEventBindings> widgetEventBindings = new HashMap<>();
     private final Map<String, ItemContext> widgetItemContexts = new HashMap<>();
     private List<TemplateListState> templateLists = List.of();
@@ -592,6 +593,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 placed.widget().setPosition(frame.x(), frame.y());
             }
             layoutBounds = bounds;
+            visibilityOrder = WidgetContainers.parentFirst(placedWidgets, PlacedWidget::id, parents);
             scrollLimits = limits;
             containerParents = Map.copyOf(parents);
             containerGroups = Map.copyOf(groups);
@@ -849,6 +851,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         }
         loadScreenOffsets();
         placedWidgets = List.of();
+        visibilityOrder = List.of();
         widgetEventBindings.clear();
         widgetItemContexts.clear();
         templateLists = List.of();
@@ -1091,7 +1094,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         visibilityScratch.clear();
         enabledScratch.clear();
         HudLayoutOffsets overrides = currentScreenOffsets();
-        for (PlacedWidget placed : placedWidgets) {
+        for (PlacedWidget placed : visibilityOrder) {
             String parent = overrides.containerParent(placed.id(), placed.containerParent());
             boolean parentVisible = parent == null || visibilityScratch.getOrDefault(parent, false);
             boolean parentEnabled = parent == null || enabledScratch.getOrDefault(parent, false);

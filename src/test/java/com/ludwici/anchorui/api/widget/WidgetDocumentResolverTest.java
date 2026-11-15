@@ -217,11 +217,14 @@ public class WidgetDocumentResolverTest {
                 """);
         JsonObject result = WidgetDocumentResolver.resolve(document, "example", Map.of());
         assertEquals(4, result.getAsJsonArray("entities").size());
+        assertEquals(3, result.getAsJsonObject("widgetParents").size());
         for (int index = 1; index <= 3; index++) {
             JsonObject child = result.getAsJsonArray("entities").get(index).getAsJsonObject();
-            assertEquals("example:grid", child.get("__anchorui_container_parent").getAsString());
-            assertEquals("example:grid/__content",
+            assertEquals("example:grid", result.getAsJsonObject("widgetParents")
+                    .get(child.get("id").getAsString()).getAsString());
+            assertEquals("example:grid",
                     child.getAsJsonObject("position").get("relativeTo").getAsString());
+            assertFalse(child.has("__anchorui_container_parent"));
             assertFalse(child.has("layoutItem"));
         }
         JsonObject sourceChild = document.getAsJsonArray("entities").get(0)

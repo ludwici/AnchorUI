@@ -31,9 +31,13 @@ public final class TemplateListExpander {
     private static final Pattern TEXT_ITEM = Pattern.compile("\\{\\{item(?:#([a-zA-Z0-9_.\\[\\]-]+))?\\}\\}");
     private static final int MAX_ITEMS = 256;
 
-    public record Entry(JsonObject settings, ItemContext itemContext) {
+    public record Entry(JsonObject settings, ItemContext itemContext, String parentId) {
         public Entry {
             settings = settings.deepCopy();
+        }
+
+        public Entry(JsonObject settings, ItemContext itemContext) {
+            this(settings, itemContext, null);
         }
 
         @Override
@@ -96,7 +100,10 @@ public final class TemplateListExpander {
             JsonArray entities = new JsonArray();
             entities.add(substituted);
             document.add("entities", entities);
-            JsonArray expanded = WidgetDocumentResolver.resolve(document, namespace, resolvedTemplates).getAsJsonArray("entities");
+            JsonObject resolvedDocument = WidgetDocumentResolver.resolve(document, namespace, resolvedTemplates);
+            JsonArray expanded = resolvedDocument.getAsJsonArray("entities");
+            JsonObject parentMap = resolvedDocument.has("widgetParents")
+                    ? resolvedDocument.getAsJsonObject("widgetParents") : new JsonObject();
             if (expanded.isEmpty()) {
                 continue;
             }
@@ -116,7 +123,10 @@ public final class TemplateListExpander {
 
                 JsonObject position = widget.has("position") && widget.get("position").isJsonObject()
                         ? widget.getAsJsonObject("position") : new JsonObject();
-                if (widgetIndex == 0 || !widget.has(WidgetContainers.PARENT_FIELD)) {
+                boolean nested = parentMap.has(id);
+                String parentId = nested ? parentMap.get(id).getAsString() : listId;
+                parentId = ids.getOrDefault(parentId, parentId);
+                if (widgetIndex == 0 || !nested) {
                     TemplateListLayoutRegistry.Cell cell = layout.place(index);
                     position.addProperty("relativeTo", WidgetContainers.contentId(listId));
                     int offsetX = GsonHelper.getAsInt(position, "x", 0);
@@ -133,19 +143,15 @@ public final class TemplateListExpander {
                     if (!sizeObject.has("height") || cell.width() > 0) {
                         sizeObject.addProperty("height", cell.height());
                     }
-                    widget.addProperty(WidgetContainers.PARENT_FIELD, listId);
+
                 } else {
                     if (position.has("relativeTo")) {
                         String reference = position.get("relativeTo").getAsString();
                         position.addProperty("relativeTo", remap(reference, ids));
                     }
-                    if (widget.has(WidgetContainers.PARENT_FIELD)) {
-                        String parent = widget.get(WidgetContainers.PARENT_FIELD).getAsString();
-                        widget.addProperty(WidgetContainers.PARENT_FIELD, ids.getOrDefault(parent, parent));
-                    }
                 }
                 widget.add("position", position);
-                result.add(new Entry(widget, context));
+                result.add(new Entry(widget, context, parentId));
             }
         }
         return List.copyOf(result);

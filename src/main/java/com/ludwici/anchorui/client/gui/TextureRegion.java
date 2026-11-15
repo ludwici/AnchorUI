@@ -39,7 +39,7 @@ public final class TextureRegion {
             throw new IllegalArgumentException("Invalid texture resource identifier '" + path
                     + "'; expected namespace:path");
         }
-        if (context.minecraft() != null && context.minecraft().getResourceManager() != null
+        if (context != null && context.minecraft() != null && context.minecraft().getResourceManager() != null
                 && context.minecraft().getResourceManager().getResource(texture).isEmpty()
                 && MISSING_WARNED.add(texture)) {
             AnchorUI.LOGGER.warn("AnchorUI missing texture resource '{}'. Expected asset path assets/{}/{}. "

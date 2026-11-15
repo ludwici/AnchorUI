@@ -158,6 +158,28 @@ public class StageOneTwoLayoutIntegrationTest {
     }
 
     @Test
+    public void bundledPolicyDemoShowsReserveAndCollapseUsingOneConditionalState() throws Exception {
+        var input = getClass().getClassLoader().getResourceAsStream(
+                "assets/anchorui/anchorui/screens/hidden_space_policy_demo.json");
+        org.junit.jupiter.api.Assertions.assertNotNull(input);
+        try (var reader = new java.io.InputStreamReader(input, java.nio.charset.StandardCharsets.UTF_8)) {
+            JsonObject doc = JsonParser.parseReader(reader).getAsJsonObject();
+            assertFalse(doc.getAsJsonObject("state").get("hideMiddle").getAsBoolean());
+            var entities = doc.getAsJsonArray("entities");
+            JsonObject reserved = entities.get(4).getAsJsonObject();
+            JsonObject collapsed = entities.get(5).getAsJsonObject();
+            assertFalse(reserved.getAsJsonObject("layout").get("collapseHidden").getAsBoolean());
+            assertTrue(collapsed.getAsJsonObject("layout").get("collapseHidden").getAsBoolean());
+            for (JsonObject panel : List.of(reserved, collapsed)) {
+                assertEquals("vertical", panel.getAsJsonObject("scroll").get("axis").getAsString());
+                var middle = panel.getAsJsonArray("children").get(1).getAsJsonObject();
+                assertEquals("hideMiddle", middle.getAsJsonObject("visibleWhen")
+                        .getAsJsonObject("not").get("path").getAsString());
+            }
+        }
+    }
+
+    @Test
     public void editorOverridesSaveCancelAndResizeWithoutLeakingAcrossDrafts() throws Exception {
         String parent = "demo:panel";
         JsonObject base = json("""

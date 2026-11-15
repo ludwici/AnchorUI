@@ -96,10 +96,10 @@ The completed functionality above does **not** imply finished visual consistency
 - [x] Validate equal RPG progress bar dimensions, frame, padding and border inheritance in a dedicated regression test; in-game rendering parity still needs confirmation.
 - [x] Render built-in rich text Tooltip after floating Select popups and outside child scissors; suppress tooltips from text hidden underneath an open popup. The popup remains above ordinary widgets and scroll indicators.
 - [x] Warn once per reload about missing texture files and missing style references, with expected resource paths; include widget ID/type in configuration errors and skip malformed root documents instead of crashing reload.
-- [x] Detect resource-pack reloads while a screen is open, rebuild the new screen document without firing spurious lifecycle events, preserve compatible Local UI State keys, and roll back if the reloaded document fails layout validation.
+- [x] Detect resource-pack revisions triggered while a screen instance remains open and rebase compatible Local UI State keys; never override vanilla F3+T handling in open GUI screens. Reopen a screen after reloading resources in the world to inspect updated resource-pack content.
 - [x] Implement Tab/Shift+Tab traversal that skips hidden, inactive, clipped and offscreen widgets, while allowing nested controls to consume Tab internally; preserve previously implemented focused/hoverFocused textures and focus outlines.
 - [x] Add `stage3_compact_demo`, an input/skin/pop-up small-scale test screen, and explicit RPG progress parity resource tests.
-- [ ] In-game QA for appearance editor, scaled/clipped keyboard and mouse hitboxes, Select popup, Color Picker modal focus, F3+T, nested tooltips and custom Java widget codecs. See [Stage 3 QA](docs/QA_STAGE_3.md).
+- [ ] In-game QA for appearance editor, scaled/clipped keyboard and mouse hitboxes, Select popup hover occlusion, Color Picker/text modal focus, resource reload from the world, nested tooltips and custom Java widget codecs. See [Stage 3 QA](docs/QA_STAGE_3.md).
 - [ ] Verify the complete screen background/blur/outline/tooltip order in Minecraft (including modded overlays and small GUI scales); unit tests cannot certify GPU rendering order.
 - [ ] Finish accessibility/narration and custom widget tab-order review after in-client checks; current focus traversal covers built-in and registered active widgets, but screen reader behavior is not fully verified.
 

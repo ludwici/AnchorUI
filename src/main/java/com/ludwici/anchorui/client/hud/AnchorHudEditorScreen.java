@@ -538,9 +538,11 @@ public final class AnchorHudEditorScreen extends Screen {
             for (Button control : controls) {
                 control.visible = !compact && !inspectorCollapsed;
             }
-            super.render(graphics, mouseX, mouseY, partialTick);
+            int backgroundMouseX = editingAppearance == null ? mouseX : Integer.MIN_VALUE;
+            int backgroundMouseY = editingAppearance == null ? mouseY : Integer.MIN_VALUE;
+            super.render(graphics, backgroundMouseX, backgroundMouseY, partialTick);
             if (!compact) {
-                widgetList.render(graphics, font, mouseX, mouseY, frameEntries,
+                widgetList.render(graphics, font, backgroundMouseX, backgroundMouseY, frameEntries,
                         selected != null ? selected : inspectedVanilla, choosingParent);
             }
             editorDropdown.render(graphics, font, mouseX, mouseY);
@@ -1257,7 +1259,7 @@ public final class AnchorHudEditorScreen extends Screen {
                 commitAppearance();
                 return true;
             }
-            return super.keyPressed(keyCode, scanCode, modifiers);
+            return appearanceInput.keyPressed(keyCode, scanCode, modifiers);
         }
         if (KeyRegistry.EDIT_HUD.isActiveAndMatches(InputConstants.getKey(keyCode, scanCode))) {
             saveAndClose();

@@ -481,8 +481,10 @@ public final class AnchorScreenEditorScreen extends Screen {
                             0xFFFFD16B, false);
                 }
             }
-            super.render(graphics, mouseX, mouseY, partialTick);
-            widgetList.render(graphics, font, mouseX, mouseY, frameEntries,
+            int backgroundMouseX = editingAppearance == null ? mouseX : Integer.MIN_VALUE;
+            int backgroundMouseY = editingAppearance == null ? mouseY : Integer.MIN_VALUE;
+            super.render(graphics, backgroundMouseX, backgroundMouseY, partialTick);
+            widgetList.render(graphics, font, backgroundMouseX, backgroundMouseY, frameEntries,
                     selected == null ? null : selected.id(), pickingParent);
             editorDropdown.render(graphics, font, mouseX, mouseY);
             if (editingAppearance != null && colorPickerDialog == null) {
@@ -1087,7 +1089,7 @@ public final class AnchorScreenEditorScreen extends Screen {
                 commitAppearance();
                 return true;
             }
-            return super.keyPressed(keyCode, scanCode, modifiers);
+            return appearanceInput.keyPressed(keyCode, scanCode, modifiers);
         }
         if (KeyRegistry.EDIT_HUD.isActiveAndMatches(InputConstants.getKey(keyCode, scanCode))) {
             save();

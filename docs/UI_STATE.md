@@ -157,6 +157,8 @@ Switch **Skills** and **Inventory**, verify the bound tab label updates immediat
 
 ## Resource reload of an open screen
 
-After Minecraft's **F3+T** resource reload, an open AnchorUI screen with a resource document ID detects the new document revision and rebuilds from the refreshed resource pack **without closing and reopening the screen**. Compatible declared Local UI State keys keep their current values; newly declared keys start from the new JSON defaults, and keys whose JSON type changed reset to the new default. The reload does not replay `onOpen`/`onClose` solely because the document changed.
+**Vanilla F3+T does not run while an ordinary GUI screen is open, and AnchorUI does not override this behavior.** To refresh the UI's resource pack in normal gameplay, close the screen, press F3+T in the world, and open the screen again. This creates a new instance, so its Local UI State uses the new document's declared defaults (unless an `open_screen.stateHandoff` explicitly transfers values).
+
+If resource reload is triggered by another mechanism while an AnchorUI screen instance is still open, the screen detects the new document revision and rebuilds. Compatible declared Local UI State keys retain their values, newly declared keys start from defaults, and keys with changed types reset. The revision update itself does not fire `onOpen`/`onClose`.
 
 If the new document is missing, the previously loaded UI remains open. If the new layout is rejected, AnchorUI restores the previous document/state and logs the reason. Invalid individual widget settings may still produce skipped-widget diagnostics. Test these behaviors with [Stage 3 QA](QA_STAGE_3.md).

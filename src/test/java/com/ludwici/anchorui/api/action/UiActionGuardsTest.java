@@ -67,8 +67,7 @@ public class UiActionGuardsTest {
     @Test
     public void typedActionsAcceptGuardsWithoutChangingTheirArguments() {
         AtomicInteger total = new AtomicInteger();
-        UiActionRegistry.registerEvent(id("typed"), Arguments.CODEC,
-                (context, arguments) -> event -> total.addAndGet(arguments.amount()));
+        UiActionRegistry.registerEvent(id("typed"), Arguments.CODEC, (context, arguments) -> event -> total.addAndGet(arguments.amount()));
 
         UiActionRegistry.compile(null, object("""
                 {"type":"action_guard_tests:typed","amount":4,"when":false}
@@ -121,8 +120,7 @@ public class UiActionGuardsTest {
                   }
                 }
                 """);
-        List<TemplateListExpander.Entry> rows = TemplateListExpander.expand(list,
-                JsonParser.parseString("""
+        List<TemplateListExpander.Entry> rows = TemplateListExpander.expand(list, JsonParser.parseString("""
                         [{"id":"starter","level":3},{"id":"expert","level":15}]
                         """).getAsJsonArray(), "action_guard_tests:rows", Map.of());
         for (TemplateListExpander.Entry row : rows) {

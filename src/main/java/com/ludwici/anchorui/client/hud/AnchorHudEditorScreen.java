@@ -189,10 +189,8 @@ public final class AnchorHudEditorScreen extends Screen {
             };
         }).bounds(panelX + panelWidth - 114, panelY + 3, 62, 16).build());
 
-        pointButton = addControl(Button.builder(Component.literal("Point ▼"),
-                button -> openAnchorDropdown(true)).bounds(left, actionsY, halfWidth, BUTTON_HEIGHT).build());
-        anchorButton = addControl(Button.builder(Component.literal("Anchor ▼"),
-                button -> openAnchorDropdown(false)).bounds(right, actionsY, halfWidth, BUTTON_HEIGHT).build());
+        pointButton = addControl(Button.builder(Component.literal("Point ▼"), button -> openAnchorDropdown(true)).bounds(left, actionsY, halfWidth, BUTTON_HEIGHT).build());
+        anchorButton = addControl(Button.builder(Component.literal("Anchor ▼"), button -> openAnchorDropdown(false)).bounds(right, actionsY, halfWidth, BUTTON_HEIGHT).build());
         parentButton = addControl(Button.builder(Component.literal("Pick parent"), button -> {
             if (selected != null) {
                 editorDropdown.close();
@@ -509,11 +507,8 @@ public final class AnchorHudEditorScreen extends Screen {
             if (!compact) {
                 graphics.fill(visiblePanelX(), panelY, visiblePanelX() + visiblePanelWidth(), panelY + visiblePanelHeight(), 0xFF121C29);
                 graphics.fill(visiblePanelX(), panelY, visiblePanelX() + visiblePanelWidth(), panelY + 20, 0xFF254057);
-                graphics.drawString(font, inspectorCollapsed ? "Inspector" : "HUD Editor",
-                        visiblePanelX() + 6, panelY + 6, 0xFFE5EEF5, false);
-                graphics.drawString(font, inspectorCollapsed ? "[+]" : "[-]",
-                        inspectorCollapsed ? visiblePanelX() + visiblePanelWidth() - 26 : panelX + panelWidth - 140,
-                        panelY + 6, 0xFFE5EEF5, false);
+                graphics.drawString(font, inspectorCollapsed ? "Inspector" : "HUD Editor", visiblePanelX() + 6, panelY + 6, 0xFFE5EEF5, false);
+                graphics.drawString(font, inspectorCollapsed ? "[+]" : "[-]", inspectorCollapsed ? visiblePanelX() + visiblePanelWidth() - 26 : panelX + panelWidth - 140, panelY + 6, 0xFFE5EEF5, false);
                 if (!inspectorCollapsed) {
                     String hint = choosingParent ? "Choose a parent, or click a listed vanilla ID" : "Snap: 6px | Alt: free | Vanilla: read-only";
                     drawScaled(graphics, hint, panelX + 6, panelY + 22, 0xFFAAC1D4);
@@ -542,8 +537,7 @@ public final class AnchorHudEditorScreen extends Screen {
             int backgroundMouseY = editingAppearance == null ? mouseY : Integer.MIN_VALUE;
             super.render(graphics, backgroundMouseX, backgroundMouseY, partialTick);
             if (!compact) {
-                widgetList.render(graphics, font, backgroundMouseX, backgroundMouseY, frameEntries,
-                        selected != null ? selected : inspectedVanilla, choosingParent);
+                widgetList.render(graphics, font, backgroundMouseX, backgroundMouseY, frameEntries, selected != null ? selected : inspectedVanilla, choosingParent);
             }
             editorDropdown.render(graphics, font, mouseX, mouseY);
             if (editingAppearance != null && colorPickerDialog == null) {
@@ -584,8 +578,7 @@ public final class AnchorHudEditorScreen extends Screen {
                 graphics.drawString(font, line.text(), 0, 0, line.color(), false);
                 graphics.pose().popPose();
                 if (line.vanillaParent() != null && y >= top && y + INSPECTOR_LINE_HEIGHT <= bottom) {
-                    vanillaParentHitboxes.add(new VanillaParentHitbox(line.vanillaParent(),
-                            panelX + 4, y, panelWidth - 8, INSPECTOR_LINE_HEIGHT));
+                    vanillaParentHitboxes.add(new VanillaParentHitbox(line.vanillaParent(), panelX + 4, y, panelWidth - 8, INSPECTOR_LINE_HEIGHT));
                 }
                 if (line.layoutControl() != null) {
                     drawLayoutControl(graphics, line.layoutControl(), y, top, bottom);
@@ -628,9 +621,7 @@ public final class AnchorHudEditorScreen extends Screen {
             EditorInspectorButton.draw(graphics, font, "-", first, lineY, 0xFF40566A, 0xFFE5EEF5);
             EditorInspectorButton.draw(graphics, font, "+", next, lineY, 0xFF40566A, 0xFFE5EEF5);
         }
-        EditorInspectorButton.draw(graphics, font, "R", reset, lineY,
-                control.modified() ? 0xFF3D6273 : 0xFF40505D,
-                control.modified() ? 0xFFECF8FF : 0xFF80919E);
+        EditorInspectorButton.draw(graphics, font, "R", reset, lineY, control.modified() ? 0xFF3D6273 : 0xFF40505D, control.modified() ? 0xFFECF8FF : 0xFF80919E);
         if (lineY >= top && lineY + RESET_SIZE <= bottom) {
             if (!choice && !checkbox) {
                 layoutHitboxes.add(new LayoutHitbox(control, -1, first, lineY));
@@ -648,16 +639,11 @@ public final class AnchorHudEditorScreen extends Screen {
         graphics.pose().pushPose();
         graphics.pose().translate(0, 0, 100);
         try {
-            graphics.fill(modalX - 1, modalY - 1, modalX + appearanceInput.getWidth() + 17,
-                    modalY + 86, 0xFF718699);
-            graphics.fill(modalX, modalY, modalX + appearanceInput.getWidth() + 16,
-                    modalY + 85, 0xFF162332);
-            graphics.drawString(font, font.plainSubstrByWidth(editingAppearance.field().label(),
-                    appearanceInput.getWidth()), modalX + 8, modalY + 8,
-                    SELECTED_COLOR, false);
+            graphics.fill(modalX - 1, modalY - 1, modalX + appearanceInput.getWidth() + 17, modalY + 86, 0xFF718699);
+            graphics.fill(modalX, modalY, modalX + appearanceInput.getWidth() + 16, modalY + 85, 0xFF162332);
+            graphics.drawString(font, font.plainSubstrByWidth(editingAppearance.field().label(), appearanceInput.getWidth()), modalX + 8, modalY + 8, SELECTED_COLOR, false);
             if (!status.isEmpty()) {
-                graphics.drawString(font, font.plainSubstrByWidth(status, appearanceInput.getWidth()),
-                        modalX + 8, modalY + 74, 0xFFFFA68A, false);
+                graphics.drawString(font, font.plainSubstrByWidth(status, appearanceInput.getWidth()), modalX + 8, modalY + 74, 0xFFFFA68A, false);
             }
             appearanceInput.render(graphics, mouseX, mouseY, partialTick);
             appearanceApply.render(graphics, mouseX, mouseY, partialTick);
@@ -762,15 +748,12 @@ public final class AnchorHudEditorScreen extends Screen {
                 EditorInspectorButton.drawColor(graphics, next, lineY, 0xFF3D4550);
             }
         } else if (control.textual() || choice) {
-            EditorInspectorButton.draw(graphics, font, choice ? "▼" : "E",
-                    next, lineY, 0xFF40566A, 0xFFE5EEF5);
+            EditorInspectorButton.draw(graphics, font, choice ? "▼" : "E", next, lineY, 0xFF40566A, 0xFFE5EEF5);
         } else {
             EditorInspectorButton.draw(graphics, font, "-", left, lineY, 0xFF40566A, 0xFFE5EEF5);
             EditorInspectorButton.draw(graphics, font, "+", next, lineY, 0xFF40566A, 0xFFE5EEF5);
         }
-        EditorInspectorButton.draw(graphics, font, "R", reset, lineY,
-                control.modified() ? 0xFF3D6273 : 0xFF40505D,
-                control.modified() ? 0xFFECF8FF : 0xFF80919E);
+        EditorInspectorButton.draw(graphics, font, "R", reset, lineY, control.modified() ? 0xFF3D6273 : 0xFF40505D, control.modified() ? 0xFFECF8FF : 0xFF80919E);
         if (lineY >= top && lineY + RESET_SIZE <= bottom) {
             if (!control.textual() && !choice && !checkbox) {
                 appearanceHitboxes.add(new AppearanceHitbox(control, -1, left, lineY));
@@ -793,10 +776,8 @@ public final class AnchorHudEditorScreen extends Screen {
             appendLine(lines, "VANILLA ANCHORS (click one):", VANILLA_COLOR);
             for (VanillaHudGeometry.Reference reference : frameVanillaHandles) {
                 String suffix = reference.active() ? "" : " [inactive]";
-                String label = font.plainSubstrByWidth(reference.id() + suffix,
-                        Math.max(40, (int) ((panelWidth - 30) / INSPECTOR_SCALE)));
-                lines.add(new InspectorLine(Component.literal(label).getVisualOrderText(),
-                        reference.active() ? VANILLA_COLOR : VANILLA_INACTIVE_COLOR, null, false, reference.id()));
+                String label = font.plainSubstrByWidth(reference.id() + suffix, Math.max(40, (int) ((panelWidth - 30) / INSPECTOR_SCALE)));
+                lines.add(new InspectorLine(Component.literal(label).getVisualOrderText(), reference.active() ? VANILLA_COLOR : VANILLA_INACTIVE_COLOR, null, false, reference.id()));
             }
         }
         if (!status.isEmpty()) {
@@ -849,9 +830,7 @@ public final class AnchorHudEditorScreen extends Screen {
                     String label = control.booleanField() ? control.label() : control.label() + ": " + control.value();
                     int available = Math.max(38, (int) ((panelWidth - 98) / INSPECTOR_SCALE));
                     String clipped = font.plainSubstrByWidth(label, available);
-                    lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(),
-                            control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null,
-                            control.modified(), null, control));
+                    lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(), control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null, control.modified(), null, control));
                 }
             }
             List<AppearanceInspectorControls.Control> appearanceControls = manager.getAppearanceControls(active.id());
@@ -861,9 +840,7 @@ public final class AnchorHudEditorScreen extends Screen {
                     String label = control.booleanField() ? control.field().label() : control.field().label() + ": " + control.value();
                     int available = Math.max(38, (int) ((panelWidth - 98) / INSPECTOR_SCALE));
                     String clipped = font.plainSubstrByWidth(label, available);
-                    lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(),
-                            control.modified() ? 0xFF92DFCE : 0xFFE5EEF5,
-                            null, control.modified(), null, null, control));
+                    lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(), control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null, control.modified(), null, null, control));
                 }
             }
             sourceHeaderIndex = lines.size();
@@ -872,8 +849,7 @@ public final class AnchorHudEditorScreen extends Screen {
                 if (!active.id().equals(inspectedId)) {
                     JsonObject settings = manager.getWidgetSettings(active.id());
                     String widgetParent = manager.getStructuralParent(active.id());
-                    sourceProperties = HudInspectorProperties.flatten(settings,
-                            "(none)".equals(widgetParent) ? null : widgetParent);
+                    sourceProperties = HudInspectorProperties.flatten(settings, "(none)".equals(widgetParent) ? null : widgetParent);
                     inspectedId = active.id();
                 }
                 for (String property : sourceProperties) {
@@ -979,8 +955,7 @@ public final class AnchorHudEditorScreen extends Screen {
         }
         AnchorLayout.Bounds viewport = new AnchorLayout.Bounds(panelX + 4, top, panelWidth - 7, bottom - top);
         if (inspectorScrollBar == null || !inspectorScrollBar.matches(viewport, maxInspectorScroll, 23, 1.0, NativeContainerScrollPanel.HUD_INSPECTOR)) {
-            inspectorScrollBar = new NativeContainerScrollPanel(minecraft, viewport, maxInspectorScroll, 23, 1.0,
-                    inspectorScroll, NativeContainerScrollPanel.HUD_INSPECTOR);
+            inspectorScrollBar = new NativeContainerScrollPanel(minecraft, viewport, maxInspectorScroll, 23, 1.0, inspectorScroll, NativeContainerScrollPanel.HUD_INSPECTOR);
         }
         inspectorScroll = inspectorScrollBar.logicalOffset();
     }
@@ -1118,8 +1093,7 @@ public final class AnchorHudEditorScreen extends Screen {
             AnchorHudManager.HudHandle panel = clickedParentPanel(mouseX, mouseY);
             VanillaHudGeometry.Reference targetReference = panel == null
                     ? clickedVanillaHandle(mouseX, mouseY) : null;
-            chooseParentTarget(panel != null ? panel.id()
-                    : targetReference != null ? targetReference.id() : "screen");
+            chooseParentTarget(panel != null ? panel.id() : targetReference != null ? targetReference.id() : "screen");
             return true;
         }
         if (clicked != null) {
@@ -1185,8 +1159,7 @@ public final class AnchorHudEditorScreen extends Screen {
                 snapResult = HudSnap.snap(dragOrigin, desiredX, desiredY, widgets, width, height);
             }
             double parentScale = manager.dragScale(selected);
-            manager.setPreviewOffset(selected, startOffsetX + (int) Math.round((snapResult.x() - dragOrigin.x()) / parentScale),
-                    startOffsetY + (int) Math.round((snapResult.y() - dragOrigin.y()) / parentScale));
+            manager.setPreviewOffset(selected, startOffsetX + (int) Math.round((snapResult.x() - dragOrigin.x()) / parentScale), startOffsetY + (int) Math.round((snapResult.y() - dragOrigin.y()) / parentScale));
             return true;
         }
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);

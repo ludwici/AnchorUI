@@ -53,9 +53,7 @@ public final class GridLayout {
             int rowGap = dimension(properties, "rowGap", gap, 4096);
             int cellWidth = dimension(properties, "cellWidth", 0, 16384);
             int cellHeight = dimension(properties, "cellHeight", 0, 16384);
-            return new Config(columns, columnGap, rowGap, cellWidth, cellHeight,
-                    Align.parse(properties, "justifyItems"), Align.parse(properties, "alignItems"),
-                    GsonHelper.getAsBoolean(properties, "collapseHidden", false));
+            return new Config(columns, columnGap, rowGap, cellWidth, cellHeight, Align.parse(properties, "justifyItems"), Align.parse(properties, "alignItems"), GsonHelper.getAsBoolean(properties, "collapseHidden", false));
         }
 
         private static int dimension(JsonObject object, String key, int defaultValue, int max) {
@@ -149,10 +147,8 @@ public final class GridLayout {
                 case CENTER -> Math.max(0, cellHeight - height) / 2;
                 case END -> Math.max(0, cellHeight - height);
             };
-            placements.put(item.id(), new StackLayout.Placement(x[column] + shiftX + item.offsetX(),
-                    y[row] + shiftY + item.offsetY(), width, height));
+            placements.put(item.id(), new StackLayout.Placement(x[column] + shiftX + item.offsetX(), y[row] + shiftY + item.offsetY(), width, height));
         }
-        return new ContainerAutoLayout.Arrangement(Map.copyOf(placements),
-                new ContainerLayout.Size((int) Math.max(1, naturalWidth), (int) Math.max(1, naturalHeight)));
+        return new ContainerAutoLayout.Arrangement(Map.copyOf(placements), new ContainerLayout.Size((int) Math.max(1, naturalWidth), (int) Math.max(1, naturalHeight)));
     }
 }

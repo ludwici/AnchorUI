@@ -35,8 +35,7 @@ public class ConditionResourceTest {
             JsonObject widget = value.getAsJsonObject();
             for (String property : new String[]{"visibleWhen", "enabledWhen"}) {
                 if (widget.has(property)) {
-                    var compiled = ConditionExpression.parse(widget.get(property), true,
-                            !"enabledWhen".equals(property));
+                    var compiled = ConditionExpression.parse(widget.get(property), true, !"enabledWhen".equals(property));
                     assertFalse(compiled.sources().isEmpty());
                     assertTrue(compiled.sources().stream().allMatch(id -> id.startsWith("anchorui:")));
                     count++;

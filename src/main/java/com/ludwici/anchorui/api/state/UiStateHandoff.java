@@ -28,8 +28,7 @@ public final class UiStateHandoff {
             try {
                 source.get(sourceKey);
             } catch (IllegalArgumentException exception) {
-                throw new IllegalArgumentException("stateHandoff." + entry.getKey()
-                        + " references unknown source state '" + sourceKey + "'", exception);
+                throw new IllegalArgumentException("stateHandoff." + entry.getKey() + " references unknown source state '" + sourceKey + "'", exception);
             }
             mapping.put(entry.getKey(), sourceKey);
         }
@@ -44,14 +43,12 @@ public final class UiStateHandoff {
             String sourceKey = entry.getValue();
             JsonElement value = sourceValues.get(sourceKey);
             if (value == null) {
-                throw new IllegalArgumentException("Missing source state '" + sourceKey
-                        + "' for destination key '" + targetKey + "'");
+                throw new IllegalArgumentException("Missing source state '" + sourceKey + "' for destination key '" + targetKey + "'");
             }
             try {
                 destination.validateSet(targetKey, value);
             } catch (IllegalArgumentException exception) {
-                throw new IllegalArgumentException("Cannot transfer UI state '" + sourceKey
-                        + "' to '" + targetKey + "': " + exception.getMessage(), exception);
+                throw new IllegalArgumentException("Cannot transfer UI state '" + sourceKey + "' to '" + targetKey + "': " + exception.getMessage(), exception);
             }
             pending.put(targetKey, value.deepCopy());
         }

@@ -83,9 +83,7 @@ public final class WidgetAnimation {
         double bottom = parent.y(frame.y() + cy + (logical.y() + logical.height() - cy) * frame.scale());
         int x = (int) Math.floor(left);
         int y = (int) Math.floor(top);
-        return new AnchorLayout.Bounds(x, y,
-                Math.max(0, (int) Math.ceil(right) - x),
-                Math.max(0, (int) Math.ceil(bottom) - y));
+        return new AnchorLayout.Bounds(x, y, Math.max(0, (int) Math.ceil(right) - x), Math.max(0, (int) Math.ceil(bottom) - y));
     }
 
     public static double inverseX(AbstractWidget widget, UiAnimationSpec.Frame frame, double coordinate) {

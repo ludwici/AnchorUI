@@ -99,10 +99,7 @@ public class WidgetDocumentResolverTest {
 
     @Test
     public void importedWidgetsCanAnchorAcrossNamespacesAndIgnoreJsonOrder() {
-        Map<String, JsonObject> templates = Map.of(
-                "anchorui_test:foreign_header", resource("assets/anchorui_test/anchorui/widgets/foreign_header.json"),
-                "anchorui_test:foreign_counter", resource("assets/anchorui_test/anchorui/widgets/foreign_counter.json")
-        );
+        Map<String, JsonObject> templates = Map.of("anchorui_test:foreign_header", resource("assets/anchorui_test/anchorui/widgets/foreign_header.json"), "anchorui_test:foreign_counter", resource("assets/anchorui_test/anchorui/widgets/foreign_counter.json"));
         JsonObject expanded = WidgetDocumentResolver.resolve(resource("assets/anchorui/anchorui/test/scenes/scene14.json"), "anchorui", templates);
         List<AnchorLayout.Frame> frames = new ArrayList<>();
         for (var entry : expanded.getAsJsonArray("entities")) {
@@ -114,8 +111,7 @@ public class WidgetDocumentResolverTest {
             String relativeTo = position.get("relativeTo").getAsString();
             int x = position.get("x").getAsInt();
             int y = position.get("y").getAsInt();
-            frames.add(new AnchorLayout.Frame(widget.get("id").getAsString(), new PositionElement(point, anchor, relativeTo, x, y),
-                    size.get("width").getAsInt(), size.get("height").getAsInt()));
+            frames.add(new AnchorLayout.Frame(widget.get("id").getAsString(), new PositionElement(point, anchor, relativeTo, x, y), size.get("width").getAsInt(), size.get("height").getAsInt()));
         }
         Collections.reverse(frames);
         Map<String, AnchorLayout.Bounds> layout = AnchorLayout.resolve(854, 480, frames);
@@ -146,10 +142,7 @@ public class WidgetDocumentResolverTest {
                 {"imports":["moda:first"]}
                 """);
         assertTrue(assertThrows(IllegalArgumentException.class, () -> WidgetDocumentResolver.resolve(doc, "modb", Map.of())).getMessage().contains("moda:first"));
-        Map<String, JsonObject> templates = Map.of(
-                "moda:first", json("{\"ref\":\"modb:second\"}"),
-                "modb:second", json("{\"ref\":\"moda:first\"}")
-        );
+        Map<String, JsonObject> templates = Map.of("moda:first", json("{\"ref\":\"modb:second\"}"), "modb:second", json("{\"ref\":\"moda:first\"}"));
         assertTrue(assertThrows(IllegalArgumentException.class, () -> WidgetDocumentResolver.resolve(doc, "modb", templates)).getMessage().contains("Circular widget definitions"));
     }
 
@@ -220,10 +213,8 @@ public class WidgetDocumentResolverTest {
         assertEquals(3, result.getAsJsonObject("widgetParents").size());
         for (int index = 1; index <= 3; index++) {
             JsonObject child = result.getAsJsonArray("entities").get(index).getAsJsonObject();
-            assertEquals("example:grid", result.getAsJsonObject("widgetParents")
-                    .get(child.get("id").getAsString()).getAsString());
-            assertEquals("example:grid",
-                    child.getAsJsonObject("position").get("relativeTo").getAsString());
+            assertEquals("example:grid", result.getAsJsonObject("widgetParents").get(child.get("id").getAsString()).getAsString());
+            assertEquals("example:grid", child.getAsJsonObject("position").get("relativeTo").getAsString());
             assertFalse(child.has("__anchorui_container_parent"));
             assertFalse(child.has("layoutItem"));
         }
@@ -241,8 +232,7 @@ public class WidgetDocumentResolverTest {
         var elements = expanded.getAsJsonArray("entities");
         assertEquals(3, elements.size());
         assertEquals("anchorui:item_model", elements.get(1).getAsJsonObject().get("id").getAsString());
-        assertEquals("anchorui:item_model",
-                elements.get(2).getAsJsonObject().getAsJsonObject("position").get("relativeTo").getAsString());
+        assertEquals("anchorui:item_model", elements.get(2).getAsJsonObject().getAsJsonObject("position").get("relativeTo").getAsString());
     }
 
     @Test
@@ -253,8 +243,7 @@ public class WidgetDocumentResolverTest {
                   {"type":"anchorui:text","id":"child","position":{"relativeTo":"panel/__content"}}
                 ]}
                 """);
-        assertThrows(IllegalArgumentException.class,
-                () -> WidgetDocumentResolver.resolve(document, "test", Map.of()));
+        assertThrows(IllegalArgumentException.class, () -> WidgetDocumentResolver.resolve(document, "test", Map.of()));
     }
 
 }

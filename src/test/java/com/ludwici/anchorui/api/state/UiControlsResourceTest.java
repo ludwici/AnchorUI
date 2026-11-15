@@ -29,12 +29,7 @@ public class UiControlsResourceTest {
         assertTrue(state.get("showDetails").getAsBoolean());
 
         Set<String> types = Set.of("anchorui:checkbox", "anchorui:switch", "anchorui:select", "anchorui:tabs");
-        Map<String, String> keys = Map.of(
-                "anchorui:checkbox", "showDetails",
-                "anchorui:switch", "notifications",
-                "anchorui:select", "difficulty",
-                "anchorui:tabs", "tab"
-        );
+        Map<String, String> keys = Map.of("anchorui:checkbox", "showDetails", "anchorui:switch", "notifications", "anchorui:select", "difficulty", "anchorui:tabs", "tab");
         int count = 0;
         for (var entry : screen.getAsJsonArray("entities")) {
             JsonObject widget = entry.getAsJsonObject();

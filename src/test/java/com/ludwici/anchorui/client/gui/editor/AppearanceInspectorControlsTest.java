@@ -58,29 +58,24 @@ public class AppearanceInspectorControlsTest {
         assertThrows(IllegalArgumentException.class, () -> AppearanceInspectorControls.parse(text, "x".repeat(4097)));
 
         var width = WidgetEditorRegistry.Field.integer("size.width", "Width", 120, 0, 200, 10);
-        assertEquals(200, AppearanceInspectorControls.stepped(
-                new AppearanceInspectorControls.Control(width, "200", false), 1).getAsInt());
-        assertEquals(190, AppearanceInspectorControls.stepped(
-                new AppearanceInspectorControls.Control(width, "200", false), -1).getAsInt());
+        assertEquals(200, AppearanceInspectorControls.stepped(new AppearanceInspectorControls.Control(width, "200", false), 1).getAsInt());
+        assertEquals(190, AppearanceInspectorControls.stepped(new AppearanceInspectorControls.Control(width, "200", false), -1).getAsInt());
         assertThrows(IllegalArgumentException.class, () -> AppearanceInspectorControls.parse(width, "-5"));
 
         var toggle = WidgetEditorRegistry.Field.bool("showText", "Show values", false);
         assertTrue(new AppearanceInspectorControls.Control(toggle, "false", false).booleanField());
         assertFalse(new AppearanceInspectorControls.Control(width, "100", false).booleanField());
-        assertTrue(AppearanceInspectorControls.stepped(
-                new AppearanceInspectorControls.Control(toggle, "false", false), 1).getAsBoolean());
+        assertTrue(AppearanceInspectorControls.stepped(new AppearanceInspectorControls.Control(toggle, "false", false), 1).getAsBoolean());
         assertFalse(AppearanceInspectorControls.parse(toggle, "FALSE").getAsBoolean());
         assertThrows(IllegalArgumentException.class, () -> AppearanceInspectorControls.parse(toggle, "yes"));
         var align = WidgetEditorRegistry.Field.choice("align", "Alignment", "left", "left", "center", "right");
-        assertEquals("center", AppearanceInspectorControls.stepped(
-                new AppearanceInspectorControls.Control(align, "left", false), 1).getAsString());
+        assertEquals("center", AppearanceInspectorControls.stepped(new AppearanceInspectorControls.Control(align, "left", false), 1).getAsString());
         assertThrows(IllegalArgumentException.class, () -> AppearanceInspectorControls.parse(align, "middle"));
     }
 
     @Test
     public void actionButtonsExposeSkinsAndHoverPaletteWithoutAffectingVanillaDefaults() {
-        var controls = AppearanceInspectorControls.describe("test:button", WidgetTypeIds.BUTTON,
-                json("""
+        var controls = AppearanceInspectorControls.describe("test:button", WidgetTypeIds.BUTTON, json("""
                         {"type":"anchorui:button","text":"Click me","size":{"width":120,"height":20}}
                         """), new HudLayoutOffsets());
         assertEquals("Click me", find(controls, "text").value());
@@ -124,15 +119,11 @@ public class AppearanceInspectorControlsTest {
     @Test
     public void registrationWhitelistsEditableFieldsAndBlocksEventOverrideInjection() {
         var type = ResourceLocation.fromNamespaceAndPath("editor_tests", "custom");
-        WidgetEditorRegistry.register(type, List.of(
-                WidgetEditorRegistry.Field.text("caption", "Caption", "Hello"),
-                WidgetEditorRegistry.Field.integer("width", "Width", 40, 0, 300, 1)));
+        WidgetEditorRegistry.register(type, List.of(WidgetEditorRegistry.Field.text("caption", "Caption", "Hello"), WidgetEditorRegistry.Field.integer("width", "Width", 40, 0, 300, 1)));
         assertEquals("caption", WidgetEditorRegistry.fields(type).getFirst().path());
         assertThrows(IllegalArgumentException.class, () -> WidgetEditorRegistry.register(type, List.of()));
-        assertThrows(IllegalArgumentException.class,
-                () -> WidgetEditorRegistry.Field.text("onClick", "Action", ""));
-        assertThrows(IllegalArgumentException.class,
-                () -> WidgetEditorRegistry.Field.text("position.x", "Position", ""));
+        assertThrows(IllegalArgumentException.class, () -> WidgetEditorRegistry.Field.text("onClick", "Action", ""));
+        assertThrows(IllegalArgumentException.class, () -> WidgetEditorRegistry.Field.text("position.x", "Position", ""));
 
         HudLayoutOffsets offsets = new HudLayoutOffsets();
         var id = "editor_tests:custom_instance";

@@ -72,8 +72,7 @@ public final class AnchorLayout {
         String targetId = p.relativeTo;
         if (targetId.endsWith(":__content") || targetId.endsWith("/__content")
                 || targetId.contains("/__content/")) {
-            throw new IllegalArgumentException("Unsupported widget anchor '" + targetId
-                    + "': reference the panel directly");
+            throw new IllegalArgumentException("Unsupported widget anchor '" + targetId + "': reference the panel directly");
         }
         if (!resolved.containsKey(targetId) && !frames.containsKey(targetId)) {
             warningSink.accept("Frame '" + id + "' references unknown relativeTo '" + targetId + "'; falling back to screen");

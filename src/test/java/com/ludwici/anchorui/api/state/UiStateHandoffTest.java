@@ -70,8 +70,7 @@ public class UiStateHandoffTest {
         UiLocalState target = new UiLocalState(JsonParser.parseString("""
                 {"page": 1, "tab": false}
                 """).getAsJsonObject());
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> UiStateHandoff.copy(source, target, Map.of("page", "page", "tab", "tab")));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> UiStateHandoff.copy(source, target, Map.of("page", "page", "tab", "tab")));
         assertEquals(1, target.get("page").getAsInt());
         assertFalse(target.get("tab").getAsBoolean());
         assertTrue(exception.getMessage().contains("Cannot transfer UI state"));
@@ -104,9 +103,7 @@ public class UiStateHandoffTest {
         UiLocalState destination = new UiLocalState(JsonParser.parseString("""
                 {"page": "1", "options": {}}
                 """).getAsJsonObject());
-        assertThrows(IllegalArgumentException.class,
-                () -> UiStateHandoff.copy(source, destination, Map.of("page", "page")));
-        assertThrows(IllegalArgumentException.class,
-                () -> UiStateHandoff.copy(source, destination, Map.of("options", "options")));
+        assertThrows(IllegalArgumentException.class, () -> UiStateHandoff.copy(source, destination, Map.of("page", "page")));
+        assertThrows(IllegalArgumentException.class, () -> UiStateHandoff.copy(source, destination, Map.of("options", "options")));
     }
 }

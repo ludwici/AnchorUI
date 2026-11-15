@@ -58,9 +58,7 @@ public final class WidgetContainers {
             return null;
         }
         PaddingElement inset = padding == null ? new PaddingElement() : padding;
-        return new AnchorLayout.Bounds(outer.x() + inset.left, outer.y() + inset.top,
-                Math.max(0, outer.width() - inset.left - inset.right),
-                Math.max(0, outer.height() - inset.top - inset.bottom));
+        return new AnchorLayout.Bounds(outer.x() + inset.left, outer.y() + inset.top, Math.max(0, outer.width() - inset.left - inset.right), Math.max(0, outer.height() - inset.top - inset.bottom));
     }
 
     public static boolean clipChildren(JsonObject settings) {

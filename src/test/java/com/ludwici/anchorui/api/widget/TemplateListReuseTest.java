@@ -113,7 +113,6 @@ public class TemplateListReuseTest {
         assertEquals(originalFirst.settings().get("id"), movedFirst.settings().get("id"));
         assertEquals(0, originalFirst.settings().getAsJsonObject("position").get("y").getAsInt());
         assertEquals(24, movedFirst.settings().getAsJsonObject("position").get("y").getAsInt());
-        assertTrue(TemplateListReuse.canReuse(originalFirst.settings(), movedFirst.settings(),
-                originalFirst.itemContext(), movedFirst.itemContext()));
+        assertTrue(TemplateListReuse.canReuse(originalFirst.settings(), movedFirst.settings(), originalFirst.itemContext(), movedFirst.itemContext()));
     }
 }

@@ -127,26 +127,17 @@ public class HudLayoutOffsetsTest {
     public void editorOffsetsKeepAnchoredChildrenAttached() {
         PositionElement root = new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, "screen", 15, 30);
         PositionElement child = new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.BOTTOMLEFT, "moda:health", 0, 6);
-        var original = AnchorLayout.resolve(640, 360, List.of(
-                new AnchorLayout.Frame("moda:health", root, 180, 18),
-                new AnchorLayout.Frame("modb:mana", child, 180, 12)
-        ));
+        var original = AnchorLayout.resolve(640, 360, List.of(new AnchorLayout.Frame("moda:health", root, 180, 18), new AnchorLayout.Frame("modb:mana", child, 180, 12)));
 
         HudLayoutOffsets overrides = new HudLayoutOffsets();
         overrides.set("moda:health", 34, -8);
-        var moved = AnchorLayout.resolve(640, 360, List.of(
-                new AnchorLayout.Frame("moda:health", adjusted("moda:health", root, overrides), 180, 18),
-                new AnchorLayout.Frame("modb:mana", adjusted("modb:mana", child, overrides), 180, 12)
-        ));
+        var moved = AnchorLayout.resolve(640, 360, List.of(new AnchorLayout.Frame("moda:health", adjusted("moda:health", root, overrides), 180, 18), new AnchorLayout.Frame("modb:mana", adjusted("modb:mana", child, overrides), 180, 12)));
         assertEquals(original.get("moda:health").x() + 34, moved.get("moda:health").x());
         assertEquals(original.get("modb:mana").x() + 34, moved.get("modb:mana").x());
         assertEquals(original.get("modb:mana").y() - 8, moved.get("modb:mana").y());
 
         overrides.set("modb:mana", -9, 5);
-        var movedChild = AnchorLayout.resolve(640, 360, List.of(
-                new AnchorLayout.Frame("moda:health", adjusted("moda:health", root, overrides), 180, 18),
-                new AnchorLayout.Frame("modb:mana", adjusted("modb:mana", child, overrides), 180, 12)
-        ));
+        var movedChild = AnchorLayout.resolve(640, 360, List.of(new AnchorLayout.Frame("moda:health", adjusted("moda:health", root, overrides), 180, 18), new AnchorLayout.Frame("modb:mana", adjusted("modb:mana", child, overrides), 180, 12)));
         assertEquals(moved.get("modb:mana").x() - 9, movedChild.get("modb:mana").x());
         assertEquals(moved.get("modb:mana").y() + 5, movedChild.get("modb:mana").y());
     }
@@ -189,10 +180,7 @@ public class HudLayoutOffsetsTest {
     }
 
     private static java.util.Map<String, AnchorLayout.Bounds> positioned(PositionElement parent, PositionElement child, HudLayoutOffsets overrides) {
-        return AnchorLayout.resolve(640, 360, List.of(
-                new AnchorLayout.Frame("moda:parent", adjusted("moda:parent", parent, overrides), 90, 18),
-                new AnchorLayout.Frame("modb:child", adjusted("modb:child", child, overrides), 60, 12)
-        ));
+        return AnchorLayout.resolve(640, 360, List.of(new AnchorLayout.Frame("moda:parent", adjusted("moda:parent", parent, overrides), 90, 18), new AnchorLayout.Frame("modb:child", adjusted("modb:child", child, overrides), 60, 12)));
     }
 
     private static PositionElement adjusted(String id, PositionElement base, HudLayoutOffsets overrides) {

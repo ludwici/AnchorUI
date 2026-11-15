@@ -59,8 +59,7 @@ public final class EditorColorPicker {
             apply.render(graphics, mouseX, mouseY, partialTick);
             cancel.render(graphics, mouseX, mouseY, partialTick);
             if (error != null && !error.isEmpty()) {
-                graphics.drawString(font, font.plainSubstrByWidth(error, width - 16),
-                        x + 8, y + height - 13, 0xFFFFA68A, false);
+                graphics.drawString(font, font.plainSubstrByWidth(error, width - 16), x + 8, y + height - 13, 0xFFFFA68A, false);
             }
         } finally {
             graphics.pose().popPose();

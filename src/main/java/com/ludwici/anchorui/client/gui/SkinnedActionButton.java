@@ -24,8 +24,7 @@ public final class SkinnedActionButton extends AbstractButton {
 
     public SkinnedActionButton(WidgetContext context, String label, LoreStyle.Element style,
                                JsonObject settings, Consumer<SkinnedActionButton> onPress) {
-        super(0, 0, style.size.width > 0 ? style.size.width : 120,
-                style.size.height > 0 ? style.size.height : 20, Component.literal(label));
+        super(0, 0, style.size.width > 0 ? style.size.width : 120, style.size.height > 0 ? style.size.height : 20, Component.literal(label));
         this.context = context;
         this.onPress = onPress;
         this.textures = new StateControlTextures(context, settings);
@@ -55,8 +54,7 @@ public final class SkinnedActionButton extends AbstractButton {
         }
         boolean hovered = isMouseOver(mouseX, mouseY);
         boolean focused = isFocused();
-        if (!textures.render(graphics, "background", x, y, width, height,
-                ControlVisualStates.background(active, hovered, focused))) {
+        if (!textures.render(graphics, "background", x, y, width, height, ControlVisualStates.background(active, hovered, focused))) {
             int fill = !active ? disabledColor : hovered || focused ? hoverColor : fillColor;
             if ((borderColor >>> 24) != 0) {
                 graphics.fill(x, y, x + width, y + height, borderColor);
@@ -68,8 +66,7 @@ public final class SkinnedActionButton extends AbstractButton {
             }
         }
         int color = !active ? (textColor & 0x00FFFFFF) | 0x99000000 : textColor;
-        graphics.drawCenteredString(context.font(), getMessage(), x + width / 2,
-                y + (height - context.font().lineHeight) / 2, color);
+        graphics.drawCenteredString(context.font(), getMessage(), x + width / 2, y + (height - context.font().lineHeight) / 2, color);
         if (ControlVisualStates.needsFocusOutline(textures, active, hovered, focused)) {
             ControlVisualStates.renderFocusOutline(graphics, x, y, width, height, focusColor);
         }

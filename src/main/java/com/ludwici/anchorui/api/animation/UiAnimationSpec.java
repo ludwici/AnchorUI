@@ -40,9 +40,7 @@ public final class UiAnimationSpec {
 
         public Frame between(Frame end, double t) {
             double p = Math.max(0.0, Math.min(1.0, t));
-            return new Frame(opacity + (end.opacity - opacity) * p,
-                    x + (end.x - x) * p, y + (end.y - y) * p,
-                    scale + (end.scale - scale) * p);
+            return new Frame(opacity + (end.opacity - opacity) * p, x + (end.x - x) * p, y + (end.y - y) * p, scale + (end.scale - scale) * p);
         }
 
         public double inverseX(double x, double centerX) {
@@ -150,9 +148,7 @@ public final class UiAnimationSpec {
         double[] x = pair(raw, "x", 0.0, -4096.0, 4096.0);
         double[] y = pair(raw, "y", 0.0, -4096.0, 4096.0);
         double[] scale = pair(raw, "scale", 1.0, 0.01, 4.0);
-        return new Track((long) ms, easing,
-                new Frame(opacity[0], x[0], y[0], scale[0]),
-                new Frame(opacity[1], x[1], y[1], scale[1]));
+        return new Track((long) ms, easing, new Frame(opacity[0], x[0], y[0], scale[0]), new Frame(opacity[1], x[1], y[1], scale[1]));
     }
 
     private static double[] pair(JsonObject root, String name, double fallback, double min, double max) {

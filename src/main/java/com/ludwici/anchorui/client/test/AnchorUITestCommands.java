@@ -62,10 +62,7 @@ public final class AnchorUITestCommands {
     }
 
     private static void registerHudTest(com.mojang.brigadier.builder.LiteralArgumentBuilder<net.minecraft.commands.CommandSourceStack> test, String group) {
-        test.then(Commands.literal(group)
-                .executes(context -> setHud(group, !AnchorHudManager.INSTANCE.isTestEnabled(group)))
-                .then(Commands.literal("on").executes(context -> setHud(group, true)))
-                .then(Commands.literal("off").executes(context -> setHud(group, false))));
+        test.then(Commands.literal(group).executes(context -> setHud(group, !AnchorHudManager.INSTANCE.isTestEnabled(group))).then(Commands.literal("on").executes(context -> setHud(group, true))).then(Commands.literal("off").executes(context -> setHud(group, false))));
     }
 
     private static int setHud(String group, boolean enabled) {

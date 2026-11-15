@@ -18,9 +18,7 @@ public final class ImageWidget extends AnchoredWidget {
     @Override
     protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         renderBackground(graphics);
-        texture.render(graphics, getX() + style.padding.left, getY() + style.padding.top,
-                getWidth() - style.padding.left - style.padding.right,
-                getHeight() - style.padding.top - style.padding.bottom);
+        texture.render(graphics, getX() + style.padding.left, getY() + style.padding.top, getWidth() - style.padding.left - style.padding.right, getHeight() - style.padding.top - style.padding.bottom);
     }
 
     @Override

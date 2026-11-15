@@ -43,8 +43,7 @@ public class UiNavigationResourcesTest {
         JsonObject withoutHandoff = sourceScreen.getAsJsonArray("entities").get(5).getAsJsonObject()
                 .getAsJsonObject("onClick");
         assertEquals(Map.of(), UiStateHandoff.parse(withoutHandoff, source));
-        assertEquals("anchorui:close_screen", targetScreen.getAsJsonArray("entities").get(4)
-                .getAsJsonObject().get("onClick").getAsString());
+        assertEquals("anchorui:close_screen", targetScreen.getAsJsonArray("entities").get(4).getAsJsonObject().get("onClick").getAsString());
     }
 
     @Test

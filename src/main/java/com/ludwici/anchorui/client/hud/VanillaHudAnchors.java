@@ -103,8 +103,7 @@ public final class VanillaHudAnchors {
                 active.add(VanillaHudGeometry.IDS.get(index));
             }
         }
-        return VanillaHudGeometry.measure(width, height,
-                new VanillaHudGeometry.State(active, snapshot.heartRows(), snapshot.effectRows() * 5));
+        return VanillaHudGeometry.measure(width, height, new VanillaHudGeometry.State(active, snapshot.heartRows(), snapshot.effectRows() * 5));
     }
 
     public static Map<String, VanillaHudGeometry.Reference> capture(Minecraft minecraft, int width, int height) {

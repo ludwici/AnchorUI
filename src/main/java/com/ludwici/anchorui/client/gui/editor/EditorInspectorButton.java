@@ -15,8 +15,7 @@ public final class EditorInspectorButton {
                             int background, int foreground) {
         int left = x + HITBOX_OFFSET;
         graphics.fill(left, y, left + SIZE, y + SIZE, background);
-        graphics.drawString(font, symbol, left + (SIZE - font.width(symbol)) / 2,
-                y + 1, foreground, false);
+        graphics.drawString(font, symbol, left + (SIZE - font.width(symbol)) / 2, y + 1, foreground, false);
     }
 
     public static void drawColor(GuiGraphics graphics, int x, int y, int argb) {

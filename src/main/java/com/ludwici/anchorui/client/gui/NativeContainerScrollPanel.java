@@ -37,8 +37,7 @@ public final class NativeContainerScrollPanel extends ScrollPanel {
 
     public NativeContainerScrollPanel(Minecraft minecraft, AnchorLayout.Bounds viewport, int logicalLimit,
                                       int wheelStep, double scale, int initialOffset, Style style) {
-        super(minecraft, viewport.width(), viewport.height(), viewport.y(), viewport.x(), 0, style.width(),
-                style.trackColor(), style.thumbColor(), style.borderColor());
+        super(minecraft, viewport.width(), viewport.height(), viewport.y(), viewport.x(), 0, style.width(), style.trackColor(), style.thumbColor(), style.borderColor());
         if (viewport.width() <= style.width() || viewport.height() < 34 || logicalLimit <= 0
                 || !Double.isFinite(scale) || scale <= 0) {
             throw new IllegalArgumentException("Invalid native scrollbar geometry or range");
@@ -49,8 +48,7 @@ public final class NativeContainerScrollPanel extends ScrollPanel {
         this.wheelStep = Math.max(1, (int) Math.round(wheelStep * scale));
         this.scale = scale;
         this.contentHeight = viewport.height() + Math.max(1, (int) Math.round(logicalLimit * scale));
-        this.scrollDistance = Math.max(0, Math.min(contentHeight - viewport.height(),
-                (float) (initialOffset * scale)));
+        this.scrollDistance = Math.max(0, Math.min(contentHeight - viewport.height(), (float) (initialOffset * scale)));
     }
 
     public boolean matches(AnchorLayout.Bounds viewport, int logicalLimit, int wheelStep, double scale) {
@@ -68,8 +66,7 @@ public final class NativeContainerScrollPanel extends ScrollPanel {
     }
 
     public void setLogicalOffset(int offset) {
-        scrollDistance = Math.max(0, Math.min(contentHeight - viewport.height(),
-                (float) (Math.max(0, Math.min(logicalLimit, offset)) * scale)));
+        scrollDistance = Math.max(0, Math.min(contentHeight - viewport.height(), (float) (Math.max(0, Math.min(logicalLimit, offset)) * scale)));
     }
 
     public boolean isDraggingBar() {

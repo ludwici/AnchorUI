@@ -25,9 +25,7 @@ public class EditorContainerParentingTest {
     Path directory;
 
     private static AnchorLayout.Frame frame(String id, String target, int x, int y, int width, int height) {
-        return new AnchorLayout.Frame(id,
-                new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, target, x, y),
-                width, height);
+        return new AnchorLayout.Frame(id, new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, target, x, y), width, height);
     }
 
     @Test
@@ -36,8 +34,7 @@ public class EditorContainerParentingTest {
         HudLayoutOffsets offsets = new HudLayoutOffsets();
         assertNull(offsets.containerParent(child, null));
         assertEquals("test:left", offsets.containerParent(child, "test:left"));
-        offsets.setAnchor(child, new HudLayoutOffsets.AnchorOverride("test:right",
-                ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
+        offsets.setAnchor(child, new HudLayoutOffsets.AnchorOverride("test:right", ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
         assertEquals("test:left", offsets.containerParent(child, "test:left"));
 
         offsets.setContainerParent(child, "test:right");
@@ -49,8 +46,7 @@ public class EditorContainerParentingTest {
         HudLayoutStorage.save(path, offsets);
         HudLayoutOffsets loaded = HudLayoutStorage.load(path);
         assertTrue(loaded.sameAs(offsets));
-        assertEquals("test:right", loaded.toJson().getAsJsonObject("offsets")
-                .getAsJsonObject(child).get("containerParent").getAsString());
+        assertEquals("test:right", loaded.toJson().getAsJsonObject("offsets").getAsJsonObject(child).get("containerParent").getAsString());
         assertEquals("test:right", loaded.containerParent(child, "test:left"));
 
         HudLayoutOffsets copy = loaded.copy();
@@ -74,26 +70,18 @@ public class EditorContainerParentingTest {
         String child = "test:cell";
         HudLayoutOffsets offsets = new HudLayoutOffsets();
         offsets.setContainerParent(child, right);
-        offsets.setAnchor(child, new HudLayoutOffsets.AnchorOverride(
-                right, ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
+        offsets.setAnchor(child, new HudLayoutOffsets.AnchorOverride(right, ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
         offsets.set(child, -42, -7);
 
-        var source = new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT,
-                "screen", 42, 7);
+        var source = new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, "screen", 42, 7);
         var override = offsets.anchor(child);
         var offset = offsets.get(child);
-        var attached = new PositionElement(override.point(), override.anchor(),
-                override.relativeTo(), source.x + offset.x(), source.y + offset.y());
-        var frames = List.of(frame(left, "screen", 0, 0, 100, 40),
-                frame(right, "screen", 150, 20, 210, 80),
-                frame("test:existing", right, 0, 0, 40, 15),
-                new AnchorLayout.Frame(child, attached, 50, 18));
+        var attached = new PositionElement(override.point(), override.anchor(), override.relativeTo(), source.x + offset.x(), source.y + offset.y());
+        var frames = List.of(frame(left, "screen", 0, 0, 100, 40), frame(right, "screen", 150, 20, 210, 80), frame("test:existing", right, 0, 0, 40, 15), new AnchorLayout.Frame(child, attached, 50, 18));
         var result = ContainerLayout.resolve(600, 300, frames,
                 Map.of(left, new PaddingElement(), right, new PaddingElement(10, 10)),
-                Map.of(), Map.of("test:existing", right,
-                        child, offsets.containerParent(child, left)),
-                Map.of(right, new GridLayout.Config(2, 10, 10, 0, 0,
-                        GridLayout.Align.START, GridLayout.Align.START, true)),
+                Map.of(), Map.of("test:existing", right, child, offsets.containerParent(child, left)),
+                Map.of(right, new GridLayout.Config(2, 10, 10, 0, 0, GridLayout.Align.START, GridLayout.Align.START, true)),
                 Set.of(), Set.of(), ignored -> {});
         assertEquals(160, result.bounds().get("test:existing").x());
         assertEquals(260, result.bounds().get(child).x());
@@ -103,8 +91,7 @@ public class EditorContainerParentingTest {
     @Test
     public void structuralCyclesAreRejectedEvenForStaticPanels() {
         assertThrows(IllegalArgumentException.class, () -> ContainerLayout.resolve(500, 300,
-                List.of(frame("test:a", "screen", 0, 0, 100, 50),
-                        frame("test:b", "screen", 0, 0, 100, 50)),
+                List.of(frame("test:a", "screen", 0, 0, 100, 50), frame("test:b", "screen", 0, 0, 100, 50)),
                 Map.of("test:a", new PaddingElement(), "test:b", new PaddingElement()),
                 Map.of(), Map.of("test:a", "test:b", "test:b", "test:a"), ignored -> {}));
     }
@@ -112,12 +99,9 @@ public class EditorContainerParentingTest {
     @Test
     public void visibilityTraversalPlacesNewParentBeforeMovedChildRegardlessOfJsonOrder() {
         List<String> original = List.of("test:child", "test:other", "test:container");
-        var reordered = WidgetContainers.parentFirst(original, id -> id,
-                Map.of("test:child", "test:container"));
+        var reordered = WidgetContainers.parentFirst(original, id -> id, Map.of("test:child", "test:container"));
         assertTrue(reordered.indexOf("test:container") < reordered.indexOf("test:child"));
         assertEquals(3, reordered.size());
-        assertThrows(IllegalArgumentException.class, () -> WidgetContainers.parentFirst(original,
-                id -> id, Map.of("test:child", "test:container",
-                        "test:container", "test:child")));
+        assertThrows(IllegalArgumentException.class, () -> WidgetContainers.parentFirst(original, id -> id, Map.of("test:child", "test:container", "test:container", "test:child")));
     }
 }

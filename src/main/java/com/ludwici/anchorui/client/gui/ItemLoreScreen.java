@@ -265,9 +265,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             ElementAnchor point = override == null ? p.point : override.point();
             ElementAnchor anchor = override == null ? p.anchor : override.anchor();
             WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
-            handles.add(new EditorHandle(placed.id(), transform.physical(bounds), parent, point, anchor,
-                    offsets.get(placed.id()), placed.widget().visible, offsets.isHidden(placed.id()),
-                    p.relativeTo, p.point, p.anchor));
+            handles.add(new EditorHandle(placed.id(), transform.physical(bounds), parent, point, anchor, offsets.get(placed.id()), placed.widget().visible, offsets.isHidden(placed.id()), p.relativeTo, p.point, p.anchor));
         }
         return List.copyOf(handles);
     }
@@ -277,8 +275,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         for (PlacedWidget placed : placedWidgets) {
             String type = widgetRegistry.definition(placed.id())
                     .map(definition -> definition.type.toString()).orElse("");
-            entries.add(new WidgetListPanel.Entry(placed.id(), placed.widget().visible, false,
-                    type, currentScreenOffsets().containerParent(placed.id(), placed.containerParent())));
+            entries.add(new WidgetListPanel.Entry(placed.id(), placed.widget().visible, false, type, currentScreenOffsets().containerParent(placed.id(), placed.containerParent())));
         }
         return List.copyOf(entries);
     }
@@ -384,8 +381,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             candidate.clearAnchor(id);
             candidate.set(id, 0, 0);
         } else {
-            candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(
-                    containerId, ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
+            candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(containerId, ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
             candidate.set(id, -widget.position().x, -widget.position().y);
             candidate.setSettingOverride(id, "layoutItem", "enabled", new com.google.gson.JsonPrimitive(true));
         }
@@ -398,8 +394,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         }
         HudLayoutOffsets candidate = editingScreenOffsets.copy();
         candidate.setContainerParent(id, "screen");
-        candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(
-                "screen", ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
+        candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride("screen", ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
         candidate.set(id, 0, 0);
         candidate.clearSettingOverride(id, "layoutItem", "enabled");
         return useCandidate(candidate);
@@ -550,8 +545,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         }
         HudLayoutOffsets candidate = editingScreenOffsets.copy();
         candidate.clearContainerParent(id);
-        candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(
-                current.defaultParent(), current.point(), current.anchor()));
+        candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(current.defaultParent(), current.point(), current.anchor()));
         candidate.set(id, 0, 0);
         candidate.clearSettingOverride(id, "layoutItem", "enabled");
         return useCandidate(candidate);
@@ -658,8 +652,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 }
             }
             Set<String> collapsedChildren = relevantLayoutHidden(hidden, parents, collapsing);
-            Map<String, ContainerScroll.Limits> limits = ContainerScroll.measure(
-                    bounds, parents, scrollConfigs, containers, collapsedChildren);
+            Map<String, ContainerScroll.Limits> limits = ContainerScroll.measure(bounds, parents, scrollConfigs, containers, collapsedChildren);
             scrollOffsets.keySet().retainAll(limits.keySet());
             for (var entry : limits.entrySet()) {
                 ContainerScroll.Offset previous = scrollOffsets.getOrDefault(entry.getKey(), ContainerScroll.Offset.ZERO);
@@ -715,8 +708,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             NativeContainerScrollPanel panel = nativeScrollPanels.get(placed.id());
             if (panel == null || !panel.matches(viewport, limits.y(), placed.scroll().step(), transform.scale())) {
                 ContainerScroll.Offset offset = scrollOffsets.getOrDefault(placed.id(), ContainerScroll.Offset.ZERO);
-                panel = new NativeContainerScrollPanel(minecraft, viewport, limits.y(),
-                        placed.scroll().step(), transform.scale(), offset.y());
+                panel = new NativeContainerScrollPanel(minecraft, viewport, limits.y(), placed.scroll().step(), transform.scale(), offset.y());
             }
             nextPanels.put(placed.id(), panel);
         }
@@ -806,8 +798,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             int nextX = old.x();
             if (limits.x() > 0 && placed.scroll().horizontal()) {
                 double horizontalWheel = scrollX != 0 ? scrollX : !placed.scroll().vertical() ? scrollY : 0;
-                nextX = Math.max(0, Math.min(limits.x(),
-                        old.x() - (int) Math.round(horizontalWheel * placed.scroll().step())));
+                nextX = Math.max(0, Math.min(limits.x(), old.x() - (int) Math.round(horizontalWheel * placed.scroll().step())));
             }
             if (nativePanel == null && placed.scroll().vertical()) {
                 nextY = ContainerScroll.move(old, limits, placed.scroll(), 0, scrollY).y();
@@ -865,8 +856,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                     continue;
                 }
                 WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
-                if (WidgetContainers.contains(WidgetAnimation.physicalBounds(frame, transform,
-                    animationFrame(placed, System.nanoTime())), mouseX, mouseY)) {
+                if (WidgetContainers.contains(WidgetAnimation.physicalBounds(frame, transform, animationFrame(placed, System.nanoTime())), mouseX, mouseY)) {
                     candidate = placed.id();
                     break;
                 }
@@ -915,8 +905,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 LoreEntity.UiElement definition = widgetRegistry.definition(placed.id()).orElse(null);
                 UiEventBindings events = widgetEventBindings.get(placed.id());
                 if (definition != null && events != null) {
-                    retained.put(placed.id(), new RetainedWidget(definition, placed,
-                            widgetItemContexts.get(placed.id()), events, selfDispatchingClicks.contains(placed.id())));
+                    retained.put(placed.id(), new RetainedWidget(definition, placed, widgetItemContexts.get(placed.id()), events, selfDispatchingClicks.contains(placed.id())));
                 }
             }
             clearWidgets();
@@ -968,8 +957,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                         BoundData items = BoundData.parse(element.settings, "items", new JsonArray(), DataBindingSpec.Kind.LIST);
                         JsonArray rows = items.get(context).getAsJsonArray();
                         listStates.add(new TemplateListState(items, context, rows.deepCopy()));
-                        for (TemplateListExpander.Entry row : TemplateListExpander.expand(element.settings, rows, listId,
-                                LoreLoader.INSTANCE.getDefinitions().exportForResolution())) {
+                        for (TemplateListExpander.Entry row : TemplateListExpander.expand(element.settings, rows, listId, LoreLoader.INSTANCE.getDefinitions().exportForResolution())) {
                             LoreEntity.UiElement rowElement = new LoreEntity.UiElement(row.settings());
                             String rowId = WidgetIds.id(rowElement.id, loreEntity.namespace);
                             widgetItemContexts.put(rowId, row.itemContext());
@@ -1024,8 +1012,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 LoreStyle.Element style = definition.legacyStyle() == null ? styleSource.get(element.type, element.settings) : styleSource.get(definition.legacyStyle(), null);
                 ItemContext rowContext = widgetItemContexts.get(definition.id());
                 RetainedWidget previous = retained.get(definition.id());
-                if (previous != null && TemplateListReuse.canReuse(previous.definition().settings, element.settings,
-                        previous.itemContext(), rowContext)) {
+                if (previous != null && TemplateListReuse.canReuse(previous.definition().settings, element.settings, previous.itemContext(), rowContext)) {
                     PlacedWidget retainedWidget = previous.placed();
                     boolean moved = previous.itemContext() != null && movedItems.contains(previous.itemContext());
                     if (rowContext != null) {
@@ -1033,8 +1020,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                         widgetItemContexts.put(definition.id(), previous.itemContext());
                     }
                     UiEventBindings events = moved
-                            ? UiEventBindings.compile(retainedWidget.context(), element.settings,
-                                    "onClick", "onHoverEnter", "onHoverLeave", "onChange")
+                            ? UiEventBindings.compile(retainedWidget.context(), element.settings, "onClick", "onHoverEnter", "onHoverLeave", "onChange")
                             : previous.events();
                     bindChangeListener(retainedWidget.widget(), events, definition.id());
                     widgetRegistry.attach(definition.id(), retainedWidget.widget());
@@ -1043,14 +1029,8 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                         selfDispatchingClicks.add(definition.id());
                     }
                     PositionElement p = style.position;
-                    PositionElement position = new PositionElement(p.point, p.anchor,
-                            WidgetIds.reference(p.relativeTo, loreEntity.namespace), p.x, p.y);
-                    created.add(new PlacedWidget(definition.id(), retainedWidget.widget(), style, position,
-                            retainedWidget.context(), retainedWidget.visibleWhen(), retainedWidget.enabledWhen(),
-                            retainedWidget.baseVisible(), retainedWidget.baseActive(),
-                            resolvedWidgetParents.getOrDefault(definition.id(), retainedWidget.containerParent()),
-                            retainedWidget.clipChildren(), retainedWidget.group(), retainedWidget.autoSize(),
-                            retainedWidget.scroll(), retainedWidget.preferredWidth(), retainedWidget.preferredHeight()));
+                    PositionElement position = new PositionElement(p.point, p.anchor, WidgetIds.reference(p.relativeTo, loreEntity.namespace), p.x, p.y);
+                    created.add(new PlacedWidget(definition.id(), retainedWidget.widget(), style, position, retainedWidget.context(), retainedWidget.visibleWhen(), retainedWidget.enabledWhen(), retainedWidget.baseVisible(), retainedWidget.baseActive(), resolvedWidgetParents.getOrDefault(definition.id(), retainedWidget.containerParent()), retainedWidget.clipChildren(), retainedWidget.group(), retainedWidget.autoSize(), retainedWidget.scroll(), retainedWidget.preferredWidth(), retainedWidget.preferredHeight()));
                 } else {
                     WidgetContext widgetContext = rowContext == null ? context : context.withItemContext(rowContext);
                     createWidget(widgetContext, definition.id(), element, style, created, warnings);
@@ -1067,8 +1047,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             animationIds.add(placed.id());
             if (!widgetAnimations.containsKey(placed.id())) {
                 try {
-                    WidgetAnimation animation = WidgetAnimation.parse(
-                            placed.style().resolvedSettings, loreEntity.animation, placed.context());
+                    WidgetAnimation animation = WidgetAnimation.parse(placed.style().resolvedSettings, loreEntity.animation, placed.context());
                     if (animation != null) {
                         widgetAnimations.put(placed.id(), animation);
                     }
@@ -1138,15 +1117,12 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         try {
             widget = factory.create(context, element, settings);
         } catch (WidgetConfigException exception) {
-            AnchorUI.LOGGER.warn("Invalid AnchorUI widget '{}' (type '{}'): {}",
-                    id, element.type, exception.getMessage());
+            AnchorUI.LOGGER.warn("Invalid AnchorUI widget '{}' (type '{}'): {}", id, element.type, exception.getMessage());
             warnings.add("Invalid widget '" + id + "' (" + element.type + "): " + exception.getMessage());
             return;
         } catch (RuntimeException exception) {
             AnchorUI.LOGGER.error("Anchor UI widget factory failed: type='{}', id='{}'", element.type, id, exception);
-            warnings.add("Widget factory failed for '" + id + "' (" + element.type + "): "
-                    + (exception.getMessage() == null || exception.getMessage().isBlank()
-                    ? exception.getClass().getSimpleName() : exception.getMessage()));
+            warnings.add("Widget factory failed for '" + id + "' (" + element.type + "): " + (exception.getMessage() == null || exception.getMessage().isBlank() ? exception.getClass().getSimpleName() : exception.getMessage()));
             return;
         }
         if (widget == null) {
@@ -1174,13 +1150,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         }
         widgetRegistry.attach(id, widget);
         boolean panel = widget instanceof PanelWidget;
-        created.add(new PlacedWidget(id, widget, settings, position, context,
-                visibleWhen, enabledWhen, widget.visible, widget.active,
-                resolvedWidgetParents.get(id),
-                panel && (WidgetContainers.clipChildren(element.settings) || settings.scroll.enabled()),
-                panel ? WidgetContainers.group(element.settings) : null,
-                panel ? settings.autoSize : ContainerLayout.AutoSize.NONE,
-                panel ? settings.scroll : ContainerScroll.Config.NONE, widget.getWidth(), widget.getHeight()));
+        created.add(new PlacedWidget(id, widget, settings, position, context, visibleWhen, enabledWhen, widget.visible, widget.active, resolvedWidgetParents.get(id), panel && (WidgetContainers.clipChildren(element.settings) || settings.scroll.enabled()), panel ? WidgetContainers.group(element.settings) : null, panel ? settings.autoSize : ContainerLayout.AutoSize.NONE, panel ? settings.scroll : ContainerScroll.Config.NONE, widget.getWidth(), widget.getHeight()));
     }
 
     private void bindChangeListener(AbstractWidget widget, UiEventBindings events, String id) {
@@ -1316,8 +1286,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         resourceRevision = LoreLoader.INSTANCE.getRevision();
         LoreEntity updated = LoreLoader.INSTANCE.getData().get(documentId);
         if (updated == null) {
-            AnchorUI.LOGGER.warn("Screen '{}' is missing or invalid after resource reload; keeping previous UI",
-                    documentId);
+            AnchorUI.LOGGER.warn("Screen '{}' is missing or invalid after resource reload; keeping previous UI", documentId);
             return;
         }
         LoreEntity previousDocument = loreEntity;
@@ -1331,15 +1300,13 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 loreEntity = previousDocument;
                 uiState = previousState;
                 buildWidgets(false);
-                AnchorUI.LOGGER.warn("Failed to apply reloaded screen '{}': {}; restored previous UI",
-                        documentId, problem);
+                AnchorUI.LOGGER.warn("Failed to apply reloaded screen '{}': {}; restored previous UI", documentId, problem);
             }
         } catch (RuntimeException exception) {
             loreEntity = previousDocument;
             uiState = previousState;
             buildWidgets(false);
-            AnchorUI.LOGGER.warn("Failed to apply reloaded screen '{}'; restored previous UI",
-                    documentId, exception);
+            AnchorUI.LOGGER.warn("Failed to apply reloaded screen '{}'; restored previous UI", documentId, exception);
         }
     }
 
@@ -1403,8 +1370,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         for (int index = placedWidgets.size() - 1; index >= 0; index--) {
             PlacedWidget placed = placedWidgets.get(index);
             if (placed.widget() instanceof UiPopupWidget popup && popup.isPopupOpen()) {
-                WidgetTransforms.Transform transform = transforms.getOrDefault(
-                        placed.id(), WidgetTransforms.IDENTITY);
+                WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
                 if (popup.containsPopup(widgetMouseX(placed, mouseX, System.nanoTime()), widgetMouseY(placed, mouseY, System.nanoTime()))) {
                     return true;
                 }
@@ -1445,10 +1411,8 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
                 boolean mouseInside = !obscuredByPopup && widget.visible && !closingWithAnimation
                         && (clip == null || WidgetContainers.contains(clip, mouseX, mouseY));
-                int widgetMouseX = mouseInside ? (int) Math.floor(
-                        WidgetAnimation.inverseX(widget, animationState, transform.inverseX(mouseX))) : Integer.MIN_VALUE;
-                int widgetMouseY = mouseInside ? (int) Math.floor(
-                        WidgetAnimation.inverseY(widget, animationState, transform.inverseY(mouseY))) : Integer.MIN_VALUE;
+                int widgetMouseX = mouseInside ? (int) Math.floor(WidgetAnimation.inverseX(widget, animationState, transform.inverseX(mouseX))) : Integer.MIN_VALUE;
+                int widgetMouseY = mouseInside ? (int) Math.floor(WidgetAnimation.inverseY(widget, animationState, transform.inverseY(mouseY))) : Integer.MIN_VALUE;
                 graphics.pose().pushPose();
                 boolean originalVisible = widget.visible;
                 try {
@@ -1536,9 +1500,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 graphics.pose().scale((float) transform.scale(), (float) transform.scale(), 1.0F);
                 UiAnimationSpec.Frame frame = animationFrame(placed, System.nanoTime());
                 WidgetAnimation.applyPose(graphics, placed.widget(), frame);
-                popup.renderPopup(graphics,
-                        (int) widgetMouseX(placed, mouseX, System.nanoTime()),
-                        (int) widgetMouseY(placed, mouseY, System.nanoTime()));
+                popup.renderPopup(graphics, (int) widgetMouseX(placed, mouseX, System.nanoTime()), (int) widgetMouseY(placed, mouseY, System.nanoTime()));
             } finally {
                 graphics.pose().popPose();
             }
@@ -1581,8 +1543,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 continue;
             }
             WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
-            if (widget.mouseClicked(widgetMouseX(placed, mouseX, System.nanoTime()),
-                    widgetMouseY(placed, mouseY, System.nanoTime()), button)) {
+            if (widget.mouseClicked(widgetMouseX(placed, mouseX, System.nanoTime()), widgetMouseY(placed, mouseY, System.nanoTime()), button)) {
                 if (minecraft.screen == this) {
                     if (getFocused() != widget) {
                         setFocused(widget);
@@ -1609,16 +1570,14 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 continue;
             }
             WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
-            if (popup.mouseClickedPopup(widgetMouseX(placed, mouseX, System.nanoTime()),
-                    widgetMouseY(placed, mouseY, System.nanoTime()), button)) {
+            if (popup.mouseClickedPopup(widgetMouseX(placed, mouseX, System.nanoTime()), widgetMouseY(placed, mouseY, System.nanoTime()), button)) {
                 if (getFocused() != placed.widget()) {
                     setFocused(placed.widget());
                 }
                 return true;
             }
             AnchorLayout.Bounds frame = layoutBounds.get(placed.id());
-            if (frame == null || !WidgetContainers.contains(WidgetAnimation.physicalBounds(frame,
-                    transform, animationFrame(placed, System.nanoTime())), mouseX, mouseY)) {
+            if (frame == null || !WidgetContainers.contains(WidgetAnimation.physicalBounds(frame, transform, animationFrame(placed, System.nanoTime())), mouseX, mouseY)) {
                 popup.closePopup();
             }
         }
@@ -1634,8 +1593,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
         }
         WidgetTransforms.Transform transform = transforms.getOrDefault(draggingWidget.id(), WidgetTransforms.IDENTITY);
-        return draggingWidget.widget().mouseDragged(transform.inverseX(mouseX), transform.inverseY(mouseY), button,
-                dragX / transform.scale(), dragY / transform.scale());
+        return draggingWidget.widget().mouseDragged(transform.inverseX(mouseX), transform.inverseY(mouseY), button, dragX / transform.scale(), dragY / transform.scale());
     }
 
     @Override
@@ -1649,8 +1607,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         PlacedWidget placed = draggingWidget;
         draggingWidget = null;
         WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
-        return placed.widget().mouseReleased(widgetMouseX(placed, mouseX, System.nanoTime()),
-                widgetMouseY(placed, mouseY, System.nanoTime()), button);
+        return placed.widget().mouseReleased(widgetMouseX(placed, mouseX, System.nanoTime()), widgetMouseY(placed, mouseY, System.nanoTime()), button);
     }
 
     @Override
@@ -1659,8 +1616,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             PlacedWidget placed = placedWidgets.get(index);
             if (placed.widget() instanceof UiPopupWidget popup && popup.isPopupOpen()) {
                 WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
-                if (popup.mouseScrolledPopup(widgetMouseX(placed, mouseX, System.nanoTime()),
-                        widgetMouseY(placed, mouseY, System.nanoTime()), scrollY)) {
+                if (popup.mouseScrolledPopup(widgetMouseX(placed, mouseX, System.nanoTime()), widgetMouseY(placed, mouseY, System.nanoTime()), scrollY)) {
                     return true;
                 }
             }
@@ -1672,10 +1628,8 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             }
             WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
             AnchorLayout.Bounds frame = layoutBounds.get(placed.id());
-            if (frame != null && WidgetContainers.contains(WidgetAnimation.physicalBounds(frame, transform,
-                    animationFrame(placed, System.nanoTime())), mouseX, mouseY)
-                    && placed.widget().mouseScrolled(widgetMouseX(placed, mouseX, System.nanoTime()),
-                    widgetMouseY(placed, mouseY, System.nanoTime()), scrollX, scrollY)) {
+            if (frame != null && WidgetContainers.contains(WidgetAnimation.physicalBounds(frame, transform, animationFrame(placed, System.nanoTime())), mouseX, mouseY)
+                    && placed.widget().mouseScrolled(widgetMouseX(placed, mouseX, System.nanoTime()), widgetMouseY(placed, mouseY, System.nanoTime()), scrollX, scrollY)) {
                 return true;
             }
         }
@@ -1767,8 +1721,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             AnchorLayout.Bounds logical = layoutBounds.get(placed.id());
             AnchorLayout.Bounds physical = logical == null ? null
                     : transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY).physical(logical);
-            candidates.add(new UiFocusTraversal.Candidate(placed.id(), widget.visible, widget.active,
-                    physical, clipBounds.get(placed.id())));
+            candidates.add(new UiFocusTraversal.Candidate(placed.id(), widget.visible, widget.active, physical, clipBounds.get(placed.id())));
         }
         String currentId = null;
         for (PlacedWidget placed : placedWidgets) {
@@ -1777,8 +1730,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 break;
             }
         }
-        String next = UiFocusTraversal.next(candidates, new AnchorLayout.Bounds(0, 0, width, height),
-                currentId, (modifiers & GLFW.GLFW_MOD_SHIFT) != 0);
+        String next = UiFocusTraversal.next(candidates, new AnchorLayout.Bounds(0, 0, width, height), currentId, (modifiers & GLFW.GLFW_MOD_SHIFT) != 0);
         if (next == null) {
             setFocused(null);
         } else {

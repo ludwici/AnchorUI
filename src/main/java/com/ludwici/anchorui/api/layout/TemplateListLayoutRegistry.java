@@ -150,8 +150,7 @@ public final class TemplateListLayoutRegistry {
         int availableWidth = Math.max(0, width - left - right);
         Layout layout;
         try {
-            layout = Objects.requireNonNull(factory.create(options, new Metrics(rowHeight, gap, availableWidth)),
-                    "Template layout factory returned null: " + id);
+            layout = Objects.requireNonNull(factory.create(options, new Metrics(rowHeight, gap, availableWidth)), "Template layout factory returned null: " + id);
         } catch (RuntimeException exception) {
             throw new IllegalArgumentException("Invalid template layout '" + id + "': " + exception.getMessage(), exception);
         }

@@ -22,9 +22,6 @@ public class LoreComponent {
     }
 
     public LoreComponent(JsonObject root) {
-        this(
-                GsonHelper.getAsString(root, "desc", ""),
-                GsonHelper.getAsBoolean(root, "hidden", false)
-        );
+        this(GsonHelper.getAsString(root, "desc", ""), GsonHelper.getAsBoolean(root, "hidden", false));
     }
 }

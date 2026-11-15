@@ -57,8 +57,7 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
 
     private ColorPickerWidget(WidgetContext context, String label, UiLocalState state,
                               String stateKey, LoreStyle.Element style) {
-        super(0, 0, style.size.width > 0 ? style.size.width : DEFAULT_WIDTH,
-                style.size.height > 0 ? style.size.height : DEFAULT_HEIGHT, Component.literal(label));
+        super(0, 0, style.size.width > 0 ? style.size.width : DEFAULT_WIDTH, style.size.height > 0 ? style.size.height : DEFAULT_HEIGHT, Component.literal(label));
         if (getWidth() < MIN_WIDTH || getHeight() < MIN_HEIGHT) {
             throw new IllegalArgumentException("color_picker requires at least " + MIN_WIDTH + "x" + MIN_HEIGHT + " pixels");
         }
@@ -103,10 +102,8 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
         size.addProperty("width", width);
         size.addProperty("height", height);
         settings.add("size", size);
-        WidgetContext context = new WidgetContext(Minecraft.getInstance(), editor,
-                ItemStack.EMPTY, new LoreEntity(new JsonObject()));
-        return new ColorPickerWidget(context, label, new UiLocalState(initialState), "draftColor",
-                new LoreStyle.Element(settings));
+        WidgetContext context = new WidgetContext(Minecraft.getInstance(), editor, ItemStack.EMPTY, new LoreEntity(new JsonObject()));
+        return new ColorPickerWidget(context, label, new UiLocalState(initialState), "draftColor", new LoreStyle.Element(settings));
     }
 
     public String applyDraft() {
@@ -172,8 +169,7 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
         int paletteY = y + 24;
         int hueX = paletteX + paletteWidth + 6;
         int fieldsX = hueX + 20;
-        return new Geometry(paletteX, paletteY, paletteWidth, paletteHeight,
-                hueX, fieldsX, Math.max(50, getRight() - fieldsX - 8));
+        return new Geometry(paletteX, paletteY, paletteWidth, paletteHeight, hueX, fieldsX, Math.max(50, getRight() - fieldsX - 8));
     }
 
     private void positionInputs(Geometry g) {
@@ -251,17 +247,14 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
         graphics.fill(x, y, x + width, y + height, borderColor);
         graphics.fill(x + 1, y + 1, x + width - 1, y + height - 1, backgroundColor);
         String heading = label.isBlank() ? "Color picker" : label;
-        graphics.drawString(context.font(), context.font().plainSubstrByWidth(heading, width - 16),
-                x + 8, y + 7, style.textColor, false);
+        graphics.drawString(context.font(), context.font().plainSubstrByWidth(heading, width - 16), x + 8, y + 7, style.textColor, false);
 
         for (int py = 0; py < g.paletteHeight(); py += CELL_SIZE) {
             for (int px = 0; px < g.paletteWidth(); px += CELL_SIZE) {
                 float saturationAt = (float) px / Math.max(1, g.paletteWidth() - 1);
                 float brightnessAt = 1.0F - (float) py / Math.max(1, g.paletteHeight() - 1);
                 int shade = ColorPickerColor.hsvColor(hue, saturationAt, brightnessAt, 255);
-                graphics.fill(g.paletteX() + px, g.paletteY() + py,
-                        g.paletteX() + Math.min(g.paletteWidth(), px + CELL_SIZE),
-                        g.paletteY() + Math.min(g.paletteHeight(), py + CELL_SIZE), shade);
+                graphics.fill(g.paletteX() + px, g.paletteY() + py, g.paletteX() + Math.min(g.paletteWidth(), px + CELL_SIZE), g.paletteY() + Math.min(g.paletteHeight(), py + CELL_SIZE), shade);
             }
         }
         int markerX = g.paletteX() + Math.round(saturation * (g.paletteWidth() - 1));
@@ -271,8 +264,7 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
         for (int py = 0; py < g.paletteHeight(); py += 2) {
             float hueAt = (float) py / Math.max(1, g.paletteHeight() - 1);
             int shade = ColorPickerColor.hsvColor(hueAt, 1.0F, 1.0F, 255);
-            graphics.fill(g.hueX(), g.paletteY() + py, g.hueX() + 12,
-                    g.paletteY() + Math.min(py + 2, g.paletteHeight()), shade);
+            graphics.fill(g.hueX(), g.paletteY() + py, g.hueX() + 12, g.paletteY() + Math.min(py + 2, g.paletteHeight()), shade);
         }
         int hueMarkerY = g.paletteY() + Math.round(hue * (g.paletteHeight() - 1));
         graphics.fill(g.hueX() - 1, hueMarkerY - 1, g.hueX() + 13, hueMarkerY + 2, 0xFF000000);
@@ -282,8 +274,7 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
             for (int previewX = g.fieldsX(); previewX < g.fieldsX() + g.fieldsWidth(); previewX += 7) {
                 int base = (((previewX - g.fieldsX()) / 7 + (previewY - y - 25) / 7) & 1) == 0
                         ? 0xFF999999 : 0xFF555555;
-                graphics.fill(previewX, previewY, Math.min(previewX + 7, g.fieldsX() + g.fieldsWidth()),
-                        Math.min(previewY + 7, y + 53), base);
+                graphics.fill(previewX, previewY, Math.min(previewX + 7, g.fieldsX() + g.fieldsWidth()), Math.min(previewY + 7, y + 53), base);
             }
         }
         graphics.fill(g.fieldsX(), y + 25, g.fieldsX() + g.fieldsWidth(), y + 53, color);
@@ -292,8 +283,7 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
         hexInput.render(graphics, mouseX, mouseY, partialTick);
         rgbInput.render(graphics, mouseX, mouseY, partialTick);
         String hint = invalidInput.isEmpty() ? "Enter to apply | Drag to pick" : invalidInput;
-        graphics.drawString(context.font(), context.font().plainSubstrByWidth(hint, width - 16),
-                x + 8, y + height - 15, invalidInput.isEmpty() ? style.textColor : 0xFFFF7777, false);
+        graphics.drawString(context.font(), context.font().plainSubstrByWidth(hint, width - 16), x + 8, y + height - 15, invalidInput.isEmpty() ? style.textColor : 0xFFFF7777, false);
         if (isFocused() && !hexInput.isFocused() && !rgbInput.isFocused()) {
             outline(graphics, x, y, width, height, 0xFFFFD16B);
         }
@@ -416,7 +406,6 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
 
     @Override
     protected void updateWidgetNarration(NarrationElementOutput output) {
-        output.add(NarratedElementType.TITLE, Component.literal(
-                (label.isBlank() ? "Color picker" : label) + ": " + ColorPickerColor.hex(color)));
+        output.add(NarratedElementType.TITLE, Component.literal((label.isBlank() ? "Color picker" : label) + ": " + ColorPickerColor.hex(color)));
     }
 }

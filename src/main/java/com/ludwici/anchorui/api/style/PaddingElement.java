@@ -25,11 +25,6 @@ public class PaddingElement {
     }
 
     public PaddingElement(JsonObject root) {
-        this(
-                GsonHelper.getAsInt(root, "left", 0),
-                GsonHelper.getAsInt(root, "top", 0),
-                GsonHelper.getAsInt(root, "right", 0),
-                GsonHelper.getAsInt(root, "bottom", 0)
-        );
+        this(GsonHelper.getAsInt(root, "left", 0), GsonHelper.getAsInt(root, "top", 0), GsonHelper.getAsInt(root, "right", 0), GsonHelper.getAsInt(root, "bottom", 0));
     }
 }

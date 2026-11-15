@@ -36,15 +36,12 @@ public final class TextureRegion {
         String qualified = path.contains(":") ? path : context.entity().namespace + ":" + path;
         texture = ResourceLocation.tryParse(qualified);
         if (texture == null) {
-            throw new IllegalArgumentException("Invalid texture resource identifier '" + path
-                    + "'; expected namespace:path");
+            throw new IllegalArgumentException("Invalid texture resource identifier '" + path + "'; expected namespace:path");
         }
         if (context != null && context.minecraft() != null && context.minecraft().getResourceManager() != null
                 && context.minecraft().getResourceManager().getResource(texture).isEmpty()
                 && MISSING_WARNED.add(texture)) {
-            AnchorUI.LOGGER.warn("AnchorUI missing texture resource '{}'. Expected asset path assets/{}/{}. "
-                    + "Check the active resource packs and reload with F3+T after fixing the asset.",
-                    texture, texture.getNamespace(), texture.getPath());
+            AnchorUI.LOGGER.warn("AnchorUI missing texture resource '{}'. Expected asset path assets/{}/{}. " + "Check the active resource packs and reload with F3+T after fixing the asset.", texture, texture.getNamespace(), texture.getPath());
         }
         textureWidth = GsonHelper.getAsInt(settings, "textureWidth", 256);
         textureHeight = GsonHelper.getAsInt(settings, "textureHeight", 256);
@@ -54,17 +51,12 @@ public final class TextureRegion {
         sourceHeight = GsonHelper.getAsInt(settings, "regionHeight", textureHeight - v);
         if (textureWidth <= 0 || textureHeight <= 0 || u < 0 || v < 0 || sourceWidth <= 0 || sourceHeight <= 0
                 || (long) u + sourceWidth > textureWidth || (long) v + sourceHeight > textureHeight) {
-            throw new IllegalArgumentException("Invalid texture region for '" + texture
-                    + "' (textureWidth=" + textureWidth + ", textureHeight=" + textureHeight
-                    + ", u=" + u + ", v=" + v + ", regionWidth=" + sourceWidth
-                    + ", regionHeight=" + sourceHeight + ")");
+            throw new IllegalArgumentException("Invalid texture region for '" + texture + "' (textureWidth=" + textureWidth + ", textureHeight=" + textureHeight + ", u=" + u + ", v=" + v + ", regionWidth=" + sourceWidth + ", regionHeight=" + sourceHeight + ")");
         }
         tint = WidgetColors.parse(GsonHelper.getAsString(settings, "tint", "#FFFFFFFF"));
         if (settings.has("nineSlice")) {
             JsonObject slice = GsonHelper.getAsJsonObject(settings, "nineSlice");
-            nineSlice = new NineSlice.Insets(GsonHelper.getAsInt(slice, "left", 0),
-                    GsonHelper.getAsInt(slice, "top", 0), GsonHelper.getAsInt(slice, "right", 0),
-                    GsonHelper.getAsInt(slice, "bottom", 0));
+            nineSlice = new NineSlice.Insets(GsonHelper.getAsInt(slice, "left", 0), GsonHelper.getAsInt(slice, "top", 0), GsonHelper.getAsInt(slice, "right", 0), GsonHelper.getAsInt(slice, "bottom", 0));
             NineSlice.tiles(1, 1, sourceWidth, sourceHeight, nineSlice);
         } else {
             nineSlice = null;
@@ -88,13 +80,10 @@ public final class TextureRegion {
         RenderSystem.setShaderColor(red, green, blue, alpha);
         try {
             if (nineSlice == null) {
-                graphics.blit(texture, x, y, width, height, (float) u, (float) v,
-                        sourceWidth, sourceHeight, textureWidth, textureHeight);
+                graphics.blit(texture, x, y, width, height, (float) u, (float) v, sourceWidth, sourceHeight, textureWidth, textureHeight);
             } else {
                 for (NineSlice.Tile tile : tiles(width, height)) {
-                    graphics.blit(texture, x + tile.x(), y + tile.y(), tile.width(), tile.height(),
-                            (float) (u + tile.u()), (float) (v + tile.v()),
-                            tile.sourceWidth(), tile.sourceHeight(), textureWidth, textureHeight);
+                    graphics.blit(texture, x + tile.x(), y + tile.y(), tile.width(), tile.height(), (float) (u + tile.u()), (float) (v + tile.v()), tile.sourceWidth(), tile.sourceHeight(), textureWidth, textureHeight);
                 }
             }
         } finally {

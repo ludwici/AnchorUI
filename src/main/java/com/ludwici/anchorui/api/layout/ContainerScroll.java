@@ -57,8 +57,7 @@ public final class ContainerScroll {
 
     public record Limits(int x, int y) {
         public Offset clamp(Offset offset) {
-            return new Offset(Math.max(0, Math.min(x, offset.x())),
-                    Math.max(0, Math.min(y, offset.y())));
+            return new Offset(Math.max(0, Math.min(x, offset.x())), Math.max(0, Math.min(y, offset.y())));
         }
     }
 

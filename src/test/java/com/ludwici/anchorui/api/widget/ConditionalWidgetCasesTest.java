@@ -103,12 +103,10 @@ public class ConditionalWidgetCasesTest {
         JsonObject first = result.get(1).getAsJsonObject();
         assertEquals("test:switcher/case_0", first.get("id").getAsString());
         assertEquals("anchorui:panel", first.get("type").getAsString());
-        assertEquals("test:root", expanded.getAsJsonObject("widgetParents")
-                .get(first.get("id").getAsString()).getAsString());
+        assertEquals("test:root", expanded.getAsJsonObject("widgetParents").get(first.get("id").getAsString()).getAsString());
         assertEquals("test:root", first.getAsJsonObject("position").get("relativeTo").getAsString());
         JsonObject child = result.get(2).getAsJsonObject();
-        assertEquals("test:switcher/case_0", expanded.getAsJsonObject("widgetParents")
-                .get(child.get("id").getAsString()).getAsString());
+        assertEquals("test:switcher/case_0", expanded.getAsJsonObject("widgetParents").get(child.get("id").getAsString()).getAsString());
         assertEquals("test:switcher/case_0", child.getAsJsonObject("position").get("relativeTo").getAsString());
         assertEquals("test:switcher/case_1", result.get(3).getAsJsonObject().get("id").getAsString());
         assertTrue(visible(first, true, false, false));
@@ -117,14 +115,7 @@ public class ConditionalWidgetCasesTest {
 
     @Test
     public void conditionalWidgetsRejectMalformedBranchesAndNesting() {
-        List<String> definitions = List.of(
-                "{\"type\":\"anchorui:cases\",\"id\":\"x\",\"cases\":[]}",
-                "{\"type\":\"anchorui:cases\",\"id\":\"x\",\"cases\":[{\"widget\":{\"type\":\"anchorui:text\"}}]}",
-                "{\"type\":\"anchorui:cases\",\"id\":\"x\",\"cases\":[{\"when\":true}]}",
-                "{\"type\":\"anchorui:cases\",\"id\":\"x\",\"cases\":[{\"when\":{\"op\":\"bad\"},\"widget\":{\"type\":\"anchorui:text\"}}]}",
-                "{\"type\":\"anchorui:cases\",\"id\":\"x\",\"cases\":[{\"when\":true,\"widget\":{\"type\":\"anchorui:text\"}}],\"otherwise\":10}",
-                "{\"type\":\"anchorui:cases\",\"id\":\"x\",\"children\":[],\"cases\":[{\"when\":true,\"widget\":{\"type\":\"anchorui:text\"}}]}"
-        );
+        List<String> definitions = List.of("{\"type\":\"anchorui:cases\",\"id\":\"x\",\"cases\":[]}", "{\"type\":\"anchorui:cases\",\"id\":\"x\",\"cases\":[{\"widget\":{\"type\":\"anchorui:text\"}}]}", "{\"type\":\"anchorui:cases\",\"id\":\"x\",\"cases\":[{\"when\":true}]}", "{\"type\":\"anchorui:cases\",\"id\":\"x\",\"cases\":[{\"when\":{\"op\":\"bad\"},\"widget\":{\"type\":\"anchorui:text\"}}]}", "{\"type\":\"anchorui:cases\",\"id\":\"x\",\"cases\":[{\"when\":true,\"widget\":{\"type\":\"anchorui:text\"}}],\"otherwise\":10}", "{\"type\":\"anchorui:cases\",\"id\":\"x\",\"children\":[],\"cases\":[{\"when\":true,\"widget\":{\"type\":\"anchorui:text\"}}]}");
         for (String definition : definitions) {
             JsonObject document = new JsonObject();
             JsonArray entities = new JsonArray();

@@ -25,9 +25,7 @@ public class ConditionOperationRegistryTest {
 
     @Test
     public void registeredBinaryOperatorUsesResolvedValuesInNestedConditions() {
-        ConditionOperationRegistry.register("mymod:even_and_greater",
-                (left, right) -> left.isJsonPrimitive() && right.isJsonPrimitive()
-                        && left.getAsInt() % 2 == 0 && left.getAsInt() > right.getAsInt());
+        ConditionOperationRegistry.register("mymod:even_and_greater", (left, right) -> left.isJsonPrimitive() && right.isJsonPrimitive() && left.getAsInt() % 2 == 0 && left.getAsInt() > right.getAsInt());
 
         ConditionExpression expression = compile("""
                 {
@@ -50,8 +48,7 @@ public class ConditionOperationRegistryTest {
 
     @Test
     public void unaryOperationsOnlyRequireLeftOperand() {
-        ConditionOperationRegistry.registerUnary("mymod:is_pokemon",
-                value -> value.isJsonPrimitive() && value.getAsString().startsWith("pokemon:"));
+        ConditionOperationRegistry.registerUnary("mymod:is_pokemon", value -> value.isJsonPrimitive() && value.getAsString().startsWith("pokemon:"));
 
         assertTrue(compile("""
                 {"left":"pokemon:miraidon","op":"mymod:is_pokemon"}
@@ -93,14 +90,10 @@ public class ConditionOperationRegistryTest {
         ConditionOperationRegistry.register("mymod:unit_binary", (left, right) -> true);
 
         assertTrue(ConditionOperationRegistry.find("mymod:unit_binary").isPresent());
-        assertThrows(IllegalStateException.class,
-                () -> ConditionOperationRegistry.register("mymod:unit_binary", (left, right) -> false));
-        assertThrows(IllegalArgumentException.class,
-                () -> ConditionOperationRegistry.register("not_namespaced", (left, right) -> true));
-        assertThrows(IllegalArgumentException.class,
-                () -> ConditionOperationRegistry.register("mymod:Invalid Uppercase", (left, right) -> true));
-        assertThrows(NullPointerException.class,
-                () -> ConditionOperationRegistry.register("mymod:null_predicate", null));
+        assertThrows(IllegalStateException.class, () -> ConditionOperationRegistry.register("mymod:unit_binary", (left, right) -> false));
+        assertThrows(IllegalArgumentException.class, () -> ConditionOperationRegistry.register("not_namespaced", (left, right) -> true));
+        assertThrows(IllegalArgumentException.class, () -> ConditionOperationRegistry.register("mymod:Invalid Uppercase", (left, right) -> true));
+        assertThrows(NullPointerException.class, () -> ConditionOperationRegistry.register("mymod:null_predicate", null));
 
         assertThrows(IllegalArgumentException.class, () -> compile("""
                 {"left":1,"op":"mymod:not_registered","right":2}

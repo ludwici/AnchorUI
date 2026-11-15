@@ -42,21 +42,14 @@ public class TexturedControlStyleTest {
                   }
                 }
                 """).getAsJsonObject();
-        LoreStyle.Element resolved = new LoreStyle(style).get(
-                ResourceLocation.fromNamespaceAndPath("anchorui", "checkbox"), overrides);
+        LoreStyle.Element resolved = new LoreStyle(style).get(ResourceLocation.fromNamespaceAndPath("anchorui", "checkbox"), overrides);
         JsonObject textures = resolved.resolvedSettings.getAsJsonObject("textures");
-        assertEquals("mymod:textures/gui/overridden_on.png",
-                textures.getAsJsonObject("indicator").get("on").getAsString());
-        assertEquals("mymod:textures/gui/off.png",
-                textures.getAsJsonObject("indicator").get("off").getAsString());
-        assertEquals("mymod:textures/gui/on_hover.png",
-                textures.getAsJsonObject("indicator").get("onHover").getAsString());
-        assertEquals(48,
-                textures.getAsJsonObject("background").getAsJsonObject("normal").get("textureWidth").getAsInt());
+        assertEquals("mymod:textures/gui/overridden_on.png", textures.getAsJsonObject("indicator").get("on").getAsString());
+        assertEquals("mymod:textures/gui/off.png", textures.getAsJsonObject("indicator").get("off").getAsString());
+        assertEquals("mymod:textures/gui/on_hover.png", textures.getAsJsonObject("indicator").get("onHover").getAsString());
+        assertEquals(48, textures.getAsJsonObject("background").getAsJsonObject("normal").get("textureWidth").getAsInt());
         assertEquals(18, resolved.resolvedSettings.get("indicatorSize").getAsInt());
         assertTrue(resolved.resolvedSettings.has("fillColor"));
-        assertEquals("mymod:textures/gui/on.png",
-                style.getAsJsonObject("anchorui:checkbox").getAsJsonObject("textures")
-                        .getAsJsonObject("indicator").get("on").getAsString());
+        assertEquals("mymod:textures/gui/on.png", style.getAsJsonObject("anchorui:checkbox").getAsJsonObject("textures").getAsJsonObject("indicator").get("on").getAsString());
     }
 }

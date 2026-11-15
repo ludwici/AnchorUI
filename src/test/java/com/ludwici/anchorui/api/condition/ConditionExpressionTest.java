@@ -46,16 +46,11 @@ public class ConditionExpressionTest {
                   ]
                 }
                 """);
-        var state = sources(Map.of("demo:player",
-                JsonParser.parseString("{\"level\":12,\"role\":\"engineer\"}"),
-                "demo:creative", JsonParser.parseString("false")));
+        var state = sources(Map.of("demo:player", JsonParser.parseString("{\"level\":12,\"role\":\"engineer\"}"), "demo:creative", JsonParser.parseString("false")));
         assertTrue(expression.evaluate(state));
         assertEquals(2, expression.sources().size());
-        assertFalse(expression.evaluate(sources(Map.of("demo:player",
-                JsonParser.parseString("{\"level\":8,\"role\":\"medic\"}")))));
-        assertFalse(expression.evaluate(sources(Map.of("demo:player",
-                JsonParser.parseString("{\"level\":12,\"role\":\"engineer\"}"),
-                "demo:creative", JsonParser.parseString("true")))));
+        assertFalse(expression.evaluate(sources(Map.of("demo:player", JsonParser.parseString("{\"level\":8,\"role\":\"medic\"}")))));
+        assertFalse(expression.evaluate(sources(Map.of("demo:player", JsonParser.parseString("{\"level\":12,\"role\":\"engineer\"}"), "demo:creative", JsonParser.parseString("true")))));
     }
 
     @Test
@@ -148,8 +143,7 @@ public class ConditionExpressionTest {
         assertTrue(ConditionExpression.parse(bound, true).evaluate(resolver));
         assertTrue(ConditionExpression.parse(bound, true).evaluate(sources(Map.of())));
         assertFalse(ConditionExpression.parse(bound, true, false).evaluate(sources(Map.of())));
-        assertFalse(ConditionExpression.parse(bound, true, false)
-                .evaluate(sources(Map.of("demo:can_use", JsonParser.parseString("\"wrong type\"")))));
+        assertFalse(ConditionExpression.parse(bound, true, false).evaluate(sources(Map.of("demo:can_use", JsonParser.parseString("\"wrong type\"")))));
         assertTrue(ConditionExpression.parse(JsonParser.parseString("""
                 {"bind":"demo:can_use","fallback":true}
                 """), true, false).evaluate(sources(Map.of())));
@@ -192,11 +186,8 @@ public class ConditionExpressionTest {
         var condition = compile("""
                 {"left":{"bind":"demo:profile","path":"stats.mana"},"op":"gt","right":10}
                 """);
-        assertFalse(condition.evaluate(sources(Map.of("demo:profile",
-                JsonParser.parseString("{\"stats\":{\"mana\":\"not a number\"}}")))));
-        assertFalse(condition.evaluate(sources(Map.of("demo:profile",
-                JsonParser.parseString("{\"stats\":{}}")))));
-        assertTrue(condition.evaluate(sources(Map.of("demo:profile",
-                JsonParser.parseString("{\"stats\":{\"mana\":35}}")))));
+        assertFalse(condition.evaluate(sources(Map.of("demo:profile", JsonParser.parseString("{\"stats\":{\"mana\":\"not a number\"}}")))));
+        assertFalse(condition.evaluate(sources(Map.of("demo:profile", JsonParser.parseString("{\"stats\":{}}")))));
+        assertTrue(condition.evaluate(sources(Map.of("demo:profile", JsonParser.parseString("{\"stats\":{\"mana\":35}}")))));
     }
 }

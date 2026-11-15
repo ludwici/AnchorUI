@@ -19,12 +19,6 @@ public class PositionElement {
     }
 
     public PositionElement(JsonObject root) {
-        this(
-                ElementAnchor.fromString(GsonHelper.getAsString(root, "point", GsonHelper.getAsString(root, "anchor", "TOPLEFT"))),
-                ElementAnchor.fromString(GsonHelper.getAsString(root, "anchor", GsonHelper.getAsString(root, "point", "TOPLEFT"))),
-                GsonHelper.getAsString(root, "relativeTo", "screen"),
-                GsonHelper.getAsInt(root, "x", 0),
-                GsonHelper.getAsInt(root, "y", 0)
-        );
+        this(ElementAnchor.fromString(GsonHelper.getAsString(root, "point", GsonHelper.getAsString(root, "anchor", "TOPLEFT"))), ElementAnchor.fromString(GsonHelper.getAsString(root, "anchor", GsonHelper.getAsString(root, "point", "TOPLEFT"))), GsonHelper.getAsString(root, "relativeTo", "screen"), GsonHelper.getAsInt(root, "x", 0), GsonHelper.getAsInt(root, "y", 0));
     }
 }

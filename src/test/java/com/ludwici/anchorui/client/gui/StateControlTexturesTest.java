@@ -104,8 +104,7 @@ public class StateControlTexturesTest {
 
     @Test
     public void bundledSelectOptionStyleIsAvailable() throws IOException {
-        var stream = getClass().getClassLoader().getResourceAsStream(
-                "assets/anchorui/anchorui/style/rare_option.json");
+        var stream = getClass().getClassLoader().getResourceAsStream("assets/anchorui/anchorui/style/rare_option.json");
         assertNotNull(stream);
         try (var reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
             JsonObject style = JsonParser.parseReader(reader).getAsJsonObject();
@@ -115,8 +114,7 @@ public class StateControlTexturesTest {
 
     @Test
     public void bundledResourceSkinDefinesVariantsForEachControl() throws IOException {
-        var stream = getClass().getClassLoader().getResourceAsStream(
-                "assets/anchorui/anchorui/style/textured_controls.json");
+        var stream = getClass().getClassLoader().getResourceAsStream("assets/anchorui/anchorui/style/textured_controls.json");
         assertNotNull(stream);
         JsonObject style;
         try (var reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
@@ -128,8 +126,7 @@ public class StateControlTexturesTest {
             assertTrue(new StateControlTextures(null, config).has("background"));
         }
 
-        var demo = getClass().getClassLoader().getResourceAsStream(
-                "assets/anchorui/anchorui/screens/ui_controls_textured_demo.json");
+        var demo = getClass().getClassLoader().getResourceAsStream("assets/anchorui/anchorui/screens/ui_controls_textured_demo.json");
         assertNotNull(demo);
         try (var reader = new InputStreamReader(demo, StandardCharsets.UTF_8)) {
             assertTrue(JsonParser.parseReader(reader).getAsJsonObject().get("style")

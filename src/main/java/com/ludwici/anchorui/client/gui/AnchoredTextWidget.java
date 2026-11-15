@@ -51,8 +51,7 @@ public class AnchoredTextWidget extends AnchoredWidget {
             this.singleLine = null;
         } else {
             this.lines = List.of();
-            this.singleLine = new StringWidget(Math.max(0, getWidth() - style.padding.left - style.padding.right),
-                    Math.max(0, getHeight() - style.padding.top - style.padding.bottom), message, font).setColor(style.textColor);
+            this.singleLine = new StringWidget(Math.max(0, getWidth() - style.padding.left - style.padding.right), Math.max(0, getHeight() - style.padding.top - style.padding.bottom), message, font).setColor(style.textColor);
             switch (style.textAlign) {
                 case "center" -> singleLine.alignCenter();
                 case "right" -> singleLine.alignRight();

@@ -38,9 +38,7 @@ public class VanillaHudGeometryTest {
         assertTrue(measured.get("minecraft:hotbar").active());
 
         List<AnchorLayout.Frame> frames = new ArrayList<>(VanillaHudGeometry.frames(measured));
-        frames.add(new AnchorLayout.Frame("othermod:above_hotbar",
-                new PositionElement(ElementAnchor.BOTTOM, ElementAnchor.TOP,
-                        "minecraft:hotbar", 0, -4), 80, 12));
+        frames.add(new AnchorLayout.Frame("othermod:above_hotbar", new PositionElement(ElementAnchor.BOTTOM, ElementAnchor.TOP, "minecraft:hotbar", 0, -4), 80, 12));
 
         var layout = AnchorLayout.resolve(426, 240, frames);
         assertEquals(new AnchorLayout.Bounds(173, 202, 80, 12), layout.get("othermod:above_hotbar"));

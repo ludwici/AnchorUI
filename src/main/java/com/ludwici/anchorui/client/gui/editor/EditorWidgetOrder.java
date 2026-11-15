@@ -88,9 +88,7 @@ public final class EditorWidgetOrder {
 
     public static List<String> sorted(Collection<String> ids, String currentNamespace) {
         List<String> result = new ArrayList<>(ids);
-        result.sort(Comparator.comparingInt((String id) -> group(id, currentNamespace))
-                .thenComparing(String.CASE_INSENSITIVE_ORDER)
-                .thenComparing(Comparator.naturalOrder()));
+        result.sort(Comparator.comparingInt((String id) -> group(id, currentNamespace)).thenComparing(String.CASE_INSENSITIVE_ORDER).thenComparing(Comparator.naturalOrder()));
         return List.copyOf(result);
     }
 }

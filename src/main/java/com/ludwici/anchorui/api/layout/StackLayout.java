@@ -158,8 +158,7 @@ public final class StackLayout {
     public static Map<String, Placement> arrange(Config config, int width, int height,
                                                   List<Item> items, boolean stretchCross) {
         boolean row = config.axis() == Axis.ROW;
-        return layout(config, width, height, items, row ? false : !stretchCross,
-                row ? !stretchCross : false).placements();
+        return layout(config, width, height, items, row ? false : !stretchCross, row ? !stretchCross : false).placements();
     }
 
     public static ContainerLayout.Size intrinsic(Config config, List<Item> items) {
@@ -223,8 +222,7 @@ public final class StackLayout {
         for (Line line : lines) {
             int[] resized = mains.clone();
             if (!autoMain) {
-                distribute(items, line.indices(), resized, mainAvailable - line.mainSize()
-                        , row, config.gap());
+                distribute(items, line.indices(), resized, mainAvailable - line.mainSize() , row, config.gap());
             }
             int occupied = config.gap() * Math.max(0, line.indices().size() - 1);
             for (int index : line.indices()) {
@@ -253,9 +251,7 @@ public final class StackLayout {
                 };
                 int mainPosition = cursor;
                 int crossPosition = crossCursor + crossOffset;
-                placements.put(item.id(), row
-                        ? new Placement(mainPosition + item.offsetX(), crossPosition + item.offsetY(), mainSize, crossSize)
-                        : new Placement(crossPosition + item.offsetX(), mainPosition + item.offsetY(), crossSize, mainSize));
+                placements.put(item.id(), row ? new Placement(mainPosition + item.offsetX(), crossPosition + item.offsetY(), mainSize, crossSize) : new Placement(crossPosition + item.offsetX(), mainPosition + item.offsetY(), crossSize, mainSize));
                 cursor += mainSize + config.gap();
                 if (config.justify() == Justify.SPACE_BETWEEN && line.indices().size() > 1
                         && local < line.indices().size() - 1) {

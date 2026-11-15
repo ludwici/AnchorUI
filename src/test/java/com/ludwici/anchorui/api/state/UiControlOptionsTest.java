@@ -68,27 +68,12 @@ public class UiControlOptionsTest {
         UiLocalState state = state("""
                 {"tab":"skills","enabled":true}
                 """);
-        for (String raw : List.of(
-                "[]",
-                "[1,1]",
-                "[\"skills\",\"skills\"]",
-                "[true]",
-                "[null]",
-                "[{}]",
-                "[{\"value\":\"skills\",\"label\":\"\"}]",
-                "[{\"value\":{\"id\":1}}]",
-                "[{\"value\":\"inventory\"}]",
-                "[{\"value\":1}]"
-        )) {
-            assertThrows(IllegalArgumentException.class, () ->
-                    UiControlOptions.parse(options(raw), state, "tab"), raw);
+        for (String raw : List.of("[]", "[1,1]", "[\"skills\",\"skills\"]", "[true]", "[null]", "[{}]", "[{\"value\":\"skills\",\"label\":\"\"}]", "[{\"value\":{\"id\":1}}]", "[{\"value\":\"inventory\"}]", "[{\"value\":1}]")) {
+            assertThrows(IllegalArgumentException.class, () -> UiControlOptions.parse(options(raw), state, "tab"), raw);
         }
-        assertThrows(IllegalArgumentException.class, () ->
-                UiControlOptions.parse(options("[\"skills\"]"), state, "missing"));
-        assertThrows(IllegalArgumentException.class, () ->
-                UiControlOptions.parse(options("[\"skills\"]"), state, "enabled"));
-        assertThrows(IllegalArgumentException.class, () ->
-                UiControlOptions.parse(new JsonObject(), state, "tab"));
+        assertThrows(IllegalArgumentException.class, () -> UiControlOptions.parse(options("[\"skills\"]"), state, "missing"));
+        assertThrows(IllegalArgumentException.class, () -> UiControlOptions.parse(options("[\"skills\"]"), state, "enabled"));
+        assertThrows(IllegalArgumentException.class, () -> UiControlOptions.parse(new JsonObject(), state, "tab"));
 
         JsonArray tooMany = new JsonArray();
         for (int index = 0; index < 65; index++) {
@@ -117,15 +102,8 @@ public class UiControlOptionsTest {
         copy.addProperty("textColor", "#FFFFFFFF");
         assertEquals("#FFE2B8FF", choices.get(1).style().getAsJsonObject().get("textColor").getAsString());
 
-        for (String raw : List.of(
-                "[{\"value\":\"rare\",\"style\":null}]",
-                "[{\"value\":\"rare\",\"style\":true}]",
-                "[{\"value\":\"rare\",\"style\":123}]",
-                "[{\"value\":\"rare\",\"style\":[]}]",
-                "[{\"value\":\"rare\",\"style\":\"\"}]"
-        )) {
-            assertThrows(IllegalArgumentException.class, () ->
-                    UiControlOptions.parse(options(raw), state, "tier"), raw);
+        for (String raw : List.of("[{\"value\":\"rare\",\"style\":null}]", "[{\"value\":\"rare\",\"style\":true}]", "[{\"value\":\"rare\",\"style\":123}]", "[{\"value\":\"rare\",\"style\":[]}]", "[{\"value\":\"rare\",\"style\":\"\"}]")) {
+            assertThrows(IllegalArgumentException.class, () -> UiControlOptions.parse(options(raw), state, "tier"), raw);
         }
     }
 

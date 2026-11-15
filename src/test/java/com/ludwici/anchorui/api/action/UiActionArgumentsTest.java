@@ -140,8 +140,7 @@ public class UiActionArgumentsTest {
                 "{\"type\":\"ui_action_args_test:strict_quest\",\"quest\":\"example:valid\",\"amount\":0}",
                 "{\"type\":\"ui_action_args_test:strict_quest\",\"quest\":\"example:valid\",\"silent\":\"yes\"}"
         }) {
-            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                    () -> UiActionRegistry.compileEvent(null, JsonParser.parseString(raw)));
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> UiActionRegistry.compileEvent(null, JsonParser.parseString(raw)));
             assertTrue(exception.getMessage().contains("ui_action_args_test:strict_quest"));
         }
     }

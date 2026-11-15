@@ -54,8 +54,7 @@ public class SelectOptionAppearanceTest {
                 "{\"ref\":123}",
                 "{\"textures\":[]}"
         }) {
-            assertThrows(IllegalArgumentException.class, () ->
-                    SelectOptionAppearance.resolve(null, JsonParser.parseString(raw)), raw);
+            assertThrows(IllegalArgumentException.class, () -> SelectOptionAppearance.resolve(null, JsonParser.parseString(raw)), raw);
         }
     }
 }

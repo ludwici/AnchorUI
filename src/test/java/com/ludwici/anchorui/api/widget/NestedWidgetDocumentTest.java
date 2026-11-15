@@ -25,8 +25,7 @@ public class NestedWidgetDocumentTest {
         assertEquals("example:outer", result.get(1).getAsJsonObject().getAsJsonObject("position").get("relativeTo").getAsString());
         assertEquals("example:panel", result.get(3).getAsJsonObject().getAsJsonObject("position").get("relativeTo").getAsString());
         assertEquals("example:panel/child_0", result.get(3).getAsJsonObject().get("id").getAsString());
-        assertEquals("example:panel", resolved.getAsJsonObject("widgetParents")
-                .get(result.get(3).getAsJsonObject().get("id").getAsString()).getAsString());
+        assertEquals("example:panel", resolved.getAsJsonObject("widgetParents").get(result.get(3).getAsJsonObject().get("id").getAsString()).getAsString());
     }
 
     @Test
@@ -49,8 +48,7 @@ public class NestedWidgetDocumentTest {
         var result = resolved.getAsJsonArray("entities");
         assertEquals("demo:own", result.get(1).getAsJsonObject().get("id").getAsString());
         assertEquals("Custom", result.get(1).getAsJsonObject().get("text").getAsString());
-        assertEquals("demo:box", resolved.getAsJsonObject("widgetParents")
-                .get(result.get(1).getAsJsonObject().get("id").getAsString()).getAsString());
+        assertEquals("demo:box", resolved.getAsJsonObject("widgetParents").get(result.get(1).getAsJsonObject().get("id").getAsString()).getAsString());
         assertTrue(!result.get(1).getAsJsonObject().has("__anchorui_container_parent"));
     }
 }

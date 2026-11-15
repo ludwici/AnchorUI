@@ -184,8 +184,7 @@ public final class WidgetDocumentResolver {
             JsonElement when = choice.get("when").deepCopy();
             ConditionExpression.parse(when, false, false);
             JsonElement selector = exclusiveCase(prior, when);
-            addCaseBranch(elements, widgetParents, base, choice.getAsJsonObject("widget"), selector,
-                    id + "/case_" + index, templates, warningSink, caseDepth + 1, parentId);
+            addCaseBranch(elements, widgetParents, base, choice.getAsJsonObject("widget"), selector, id + "/case_" + index, templates, warningSink, caseDepth + 1, parentId);
             prior.add(when);
         }
         if (original.has("otherwise")) {
@@ -193,8 +192,7 @@ public final class WidgetDocumentResolver {
             if (!fallback.isJsonObject()) {
                 throw new IllegalArgumentException("Conditional widget '" + id + "' requires an object in 'otherwise'");
             }
-            addCaseBranch(elements, widgetParents, base, fallback.getAsJsonObject(), excludePrior(prior),
-                    id + "/otherwise", templates, warningSink, caseDepth + 1, parentId);
+            addCaseBranch(elements, widgetParents, base, fallback.getAsJsonObject(), excludePrior(prior), id + "/otherwise", templates, warningSink, caseDepth + 1, parentId);
         }
     }
 
@@ -221,11 +219,9 @@ public final class WidgetDocumentResolver {
         JsonObject output = merge(merge(templateWidget, base), widget);
         output.addProperty("id", id);
         output.remove("ref");
-        output.add("visibleWhen", conjunction(base.get("visibleWhen"), templateWidget.get("visibleWhen"),
-                widget.get("visibleWhen"), selector));
+        output.add("visibleWhen", conjunction(base.get("visibleWhen"), templateWidget.get("visibleWhen"), widget.get("visibleWhen"), selector));
         if (base.has("enabledWhen") && (templateWidget.has("enabledWhen") || widget.has("enabledWhen"))) {
-            output.add("enabledWhen", conjunction(base.get("enabledWhen"), templateWidget.get("enabledWhen"),
-                    widget.get("enabledWhen")));
+            output.add("enabledWhen", conjunction(base.get("enabledWhen"), templateWidget.get("enabledWhen"), widget.get("enabledWhen")));
         }
         if (!output.has("type") || !output.get("type").isJsonPrimitive()) {
             throw new IllegalArgumentException("Conditional widget branch '" + id + "' requires 'type' or 'ref'");

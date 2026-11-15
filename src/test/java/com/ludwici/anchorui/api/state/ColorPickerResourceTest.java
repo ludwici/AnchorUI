@@ -17,8 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ColorPickerResourceTest {
     @Test
     public void bundledDemoDeclaresAColorPickerWithStringStateAndChangeEvent() throws Exception {
-        var stream = getClass().getClassLoader().getResourceAsStream(
-                "assets/anchorui/anchorui/screens/color_picker_demo.json");
+        var stream = getClass().getClassLoader().getResourceAsStream("assets/anchorui/anchorui/screens/color_picker_demo.json");
         assertNotNull(stream);
         try (var reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
             JsonObject screen = JsonParser.parseReader(reader).getAsJsonObject();

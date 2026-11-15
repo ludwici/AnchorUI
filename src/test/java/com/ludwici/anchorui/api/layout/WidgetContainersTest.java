@@ -17,32 +17,26 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class WidgetContainersTest {
     @Test
     public void panelContentBoundsRespectsPaddingWithoutSyntheticFrames() {
-        var outer = new AnchorLayout.Frame("demo:outer",
-                new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, "screen", 70, 80), 180, 120);
-        var child = new AnchorLayout.Frame("demo:child",
-                new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, "demo:outer", 0, 0), 40, 20);
+        var outer = new AnchorLayout.Frame("demo:outer", new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, "screen", 70, 80), 180, 120);
+        var child = new AnchorLayout.Frame("demo:child", new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, "demo:outer", 0, 0), 40, 20);
         var result = ContainerLayout.resolve(400, 300, List.of(outer, child),
                 Map.of("demo:outer", new PaddingElement(10, 12, 14, 16)),
                 Map.of(), Map.of("demo:child", "demo:outer"), ignored -> {});
-        assertEquals(new AnchorLayout.Bounds(80, 92, 156, 92),
-                WidgetContainers.contentBounds(result.bounds().get("demo:outer"), new PaddingElement(10, 12, 14, 16)));
+        assertEquals(new AnchorLayout.Bounds(80, 92, 156, 92), WidgetContainers.contentBounds(result.bounds().get("demo:outer"), new PaddingElement(10, 12, 14, 16)));
         assertEquals(new AnchorLayout.Bounds(80, 92, 40, 20), result.bounds().get("demo:child"));
         assertEquals(3, result.bounds().size());
     }
 
     @Test
     public void doesNotClipWhenParentHasNotOptedIn() {
-        var bounds = Map.of("screen", new AnchorLayout.Bounds(0, 0, 300, 200),
-                "demo:outer", new AnchorLayout.Bounds(10, 10, 30, 30));
+        var bounds = Map.of("screen", new AnchorLayout.Bounds(0, 0, 300, 200), "demo:outer", new AnchorLayout.Bounds(10, 10, 30, 30));
         var parents = Map.of("demo:child", "demo:outer");
         assertTrue(WidgetContainers.clips(bounds, parents, Set.of(), Map.of()).isEmpty());
     }
 
     @Test
     public void onlyOptedInAncestorsClipTheirDescendants() {
-        var bounds = Map.of("screen", new AnchorLayout.Bounds(0, 0, 300, 200),
-                "demo:outer", new AnchorLayout.Bounds(10, 10, 30, 30),
-                "demo:inner", new AnchorLayout.Bounds(15, 15, 100, 100));
+        var bounds = Map.of("screen", new AnchorLayout.Bounds(0, 0, 300, 200), "demo:outer", new AnchorLayout.Bounds(10, 10, 30, 30), "demo:inner", new AnchorLayout.Bounds(15, 15, 100, 100));
         var parents = Map.of("demo:inner", "demo:outer", "demo:leaf", "demo:inner");
         var clips = WidgetContainers.clips(bounds, parents, Set.of("demo:outer"), Map.of());
         assertEquals(new AnchorLayout.Bounds(10, 10, 30, 30), clips.get("demo:leaf"));
@@ -50,14 +44,10 @@ public class WidgetContainersTest {
 
     @Test
     public void optedInClipUsesScaledPaddedPanelBounds() {
-        var bounds = Map.of("screen", new AnchorLayout.Bounds(0, 0, 400, 200),
-                "demo:box", new AnchorLayout.Bounds(80, 40, 200, 100),
-                "demo:leaf", new AnchorLayout.Bounds(90, 50, 30, 20));
+        var bounds = Map.of("screen", new AnchorLayout.Bounds(0, 0, 400, 200), "demo:box", new AnchorLayout.Bounds(80, 40, 200, 100), "demo:leaf", new AnchorLayout.Bounds(90, 50, 30, 20));
         var parents = Map.of("demo:leaf", "demo:box");
-        var transforms = WidgetTransforms.resolve(bounds, parents,
-                Map.of("demo:box", new WidgetTransforms.Group(0.5, false)));
-        var clips = WidgetContainers.clips(bounds, parents, Set.of("demo:box"),
-                Map.of("demo:box", new PaddingElement(10, 10)), transforms);
+        var transforms = WidgetTransforms.resolve(bounds, parents, Map.of("demo:box", new WidgetTransforms.Group(0.5, false)));
+        var clips = WidgetContainers.clips(bounds, parents, Set.of("demo:box"), Map.of("demo:box", new PaddingElement(10, 10)), transforms);
         assertEquals(new AnchorLayout.Bounds(85, 45, 90, 40), clips.get("demo:leaf"));
     }
 

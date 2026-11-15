@@ -52,16 +52,13 @@ public final class LayoutInspectorControls {
                 controls.add(control(overrides, id, "layout", "align", "Align", value(effective, "layout", "align", "start")));
                 controls.add(control(overrides, id, "layout", "justify", "Justify", value(effective, "layout", "justify", "start")));
                 controls.add(control(overrides, id, "layout", "wrap", "Wrap", value(effective, "layout", "wrap", "false")));
-                controls.add(control(overrides, id, "layout", "lineGap", "Line gap", value(effective, "layout", "lineGap",
-                        value(effective, "layout", "gap", "0"))));
+                controls.add(control(overrides, id, "layout", "lineGap", "Line gap", value(effective, "layout", "lineGap", value(effective, "layout", "gap", "0"))));
                 controls.add(control(overrides, id, "layout", "collapseHidden", "Collapse", value(effective, "layout", "collapseHidden", "false")));
             } else if ("grid".equals(layout) || "anchorui:grid".equals(layout)) {
                 controls.add(control(overrides, id, "layout", "columns", "Columns", value(effective, "layout", "columns", "1")));
                 controls.add(control(overrides, id, "layout", "gap", "Gap", value(effective, "layout", "gap", "0")));
-                controls.add(control(overrides, id, "layout", "columnGap", "Col gap", value(effective, "layout", "columnGap",
-                        value(effective, "layout", "gap", "0"))));
-                controls.add(control(overrides, id, "layout", "rowGap", "Row gap", value(effective, "layout", "rowGap",
-                        value(effective, "layout", "gap", "0"))));
+                controls.add(control(overrides, id, "layout", "columnGap", "Col gap", value(effective, "layout", "columnGap", value(effective, "layout", "gap", "0"))));
+                controls.add(control(overrides, id, "layout", "rowGap", "Row gap", value(effective, "layout", "rowGap", value(effective, "layout", "gap", "0"))));
                 controls.add(control(overrides, id, "layout", "cellWidth", "Cell W", value(effective, "layout", "cellWidth", "0")));
                 controls.add(control(overrides, id, "layout", "cellHeight", "Cell H", value(effective, "layout", "cellHeight", "0")));
                 controls.add(control(overrides, id, "layout", "justifyItems", "Cell X", value(effective, "layout", "justifyItems", "start")));

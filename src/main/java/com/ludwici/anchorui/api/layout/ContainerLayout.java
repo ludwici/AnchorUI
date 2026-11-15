@@ -25,8 +25,7 @@ public final class ContainerLayout {
             JsonElement value = settings.get("autoSize");
             if (value.isJsonObject()) {
                 JsonObject object = value.getAsJsonObject();
-                return new AutoSize(object.has("width") && object.get("width").getAsBoolean(),
-                        object.has("height") && object.get("height").getAsBoolean());
+                return new AutoSize(object.has("width") && object.get("width").getAsBoolean(), object.has("height") && object.get("height").getAsBoolean());
             }
             if (value.isJsonPrimitive() && value.getAsJsonPrimitive().isBoolean()) {
                 return value.getAsBoolean() ? new AutoSize(true, true) : NONE;
@@ -57,16 +56,14 @@ public final class ContainerLayout {
     public static Result resolve(int screenWidth, int screenHeight, Collection<AnchorLayout.Frame> frames,
                                  Map<String, PaddingElement> containers, Map<String, AutoSize> autoSizes,
                                  Map<String, String> parents, Consumer<String> warnings) {
-        return resolve(screenWidth, screenHeight, frames, containers, autoSizes, parents,
-                Map.of(), Set.of(), Set.of(), warnings);
+        return resolve(screenWidth, screenHeight, frames, containers, autoSizes, parents, Map.of(), Set.of(), Set.of(), warnings);
     }
 
     public static Result resolve(int screenWidth, int screenHeight, Collection<AnchorLayout.Frame> frames,
                                  Map<String, PaddingElement> containers, Map<String, AutoSize> autoSizes,
                                  Map<String, String> parents, Map<String, ? extends ContainerAutoLayout> layouts,
                                  Set<String> hidden, Set<String> unmanaged, Consumer<String> warnings) {
-        return resolve(screenWidth, screenHeight, frames, containers, autoSizes, parents,
-                layouts, Map.of(), hidden, unmanaged, warnings);
+        return resolve(screenWidth, screenHeight, frames, containers, autoSizes, parents, layouts, Map.of(), hidden, unmanaged, warnings);
     }
 
     public static Result resolve(int screenWidth, int screenHeight, Collection<AnchorLayout.Frame> frames,
@@ -153,9 +150,7 @@ public final class ContainerLayout {
                 for (var positioned : arrangement.placements().entrySet()) {
                     StackLayout.Placement p = positioned.getValue();
                     String childId = positioned.getKey();
-                    var position = new com.ludwici.anchorui.api.style.PositionElement(
-                            ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT,
-                            container, padding.left + p.x(), padding.top + p.y());
+                    var position = new com.ludwici.anchorui.api.style.PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, container, padding.left + p.x(), padding.top + p.y());
                     effective.put(childId, new AnchorLayout.Frame(childId, position, p.width(), p.height()));
                     managed.add(childId);
                 }
@@ -175,15 +170,12 @@ public final class ContainerLayout {
                 if (entry.getValue().equals(position.relativeTo)
                         && position.point == ElementAnchor.TOPLEFT
                         && position.anchor == ElementAnchor.TOPLEFT) {
-                    var padded = new com.ludwici.anchorui.api.style.PositionElement(
-                            position.point, position.anchor, position.relativeTo,
-                            position.x + parentPadding.left, position.y + parentPadding.top);
+                    var padded = new com.ludwici.anchorui.api.style.PositionElement(position.point, position.anchor, position.relativeTo, position.x + parentPadding.left, position.y + parentPadding.top);
                     effective.put(childId, new AnchorLayout.Frame(childId, padded, child.width(), child.height()));
                 }
             }
 
-            Map<String, AnchorLayout.Bounds> resolved = AnchorLayout.resolve(screenWidth, screenHeight,
-                    effective.values(), warnings);
+            Map<String, AnchorLayout.Bounds> resolved = AnchorLayout.resolve(screenWidth, screenHeight, effective.values(), warnings);
             boolean changed = false;
             for (var entry : autoSizes.entrySet()) {
                 String id = entry.getKey();

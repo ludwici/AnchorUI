@@ -96,8 +96,7 @@ public class TemplateGridLayoutTest {
             assertEquals("rpg:skills", position.get("relativeTo").getAsString());
             assertEquals("rpg:skills", expanded.get(index).parentId());
             assertEquals(items().get(index).getAsJsonObject().get("title").getAsString(), row.get("text").getAsString());
-            assertEquals(items().get(index).getAsJsonObject().get("id").getAsString(),
-                    row.getAsJsonObject("onClick").get("item").getAsString());
+            assertEquals(items().get(index).getAsJsonObject().get("id").getAsString(), row.getAsJsonObject("onClick").get("item").getAsString());
             assertEquals(items().get(index), expanded.get(index).itemContext().value());
         }
         assertNotEquals(expanded.get(0).settings().get("id"), expanded.get(1).settings().get("id"));
@@ -209,18 +208,10 @@ public class TemplateGridLayoutTest {
 
     @Test
     public void rejectsBadGridSettingsAndMissingWidth() {
-        for (String options : List.of(
-                "{\"type\":\"grid\",\"columns\":0}",
-                "{\"type\":\"grid\",\"columns\":257}",
-                "{\"type\":\"grid\",\"columns\":3,\"columnGap\":-1}",
-                "{\"type\":\"grid\",\"columns\":3,\"cellHeight\":0}",
-                "{\"type\":\"grid\",\"columns\":4,\"cellWidth\":-3}",
-                "{\"type\":\"unknown:grid\"}"
-        )) {
+        for (String options : List.of("{\"type\":\"grid\",\"columns\":0}", "{\"type\":\"grid\",\"columns\":257}", "{\"type\":\"grid\",\"columns\":3,\"columnGap\":-1}", "{\"type\":\"grid\",\"columns\":3,\"cellHeight\":0}", "{\"type\":\"grid\",\"columns\":4,\"cellWidth\":-3}", "{\"type\":\"unknown:grid\"}")) {
             JsonObject settings = templateList();
             settings.add("layout", JsonParser.parseString(options));
-            assertThrows(IllegalArgumentException.class, () ->
-                    TemplateListExpander.expand(settings, items(), "rpg:skills", Map.of()), options);
+            assertThrows(IllegalArgumentException.class, () -> TemplateListExpander.expand(settings, items(), "rpg:skills", Map.of()), options);
         }
 
         JsonObject noWidth = templateList();
@@ -231,7 +222,6 @@ public class TemplateGridLayoutTest {
                   "columns": 3
                 }
                 """));
-        assertThrows(IllegalArgumentException.class, () ->
-                TemplateListExpander.expand(noWidth, items(), "rpg:skills", Map.of()));
+        assertThrows(IllegalArgumentException.class, () -> TemplateListExpander.expand(noWidth, items(), "rpg:skills", Map.of()));
     }
 }

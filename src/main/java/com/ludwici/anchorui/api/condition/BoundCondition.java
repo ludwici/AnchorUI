@@ -34,16 +34,14 @@ public final class BoundCondition {
     public static BoundCondition parse(JsonObject json, String property, boolean defaultValue,
                                        boolean missingBindingFallback) {
         try {
-            ConditionExpression expression = ConditionExpression.parse(json.get(property), defaultValue,
-                    missingBindingFallback);
+            ConditionExpression expression = ConditionExpression.parse(json.get(property), defaultValue, missingBindingFallback);
             Map<String, DataValueRegistry.Provider> providers = new HashMap<>();
             for (String source : expression.sources()) {
                 ResourceLocation id = ResourceLocation.tryParse(source);
                 if (id == null) {
                     throw new IllegalArgumentException("Invalid condition source: " + source);
                 }
-                providers.put(source, DataValueRegistry.find(id)
-                        .orElseThrow(() -> new IllegalArgumentException("Unknown condition data source: " + source)));
+                providers.put(source, DataValueRegistry.find(id).orElseThrow(() -> new IllegalArgumentException("Unknown condition data source: " + source)));
             }
             return new BoundCondition(expression, Map.copyOf(providers), property);
         } catch (IllegalArgumentException exception) {
@@ -72,8 +70,7 @@ public final class BoundCondition {
                 root = providers.get(source).read(context);
             } catch (RuntimeException exception) {
                 if (reportedFailures.add(source)) {
-                    AnchorUI.LOGGER.warn("Anchor UI condition '{}' data source '{}' failed; using fallback",
-                            property, source, exception);
+                    AnchorUI.LOGGER.warn("Anchor UI condition '{}' data source '{}' failed; using fallback", property, source, exception);
                 }
             }
             if (root == null) {

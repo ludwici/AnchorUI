@@ -142,8 +142,7 @@ public final class ConditionExpression {
             ConditionOperationRegistry.Definition custom = null;
             if (builtin == null) {
                 custom = ConditionOperationRegistry.find(operatorId)
-                        .orElseThrow(() -> new IllegalArgumentException("Unknown condition operator: " + operatorId
-                                + " (register a namespaced operation before loading the UI)"));
+                        .orElseThrow(() -> new IllegalArgumentException("Unknown condition operator: " + operatorId + " (register a namespaced operation before loading the UI)"));
             }
             boolean unary = builtin != null ? builtin.unary() : custom.unary();
             if (!object.has("left") || (!unary && !object.has("right"))
@@ -167,8 +166,7 @@ public final class ConditionExpression {
                 };
             }
             Operator operation = builtin;
-            return resolver -> compare(operation, left.resolve(resolver),
-                    right == null ? null : right.resolve(resolver));
+            return resolver -> compare(operation, left.resolve(resolver), right == null ? null : right.resolve(resolver));
         }
 
         private Operand operand(JsonElement json, int depth) {

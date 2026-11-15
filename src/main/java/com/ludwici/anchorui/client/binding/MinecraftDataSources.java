@@ -25,8 +25,7 @@ public final class MinecraftDataSources {
         DataValueRegistry.registerBoolean(id("player.creative"), ctx -> ctx.minecraft().player != null && ctx.minecraft().player.getAbilities().instabuild);
         DataValueRegistry.registerObject(id("player.profile"), MinecraftDataSources::profile);
         DataValueRegistry.registerList(id("player.effects"), MinecraftDataSources::effects);
-        DataValueRegistry.registerObject(id("ui.state"), context -> context != null && context.screen() instanceof UiStateHost host
-                ? host.uiState().snapshot() : new JsonObject());
+        DataValueRegistry.registerObject(id("ui.state"), context -> context != null && context.screen() instanceof UiStateHost host ? host.uiState().snapshot() : new JsonObject());
     }
 
     private static JsonObject profile(WidgetContext context) {

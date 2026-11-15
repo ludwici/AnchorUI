@@ -16,16 +16,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class PanelParentLayoutTest {
     private static AnchorLayout.Frame frame(String id, String target, int x, int y, int w, int h) {
-        return new AnchorLayout.Frame(id,
-                new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, target, x, y), w, h);
+        return new AnchorLayout.Frame(id, new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, target, x, y), w, h);
     }
 
     @Test
     public void parentPanelAppliesItsPaddingToRowChildrenWithoutContentIds() {
         String panel = "test:panel";
-        var frames = List.of(frame(panel, "screen", 10, 12, 220, 80),
-                frame("test:a", panel, 0, 0, 40, 20),
-                frame("test:b", panel, 0, 0, 50, 20));
+        var frames = List.of(frame(panel, "screen", 10, 12, 220, 80), frame("test:a", panel, 0, 0, 40, 20), frame("test:b", panel, 0, 0, 50, 20));
         var arrangement = ContainerAutoLayout.parse(JsonParser.parseString("""
                 {"layout":{"type":"row","gap":5}}
                 """).getAsJsonObject());
@@ -41,10 +38,7 @@ public class PanelParentLayoutTest {
     @Test
     public void plainPanelIsAlreadyAContainerAndPositionsChildrenWithinPadding() {
         String panel = "test:panel";
-        var frames = List.of(frame(panel, "screen", 20, 30, 160, 100),
-                frame("test:new", panel, 2, 3, 40, 20),
-                frame("test:nested", panel, 2, 3, 40, 20),
-                frame("test:external", "screen", 200, 50, 40, 20));
+        var frames = List.of(frame(panel, "screen", 20, 30, 160, 100), frame("test:new", panel, 2, 3, 40, 20), frame("test:nested", panel, 2, 3, 40, 20), frame("test:external", "screen", 200, 50, 40, 20));
         var result = ContainerLayout.resolve(600, 300, frames,
                 Map.of(panel, new PaddingElement(10, 8)),
                 Map.of(), Map.of("test:new", panel, "test:nested", panel, "test:external", panel),
@@ -57,9 +51,7 @@ public class PanelParentLayoutTest {
     @Test
     public void gridOwnsDirectChildrenEvenWhenTheyKeepOldScreenAnchors() {
         String panel = "test:grid";
-        var frames = List.of(frame(panel, "screen", 20, 30, 160, 100),
-                frame("test:first", "screen", 500, 500, 40, 20),
-                frame("test:second", panel, 20, 30, 40, 20));
+        var frames = List.of(frame(panel, "screen", 20, 30, 160, 100), frame("test:first", "screen", 500, 500, 40, 20), frame("test:second", panel, 20, 30, 40, 20));
         var layout = ContainerAutoLayout.parse(JsonParser.parseString("""
                 {"layout":{"type":"grid","columns":2,"columnGap":8}}
                 """).getAsJsonObject());
@@ -72,9 +64,7 @@ public class PanelParentLayoutTest {
     }
     @Test
     public void rejectsRemovedInternalPanelAnchors() {
-        assertThrows(IllegalArgumentException.class, () -> AnchorLayout.resolve(300, 200, List.of(
-                frame("test:panel", "screen", 0, 0, 100, 80),
-                frame("test:invalid", "test:panel/__content", 0, 0, 20, 10))));
+        assertThrows(IllegalArgumentException.class, () -> AnchorLayout.resolve(300, 200, List.of(frame("test:panel", "screen", 0, 0, 100, 80), frame("test:invalid", "test:panel/__content", 0, 0, 20, 10))));
     }
 
 }

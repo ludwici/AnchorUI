@@ -59,12 +59,7 @@ public final class HudSnap {
             vertical = closest(vertical, desiredY, other.y() + other.height());
             vertical = closest(vertical, desiredY + moving.height(), other.y());
         }
-        return new Result(
-                desiredX + (horizontal == null ? 0 : horizontal.correction()),
-                desiredY + (vertical == null ? 0 : vertical.correction()),
-                horizontal == null ? null : horizontal.guide(),
-                vertical == null ? null : vertical.guide()
-        );
+        return new Result(desiredX + (horizontal == null ? 0 : horizontal.correction()), desiredY + (vertical == null ? 0 : vertical.correction()), horizontal == null ? null : horizontal.guide(), vertical == null ? null : vertical.guide());
     }
 
     private static Candidate closest(Candidate current, int movingCoordinate, int referenceCoordinate) {

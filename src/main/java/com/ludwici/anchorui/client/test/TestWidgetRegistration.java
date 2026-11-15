@@ -66,8 +66,7 @@ public final class TestWidgetRegistration {
             if (context.minecraft().player != null) {
                 String selected = event.item().isJsonObject()
                         ? event.item().getAsJsonObject().get("title").getAsString() : quest;
-                context.minecraft().player.displayClientMessage(
-                        Component.literal("Template List selected " + selected + " [" + quest + "]"), false);
+                context.minecraft().player.displayClientMessage(Component.literal("Template List selected " + selected + " [" + quest + "]"), false);
             }
         });
         UiActionRegistry.registerEvent(TOGGLE_QUESTS, (context, settings) -> event -> {
@@ -132,8 +131,7 @@ public final class TestWidgetRegistration {
                 return;
             }
             String value = event.value().isJsonNull() ? "" : " = " + event.value();
-            context.minecraft().player.displayClientMessage(Component.literal(
-                    "Anchor UI " + event.name() + " [" + event.targetId() + "]" + value), false);
+            context.minecraft().player.displayClientMessage(Component.literal("Anchor UI " + event.name() + " [" + event.targetId() + "]" + value), false);
         });
     }
 }

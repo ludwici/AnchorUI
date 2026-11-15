@@ -37,10 +37,8 @@ public class ColorValuesTest {
                   "color": "#00112233"
                 }
                 """).getAsJsonObject();
-        assertEquals(0x00112233,
-                style.get(ResourceLocation.parse("anchorui:text"), overrides).textColor);
-        assertEquals(0xFFFFE278, new LoreStyle(new com.google.gson.JsonObject())
-                .get(ResourceLocation.parse("anchorui:text"), null).textColor);
+        assertEquals(0x00112233, style.get(ResourceLocation.parse("anchorui:text"), overrides).textColor);
+        assertEquals(0xFFFFE278, new LoreStyle(new com.google.gson.JsonObject()).get(ResourceLocation.parse("anchorui:text"), null).textColor);
     }
 
     @Test
@@ -51,8 +49,7 @@ public class ColorValuesTest {
                 }
                 """).getAsJsonObject();
         assertEquals(0x99123456, new BackgroundElement(json).color);
-        assertEquals(0xFF123456, new BackgroundElement(
-                JsonParser.parseString("""
+        assertEquals(0xFF123456, new BackgroundElement(JsonParser.parseString("""
                         {
                           "color": "#123456"
                         }
@@ -62,8 +59,7 @@ public class ColorValuesTest {
     @Test
     public void malformedColorsReportOriginalValueAndExpectedFormat() {
         for (String candidate : new String[]{"#FFF", "#FF00GG", "FF1234567", "", "#12345"}) {
-            var exception = assertThrows(IllegalArgumentException.class,
-                    () -> ColorValues.parse(candidate));
+            var exception = assertThrows(IllegalArgumentException.class, () -> ColorValues.parse(candidate));
             assertTrue(exception.getMessage().contains(candidate));
             assertTrue(exception.getMessage().contains("#RRGGBB"));
         }

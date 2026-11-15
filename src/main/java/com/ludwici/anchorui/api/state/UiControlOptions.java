@@ -78,8 +78,7 @@ public final class UiControlOptions {
                 JsonObject object = item.getAsJsonObject();
                 value = object.get("value");
                 choiceStyle = object.get("style");
-                label = GsonHelper.getAsString(object, "label",
-                        value != null && value.isJsonPrimitive() ? value.getAsString() : "");
+                label = GsonHelper.getAsString(object, "label", value != null && value.isJsonPrimitive() ? value.getAsString() : "");
             } else {
                 throw new IllegalArgumentException("Choice must be a string/number or an object with 'value'");
             }

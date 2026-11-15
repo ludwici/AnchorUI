@@ -142,8 +142,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         }
         panelLeft = Math.max(0, Math.min(panelLeft, width - inspectorWidth));
         panelTop = Math.max(0, Math.min(panelTop, height - 155));
-        if (!inspectorCollapsed && widgetList.overlaps(panelX(), panelTop,
-                panelX() + inspectorWidth, panelTop + expandedPanelHeight())) {
+        if (!inspectorCollapsed && widgetList.overlaps(panelX(), panelTop, panelX() + inspectorWidth, panelTop + expandedPanelHeight())) {
             inspectorCollapsed = true;
         }
         int x = panelX();
@@ -198,8 +197,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     }
 
     private void toggleInspector() {
-        if (inspectorCollapsed && widgetList.overlaps(panelX(), panelTop,
-                panelX() + inspectorWidth, panelTop + expandedPanelHeight())) {
+        if (inspectorCollapsed && widgetList.overlaps(panelX(), panelTop, panelX() + inspectorWidth, panelTop + expandedPanelHeight())) {
             widgetList.setCollapsed(true);
         }
         inspectorCollapsed = !inspectorCollapsed;
@@ -213,8 +211,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         for (int index = 0; index < controls.size(); index++) {
             Button button = controls.get(index);
             button.setWidth(halfWidth);
-            button.setPosition(panelX() + 7 + (index % 2) * (halfWidth + 7),
-                    panelTop + 29 + (index / 2) * 24);
+            button.setPosition(panelX() + 7 + (index % 2) * (halfWidth + 7), panelTop + 29 + (index / 2) * 24);
         }
     }
 
@@ -357,9 +354,7 @@ public final class AnchorScreenEditorScreen extends Screen {
                         return;
                     }
                     ElementAnchor chosen = ElementAnchor.fromString(value);
-                    boolean changed = target.editorAnchor(id, selected.relativeTo(),
-                            pointChoice ? chosen : selected.point(),
-                            pointChoice ? selected.anchor() : chosen);
+                    boolean changed = target.editorAnchor(id, selected.relativeTo(), pointChoice ? chosen : selected.point(), pointChoice ? selected.anchor() : chosen);
                     status = changed ? "" : "Invalid anchor position";
                     refreshSelection();
                 });
@@ -467,25 +462,20 @@ public final class AnchorScreenEditorScreen extends Screen {
             int panelHeight = inspectorCollapsed ? 27 : expandedPanelHeight();
             graphics.fill(x, y, x + visiblePanelWidth(), y + panelHeight, BACKGROUND);
             graphics.fill(x, y, x + visiblePanelWidth(), y + 1, OUTLINE);
-            graphics.drawString(font, inspectorCollapsed ? "Inspector" : "Screen Editor",
-                    x + 8, y + 9, 0xFFFFFFFF, false);
-            graphics.drawString(font, inspectorCollapsed ? "[+]" : "[-]",
-                    x + visiblePanelWidth() - 27, y + 9, 0xFFFFFFFF, false);
+            graphics.drawString(font, inspectorCollapsed ? "Inspector" : "Screen Editor", x + 8, y + 9, 0xFFFFFFFF, false);
+            graphics.drawString(font, inspectorCollapsed ? "[+]" : "[-]", x + visiblePanelWidth() - 27, y + 9, 0xFFFFFFFF, false);
             if (!inspectorCollapsed) {
-                graphics.drawString(font, pickingParent ? "Pick a widget or empty space" :
-                        "Drag: magnet 6px | Alt: free", x + 8, y + 123, 0xFFACD9D9, false);
+                graphics.drawString(font, pickingParent ? "Pick a widget or empty space" : "Drag: magnet 6px | Alt: free", x + 8, y + 123, 0xFFACD9D9, false);
                 renderInspector(graphics);
                 if (!status.isEmpty()) {
                     String message = font.plainSubstrByWidth(status, inspectorWidth - 18);
-                    graphics.drawString(font, message, x + 8, y + expandedPanelHeight() - 14,
-                            0xFFFFD16B, false);
+                    graphics.drawString(font, message, x + 8, y + expandedPanelHeight() - 14, 0xFFFFD16B, false);
                 }
             }
             int backgroundMouseX = editingAppearance == null ? mouseX : Integer.MIN_VALUE;
             int backgroundMouseY = editingAppearance == null ? mouseY : Integer.MIN_VALUE;
             super.render(graphics, backgroundMouseX, backgroundMouseY, partialTick);
-            widgetList.render(graphics, font, backgroundMouseX, backgroundMouseY, frameEntries,
-                    selected == null ? null : selected.id(), pickingParent);
+            widgetList.render(graphics, font, backgroundMouseX, backgroundMouseY, frameEntries, selected == null ? null : selected.id(), pickingParent);
             editorDropdown.render(graphics, font, mouseX, mouseY);
             if (editingAppearance != null && colorPickerDialog == null) {
                 renderAppearanceModal(graphics, mouseX, mouseY, partialTick);
@@ -565,9 +555,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             EditorInspectorButton.draw(graphics, font, "-", first, lineY, 0xFF40566A, 0xFFE5EEF5);
             EditorInspectorButton.draw(graphics, font, "+", next, lineY, 0xFF40566A, 0xFFE5EEF5);
         }
-        EditorInspectorButton.draw(graphics, font, "R", reset, lineY,
-                control.modified() ? 0xFF3D6273 : 0xFF40505D,
-                control.modified() ? 0xFFECF8FF : 0xFF80919E);
+        EditorInspectorButton.draw(graphics, font, "R", reset, lineY, control.modified() ? 0xFF3D6273 : 0xFF40505D, control.modified() ? 0xFFECF8FF : 0xFF80919E);
         if (lineY >= top && lineY + RESET_SIZE <= bottom) {
             if (!choice && !checkbox) {
                 layoutHitboxes.add(new LayoutHitbox(control, -1, first, lineY));
@@ -585,16 +573,11 @@ public final class AnchorScreenEditorScreen extends Screen {
         graphics.pose().pushPose();
         graphics.pose().translate(0, 0, 100);
         try {
-            graphics.fill(modalX - 1, modalY - 1, modalX + appearanceInput.getWidth() + 17,
-                    modalY + 86, 0xFF718699);
-            graphics.fill(modalX, modalY, modalX + appearanceInput.getWidth() + 16,
-                    modalY + 85, 0xFF162332);
-            graphics.drawString(font, font.plainSubstrByWidth(editingAppearance.field().label(),
-                    appearanceInput.getWidth()), modalX + 8, modalY + 8,
-                    SELECTED, false);
+            graphics.fill(modalX - 1, modalY - 1, modalX + appearanceInput.getWidth() + 17, modalY + 86, 0xFF718699);
+            graphics.fill(modalX, modalY, modalX + appearanceInput.getWidth() + 16, modalY + 85, 0xFF162332);
+            graphics.drawString(font, font.plainSubstrByWidth(editingAppearance.field().label(), appearanceInput.getWidth()), modalX + 8, modalY + 8, SELECTED, false);
             if (!status.isEmpty()) {
-                graphics.drawString(font, font.plainSubstrByWidth(status, appearanceInput.getWidth()),
-                        modalX + 8, modalY + 74, 0xFFFFA68A, false);
+                graphics.drawString(font, font.plainSubstrByWidth(status, appearanceInput.getWidth()), modalX + 8, modalY + 74, 0xFFFFA68A, false);
             }
             appearanceInput.render(graphics, mouseX, mouseY, partialTick);
             appearanceApply.render(graphics, mouseX, mouseY, partialTick);
@@ -704,15 +687,12 @@ public final class AnchorScreenEditorScreen extends Screen {
                 EditorInspectorButton.drawColor(graphics, next, lineY, 0xFF3D4550);
             }
         } else if (control.textual() || choice) {
-            EditorInspectorButton.draw(graphics, font, choice ? "▼" : "E",
-                    next, lineY, 0xFF40566A, 0xFFE5EEF5);
+            EditorInspectorButton.draw(graphics, font, choice ? "▼" : "E", next, lineY, 0xFF40566A, 0xFFE5EEF5);
         } else {
             EditorInspectorButton.draw(graphics, font, "-", left, lineY, 0xFF40566A, 0xFFE5EEF5);
             EditorInspectorButton.draw(graphics, font, "+", next, lineY, 0xFF40566A, 0xFFE5EEF5);
         }
-        EditorInspectorButton.draw(graphics, font, "R", reset, lineY,
-                control.modified() ? 0xFF3D6273 : 0xFF40505D,
-                control.modified() ? 0xFFECF8FF : 0xFF80919E);
+        EditorInspectorButton.draw(graphics, font, "R", reset, lineY, control.modified() ? 0xFF3D6273 : 0xFF40505D, control.modified() ? 0xFFECF8FF : 0xFF80919E);
         if (lineY >= top && lineY + RESET_SIZE <= bottom) {
             if (!control.textual() && !choice && !checkbox) {
                 appearanceHitboxes.add(new AppearanceHitbox(control, -1, left, lineY));
@@ -750,8 +730,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         AnchorLayout.Bounds bounds = selected.bounds();
         appendInspectorLine(lines, "screen: " + bounds.x() + ", " + bounds.y(), 0xFFE5EEF5, null, false);
         appendInspectorLine(lines, "size: " + bounds.width() + " x " + bounds.height(), 0xFFE5EEF5, null, false);
-        appendProperty(lines, "user offset: " + selected.offset().x() + ", " + selected.offset().y(),
-                AnchorHudManager.EditableProperty.OFFSET);
+        appendProperty(lines, "user offset: " + selected.offset().x() + ", " + selected.offset().y(), AnchorHudManager.EditableProperty.OFFSET);
         appendProperty(lines, "visible: " + selected.visible(), AnchorHudManager.EditableProperty.VISIBILITY);
         List<LayoutInspectorControls.Control> layoutControls = target.editorLayoutControls(selected.id());
         if (!layoutControls.isEmpty()) {
@@ -761,8 +740,7 @@ public final class AnchorScreenEditorScreen extends Screen {
                 String label = control.booleanField() ? control.label() : control.label() + ": " + control.value();
                 int width = Math.max(38, (int) ((inspectorWidth - 98) / INSPECTOR_SCALE));
                 String clipped = font.plainSubstrByWidth(label, width);
-                lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(),
-                        control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null, control.modified(), control));
+                lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(), control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null, control.modified(), control));
             }
         }
         List<AppearanceInspectorControls.Control> appearanceControls = target.editorAppearanceControls(selected.id());
@@ -771,9 +749,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             for (AppearanceInspectorControls.Control control : appearanceControls) {
                 String label = control.booleanField() ? control.field().label() : control.field().label() + ": " + control.value();
                 String clipped = font.plainSubstrByWidth(label, Math.max(38, (int) ((inspectorWidth - 98) / INSPECTOR_SCALE)));
-                lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(),
-                        control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null,
-                        control.modified(), null, control));
+                lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(), control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null, control.modified(), null, control));
             }
         }
         sourceHeaderIndex = lines.size();
@@ -782,8 +758,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             if (!selected.id().equals(inspectedId)) {
                 JsonObject settings = target.editorSourceSettings(selected.id());
                 String widgetParent = target.editorStructuralParent(selected.id());
-                sourceProperties = HudInspectorProperties.flatten(settings,
-                        "(none)".equals(widgetParent) ? null : widgetParent);
+                sourceProperties = HudInspectorProperties.flatten(settings, "(none)".equals(widgetParent) ? null : widgetParent);
                 inspectedId = selected.id();
             }
             for (String property : sourceProperties) {
@@ -816,8 +791,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         }
         AnchorLayout.Bounds viewport = new AnchorLayout.Bounds(panelX() + 4, top, inspectorWidth - 7, bottom - top);
         if (inspectorScrollBar == null || !inspectorScrollBar.matches(viewport, maxInspectorScroll, 23, 1.0, NativeContainerScrollPanel.SCREEN_INSPECTOR)) {
-            inspectorScrollBar = new NativeContainerScrollPanel(minecraft, viewport, maxInspectorScroll, 23, 1.0,
-                    inspectorScroll, NativeContainerScrollPanel.SCREEN_INSPECTOR);
+            inspectorScrollBar = new NativeContainerScrollPanel(minecraft, viewport, maxInspectorScroll, 23, 1.0, inspectorScroll, NativeContainerScrollPanel.SCREEN_INSPECTOR);
         }
         inspectorScroll = inspectorScrollBar.logicalOffset();
     }
@@ -867,8 +841,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             boolean wasCollapsed = widgetList.isCollapsed();
             widgetList.beginClick(mouseX, mouseY, button, frameEntries);
             if (wasCollapsed && !widgetList.isCollapsed() && !inspectorCollapsed
-                    && widgetList.overlaps(panelX(), panelTop,
-                    panelX() + inspectorWidth, panelTop + expandedPanelHeight())) {
+                    && widgetList.overlaps(panelX(), panelTop, panelX() + inspectorWidth, panelTop + expandedPanelHeight())) {
                 toggleInspector();
             }
             return true;
@@ -961,8 +934,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         select(hit == null ? null : hit.id());
         if (selected != null) {
             AnchorLayout.Bounds bounds = selected.bounds();
-            dragOrigin = new HudSnap.Widget(selected.id(), selected.relativeTo(), bounds.x(), bounds.y(),
-                    bounds.width(), bounds.height(), selected.visible());
+            dragOrigin = new HudSnap.Widget(selected.id(), selected.relativeTo(), bounds.x(), bounds.y(), bounds.width(), bounds.height(), selected.visible());
             startX = mouseX;
             startY = mouseY;
             startOffset = selected.offset();
@@ -990,8 +962,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         }
         if (draggingPanel && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             panelLeft = Math.max(0, Math.min(width - inspectorWidth, panelDragLeft + (int) Math.round(mouseX - panelStartX)));
-            panelTop = Math.max(0, Math.min(height - expandedPanelHeight(),
-                    panelDragTop + (int) Math.round(mouseY - panelStartY)));
+            panelTop = Math.max(0, Math.min(height - expandedPanelHeight(), panelDragTop + (int) Math.round(mouseY - panelStartY)));
             positionControls();
             return true;
         }
@@ -1006,8 +977,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             List<HudSnap.Widget> targets = new ArrayList<>();
             for (ItemLoreScreen.EditorHandle handle : target.editorHandles()) {
                 AnchorLayout.Bounds b = handle.bounds();
-                targets.add(new HudSnap.Widget(handle.id(), handle.relativeTo(), b.x(), b.y(),
-                        b.width(), b.height(), handle.visible()));
+                targets.add(new HudSnap.Widget(handle.id(), handle.relativeTo(), b.x(), b.y(), b.width(), b.height(), handle.visible()));
             }
             snapped = HudSnap.snap(dragOrigin, desiredX, desiredY, targets, width, height);
         }

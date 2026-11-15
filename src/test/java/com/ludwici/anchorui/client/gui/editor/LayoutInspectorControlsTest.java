@@ -92,8 +92,7 @@ public class LayoutInspectorControlsTest {
         var field = find(LayoutInspectorControls.describe("test:child", source, overrides, true, false), "layoutItem.enabled");
         assertEquals("false", field.value());
         overrides.setSettingOverride("test:child", field.section(), field.field(), LayoutInspectorControls.stepped(field, 1));
-        assertTrue(overrides.effectiveSettings("test:child", source)
-                .getAsJsonObject("layoutItem").get("enabled").getAsBoolean());
+        assertTrue(overrides.effectiveSettings("test:child", source).getAsJsonObject("layoutItem").get("enabled").getAsBoolean());
         assertEquals("0", find(LayoutInspectorControls.describe("test:child", source, overrides, true, false), "layoutItem.grow").value());
     }
 
@@ -124,17 +123,14 @@ public class LayoutInspectorControlsTest {
                  "columns":3,"justifyItems":"center","alignItems":"stretch"}}
                 """);
         var controls = LayoutInspectorControls.describe("test:grid", source, new HudLayoutOffsets());
-        assertEquals(List.of("none", "row", "column", "grid"),
-                LayoutInspectorControls.choices(find(controls, "layout.type")));
-        assertEquals(List.of("start", "center", "end", "stretch"),
-                LayoutInspectorControls.choices(find(controls, "layout.justifyItems")));
+        assertEquals(List.of("none", "row", "column", "grid"), LayoutInspectorControls.choices(find(controls, "layout.type")));
+        assertEquals(List.of("start", "center", "end", "stretch"), LayoutInspectorControls.choices(find(controls, "layout.justifyItems")));
         assertTrue(LayoutInspectorControls.choices(find(controls, "layout.columns")).isEmpty());
     }
 
     @Test
     public void unrelatedWidgetsDoNotExposeLayoutControls() {
-        assertTrue(LayoutInspectorControls.describe("test:label",
-                json("""
+        assertTrue(LayoutInspectorControls.describe("test:label", json("""
                 {"type":"anchorui:text"}
                 """), new HudLayoutOffsets()).isEmpty());
     }
@@ -143,8 +139,7 @@ public class LayoutInspectorControlsTest {
         var source = json("""
                 {"type":"anchorui:button","text":"Nested"}
                 """);
-        var controls = LayoutInspectorControls.describe("test:child", source,
-                new HudLayoutOffsets(), true, false);
+        var controls = LayoutInspectorControls.describe("test:child", source, new HudLayoutOffsets(), true, false);
         assertEquals("true", find(controls, "layoutItem.enabled").value());
         assertEquals("0", find(controls, "layoutItem.grow").value());
         assertEquals("0", find(controls, "layoutItem.shrink").value());

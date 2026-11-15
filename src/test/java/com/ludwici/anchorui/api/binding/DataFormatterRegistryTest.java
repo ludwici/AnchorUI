@@ -49,8 +49,7 @@ public class DataFormatterRegistryTest {
     @Test
     public void compilesConfiguredFormatterOnceAndUsesCodecValidation() {
         DataValueRegistry.registerNumber(id("score"), context -> 42);
-        DataFormatterRegistry.register(id("suffix"), Codec.STRING.fieldOf("suffix").codec(),
-                (value, context, suffix) -> new JsonPrimitive(value.getAsInt() + suffix));
+        DataFormatterRegistry.register(id("suffix"), Codec.STRING.fieldOf("suffix").codec(), (value, context, suffix) -> new JsonPrimitive(value.getAsInt() + suffix));
 
         BoundData binding = BoundData.parse(json("""
                 {

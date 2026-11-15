@@ -29,15 +29,13 @@ public class SharedVisualStyleTest {
                 }
                 """).getAsJsonObject();
         LoreStyle shared = new LoreStyle(style);
-        LoreStyle.Element progress = shared.get(ResourceLocation.fromNamespaceAndPath("anchorui", "progress"),
-                JsonParser.parseString("{\"fillColor\":\"#FFCC4455\"}").getAsJsonObject());
+        LoreStyle.Element progress = shared.get(ResourceLocation.fromNamespaceAndPath("anchorui", "progress"), JsonParser.parseString("{\"fillColor\":\"#FFCC4455\"}").getAsJsonObject());
         assertEquals("#FFCC4455", progress.resolvedSettings.get("fillColor").getAsString());
         assertEquals("#FF99AABB", progress.resolvedSettings.get("borderColor").getAsString());
         assertEquals(2, progress.resolvedSettings.get("borderWidth").getAsInt());
         assertNotNull(progress.resolvedSettings.getAsJsonObject("textures").get("frame"));
 
-        LoreStyle.Element panel = shared.get(ResourceLocation.fromNamespaceAndPath("anchorui", "panel"),
-                new JsonObject());
+        LoreStyle.Element panel = shared.get(ResourceLocation.fromNamespaceAndPath("anchorui", "panel"), new JsonObject());
         assertEquals(8, panel.resolvedSettings.get("radius").getAsInt());
         assertEquals("#FF101820", panel.resolvedSettings.get("fillColor").getAsString());
         assertEquals("minecraft:textures/block/stone.png", panel.resolvedSettings.get("texture").getAsString());

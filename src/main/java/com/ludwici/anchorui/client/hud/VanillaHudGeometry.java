@@ -115,8 +115,7 @@ public final class VanillaHudGeometry {
                 throw new IllegalArgumentException("Missing vanilla HUD reference: " + id);
             }
             AnchorLayout.Bounds bounds = ref.bounds();
-            PositionElement position = new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT,
-                    "screen", bounds.x(), bounds.y());
+            PositionElement position = new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, "screen", bounds.x(), bounds.y());
             frames.add(new AnchorLayout.Frame(id, position, bounds.width(), bounds.height()));
         }
         return List.copyOf(frames);

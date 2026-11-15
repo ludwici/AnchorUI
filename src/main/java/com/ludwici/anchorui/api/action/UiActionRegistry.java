@@ -120,8 +120,7 @@ public final class UiActionRegistry {
         }
         BoundCondition guard = object.has("when") ? BoundCondition.parse(object, "when", false, false) : null;
         object.remove("when");
-        Consumer<UiEvent> action = Objects.requireNonNull(factory.create(context, object),
-                "Event action factory returned null: " + id);
+        Consumer<UiEvent> action = Objects.requireNonNull(factory.create(context, object), "Event action factory returned null: " + id);
         return guard == null ? action : event -> {
             if (guard.get(context)) {
                 action.accept(event);

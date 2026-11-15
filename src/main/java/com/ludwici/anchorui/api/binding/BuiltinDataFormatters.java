@@ -11,12 +11,9 @@ public final class BuiltinDataFormatters {
     }
 
     public static void register() {
-        DataFormatterRegistry.register(id("integer"), (value, context) ->
-                new JsonPrimitive(Long.toString(Math.round(number(value)))));
-        DataFormatterRegistry.register(id("percent"), (value, context) ->
-                new JsonPrimitive(Math.round(number(value) * 100.0) + "%"));
-        DataFormatterRegistry.register(id("compact"), (value, context) ->
-                new JsonPrimitive(compact(number(value))));
+        DataFormatterRegistry.register(id("integer"), (value, context) -> new JsonPrimitive(Long.toString(Math.round(number(value)))));
+        DataFormatterRegistry.register(id("percent"), (value, context) -> new JsonPrimitive(Math.round(number(value) * 100.0) + "%"));
+        DataFormatterRegistry.register(id("compact"), (value, context) -> new JsonPrimitive(compact(number(value))));
         DataFormatterRegistry.register(id("uppercase"), (value, context) -> {
             if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isString()) {
                 throw new IllegalArgumentException("uppercase expects a string");

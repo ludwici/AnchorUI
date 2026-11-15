@@ -30,8 +30,7 @@ public class StageOneTwoLayoutIntegrationTest {
     }
 
     private static AnchorLayout.Frame frame(String id, String parent, int x, int y, int width, int height) {
-        return new AnchorLayout.Frame(id,
-                new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, parent, x, y), width, height);
+        return new AnchorLayout.Frame(id, new PositionElement(ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT, parent, x, y), width, height);
     }
 
     private static ContainerLayout.Result resolve(int screenWidth, List<AnchorLayout.Frame> frames,
@@ -51,10 +50,7 @@ public class StageOneTwoLayoutIntegrationTest {
     @Test
     public void rowHiddenChildrenReserveSlotsByDefaultAndCollapseOnlyWhenOptedIn() {
         String parent = "demo:panel";
-        var frames = List.of(frame(parent, "screen", 0, 0, 200, 60),
-                frame("demo:first", parent, 0, 0, 40, 15),
-                frame("demo:middle", parent, 0, 0, 50, 15),
-                frame("demo:last", parent, 0, 0, 60, 15));
+        var frames = List.of(frame(parent, "screen", 0, 0, 200, 60), frame("demo:first", parent, 0, 0, 40, 15), frame("demo:middle", parent, 0, 0, 50, 15), frame("demo:last", parent, 0, 0, 60, 15));
         var reserve = resolve(300, frames, parent, json("""
                 {
                   "layout": {
@@ -88,10 +84,7 @@ public class StageOneTwoLayoutIntegrationTest {
     @Test
     public void gridHiddenCellsReserveIndexOrReflowWithoutBreakingSurvivingChildIds() {
         String parent = "demo:panel";
-        var frames = List.of(frame(parent, "screen", 15, 10, 200, 100),
-                frame("demo:first", parent, 0, 0, 40, 20),
-                frame("demo:middle", parent, 0, 0, 50, 20),
-                frame("demo:last", parent, 0, 0, 60, 20));
+        var frames = List.of(frame(parent, "screen", 15, 10, 200, 100), frame("demo:first", parent, 0, 0, 40, 20), frame("demo:middle", parent, 0, 0, 50, 20), frame("demo:last", parent, 0, 0, 60, 20));
         var reserved = resolve(300, frames, parent, json("""
                 {
                   "layout": {
@@ -113,17 +106,13 @@ public class StageOneTwoLayoutIntegrationTest {
                 """), Set.of("demo:middle"), Map.of());
         assertTrue(reserved.bounds().get("demo:last").y() > reserved.bounds().get("demo:first").y());
         assertEquals(collapsed.bounds().get("demo:first").y(), collapsed.bounds().get("demo:last").y());
-        assertEquals(3, collapsed.bounds().keySet().stream()
-                .filter(id -> id.startsWith("demo:") && !id.equals(parent)).count());
+        assertEquals(3, collapsed.bounds().keySet().stream().filter(id -> id.startsWith("demo:") && !id.equals(parent)).count());
     }
 
     @Test
     public void hiddenManualChildDoesNotExpandAutoSizedParentWhenCollapseIsEnabled() {
         String parent = "demo:panel";
-        var frames = List.of(frame(parent, "screen", 10, 10, 1, 1),
-                frame("demo:first", parent, 0, 0, 40, 12),
-                frame("demo:middle", parent, 100, 40, 80, 30),
-                frame("demo:last", parent, 0, 0, 20, 12));
+        var frames = List.of(frame(parent, "screen", 10, 10, 1, 1), frame("demo:first", parent, 0, 0, 40, 12), frame("demo:middle", parent, 100, 40, 80, 30), frame("demo:last", parent, 0, 0, 20, 12));
         var parents = Map.of("demo:first", parent, "demo:middle", parent, "demo:last", parent);
         var rules = Map.of("demo:middle", StackLayout.Rules.parse(json("""
                 {
@@ -159,8 +148,7 @@ public class StageOneTwoLayoutIntegrationTest {
 
     @Test
     public void bundledPolicyDemoShowsReserveAndCollapseUsingOneConditionalState() throws Exception {
-        var input = getClass().getClassLoader().getResourceAsStream(
-                "assets/anchorui/anchorui/screens/hidden_space_policy_demo.json");
+        var input = getClass().getClassLoader().getResourceAsStream("assets/anchorui/anchorui/screens/hidden_space_policy_demo.json");
         org.junit.jupiter.api.Assertions.assertNotNull(input);
         try (var reader = new java.io.InputStreamReader(input, java.nio.charset.StandardCharsets.UTF_8)) {
             JsonObject doc = JsonParser.parseReader(reader).getAsJsonObject();
@@ -173,8 +161,7 @@ public class StageOneTwoLayoutIntegrationTest {
             for (JsonObject panel : List.of(reserved, collapsed)) {
                 assertEquals("vertical", panel.getAsJsonObject("scroll").get("axis").getAsString());
                 var middle = panel.getAsJsonArray("children").get(1).getAsJsonObject();
-                assertEquals("hideMiddle", middle.getAsJsonObject("visibleWhen")
-                        .getAsJsonObject("not").get("path").getAsString());
+                assertEquals("hideMiddle", middle.getAsJsonObject("visibleWhen").getAsJsonObject("not").get("path").getAsString());
             }
         }
     }
@@ -198,8 +185,7 @@ public class StageOneTwoLayoutIntegrationTest {
         var wrapControl = controls.stream().filter(c -> c.key().equals("layout.wrap")).findFirst().orElseThrow();
         var collapseControl = controls.stream().filter(c -> c.key().equals("layout.collapseHidden")).findFirst().orElseThrow();
         draft.setSettingOverride(parent, "layout", "wrap", LayoutInspectorControls.stepped(wrapControl, 1));
-        draft.setSettingOverride(parent, "layout", "collapseHidden",
-                LayoutInspectorControls.stepped(collapseControl, 1));
+        draft.setSettingOverride(parent, "layout", "collapseHidden", LayoutInspectorControls.stepped(collapseControl, 1));
         draft.setSettingOverride(parent, "layout", "gap", new JsonPrimitive(8));
         assertFalse(saved.hasSettingOverrides(parent));
 
@@ -211,20 +197,15 @@ public class StageOneTwoLayoutIntegrationTest {
         assertTrue(loaded.effectiveSettings(parent, base).getAsJsonObject("layout").get("collapseHidden").getAsBoolean());
 
         var layout = ContainerAutoLayout.parse(loaded.effectiveSettings(parent, base));
-        var frames = List.of(frame(parent, "screen", 0, 0, 110, 120),
-                frame("demo:first", parent, 0, 0, 65, 20),
-                frame("demo:middle", parent, 0, 0, 55, 20),
-                frame("demo:last", parent, 0, 0, 40, 20));
-        Map<String, String> parents = Map.of("demo:first", parent,
-                "demo:middle", parent, "demo:last", parent);
+        var frames = List.of(frame(parent, "screen", 0, 0, 110, 120), frame("demo:first", parent, 0, 0, 65, 20), frame("demo:middle", parent, 0, 0, 55, 20), frame("demo:last", parent, 0, 0, 40, 20));
+        Map<String, String> parents = Map.of("demo:first", parent, "demo:middle", parent, "demo:last", parent);
         var narrow = ContainerLayout.resolve(240, 200, frames,
                 Map.of(parent, new PaddingElement()), Map.of(), parents,
                 Map.of(parent, layout), Set.of("demo:middle"), Set.of(), warning -> {});
         assertEquals(0, narrow.bounds().get("demo:first").y());
         assertEquals(28, narrow.bounds().get("demo:last").y());
 
-        var expandedFrames = List.of(frame(parent, "screen", 0, 0, 180, 120),
-                frames.get(1), frames.get(2), frames.get(3));
+        var expandedFrames = List.of(frame(parent, "screen", 0, 0, 180, 120), frames.get(1), frames.get(2), frames.get(3));
         var wide = ContainerLayout.resolve(340, 200, expandedFrames,
                 Map.of(parent, new PaddingElement()), Map.of(), parents,
                 Map.of(parent, layout), Set.of("demo:middle"), Set.of(), warning -> {});

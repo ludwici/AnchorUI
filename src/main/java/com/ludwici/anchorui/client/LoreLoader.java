@@ -50,8 +50,7 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
         for (var entry : objects.entrySet()) {
             ResourceLocation resource = entry.getKey();
             if (!entry.getValue().isJsonObject()) {
-                AnchorUI.LOGGER.error("Invalid Anchor UI resource '{}': expected a JSON object, got {}",
-                        resource, entry.getValue());
+                AnchorUI.LOGGER.error("Invalid Anchor UI resource '{}': expected a JSON object, got {}", resource, entry.getValue());
                 continue;
             }
             JsonObject json = entry.getValue().getAsJsonObject();
@@ -121,9 +120,7 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
         LoreStyle style = key == null ? null : styles.get(key);
         if (style == null) {
             if (id != null && !id.isBlank() && key != null && warnedMissingStyles.add(key)) {
-                AnchorUI.LOGGER.warn("Missing Anchor UI style '{}'; using anchorui:style/default. "
-                        + "Expected asset: assets/{}/anchorui/{}.json",
-                        key, key.getNamespace(), key.getPath());
+                AnchorUI.LOGGER.warn("Missing Anchor UI style '{}'; using anchorui:style/default. " + "Expected asset: assets/{}/anchorui/{}.json", key, key.getNamespace(), key.getPath());
             }
             style = styles.get(ResourceLocation.fromNamespaceAndPath("anchorui", "style/default"));
         }

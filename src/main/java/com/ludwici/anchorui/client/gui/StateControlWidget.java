@@ -135,8 +135,7 @@ public final class StateControlWidget extends AbstractButton implements UiChange
         int hoverColor = WidgetColors.parse(GsonHelper.getAsString(visualSettings, "hoverColor", "#FF36506A"));
         int disabledColor = WidgetColors.parse(GsonHelper.getAsString(visualSettings, "disabledColor", "#FF353B43"));
         int focusColor = WidgetColors.parse(GsonHelper.getAsString(visualSettings, "focusColor", "#FFFFD16B"));
-        return new StateControlWidget(context, kind, state, key, element.text, options, width, height,
-                style.textColor, fillColor, borderColor, accentColor, hoverColor, disabledColor, focusColor, visualSettings);
+        return new StateControlWidget(context, kind, state, key, element.text, options, width, height, style.textColor, fillColor, borderColor, accentColor, hoverColor, disabledColor, focusColor, visualSettings);
     }
 
     @Override
@@ -181,8 +180,7 @@ public final class StateControlWidget extends AbstractButton implements UiChange
                     popupOpen = false;
                 } else {
                     highlight = Math.max(0, selectedIndex());
-                    scrollStart = Math.max(0, Math.min(highlight - shownOptionCount() + 1,
-                            options.size() - shownOptionCount()));
+                    scrollStart = Math.max(0, Math.min(highlight - shownOptionCount() + 1, options.size() - shownOptionCount()));
                     if (context.screen() instanceof ItemLoreScreen screen) {
                         screen.closeOtherWidgetPopups(this);
                     }
@@ -232,8 +230,7 @@ public final class StateControlWidget extends AbstractButton implements UiChange
                 return true;
             }
             if (keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_DOWN) {
-                highlight = Math.max(0, Math.min(options.size() - 1, highlight
-                        + (keyCode == GLFW.GLFW_KEY_UP ? -1 : 1)));
+                highlight = Math.max(0, Math.min(options.size() - 1, highlight + (keyCode == GLFW.GLFW_KEY_UP ? -1 : 1)));
                 scrollStart = Math.max(0, Math.min(scrollStart, highlight));
                 scrollStart = Math.max(scrollStart, highlight - shownOptionCount() + 1);
                 return true;
@@ -253,10 +250,8 @@ public final class StateControlWidget extends AbstractButton implements UiChange
         int width = getWidth();
         boolean hovered = isMouseOver(mouseX, mouseY);
         boolean focused = isFocused();
-        if (!textures.render(graphics, "background", x, y, width, height,
-                ControlVisualStates.background(active, hovered, focused))) {
-            drawBox(graphics, x, y, width, height,
-                    !active ? disabledColor : hovered || focused ? hoverColor : fillColor);
+        if (!textures.render(graphics, "background", x, y, width, height, ControlVisualStates.background(active, hovered, focused))) {
+            drawBox(graphics, x, y, width, height, !active ? disabledColor : hovered || focused ? hoverColor : fillColor);
         }
 
         switch (kind) {
@@ -271,8 +266,7 @@ public final class StateControlWidget extends AbstractButton implements UiChange
                         graphics.fill(boxX + 3, boxY + 3, boxX + side - 3, boxY + side - 3, TEXT);
                     }
                 }
-                drawText(graphics, label, boxX + side + 6, y + (height - 8) / 2,
-                        Math.max(0, width - side - 16), textColor);
+                drawText(graphics, label, boxX + side + 6, y + (height - 8) / 2, Math.max(0, width - side - 16), textColor);
             }
             case SWITCH -> {
                 int trackX = x + 5;
@@ -286,20 +280,16 @@ public final class StateControlWidget extends AbstractButton implements UiChange
                 if (!drawToggleTexture(graphics, "thumb", knobX, knobY, thumbWidth, thumbHeight, enabled, hovered)) {
                     graphics.fill(knobX, knobY, knobX + thumbWidth, knobY + thumbHeight, TEXT);
                 }
-                drawText(graphics, label, trackX + trackWidth + 6, y + (height - 8) / 2,
-                        Math.max(0, width - trackWidth - 16), textColor);
+                drawText(graphics, label, trackX + trackWidth + 6, y + (height - 8) / 2, Math.max(0, width - trackWidth - 16), textColor);
             }
             case SELECT -> {
                 int index = selectedIndex();
                 String value = index < 0 ? "" : options.get(index).label();
                 String description = label.isBlank() ? value : label + ": " + value;
-                drawText(graphics, description, x + 7, y + (height - 8) / 2,
-                        Math.max(0, width - 24), textColor);
+                drawText(graphics, description, x + 7, y + (height - 8) / 2, Math.max(0, width - 24), textColor);
                 int arrowX = x + width - arrowSize - 3;
-                if (!textures.render(graphics, "arrow", arrowX, y + (height - arrowSize) / 2,
-                        arrowSize, arrowSize, !active ? "disabled" : popupOpen ? "open" : "closed", "closed")) {
-                    drawText(graphics, popupOpen ? "▲" : "▼", x + width - 15,
-                            y + (height - 8) / 2, 12, MUTED);
+                if (!textures.render(graphics, "arrow", arrowX, y + (height - arrowSize) / 2, arrowSize, arrowSize, !active ? "disabled" : popupOpen ? "open" : "closed", "closed")) {
+                    drawText(graphics, popupOpen ? "▲" : "▼", x + width - 15, y + (height - 8) / 2, 12, MUTED);
                 }
             }
             case TABS -> {
@@ -311,10 +301,8 @@ public final class StateControlWidget extends AbstractButton implements UiChange
                     boolean tabHover = hovered && mouseX >= left && mouseX < right;
                     boolean selected = index == chosen;
                     boolean rendered = selected
-                            ? textures.render(graphics, "tab", left, y, right - left, height,
-                                    !active ? "disabled" : tabHover ? "selectedHover" : "selected", "selected")
-                            : textures.render(graphics, "tab", left, y, right - left, height,
-                                    !active ? "disabled" : tabHover ? "hover" : "normal");
+                            ? textures.render(graphics, "tab", left, y, right - left, height, !active ? "disabled" : tabHover ? "selectedHover" : "selected", "selected")
+                            : textures.render(graphics, "tab", left, y, right - left, height, !active ? "disabled" : tabHover ? "hover" : "normal");
                     if (!rendered) {
                         if (selected) {
                             graphics.fill(left + 1, y + 1, right - 1, y + height - 1, accentColor);
@@ -327,8 +315,7 @@ public final class StateControlWidget extends AbstractButton implements UiChange
                     int maxWidth = Math.max(0, right - left - 8);
                     String shortTitle = context.font().plainSubstrByWidth(title, maxWidth);
                     int tx = left + Math.max(2, (right - left - context.font().width(shortTitle)) / 2);
-                    drawText(graphics, shortTitle, tx, y + (height - 8) / 2, maxWidth,
-                            index == chosen ? TEXT : MUTED);
+                    drawText(graphics, shortTitle, tx, y + (height - 8) / 2, maxWidth, index == chosen ? TEXT : MUTED);
                 }
             }
         }
@@ -359,8 +346,7 @@ public final class StateControlWidget extends AbstractButton implements UiChange
 
     private void drawText(GuiGraphics graphics, String text, int x, int y, int availableWidth, int color) {
         if (availableWidth > 0 && !text.isEmpty()) {
-            graphics.drawString(context.font(), context.font().plainSubstrByWidth(text, availableWidth),
-                    x, y, color, false);
+            graphics.drawString(context.font(), context.font().plainSubstrByWidth(text, availableWidth), x, y, color, false);
         }
     }
 
@@ -416,8 +402,7 @@ public final class StateControlWidget extends AbstractButton implements UiChange
         if (!containsPopup(mouseX, mouseY)) {
             return false;
         }
-        scrollStart = Math.max(0, Math.min(options.size() - shownOptionCount(),
-                scrollStart - (int) Math.signum(scrollY)));
+        scrollStart = Math.max(0, Math.min(options.size() - shownOptionCount(), scrollStart - (int) Math.signum(scrollY)));
         return true;
     }
 
@@ -442,15 +427,11 @@ public final class StateControlWidget extends AbstractButton implements UiChange
             boolean selectedOption = index == selected;
             boolean optionHover = hovered || index == highlight;
             SelectOptionAppearance appearance = optionAppearances.get(index);
-            if (!renderOptionBackground(graphics, appearance, x + 1, top, width - 2, popupRowHeight,
-                    selectedOption, optionHover) && (selectedOption || optionHover)) {
-                graphics.fill(x + 1, top, x + width - 1, top + popupRowHeight,
-                        selectedOption ? accentColor : HOVER);
+            if (!renderOptionBackground(graphics, appearance, x + 1, top, width - 2, popupRowHeight, selectedOption, optionHover) && (selectedOption || optionHover)) {
+                graphics.fill(x + 1, top, x + width - 1, top + popupRowHeight, selectedOption ? accentColor : HOVER);
             }
             int defaultTextColor = selectedOption ? TEXT : textColor;
-            drawText(graphics, options.get(index).label(), x + 7, top + (popupRowHeight - 8) / 2,
-                    width - 14, appearance == null ? defaultTextColor
-                            : appearance.textColor(selectedOption, optionHover, defaultTextColor));
+            drawText(graphics, options.get(index).label(), x + 7, top + (popupRowHeight - 8) / 2, width - 14, appearance == null ? defaultTextColor : appearance.textColor(selectedOption, optionHover, defaultTextColor));
         }
     }
 

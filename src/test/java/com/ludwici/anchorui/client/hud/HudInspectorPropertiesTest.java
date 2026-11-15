@@ -50,8 +50,7 @@ public class HudInspectorPropertiesTest {
                 }
                 """).getAsJsonObject();
         List<String> lines = HudInspectorProperties.flatten(json, "test:grid");
-        assertEquals(List.of("type: anchorui:button", "id: test:cell",
-                "position.x: 0", "position.y: 0", "text: Cell"), lines);
+        assertEquals(List.of("type: anchorui:button", "id: test:cell", "position.x: 0", "position.y: 0", "text: Cell"), lines);
     }
 
     @Test

@@ -60,8 +60,7 @@ public final class HudInspectorProperties {
                 }
             }
         } else {
-            lines.add(key + ": " + (value.getAsJsonPrimitive().isString()
-                    ? value.getAsString().replace("\n", "\\n") : value.toString()));
+            lines.add(key + ": " + (value.getAsJsonPrimitive().isString() ? value.getAsString().replace("\n", "\\n") : value.toString()));
         }
     }
 }

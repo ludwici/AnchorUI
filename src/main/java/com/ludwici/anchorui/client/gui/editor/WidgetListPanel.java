@@ -80,8 +80,7 @@ public final class WidgetListPanel {
     }
 
     private void updateHeight() {
-        height = Math.min(preferredHeight, Math.max(HEADER_HEIGHT + FOOTER_HEIGHT + 1,
-                viewportHeight - y - SCREEN_MARGIN));
+        height = Math.min(preferredHeight, Math.max(HEADER_HEIGHT + FOOTER_HEIGHT + 1, viewportHeight - y - SCREEN_MARGIN));
     }
 
     public boolean contains(double mouseX, double mouseY) {
@@ -165,8 +164,7 @@ public final class WidgetListPanel {
             return false;
         }
         x = Math.max(0, Math.min(startX + (int) Math.round(mouseX - dragStartX), Math.max(0, viewportWidth - width)));
-        y = Math.max(0, Math.min(startY + (int) Math.round(mouseY - dragStartY),
-                Math.max(0, viewportHeight - MIN_EXPANDED_HEIGHT - SCREEN_MARGIN)));
+        y = Math.max(0, Math.min(startY + (int) Math.round(mouseY - dragStartY), Math.max(0, viewportHeight - MIN_EXPANDED_HEIGHT - SCREEN_MARGIN)));
         updateHeight();
         return true;
     }
@@ -254,23 +252,20 @@ public final class WidgetListPanel {
                     if (row.heading()) {
                         graphics.fill(x + 3, lineY, x + width - 4, lineY + ROW_HEIGHT, 0xFF223244);
                         String groupTitle = (collapsedGroups.contains(row.group()) ? "[+] " : "[-] ") + row.header();
-                        graphics.drawString(font, font.plainSubstrByWidth(groupTitle, width - 18),
-                                x + 8, lineY + 4, color(row.group()), false);
+                        graphics.drawString(font, font.plainSubstrByWidth(groupTitle, width - 18), x + 8, lineY + 4, color(row.group()), false);
                     } else {
                         Entry entry = row.entry();
                         boolean chosen = entry.id().equals(selected);
                         boolean hovering = mouseX >= x + 3 && mouseX < x + width - 4
                                 && mouseY >= Math.max(top, lineY) && mouseY < Math.min(bottom, lineY + ROW_HEIGHT);
                         if (chosen || hovering) {
-                            graphics.fill(x + 3, lineY, x + width - 5, lineY + ROW_HEIGHT,
-                                    chosen ? 0xB04A4435 : 0x88405062);
+                            graphics.fill(x + 3, lineY, x + width - 5, lineY + ROW_HEIGHT, chosen ? 0xB04A4435 : 0x88405062);
                         }
                         int tint = chosen ? SELECTED_COLOR : entry.visible() ? color(row.group()) : 0xFF8993A1;
                         int indentation = Math.min(60, row.depth() * 10);
                         int textX = x + 15 + indentation + (row.hasChildren() ? 10 : 0);
                         if (row.hasChildren()) {
-                            graphics.drawString(font, collapsedContainers.contains(entry.id()) ? ">" : "v",
-                                    x + 11 + indentation, lineY + 4, tint, false);
+                            graphics.drawString(font, collapsedContainers.contains(entry.id()) ? ">" : "v", x + 11 + indentation, lineY + 4, tint, false);
                         }
                         graphics.fill(textX - 3, lineY + 5, textX, lineY + 12, tint);
                         String local = entry.id().substring(entry.id().indexOf(':') + 1);
@@ -285,8 +280,7 @@ public final class WidgetListPanel {
             graphics.disableScissor();
         }
         graphics.fill(x + 3, bottom, x + width - 3, bottom + 1, 0xFF50647A);
-        graphics.drawString(font, choosingParent ? "Click a parent ID" : "Click to select | Scroll",
-                x + 6, bottom + 5, 0xFFB7C8D6, false);
+        graphics.drawString(font, choosingParent ? "Click a parent ID" : "Click to select | Scroll", x + 6, bottom + 5, 0xFFB7C8D6, false);
 
         if (scrollBar != null) {
             scrollBar.render(graphics, mouseX, mouseY, 0);
@@ -294,9 +288,7 @@ public final class WidgetListPanel {
 
         Entry hovered = entryAt(mouseX, mouseY, entries);
         if (hovered != null) {
-            graphics.renderTooltip(font, Component.literal(hovered.id()
-                    + (hovered.type().isEmpty() ? "" : " [" + hovered.type() + "]")
-                    + (hovered.readOnly() ? " (read-only)" : "")), mouseX, mouseY);
+            graphics.renderTooltip(font, Component.literal(hovered.id() + (hovered.type().isEmpty() ? "" : " [" + hovered.type() + "]") + (hovered.readOnly() ? " (read-only)" : "")), mouseX, mouseY);
         }
     }
 
@@ -311,8 +303,7 @@ public final class WidgetListPanel {
         }
         AnchorLayout.Bounds viewport = new AnchorLayout.Bounds(x + 3, top, width - 6, bottom - top);
         if (scrollBar == null || !scrollBar.matches(viewport, max, ROW_HEIGHT * 2, 1.0, NativeContainerScrollPanel.WIDGET_LIST)) {
-            scrollBar = new NativeContainerScrollPanel(Minecraft.getInstance(), viewport,
-                    max, ROW_HEIGHT * 2, 1.0, scroll, NativeContainerScrollPanel.WIDGET_LIST);
+            scrollBar = new NativeContainerScrollPanel(Minecraft.getInstance(), viewport, max, ROW_HEIGHT * 2, 1.0, scroll, NativeContainerScrollPanel.WIDGET_LIST);
         }
         scroll = scrollBar.logicalOffset();
     }
@@ -331,8 +322,7 @@ public final class WidgetListPanel {
         }
         List<Row> result = new ArrayList<>();
         int previousGroup = -1;
-        for (EditorWidgetOrder.Node node : EditorWidgetOrder.hierarchy(byId.keySet(),
-                currentNamespace, parents, collapsedContainers)) {
+        for (EditorWidgetOrder.Node node : EditorWidgetOrder.hierarchy(byId.keySet(), currentNamespace, parents, collapsedContainers)) {
             int group = EditorWidgetOrder.group(node.id(), currentNamespace);
             if (group != previousGroup) {
                 String heading = switch (group) {

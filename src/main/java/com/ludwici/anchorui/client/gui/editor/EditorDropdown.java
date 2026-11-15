@@ -88,8 +88,7 @@ public final class EditorDropdown {
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             close();
         } else if (keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_DOWN) {
-            highlighted = Math.max(0, Math.min(options.size() - 1,
-                    highlighted + (keyCode == GLFW.GLFW_KEY_UP ? -1 : 1)));
+            highlighted = Math.max(0, Math.min(options.size() - 1, highlighted + (keyCode == GLFW.GLFW_KEY_UP ? -1 : 1)));
             scrollStart = Math.max(0, Math.min(scrollStart, highlighted));
             scrollStart = Math.max(scrollStart, highlighted - visibleRows + 1);
         } else if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER
@@ -115,12 +114,10 @@ public final class EditorDropdown {
                 boolean hovering = mouseX >= x && mouseX < x + width
                         && mouseY >= rowY && mouseY < rowY + ROW_HEIGHT;
                 if (index == highlighted || hovering) {
-                    graphics.fill(x + 1, rowY, x + width - 1, rowY + ROW_HEIGHT,
-                            hovering ? HOVER : SELECTED);
+                    graphics.fill(x + 1, rowY, x + width - 1, rowY + ROW_HEIGHT, hovering ? HOVER : SELECTED);
                 }
                 String text = font.plainSubstrByWidth(options.get(index), width - 18);
-                graphics.drawString(font, text, x + 7, rowY + (ROW_HEIGHT - font.lineHeight) / 2,
-                        index == highlighted ? TEXT : MUTED, false);
+                graphics.drawString(font, text, x + 7, rowY + (ROW_HEIGHT - font.lineHeight) / 2, index == highlighted ? TEXT : MUTED, false);
             }
         } finally {
             graphics.pose().popPose();

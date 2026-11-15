@@ -291,8 +291,7 @@ public class TemplateListExpanderTest {
         assertEquals("Java: One", fromJava.getFirst().settings().get("text").getAsString());
         assertTrue(calls.get() > 0);
 
-        List<TemplateListExpander.Entry> overridden = TemplateListExpander.expand(config, rows, "example:items",
-                Map.of("template_registry_test:generated_row", object("""
+        List<TemplateListExpander.Entry> overridden = TemplateListExpander.expand(config, rows, "example:items", Map.of("template_registry_test:generated_row", object("""
                         {
                           "type":"anchorui:text",
                           "text":"Pack: {{item#title}}"
@@ -327,9 +326,7 @@ public class TemplateListExpanderTest {
                 """);
         List<TemplateListExpander.Entry> rows = TemplateListExpander.expand(config, array("""
                 [{"id":"quest:one","title":"Sword"}]
-                """), "example:quests", Map.of(
-                "example:base_row", parent,
-                "example:inherited_row", object("""
+                """), "example:quests", Map.of("example:base_row", parent, "example:inherited_row", object("""
                         {
                           "ref":"example:base_row",
                           "size":{"width":210}
@@ -349,12 +346,10 @@ public class TemplateListExpanderTest {
         JsonArray rows = array("""
                 [{"id":"example:a","title":"A"}]
                 """);
-        assertThrows(WidgetDocumentResolver.UnknownWidgetDefinitionException.class,
-                () -> TemplateListExpander.expand(object("""
+        assertThrows(WidgetDocumentResolver.UnknownWidgetDefinitionException.class, () -> TemplateListExpander.expand(object("""
                         {"key":"id","template":"example:missing"}
                         """), rows, "example:list", Map.of()));
-        assertThrows(IllegalArgumentException.class,
-                () -> TemplateListExpander.expand(object("""
+        assertThrows(IllegalArgumentException.class, () -> TemplateListExpander.expand(object("""
                         {"template":42}
                         """), rows, "example:list", Map.of()));
 

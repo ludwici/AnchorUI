@@ -12,8 +12,7 @@ public final class ColorValues {
         }
         String hex = value.startsWith("#") ? value.substring(1) : value;
         if (!hex.matches("(?i)([0-9a-f]{6}|[0-9a-f]{8})")) {
-            throw new IllegalArgumentException("Invalid color '" + value
-                    + "'; expected #RRGGBB or #AARRGGBB");
+            throw new IllegalArgumentException("Invalid color '" + value + "'; expected #RRGGBB or #AARRGGBB");
         }
         long parsed = Long.parseLong(hex, 16);
         return (int) (hex.length() == 6 ? parsed | 0xFF000000L : parsed);

@@ -202,14 +202,12 @@ public final class AnchorHudManager {
 
     public boolean setPreviewPoint(String id, ElementAnchor value) {
         HudHandle handle = handle(id);
-        return handle != null && changePreviewAnchor(id,
-                new HudLayoutOffsets.AnchorOverride(handle.relativeTo(), value, handle.anchor()));
+        return handle != null && changePreviewAnchor(id, new HudLayoutOffsets.AnchorOverride(handle.relativeTo(), value, handle.anchor()));
     }
 
     public boolean setPreviewAnchor(String id, ElementAnchor value) {
         HudHandle handle = handle(id);
-        return handle != null && changePreviewAnchor(id,
-                new HudLayoutOffsets.AnchorOverride(handle.relativeTo(), handle.point(), value));
+        return handle != null && changePreviewAnchor(id, new HudLayoutOffsets.AnchorOverride(handle.relativeTo(), handle.point(), value));
     }
 
     public boolean setPreviewParent(String id, String parent) {
@@ -263,8 +261,7 @@ public final class AnchorHudManager {
                     candidate.clearAnchor(id);
                     candidate.set(id, 0, 0);
                 } else {
-                    candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(
-                            containerId, ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
+                    candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(containerId, ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
                     candidate.set(id, -placed.position().x, -placed.position().y);
                     candidate.setSettingOverride(id, "layoutItem", "enabled", new com.google.gson.JsonPrimitive(true));
                 }
@@ -280,8 +277,7 @@ public final class AnchorHudManager {
         }
         HudLayoutOffsets candidate = editingOffsets.copy();
         candidate.setContainerParent(id, "screen");
-        candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(
-                "screen", ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
+        candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride("screen", ElementAnchor.TOPLEFT, ElementAnchor.TOPLEFT));
         candidate.set(id, 0, 0);
         candidate.clearSettingOverride(id, "layoutItem", "enabled");
         return usePreviewLayout(candidate);
@@ -451,8 +447,7 @@ public final class AnchorHudManager {
             NativeContainerScrollPanel panel = nativeScrollPanels.get(placed.id());
             if (panel == null || !panel.matches(viewport, limits.y(), placed.scroll().step(), transform.scale())) {
                 ContainerScroll.Offset offset = scrollOffsets.getOrDefault(placed.id(), ContainerScroll.Offset.ZERO);
-                panel = new NativeContainerScrollPanel(Minecraft.getInstance(), viewport, limits.y(),
-                        placed.scroll().step(), transform.scale(), offset.y());
+                panel = new NativeContainerScrollPanel(Minecraft.getInstance(), viewport, limits.y(), placed.scroll().step(), transform.scale(), offset.y());
             }
             panels.put(placed.id(), panel);
         }
@@ -564,8 +559,7 @@ public final class AnchorHudManager {
             int nextX = old.x();
             if (limits.x() > 0 && placed.scroll().horizontal()) {
                 double horizontalWheel = scrollX != 0 ? scrollX : !placed.scroll().vertical() ? scrollY : 0;
-                nextX = Math.max(0, Math.min(limits.x(),
-                        old.x() - (int) Math.round(horizontalWheel * placed.scroll().step())));
+                nextX = Math.max(0, Math.min(limits.x(), old.x() - (int) Math.round(horizontalWheel * placed.scroll().step())));
             }
             if (panel == null && placed.scroll().vertical()) {
                 nextY = ContainerScroll.move(old, limits, placed.scroll(), 0, scrollY).y();
@@ -834,8 +828,7 @@ public final class AnchorHudManager {
         for (PlacedWidget placed : widgets) {
             String type = registry.definition(placed.id())
                     .map(definition -> definition.type.toString()).orElse("");
-            entries.add(new WidgetListPanel.Entry(placed.id(), placed.widget().visible, false,
-                    type, currentOffsets().containerParent(placed.id(), placed.containerParent())));
+            entries.add(new WidgetListPanel.Entry(placed.id(), placed.widget().visible, false, type, currentOffsets().containerParent(placed.id(), placed.containerParent())));
         }
         return List.copyOf(entries);
     }
@@ -848,8 +841,7 @@ public final class AnchorHudManager {
             if (bounds != null && !renderFailures.contains(placed.id())) {
                 PositionElement effective = placed.effectivePosition(offsets);
                 WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
-                result.add(new HudHandle(placed.id(), transform.physical(bounds), effective.relativeTo, effective.point, effective.anchor, offsets.get(placed.id()), placed.widget().visible, offsets.isHidden(placed.id()),
-                        placed.position().relativeTo, placed.position().point, placed.position().anchor, placed.baseVisible()));
+                result.add(new HudHandle(placed.id(), transform.physical(bounds), effective.relativeTo, effective.point, effective.anchor, offsets.get(placed.id()), placed.widget().visible, offsets.isHidden(placed.id()), placed.position().relativeTo, placed.position().point, placed.position().anchor, placed.baseVisible()));
             }
         }
         return List.copyOf(result);
@@ -1048,13 +1040,7 @@ public final class AnchorHudManager {
                 BoundCondition enabledWhen = BoundCondition.parse(element.settings, "enabledWhen", true, false);
                 registry.attach(definition.id(), widget);
                 boolean panel = widget instanceof com.ludwici.anchorui.client.gui.PanelWidget;
-                created.add(new PlacedWidget(definition.id(), widget, style, anchored,
-                        widget.visible, widget.active, context, visibleWhen, enabledWhen,
-                        entity.widgetParents.get(definition.id()),
-                        panel && (WidgetContainers.clipChildren(element.settings) || style.scroll.enabled()),
-                        panel ? WidgetContainers.group(element.settings) : null,
-                        panel ? style.autoSize : ContainerLayout.AutoSize.NONE,
-                        panel ? style.scroll : ContainerScroll.Config.NONE, widget.getWidth(), widget.getHeight()));
+                created.add(new PlacedWidget(definition.id(), widget, style, anchored, widget.visible, widget.active, context, visibleWhen, enabledWhen, entity.widgetParents.get(definition.id()), panel && (WidgetContainers.clipChildren(element.settings) || style.scroll.enabled()), panel ? WidgetContainers.group(element.settings) : null, panel ? style.autoSize : ContainerLayout.AutoSize.NONE, panel ? style.scroll : ContainerScroll.Config.NONE, widget.getWidth(), widget.getHeight()));
             } catch (WidgetConfigException exception) {
                 warnings.add(exception.getMessage());
             } catch (RuntimeException exception) {
@@ -1108,8 +1094,7 @@ public final class AnchorHudManager {
                     configurations.put(placed.id(), placed.scroll());
                 }
             }
-            scrollLimits = ContainerScroll.measure(
-                    bounds, parents, configurations, paddings, collapsedLayoutHidden);
+            scrollLimits = ContainerScroll.measure(bounds, parents, configurations, paddings, collapsedLayoutHidden);
             scrollOffsets.keySet().retainAll(scrollLimits.keySet());
             for (var entry : scrollLimits.entrySet()) {
                 ContainerScroll.Offset previous = scrollOffsets.getOrDefault(entry.getKey(), ContainerScroll.Offset.ZERO);

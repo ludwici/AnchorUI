@@ -94,8 +94,7 @@ public final class SelectOptionAppearance {
         for (var entry : overrides.entrySet()) {
             JsonElement previous = result.get(entry.getKey());
             JsonElement next = entry.getValue();
-            result.add(entry.getKey(), previous != null && previous.isJsonObject() && next.isJsonObject()
-                    ? merge(previous.getAsJsonObject(), next.getAsJsonObject()) : next.deepCopy());
+            result.add(entry.getKey(), previous != null && previous.isJsonObject() && next.isJsonObject() ? merge(previous.getAsJsonObject(), next.getAsJsonObject()) : next.deepCopy());
         }
         return result;
     }

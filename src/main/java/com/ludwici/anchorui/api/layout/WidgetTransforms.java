@@ -35,9 +35,7 @@ public final class WidgetTransforms {
         }
 
         public Transform scaledAround(double pivotX, double pivotY, double factor) {
-            return new Transform(scale * factor,
-                    translateX + scale * pivotX * (1 - factor),
-                    translateY + scale * pivotY * (1 - factor));
+            return new Transform(scale * factor, translateX + scale * pivotX * (1 - factor), translateY + scale * pivotY * (1 - factor));
         }
 
         public AnchorLayout.Bounds physical(AnchorLayout.Bounds logical) {
@@ -85,9 +83,7 @@ public final class WidgetTransforms {
         } else {
             Transform parentTransform = resolveOne(parent, layout, parents, groups, scrollOffsets, resolved, visiting);
             ContainerScroll.Offset scroll = scrollOffsets.getOrDefault(parent, ContainerScroll.Offset.ZERO);
-            transform = new Transform(parentTransform.scale(),
-                    parentTransform.translateX() - parentTransform.scale() * scroll.x(),
-                    parentTransform.translateY() - parentTransform.scale() * scroll.y());
+            transform = new Transform(parentTransform.scale(), parentTransform.translateX() - parentTransform.scale() * scroll.x(), parentTransform.translateY() - parentTransform.scale() * scroll.y());
         }
         AnchorLayout.Bounds bounds = layout.get(id);
         if (bounds == null) {

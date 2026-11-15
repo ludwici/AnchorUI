@@ -643,7 +643,15 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                         }
                     });
             Map<String, AnchorLayout.Bounds> bounds = result.bounds();
-            Map<String, ContainerScroll.Limits> limits = ContainerScroll.measure(bounds, parents, scrollConfigs, containers);
+            Set<String> collapsing = new HashSet<>();
+            for (var entry : stackLayouts.entrySet()) {
+                if (entry.getValue().collapseHidden()) {
+                    collapsing.add(entry.getKey());
+                }
+            }
+            Set<String> collapsedChildren = relevantLayoutHidden(hidden, parents, collapsing);
+            Map<String, ContainerScroll.Limits> limits = ContainerScroll.measure(
+                    bounds, parents, scrollConfigs, containers, collapsedChildren);
             scrollOffsets.keySet().retainAll(limits.keySet());
             for (var entry : limits.entrySet()) {
                 ContainerScroll.Offset previous = scrollOffsets.getOrDefault(entry.getKey(), ContainerScroll.Offset.ZERO);
@@ -662,14 +670,8 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             containerPaddings = Map.copyOf(containers);
             containerGroups = Map.copyOf(groups);
             clippingContainers = Set.copyOf(clipping);
-            Set<String> collapsing = new HashSet<>();
-            for (var entry : stackLayouts.entrySet()) {
-                if (entry.getValue().collapseHidden()) {
-                    collapsing.add(entry.getKey());
-                }
-            }
             collapsingLayoutParents = Set.copyOf(collapsing);
-            collapsedLayoutHidden = relevantLayoutHidden(hidden, parents, collapsingLayoutParents);
+            collapsedLayoutHidden = collapsedChildren;
             updateScrolledTransforms();
             lastLayoutFailure = null;
             return true;

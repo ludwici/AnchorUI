@@ -1108,7 +1108,8 @@ public final class AnchorHudManager {
                     configurations.put(placed.id(), placed.scroll());
                 }
             }
-            scrollLimits = ContainerScroll.measure(bounds, parents, configurations, paddings);
+            scrollLimits = ContainerScroll.measure(
+                    bounds, parents, configurations, paddings, collapsedLayoutHidden);
             scrollOffsets.keySet().retainAll(scrollLimits.keySet());
             for (var entry : scrollLimits.entrySet()) {
                 ContainerScroll.Offset previous = scrollOffsets.getOrDefault(entry.getKey(), ContainerScroll.Offset.ZERO);

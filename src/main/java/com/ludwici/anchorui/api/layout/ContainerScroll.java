@@ -7,6 +7,7 @@ import com.ludwici.anchorui.api.style.PaddingElement;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class ContainerScroll {
     public record Config(boolean horizontal, boolean vertical, int step) {
@@ -67,6 +68,12 @@ public final class ContainerScroll {
     public static Map<String, Limits> measure(Map<String, AnchorLayout.Bounds> bounds,
                                               Map<String, String> parents, Map<String, Config> configurations,
                                               Map<String, PaddingElement> paddings) {
+        return measure(bounds, parents, configurations, paddings, Set.of());
+    }
+
+    public static Map<String, Limits> measure(Map<String, AnchorLayout.Bounds> bounds,
+                                              Map<String, String> parents, Map<String, Config> configurations,
+                                              Map<String, PaddingElement> paddings, Set<String> collapsedChildren) {
         Map<String, Limits> result = new LinkedHashMap<>();
         for (var entry : configurations.entrySet()) {
             String id = entry.getKey();
@@ -81,7 +88,7 @@ public final class ContainerScroll {
             int maxRight = content.x();
             int maxBottom = content.y();
             for (var child : parents.entrySet()) {
-                if (!id.equals(child.getValue())) {
+                if (!id.equals(child.getValue()) || collapsedChildren.contains(child.getKey())) {
                     continue;
                 }
                 AnchorLayout.Bounds box = bounds.get(child.getKey());

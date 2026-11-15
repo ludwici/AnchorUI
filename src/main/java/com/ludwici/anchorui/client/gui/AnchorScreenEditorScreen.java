@@ -15,6 +15,7 @@ import com.ludwici.anchorui.client.gui.editor.LayoutInspectorControls;
 import com.ludwici.anchorui.client.gui.editor.EditorDropdown;
 import com.ludwici.anchorui.api.widget.WidgetEditorRegistry;
 import com.ludwici.anchorui.client.gui.editor.AppearanceInspectorControls;
+import com.ludwici.anchorui.client.gui.editor.InspectorSections;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorCheckbox;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorButton;
 import com.ludwici.anchorui.client.gui.editor.EditorColorPicker;
@@ -83,6 +84,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     private final List<ResetHitbox> resetHitboxes = new ArrayList<>();
     private final List<LayoutHitbox> layoutHitboxes = new ArrayList<>();
     private final List<AppearanceHitbox> appearanceHitboxes = new ArrayList<>();
+    private final InspectorSections inspectorSections = new InspectorSections();
     private EditBox appearanceInput;
     private Button appearanceApply;
     private Button appearanceCancel;
@@ -90,9 +92,6 @@ public final class AnchorScreenEditorScreen extends Screen {
     private EditorColorPicker colorPickerDialog;
     private String editingAppearanceId;
     private List<String> sourceProperties = List.of();
-    private boolean sourceExpanded;
-    private int sourceHeaderIndex = -1;
-    private int sourceHeaderY = -1;
     private String inspectedId;
     private int inspectorScroll;
     private int maxInspectorScroll;
@@ -235,7 +234,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             editorDropdown.close();
             inspectedId = null;
             sourceProperties = List.of();
-            sourceExpanded = false;
+            inspectorSections.collapse("source");
             resetInspectorScroll();
         }
         selected = null;
@@ -501,7 +500,6 @@ public final class AnchorScreenEditorScreen extends Screen {
         maxInspectorScroll = Math.max(0, lines.size() * INSPECTOR_LINE_HEIGHT - (bottom - top));
         inspectorScroll = Math.max(0, Math.min(inspectorScroll, maxInspectorScroll));
         updateInspectorScrollBar(top, bottom);
-        sourceHeaderY = sourceHeaderIndex < 0 ? -1 : top - inspectorScroll + sourceHeaderIndex * INSPECTOR_LINE_HEIGHT;
         graphics.enableScissor(panelX() + 4, top, panelX() + inspectorWidth - 4, bottom);
         try {
             int lineY = top - inspectorScroll;
@@ -706,8 +704,8 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     private List<InspectorLine> inspectorLines() {
         List<InspectorLine> lines = new ArrayList<>();
+        inspectorSections.clearHeaders();
         if (selected == null) {
-            sourceHeaderIndex = -1;
             appendInspectorLine(lines, "SELECT A WIDGET", SELECTED, null, false);
             appendInspectorLine(lines, "Click a widget or the Widgets list", 0xFFE5EEF5, null, false);
             appendInspectorLine(lines, "Arrows: 1px | Shift: 10px", 0xFFE5EEF5, null, false);
@@ -716,50 +714,56 @@ public final class AnchorScreenEditorScreen extends Screen {
             return lines;
         }
 
-        appendInspectorLine(lines, "CURRENT WIDGET", SELECTED, null, false);
-        appendInspectorLine(lines, "R: reset individual property", 0xFF96AEBE, null, false);
-        appendInspectorLine(lines, "id: " + selected.id(), 0xFFE5EEF5, null, false);
-        String parentId = target.editorStructuralParent(selected.id());
-        if ("(none)".equals(parentId)) {
-            appendProperty(lines, "parent: " + selected.relativeTo(), AnchorHudManager.EditableProperty.PARENT);
-        } else {
-            appendInspectorLine(lines, "parent: " + parentId, 0xFFE5EEF5, null, false);
+        appendSection(lines, "widget", "CURRENT WIDGET");
+        if (inspectorSections.expanded("widget")) {
+            appendInspectorLine(lines, "R: reset individual property", 0xFF96AEBE, null, false);
+            appendInspectorLine(lines, "id: " + selected.id(), 0xFFE5EEF5, null, false);
+            String parentId = target.editorStructuralParent(selected.id());
+            if ("(none)".equals(parentId)) {
+                appendProperty(lines, "parent: " + selected.relativeTo(), AnchorHudManager.EditableProperty.PARENT);
+            } else {
+                appendInspectorLine(lines, "parent: " + parentId, 0xFFE5EEF5, null, false);
+            }
+            appendProperty(lines, "point: " + selected.point(), AnchorHudManager.EditableProperty.POINT);
+            appendProperty(lines, "anchor: " + selected.anchor(), AnchorHudManager.EditableProperty.ANCHOR);
+            AnchorLayout.Bounds bounds = selected.bounds();
+            appendInspectorLine(lines, "screen: " + bounds.x() + ", " + bounds.y(), 0xFFE5EEF5, null, false);
+            appendInspectorLine(lines, "size: " + bounds.width() + " x " + bounds.height(), 0xFFE5EEF5, null, false);
+            appendProperty(lines, "user offset: " + selected.offset().x() + ", " + selected.offset().y(), AnchorHudManager.EditableProperty.OFFSET);
+            appendProperty(lines, "visible: " + selected.visible(), AnchorHudManager.EditableProperty.VISIBILITY);
         }
-        appendProperty(lines, "point: " + selected.point(), AnchorHudManager.EditableProperty.POINT);
-        appendProperty(lines, "anchor: " + selected.anchor(), AnchorHudManager.EditableProperty.ANCHOR);
-        AnchorLayout.Bounds bounds = selected.bounds();
-        appendInspectorLine(lines, "screen: " + bounds.x() + ", " + bounds.y(), 0xFFE5EEF5, null, false);
-        appendInspectorLine(lines, "size: " + bounds.width() + " x " + bounds.height(), 0xFFE5EEF5, null, false);
-        appendProperty(lines, "user offset: " + selected.offset().x() + ", " + selected.offset().y(), AnchorHudManager.EditableProperty.OFFSET);
-        appendProperty(lines, "visible: " + selected.visible(), AnchorHudManager.EditableProperty.VISIBILITY);
         List<LayoutInspectorControls.Control> layoutControls = target.editorLayoutControls(selected.id());
         if (!layoutControls.isEmpty()) {
-            appendInspectorLine(lines, "COMPONENT / LAYOUT", SELECTED, null, false);
-            appendInspectorLine(lines, "- / + adjust | R reset", 0xFF96AEBE, null, false);
-            for (LayoutInspectorControls.Control control : layoutControls) {
-                String label = control.booleanField() ? control.label() : control.label() + ": " + control.value();
-                int width = Math.max(38, (int) ((inspectorWidth - 98) / INSPECTOR_SCALE));
-                String clipped = font.plainSubstrByWidth(label, width);
-                lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(), control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null, control.modified(), control));
+            appendSection(lines, "layout", "COMPONENT / LAYOUT");
+            if (inspectorSections.expanded("layout")) {
+                appendInspectorLine(lines, "- / + adjust | R reset", 0xFF96AEBE, null, false);
+                for (LayoutInspectorControls.Control control : layoutControls) {
+                    String label = control.booleanField() ? control.label() : control.label() + ": " + control.value();
+                    int width = Math.max(38, (int) ((inspectorWidth - 98) / INSPECTOR_SCALE));
+                    String clipped = font.plainSubstrByWidth(label, width);
+                    lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(), control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null, control.modified(), control));
+                }
             }
         }
         List<AppearanceInspectorControls.Control> appearanceControls = target.editorAppearanceControls(selected.id());
         if (!appearanceControls.isEmpty()) {
             boolean animationSection = false;
-            appendInspectorLine(lines, "VISUAL / CONTENT", SELECTED, null, false);
+            appendSection(lines, "visual", "VISUAL / CONTENT");
             for (AppearanceInspectorControls.Control control : appearanceControls) {
                 if (!animationSection && control.field().path().startsWith("animation.")) {
                     animationSection = true;
-                    appendInspectorLine(lines, "ANIMATION", SELECTED, null, false);
+                    appendSection(lines, "animation", "ANIMATION");
+                }
+                if (!inspectorSections.expanded(animationSection ? "animation" : "visual")) {
+                    continue;
                 }
                 String label = control.booleanField() ? control.field().label() : control.field().label() + ": " + control.value();
                 String clipped = font.plainSubstrByWidth(label, Math.max(38, (int) ((inspectorWidth - 98) / INSPECTOR_SCALE)));
                 lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(), control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null, control.modified(), null, control));
             }
         }
-        sourceHeaderIndex = lines.size();
-        appendInspectorLine(lines, "SOURCE JSON " + (sourceExpanded ? "[-]" : "[+]") + " (read only)", SELECTED, null, false);
-        if (sourceExpanded) {
+        appendSection(lines, "source", "SOURCE JSON (read only)");
+        if (inspectorSections.expanded("source")) {
             if (!selected.id().equals(inspectedId)) {
                 JsonObject settings = target.editorSourceSettings(selected.id());
                 String widgetParent = target.editorStructuralParent(selected.id());
@@ -771,6 +775,13 @@ public final class AnchorScreenEditorScreen extends Screen {
             }
         }
         return lines;
+    }
+
+    private void appendSection(List<InspectorLine> lines, String id, String title) {
+        inspectorSections.register(id, lines.size());
+        String label = inspectorSections.label(id, title);
+        String clipped = font.plainSubstrByWidth(label, Math.max(24, (int) ((inspectorWidth - 22) / INSPECTOR_SCALE)));
+        lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(), SELECTED, null, false));
     }
 
     private void appendProperty(List<InspectorLine> lines, String label, AnchorHudManager.EditableProperty property) {
@@ -861,9 +872,7 @@ public final class AnchorScreenEditorScreen extends Screen {
                 && mouseX < visiblePanelX() + visiblePanelWidth()
                 && mouseY >= panelTop && mouseY < panelTop + (inspectorCollapsed ? 27 : expandedPanelHeight())) {
             if (insideInspector(mouseX, mouseY)) {
-                if (sourceHeaderY >= inspectorTop() && sourceHeaderY + INSPECTOR_LINE_HEIGHT <= inspectorBottom()
-                        && mouseY >= sourceHeaderY && mouseY < sourceHeaderY + INSPECTOR_LINE_HEIGHT) {
-                    sourceExpanded = !sourceExpanded;
+                if (inspectorSections.click(mouseY, inspectorTop(), inspectorBottom(), inspectorScroll, INSPECTOR_LINE_HEIGHT)) {
                     return true;
                 }
                 for (AppearanceHitbox hitbox : appearanceHitboxes) {

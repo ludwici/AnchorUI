@@ -1,49 +1,60 @@
 package com.ludwici.anchorui.client.gui;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ludwici.anchorui.api.animation.UiAnimationSpec;
-import com.ludwici.anchorui.api.layout.AnchorLayout;
-import com.ludwici.anchorui.api.layout.WidgetTransforms;
 import com.ludwici.anchorui.api.animation.UiAnimationTimeline;
 import com.ludwici.anchorui.api.binding.BoundData;
 import com.ludwici.anchorui.api.binding.DataBindingSpec;
+import com.ludwici.anchorui.api.layout.AnchorLayout;
+import com.ludwici.anchorui.api.layout.WidgetTransforms;
 import com.ludwici.anchorui.api.widget.WidgetContext;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public final class WidgetAnimation {
     private final UiAnimationTimeline timeline;
-    private final BoundData watch;
+    private final Map<String, BoundData> watches;
     private final WidgetContext context;
 
-    private WidgetAnimation(UiAnimationTimeline timeline, BoundData watch, WidgetContext context) {
+    private WidgetAnimation(UiAnimationTimeline timeline, Map<String, BoundData> watches, WidgetContext context) {
         this.timeline = timeline;
-        this.watch = watch;
+        this.watches = Map.copyOf(watches);
         this.context = context;
     }
 
-    public static WidgetAnimation parse(JsonObject settings, JsonObject defaults, WidgetContext context) {
+    public static WidgetAnimation parse(JsonObject settings, JsonArray defaults, WidgetContext context) {
         UiAnimationSpec spec = UiAnimationSpec.parse(settings, defaults);
         if (spec.isEmpty()) {
             return null;
         }
-        BoundData bound = null;
-        JsonElement watched = spec.watch();
-        if (watched != null) {
-            JsonObject root = new JsonObject();
-            root.add("watch", watched);
-            bound = BoundData.parse(root, "watch", new JsonPrimitive(""), DataBindingSpec.Kind.ANY);
-            if (!bound.isBound()) {
-                throw new IllegalArgumentException("animation.watch must be a data binding with 'bind'");
+        Map<String, BoundData> watches = new HashMap<>();
+        for (UiAnimationSpec.Track track : spec.tracks()) {
+            if (!track.enabled() || track.watch() == null) {
+                continue;
             }
+            JsonObject holder = new JsonObject();
+            holder.add("watch", track.watch());
+            BoundData bound = BoundData.parse(holder, "watch", new JsonPrimitive(""), DataBindingSpec.Kind.ANY);
+            if (!bound.isBound()) {
+                throw new IllegalArgumentException("Animation '" + track.id() + "' watch must have a bound data source");
+            }
+            watches.put(track.id(), bound);
         }
-        return new WidgetAnimation(new UiAnimationTimeline(spec), bound, context);
+        return new WidgetAnimation(new UiAnimationTimeline(spec), watches, context);
     }
 
     public void update(boolean visible, long now) {
-        timeline.update(visible, watch == null ? null : watch.get(context), now);
+        Map<String, JsonElement> values = new HashMap<>();
+        for (var entry : watches.entrySet()) {
+            values.put(entry.getKey(), entry.getValue().get(context));
+        }
+        timeline.update(visible, values, now);
     }
 
     public UiAnimationSpec.Frame frame(long now) {
@@ -61,7 +72,6 @@ public final class WidgetAnimation {
     public void beginClose(long now) {
         timeline.begin(UiAnimationSpec.Trigger.CLOSE, now);
     }
-
     public static void applyPose(GuiGraphics graphics, AbstractWidget widget, UiAnimationSpec.Frame frame) {
         graphics.pose().translate(frame.x(), frame.y(), 0.0);
         if (frame.scale() != 1.0) {

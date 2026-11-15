@@ -5,82 +5,145 @@ import com.ludwici.anchorui.api.animation.UiAnimationSpec.Frame;
 import com.ludwici.anchorui.api.animation.UiAnimationSpec.Track;
 import com.ludwici.anchorui.api.animation.UiAnimationSpec.Trigger;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 public final class UiAnimationTimeline {
+    private record Running(Track track, long startNanos, Frame from) {
+        private long delayNanos() {
+            return track.delayMillis() * 1000000L;
+        }
+
+        private boolean pending(long now) {
+            return now < startNanos + delayNanos();
+        }
+
+        private boolean finished(long now) {
+            return now - startNanos >= track.totalMillis() * 1000000L;
+        }
+
+        private Frame frame(long now) {
+            if (pending(now)) {
+                return Frame.IDENTITY;
+            }
+            double elapsed = Math.max(0.0, (now - startNanos - delayNanos()) / (track.durationMillis() * 1000000.0));
+            return from.between(track.to(), track.easing().apply(elapsed));
+        }
+    }
+
     private final UiAnimationSpec spec;
+    private final Map<String, Running> running = new LinkedHashMap<>();
+    private final Map<String, JsonElement> watched = new HashMap<>();
     private boolean initialized;
-    private boolean lastVisible;
-    private JsonElement lastWatched;
-    private Track active;
-    private long startedAtNanos;
-    private Frame start = Frame.IDENTITY;
-    private Frame end = Frame.IDENTITY;
-    private boolean finishingHide;
+    private boolean visible;
 
     public UiAnimationTimeline(UiAnimationSpec spec) {
         this.spec = spec;
     }
 
-    public void update(boolean visible, JsonElement watched, long nowNanos) {
+    public void update(boolean visible, Map<String, JsonElement> values, long nowNanos) {
         if (!initialized) {
             initialized = true;
-            lastVisible = visible;
-            lastWatched = watched == null ? null : watched.deepCopy();
+            this.visible = visible;
+            remember(values);
             if (visible) {
                 begin(Trigger.OPEN, nowNanos);
             }
             return;
         }
-        if (visible != lastVisible) {
-            lastVisible = visible;
+        if (this.visible != visible) {
+            this.visible = visible;
             if (visible) {
-                finishingHide = false;
+                removeTriggers(Trigger.HIDE, Trigger.CLOSE);
                 begin(Trigger.SHOW, nowNanos);
             } else {
-                finishingHide = false;
+                removeTriggers(Trigger.OPEN, Trigger.SHOW, Trigger.CHANGE);
                 begin(Trigger.HIDE, nowNanos);
-                finishingHide = active != null;
             }
-        } else if (watched != null && lastWatched != null && !watched.equals(lastWatched)) {
-            begin(Trigger.CHANGE, nowNanos);
+        } else if (visible) {
+            for (Track track : spec.tracks()) {
+                if (track.enabled() && track.trigger() == Trigger.CHANGE) {
+                    JsonElement next = values == null ? null : values.get(track.id());
+                    JsonElement previous = watched.get(track.id());
+                    if (next != null && previous != null && !next.equals(previous)) {
+                        launch(track, nowNanos);
+                    }
+                }
+            }
         }
-        lastWatched = watched == null ? null : watched.deepCopy();
+        remember(values);
+    }
+
+    private void remember(Map<String, JsonElement> values) {
+        if (values == null) {
+            return;
+        }
+        for (var entry : values.entrySet()) {
+            if (entry.getValue() == null) {
+                watched.remove(entry.getKey());
+            } else {
+                watched.put(entry.getKey(), entry.getValue().deepCopy());
+            }
+        }
+    }
+
+    private void removeTriggers(Trigger... triggers) {
+        for (var iterator = running.entrySet().iterator(); iterator.hasNext();) {
+            Running item = iterator.next().getValue();
+            for (Trigger trigger : triggers) {
+                if (item.track().trigger() == trigger) {
+                    iterator.remove();
+                    break;
+                }
+            }
+        }
     }
 
     public void begin(Trigger trigger, long nowNanos) {
-        Track track = spec.track(trigger);
-        if (track == null) {
-            active = null;
-            return;
+        if (trigger == Trigger.CLOSE) {
+            running.clear();
         }
-        // Sample the old animation first so successive changes do not snap back to its start.
-        Frame initial = active == null || finished(nowNanos) ? track.from() : sample(nowNanos);
-        active = track;
-        start = initial;
-        end = track.to();
-        startedAtNanos = nowNanos;
-        if (trigger != Trigger.HIDE) {
-            finishingHide = false;
+        for (Track track : spec.tracks()) {
+            if (track.enabled() && track.trigger() == trigger) {
+                launch(track, nowNanos);
+            }
         }
+    }
+
+    private void launch(Track track, long nowNanos) {
+        Running current = running.get(track.id());
+        Frame initial = current != null && !current.finished(nowNanos) && !current.pending(nowNanos)
+                ? current.frame(nowNanos) : track.from();
+        running.put(track.id(), new Running(track, nowNanos, initial));
     }
 
     public Frame sample(long nowNanos) {
-        if (active == null) {
-            return Frame.IDENTITY;
+        double opacity = 1.0;
+        double x = 0.0;
+        double y = 0.0;
+        double scale = 1.0;
+        for (Running item : running.values()) {
+            Frame frame = item.frame(nowNanos);
+            opacity *= frame.opacity();
+            x += frame.x();
+            y += frame.y();
+            scale *= frame.scale();
         }
-        double elapsed = Math.max(0.0, (nowNanos - startedAtNanos) / (active.durationMillis() * 1000000.0));
-        return start.between(end, active.easing().apply(elapsed));
+        return new Frame(Math.max(0.0, Math.min(1.0, opacity)), Math.max(-4096.0, Math.min(4096.0, x)),
+                Math.max(-4096.0, Math.min(4096.0, y)), Math.max(0.01, Math.min(4.0, scale)));
     }
 
     public boolean finished(long nowNanos) {
-        return active == null || nowNanos - startedAtNanos >= active.durationMillis() * 1000000L;
+        return running.values().stream().allMatch(item -> item.finished(nowNanos));
     }
 
     public boolean renderWhenHidden(long nowNanos) {
-        return finishingHide && !finished(nowNanos);
+        return running.values().stream().anyMatch(item -> item.track().trigger() == Trigger.HIDE && !item.finished(nowNanos));
     }
 
     public long closeDurationMillis() {
-        Track track = spec.track(Trigger.CLOSE);
-        return track == null ? 0L : track.durationMillis();
+        return spec.tracks().stream().filter(item -> item.enabled() && item.trigger() == Trigger.CLOSE)
+                .mapToLong(Track::totalMillis).max().orElse(0L);
     }
 }

@@ -1070,7 +1070,7 @@ public final class AnchorHudManager {
                 boolean panel = widget instanceof com.ludwici.anchorui.client.gui.PanelWidget;
                 created.add(new PlacedWidget(definition.id(), widget, style, anchored, widget.visible, widget.active, context, visibleWhen, enabledWhen, entity.widgetParents.get(definition.id()), panel && (WidgetContainers.clipChildren(element.settings) || style.scroll.enabled()), panel ? WidgetContainers.group(element.settings) : null, panel ? style.autoSize : ContainerLayout.AutoSize.NONE, panel ? style.scroll : ContainerScroll.Config.NONE, widget.getWidth(), widget.getHeight()));
                 try {
-                    WidgetAnimation animation = WidgetAnimation.parse(style.resolvedSettings, entity.animation, context);
+                    WidgetAnimation animation = WidgetAnimation.parse(style.resolvedSettings, entity.animations, context);
                     if (animation != null) {
                         widgetAnimations.put(definition.id(), animation);
                     }

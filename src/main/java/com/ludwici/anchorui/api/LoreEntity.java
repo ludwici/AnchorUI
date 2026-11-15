@@ -1,6 +1,7 @@
 package com.ludwici.anchorui.api;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.GsonHelper;
@@ -20,7 +21,7 @@ public class LoreEntity {
     public final JsonElement onOpen;
     public final JsonElement onClose;
     public final JsonObject initialState;
-    public final JsonObject animation;
+    public final JsonArray animations;
     public final boolean hasExplicitWidgets;
     public final List<LoreComponent> components = new ArrayList<>();
     public final List<UiElement> entities = new ArrayList<>();
@@ -36,10 +37,13 @@ public class LoreEntity {
             throw new IllegalArgumentException("Screen 'state' must be a JSON object");
         }
         initialState = root.has("state") ? root.getAsJsonObject("state").deepCopy() : new JsonObject();
-        if (root.has("animation") && !root.get("animation").isJsonObject()) {
-            throw new IllegalArgumentException("Screen 'animation' must be an object");
+        if (root.has("animation")) {
+            throw new IllegalArgumentException("Unsupported 'animation' object; use 'animations' array");
         }
-        animation = root.has("animation") ? root.getAsJsonObject("animation").deepCopy() : new JsonObject();
+        if (root.has("animations") && !root.get("animations").isJsonArray()) {
+            throw new IllegalArgumentException("'animations' must be a JSON array");
+        }
+        animations = root.has("animations") ? root.getAsJsonArray("animations").deepCopy() : new JsonArray();
         onOpen = root.has("onOpen") ? root.get("onOpen").deepCopy() : null;
         onClose = root.has("onClose") ? root.get("onClose").deepCopy() : null;
         this.hasExplicitWidgets = root.has("entities");

@@ -1047,13 +1047,13 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         Set<String> animationIds = new HashSet<>();
         for (PlacedWidget placed : created) {
             animationIds.add(placed.id());
-            String localAnimation = placed.style().resolvedSettings.has("animation") ? placed.style().resolvedSettings.get("animation").toString() : "";
-            String animationDefinition = loreEntity.animation + "|" + localAnimation;
+            String localAnimation = placed.style().resolvedSettings.has("animations") ? placed.style().resolvedSettings.get("animations").toString() : "";
+            String animationDefinition = loreEntity.animations + "|" + localAnimation;
             if (!animationDefinition.equals(animationDefinitions.get(placed.id()))) {
                 widgetAnimations.remove(placed.id());
                 animationDefinitions.put(placed.id(), animationDefinition);
                 try {
-                    WidgetAnimation animation = WidgetAnimation.parse(placed.style().resolvedSettings, loreEntity.animation, placed.context());
+                    WidgetAnimation animation = WidgetAnimation.parse(placed.style().resolvedSettings, loreEntity.animations, placed.context());
                     if (animation != null) {
                         widgetAnimations.put(placed.id(), animation);
                     }

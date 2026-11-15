@@ -69,20 +69,6 @@ public final class WidgetEditorRegistry {
     }
 
     private static final Map<ResourceLocation, List<Field>> FIELDS = new ConcurrentHashMap<>();
-    private static final List<Field> ANIMATION_FIELDS = createAnimationFields();
-
-    private static List<Field> createAnimationFields() {
-        List<Field> fields = new ArrayList<>();
-        for (String trigger : List.of("open", "show", "hide", "close")) {
-            String path = "animation." + trigger + ".";
-            String label = Character.toUpperCase(trigger.charAt(0)) + trigger.substring(1);
-            fields.add(Field.choice(path + "preset", label + " effect", "none", "none", "fade", "slideLeft", "slideRight", "slideUp", "zoom", "custom"));
-            fields.add(Field.integer(path + "duration", label + " duration (ms)", 300, 1, 10000, 50));
-            fields.add(Field.choice(path + "easing", label + " easing", "linear", "linear", "easeIn", "easeOut", "easeInOut", "outCubic"));
-        }
-        return List.copyOf(fields);
-    }
-
     static {
         register(WidgetTypeIds.TEXT, List.of(
                 Field.text("text", "Text", ""),
@@ -201,11 +187,7 @@ public final class WidgetEditorRegistry {
     }
 
     public static List<Field> fields(ResourceLocation type) {
-        List<Field> typeFields = FIELDS.getOrDefault(type, List.of());
-        List<Field> result = new ArrayList<>(typeFields.size() + ANIMATION_FIELDS.size());
-        result.addAll(typeFields);
-        result.addAll(ANIMATION_FIELDS);
-        return List.copyOf(result);
+        return FIELDS.getOrDefault(type, List.of());
     }
 
     public static Field find(ResourceLocation type, String path) {

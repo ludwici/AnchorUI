@@ -70,7 +70,8 @@ public final class AnchorLayout {
         path.add(id);
         PositionElement p = frame.position();
         String targetId = p.relativeTo;
-        if (targetId.endsWith("/__content")) {
+        if (targetId.endsWith(":__content") || targetId.endsWith("/__content")
+                || targetId.contains("/__content/")) {
             throw new IllegalArgumentException("Unsupported widget anchor '" + targetId
                     + "': reference the panel directly");
         }

@@ -1344,8 +1344,23 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         renderInterfaceWidgets(graphics, -1, -1, partialTick);
     }
 
+    private boolean isInsideOpenPopup(double mouseX, double mouseY) {
+        for (int index = placedWidgets.size() - 1; index >= 0; index--) {
+            PlacedWidget placed = placedWidgets.get(index);
+            if (placed.widget() instanceof UiPopupWidget popup && popup.isPopupOpen()) {
+                WidgetTransforms.Transform transform = transforms.getOrDefault(
+                        placed.id(), WidgetTransforms.IDENTITY);
+                if (popup.containsPopup(transform.inverseX(mouseX), transform.inverseY(mouseY))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private void renderInterfaceWidgets(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         queuedRichTextTooltip = null;
+        boolean obscuredByPopup = isInsideOpenPopup(mouseX, mouseY);
         for (PlacedWidget placed : placedWidgets) {
             AbstractWidget widget = placed.widget();
             if (!widget.visible) {
@@ -1364,7 +1379,8 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                     graphics.fill(widget.getX(), widget.getY(), widget.getRight(), widget.getBottom(), color);
                 }
                 WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
-                boolean mouseInside = clip == null || WidgetContainers.contains(clip, mouseX, mouseY);
+                boolean mouseInside = !obscuredByPopup
+                        && (clip == null || WidgetContainers.contains(clip, mouseX, mouseY));
                 int widgetMouseX = mouseInside ? (int) Math.floor(transform.inverseX(mouseX)) : Integer.MIN_VALUE;
                 int widgetMouseY = mouseInside ? (int) Math.floor(transform.inverseY(mouseY)) : Integer.MIN_VALUE;
                 graphics.pose().pushPose();
@@ -1398,14 +1414,8 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         if (hovered == null || mouseX < 0 || mouseY < 0) {
             return;
         }
-        for (PlacedWidget placed : placedWidgets) {
-            if (placed.widget() instanceof UiPopupWidget popup && popup.isPopupOpen()) {
-                WidgetTransforms.Transform transform = transforms.getOrDefault(
-                        placed.id(), WidgetTransforms.IDENTITY);
-                if (popup.containsPopup(transform.inverseX(mouseX), transform.inverseY(mouseY))) {
-                    return;
-                }
-            }
+        if (isInsideOpenPopup(mouseX, mouseY)) {
+            return;
         }
         graphics.pose().pushPose();
         try {

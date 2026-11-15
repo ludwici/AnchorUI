@@ -228,7 +228,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         hide.setMessage(Component.literal(hasSelection && selected.hiddenByUser() ? "Show" : "Hide"));
         parent.setMessage(Component.literal(pickingParent ? "Pick target..." : "Parent"));
         for (Button button : controls) {
-            button.visible = !compact && !inspectorCollapsed && editingAppearance == null;
+            button.visible = !compact && !inspectorCollapsed;
         }
     }
 
@@ -481,21 +481,13 @@ public final class AnchorScreenEditorScreen extends Screen {
                             0xFFFFD16B, false);
                 }
             }
-            if (editingAppearance != null && colorPickerDialog == null) {
-                int modalX = appearanceInput.getX() - 8;
-                int modalY = appearanceInput.getY() - 23;
-                graphics.fill(modalX - 1, modalY - 1, modalX + appearanceInput.getWidth() + 17, modalY + 86, 0xFF162332);
-                graphics.drawString(font, font.plainSubstrByWidth(editingAppearance.field().label(),
-                        appearanceInput.getWidth()), modalX + 8, modalY + 8, SELECTED, false);
-                if (!status.isEmpty()) {
-                    graphics.drawString(font, font.plainSubstrByWidth(status, appearanceInput.getWidth()),
-                            modalX + 8, modalY + 74, 0xFFFFA68A, false);
-                }
-            }
             super.render(graphics, mouseX, mouseY, partialTick);
             widgetList.render(graphics, font, mouseX, mouseY, frameEntries,
                     selected == null ? null : selected.id(), pickingParent);
             editorDropdown.render(graphics, font, mouseX, mouseY);
+            if (editingAppearance != null && colorPickerDialog == null) {
+                renderAppearanceModal(graphics, mouseX, mouseY, partialTick);
+            }
             if (colorPickerDialog != null) {
                 colorPickerDialog.render(graphics, font, mouseX, mouseY, partialTick, width, height, status);
             }
@@ -583,6 +575,42 @@ public final class AnchorScreenEditorScreen extends Screen {
                 layoutHitboxes.add(new LayoutHitbox(control, 0, reset, lineY));
             }
         }
+    }
+
+    private void renderAppearanceModal(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        int modalX = appearanceInput.getX() - 8;
+        int modalY = appearanceInput.getY() - 23;
+        graphics.pose().pushPose();
+        graphics.pose().translate(0, 0, 100);
+        try {
+            graphics.fill(modalX - 1, modalY - 1, modalX + appearanceInput.getWidth() + 17,
+                    modalY + 86, 0xFF718699);
+            graphics.fill(modalX, modalY, modalX + appearanceInput.getWidth() + 16,
+                    modalY + 85, 0xFF162332);
+            graphics.drawString(font, font.plainSubstrByWidth(editingAppearance.field().label(),
+                    appearanceInput.getWidth()), modalX + 8, modalY + 8,
+                    SELECTED, false);
+            if (!status.isEmpty()) {
+                graphics.drawString(font, font.plainSubstrByWidth(status, appearanceInput.getWidth()),
+                        modalX + 8, modalY + 74, 0xFFFFA68A, false);
+            }
+            appearanceInput.render(graphics, mouseX, mouseY, partialTick);
+            appearanceApply.render(graphics, mouseX, mouseY, partialTick);
+            appearanceCancel.render(graphics, mouseX, mouseY, partialTick);
+        } finally {
+            graphics.pose().popPose();
+        }
+    }
+
+    private boolean clickAppearanceModal(double mouseX, double mouseY, int button) {
+        if (appearanceApply.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+        if (appearanceCancel.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+        appearanceInput.mouseClicked(mouseX, mouseY, button);
+        return true;
     }
 
     private void createAppearanceInput() {
@@ -818,8 +846,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             return editorDropdown.mouseClicked(mouseX, mouseY, button);
         }
         if (editingAppearance != null) {
-            super.mouseClicked(mouseX, mouseY, button);
-            return true;
+            return clickAppearanceModal(mouseX, mouseY, button);
         }
         if (!compact && button == GLFW.GLFW_MOUSE_BUTTON_LEFT
                 && mouseX >= visiblePanelX() + visiblePanelWidth() - 30

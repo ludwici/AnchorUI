@@ -536,19 +536,7 @@ public final class AnchorHudEditorScreen extends Screen {
                 default -> "IDs ALL";
             }));
             for (Button control : controls) {
-                control.visible = !compact && !inspectorCollapsed && editingAppearance == null;
-            }
-            if (editingAppearance != null && colorPickerDialog == null) {
-                int modalX = appearanceInput.getX() - 8;
-                int modalY = appearanceInput.getY() - 23;
-                graphics.fill(modalX - 1, modalY - 1, modalX + appearanceInput.getWidth() + 17,
-                        modalY + 86, 0xFF162332);
-                graphics.drawString(font, font.plainSubstrByWidth(editingAppearance.field().label(),
-                        appearanceInput.getWidth()), modalX + 8, modalY + 8, SELECTED_COLOR, false);
-                if (!status.isEmpty()) {
-                    graphics.drawString(font, font.plainSubstrByWidth(status, appearanceInput.getWidth()),
-                            modalX + 8, modalY + 74, 0xFFFFA68A, false);
-                }
+                control.visible = !compact && !inspectorCollapsed;
             }
             super.render(graphics, mouseX, mouseY, partialTick);
             if (!compact) {
@@ -556,6 +544,9 @@ public final class AnchorHudEditorScreen extends Screen {
                         selected != null ? selected : inspectedVanilla, choosingParent);
             }
             editorDropdown.render(graphics, font, mouseX, mouseY);
+            if (editingAppearance != null && colorPickerDialog == null) {
+                renderAppearanceModal(graphics, mouseX, mouseY, partialTick);
+            }
             if (colorPickerDialog != null) {
                 colorPickerDialog.render(graphics, font, mouseX, mouseY, partialTick, width, height, status);
             }
@@ -647,6 +638,42 @@ public final class AnchorHudEditorScreen extends Screen {
                 layoutHitboxes.add(new LayoutHitbox(control, 0, reset, lineY));
             }
         }
+    }
+
+    private void renderAppearanceModal(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        int modalX = appearanceInput.getX() - 8;
+        int modalY = appearanceInput.getY() - 23;
+        graphics.pose().pushPose();
+        graphics.pose().translate(0, 0, 100);
+        try {
+            graphics.fill(modalX - 1, modalY - 1, modalX + appearanceInput.getWidth() + 17,
+                    modalY + 86, 0xFF718699);
+            graphics.fill(modalX, modalY, modalX + appearanceInput.getWidth() + 16,
+                    modalY + 85, 0xFF162332);
+            graphics.drawString(font, font.plainSubstrByWidth(editingAppearance.field().label(),
+                    appearanceInput.getWidth()), modalX + 8, modalY + 8,
+                    SELECTED_COLOR, false);
+            if (!status.isEmpty()) {
+                graphics.drawString(font, font.plainSubstrByWidth(status, appearanceInput.getWidth()),
+                        modalX + 8, modalY + 74, 0xFFFFA68A, false);
+            }
+            appearanceInput.render(graphics, mouseX, mouseY, partialTick);
+            appearanceApply.render(graphics, mouseX, mouseY, partialTick);
+            appearanceCancel.render(graphics, mouseX, mouseY, partialTick);
+        } finally {
+            graphics.pose().popPose();
+        }
+    }
+
+    private boolean clickAppearanceModal(double mouseX, double mouseY, int button) {
+        if (appearanceApply.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+        if (appearanceCancel.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+        appearanceInput.mouseClicked(mouseX, mouseY, button);
+        return true;
     }
 
     private void createAppearanceInput() {
@@ -972,8 +999,7 @@ public final class AnchorHudEditorScreen extends Screen {
             return editorDropdown.mouseClicked(mouseX, mouseY, button);
         }
         if (editingAppearance != null) {
-            super.mouseClicked(mouseX, mouseY, button);
-            return true;
+            return clickAppearanceModal(mouseX, mouseY, button);
         }
         if (!compact && button == GLFW.GLFW_MOUSE_BUTTON_LEFT && insidePanel(mouseX, mouseY)
                 && mouseY < panelY + 20

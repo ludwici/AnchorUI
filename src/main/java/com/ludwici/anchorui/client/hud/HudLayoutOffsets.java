@@ -5,6 +5,8 @@ import com.google.gson.JsonArray;
 import com.ludwici.anchorui.api.animation.UiAnimationSpec;
 import com.google.gson.JsonObject;
 import com.ludwici.anchorui.api.style.ElementAnchor;
+import com.ludwici.anchorui.api.style.PositionElement;
+import java.util.List;
 import com.ludwici.anchorui.api.widget.WidgetIds;
 import com.ludwici.anchorui.api.widget.WidgetEditorRegistry;
 import com.ludwici.anchorui.client.gui.editor.AppearanceInspectorControls;
@@ -33,6 +35,7 @@ public final class HudLayoutOffsets {
 
     private final Map<String, Offset> offsets = new LinkedHashMap<>();
     private final Map<String, AnchorOverride> anchors = new LinkedHashMap<>();
+    private final Map<String, List<PositionElement.Constraint>> anchorLists = new LinkedHashMap<>();
     private final Map<String, String> containerParents = new LinkedHashMap<>();
     private final Set<String> hidden = new TreeSet<>();
     private final Map<String, JsonObject> componentSettings = new LinkedHashMap<>();
@@ -43,6 +46,30 @@ public final class HudLayoutOffsets {
 
     public AnchorOverride anchor(String id) {
         return anchors.get(id);
+    }
+
+    public List<PositionElement.Constraint> anchorConstraints(String id) {
+        return anchorLists.get(id);
+    }
+
+    public PositionElement effectivePosition(String id, PositionElement original) {
+        List<PositionElement.Constraint> list = anchorLists.get(id);
+        if (list != null) {
+            return new PositionElement(list);
+        }
+        AnchorOverride override = anchors.get(id);
+        return override == null ? original : original.withPrimary(override.point(), override.anchor(), override.relativeTo());
+    }
+
+    public void setAnchorConstraints(String id, List<PositionElement.Constraint> constraints) {
+        String qualified = WidgetIds.id(id, "anchorui");
+        PositionElement validated = new PositionElement(constraints);
+        anchorLists.put(qualified, validated.anchors);
+        anchors.remove(qualified);
+    }
+
+    public void clearAnchorConstraints(String id) {
+        anchorLists.remove(WidgetIds.id(id, "anchorui"));
     }
 
     public boolean isHidden(String id) {
@@ -225,11 +252,19 @@ public final class HudLayoutOffsets {
     }
 
     public void setAnchor(String id, AnchorOverride anchor) {
-        anchors.put(WidgetIds.id(id, "anchorui"), anchor);
+        String qualified = WidgetIds.id(id, "anchorui");
+        List<PositionElement.Constraint> list = anchorLists.get(qualified);
+        if (list != null) {
+            anchorLists.put(qualified, new PositionElement(list).withPrimary(anchor.point(), anchor.anchor(), anchor.relativeTo()).anchors);
+        } else {
+            anchors.put(qualified, anchor);
+        }
     }
 
     public void clearAnchor(String id) {
-        anchors.remove(WidgetIds.id(id, "anchorui"));
+        String qualified = WidgetIds.id(id, "anchorui");
+        anchors.remove(qualified);
+        anchorLists.remove(qualified);
     }
 
     public void setHidden(String id, boolean value) {
@@ -244,6 +279,7 @@ public final class HudLayoutOffsets {
     public void reset(String id) {
         offsets.remove(id);
         anchors.remove(id);
+        anchorLists.remove(id);
         containerParents.remove(id);
         hidden.remove(id);
         componentSettings.remove(id);
@@ -252,6 +288,7 @@ public final class HudLayoutOffsets {
     public void resetAll() {
         offsets.clear();
         anchors.clear();
+        anchorLists.clear();
         containerParents.clear();
         hidden.clear();
         componentSettings.clear();
@@ -265,6 +302,7 @@ public final class HudLayoutOffsets {
         HudLayoutOffsets result = new HudLayoutOffsets();
         result.offsets.putAll(offsets);
         result.anchors.putAll(anchors);
+        result.anchorLists.putAll(anchorLists);
         result.containerParents.putAll(containerParents);
         result.hidden.addAll(hidden);
         for (var entry : componentSettings.entrySet()) {
@@ -274,7 +312,7 @@ public final class HudLayoutOffsets {
     }
 
     public boolean sameAs(HudLayoutOffsets other) {
-        return offsets.equals(other.offsets) && anchors.equals(other.anchors)
+        return offsets.equals(other.offsets) && anchors.equals(other.anchors) && anchorLists.equals(other.anchorLists)
                 && containerParents.equals(other.containerParents) && hidden.equals(other.hidden)
                 && componentSettings.equals(other.componentSettings);
     }
@@ -286,6 +324,7 @@ public final class HudLayoutOffsets {
         Set<String> ids = new TreeSet<>();
         ids.addAll(offsets.keySet());
         ids.addAll(anchors.keySet());
+        ids.addAll(anchorLists.keySet());
         ids.addAll(containerParents.keySet());
         ids.addAll(hidden);
         ids.addAll(componentSettings.keySet());
@@ -296,11 +335,26 @@ public final class HudLayoutOffsets {
                 value.addProperty("x", offset.x());
                 value.addProperty("y", offset.y());
             }
-            AnchorOverride anchor = anchors.get(id);
-            if (anchor != null) {
-                value.addProperty("relativeTo", anchor.relativeTo());
-                value.addProperty("point", anchor.point().name());
-                value.addProperty("anchor", anchor.anchor().name());
+            List<PositionElement.Constraint> list = anchorLists.get(id);
+            if (list != null) {
+                JsonArray array = new JsonArray();
+                for (PositionElement.Constraint entry : list) {
+                    JsonObject json = new JsonObject();
+                    json.addProperty("point", entry.point().name());
+                    json.addProperty("anchor", entry.anchor().name());
+                    json.addProperty("relativeTo", entry.relativeTo());
+                    json.addProperty("x", entry.x());
+                    json.addProperty("y", entry.y());
+                    array.add(json);
+                }
+                value.add("anchors", array);
+            } else {
+                AnchorOverride anchor = anchors.get(id);
+                if (anchor != null) {
+                    value.addProperty("relativeTo", anchor.relativeTo());
+                    value.addProperty("point", anchor.point().name());
+                    value.addProperty("anchor", anchor.anchor().name());
+                }
             }
             String containerParent = containerParents.get(id);
             if (containerParent != null) {
@@ -336,7 +390,14 @@ public final class HudLayoutOffsets {
             int x = value.has("x") ? value.get("x").getAsInt() : 0;
             int y = value.has("y") ? value.get("y").getAsInt() : 0;
             result.set(id, x, y);
-            if (value.has("relativeTo")) {
+            if (value.has("anchors")) {
+                if (!value.get("anchors").isJsonArray()) {
+                    throw new IllegalArgumentException("Saved anchors must be an array");
+                }
+                JsonObject position = new JsonObject();
+                position.add("anchors", value.getAsJsonArray("anchors"));
+                result.setAnchorConstraints(id, new PositionElement(position).anchors);
+            } else if (value.has("relativeTo")) {
                 String target = value.get("relativeTo").getAsString();
                 ElementAnchor point = ElementAnchor.fromString(value.get("point").getAsString());
                 ElementAnchor anchor = ElementAnchor.fromString(value.get("anchor").getAsString());

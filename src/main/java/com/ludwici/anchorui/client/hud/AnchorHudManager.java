@@ -948,7 +948,12 @@ public final class AnchorHudManager {
         try {
             HudLayoutOffsets candidate = editingOffsets.copy();
             HudLayoutOffsets.Offset offset = candidate.get(id);
-            candidate.setAnchorConstraints(id, new PositionElement(anchors).translated(-offset.x(), -offset.y()).anchors);
+            for (PlacedWidget placed : widgets) {
+                if (placed.id().equals(id)) {
+                    candidate.setAnchorConstraints(id, new PositionElement(anchors).translated(-offset.x(), -offset.y()).anchors, placed.position());
+                    break;
+                }
+            }
             return usePreviewLayout(candidate);
         } catch (RuntimeException exception) {
             previewLayoutFailure = exception.getMessage();

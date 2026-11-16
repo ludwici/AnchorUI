@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -50,6 +51,48 @@ public final class ContainerLayout {
     public record Result(Map<String, AnchorLayout.Bounds> bounds, Map<String, Size> sizes) {
     }
 
+    /**
+     * Per-screen cache of independent built-in row, column and grid arrangements.
+     * A container is recomputed only when its layout settings, available size,
+     * intrinsic child sizes, layout rules, or managed child order change.
+     * Custom Java layouts are always evaluated to preserve their dynamic behavior.
+     */
+    public static final class Cache {
+        private record Input(ContainerAutoLayout layout, int width, int height, List<StackLayout.Item> items,
+                             boolean autoWidth, boolean autoHeight) {
+        }
+
+        private record Entry(Input input, ContainerAutoLayout.Arrangement arrangement) {
+        }
+
+        private final Map<String, Entry> entries = new HashMap<>();
+
+        ContainerAutoLayout.Arrangement arrange(String container, ContainerAutoLayout layout, int width, int height,
+                                                List<StackLayout.Item> items, boolean autoWidth, boolean autoHeight) {
+            if (!(layout instanceof StackLayout.Config) && !(layout instanceof GridLayout.Config)) {
+                entries.remove(container);
+                return layout.arrange(width, height, items, autoWidth, autoHeight);
+            }
+
+            Input input = new Input(layout, width, height, List.copyOf(items), autoWidth, autoHeight);
+            Entry entry = entries.get(container);
+            if (entry != null && entry.input().equals(input)) {
+                return entry.arrangement();
+            }
+            ContainerAutoLayout.Arrangement arrangement = layout.arrange(width, height, items, autoWidth, autoHeight);
+            entries.put(container, new Entry(input, arrangement));
+            return arrangement;
+        }
+
+        void retain(Set<String> containers) {
+            entries.keySet().retainAll(containers);
+        }
+
+        public void clear() {
+            entries.clear();
+        }
+    }
+
     private ContainerLayout() {
     }
 
@@ -71,6 +114,14 @@ public final class ContainerLayout {
                                  Map<String, String> parents, Map<String, ? extends ContainerAutoLayout> layouts,
                                  Map<String, StackLayout.Rules> itemRules,
                                  Set<String> hidden, Set<String> unmanaged, Consumer<String> warnings) {
+        return resolve(screenWidth, screenHeight, frames, containers, autoSizes, parents, layouts, itemRules, hidden, unmanaged, null, warnings);
+    }
+
+    public static Result resolve(int screenWidth, int screenHeight, Collection<AnchorLayout.Frame> frames,
+                                 Map<String, PaddingElement> containers, Map<String, AutoSize> autoSizes,
+                                 Map<String, String> parents, Map<String, ? extends ContainerAutoLayout> layouts,
+                                 Map<String, StackLayout.Rules> itemRules,
+                                 Set<String> hidden, Set<String> unmanaged, Cache cache, Consumer<String> warnings) {
         Map<String, AnchorLayout.Frame> definitions = new LinkedHashMap<>();
         for (AnchorLayout.Frame frame : frames) {
             if (definitions.putIfAbsent(frame.id(), frame) != null) {
@@ -144,8 +195,9 @@ public final class ContainerLayout {
                     items.add(new StackLayout.Item(childId, child.width(), child.height(), offsetX, offsetY, rules));
                 }
                 AutoSize auto = autoSizes.getOrDefault(container, AutoSize.NONE);
-                ContainerAutoLayout.Arrangement arrangement =
-                        layout.arrange(availableWidth, availableHeight, items, auto.width(), auto.height());
+                ContainerAutoLayout.Arrangement arrangement = cache == null
+                        ? layout.arrange(availableWidth, availableHeight, items, auto.width(), auto.height())
+                        : cache.arrange(container, layout, availableWidth, availableHeight, items, auto.width(), auto.height());
                 intrinsic.put(container, arrangement.intrinsic());
                 for (var positioned : arrangement.placements().entrySet()) {
                     StackLayout.Placement p = positioned.getValue();
@@ -220,6 +272,9 @@ public final class ContainerLayout {
                 Map<String, Size> actualSizes = new LinkedHashMap<>();
                 for (AnchorLayout.Frame frame : effective.values()) {
                     actualSizes.put(frame.id(), new Size(frame.width(), frame.height()));
+                }
+                if (cache != null) {
+                    cache.retain(layouts.keySet());
                 }
                 return new Result(resolved, Map.copyOf(actualSizes));
             }

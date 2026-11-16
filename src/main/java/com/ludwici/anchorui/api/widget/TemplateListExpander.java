@@ -128,11 +128,7 @@ public final class TemplateListExpander {
                 parentId = ids.getOrDefault(parentId, parentId);
                 if (widgetIndex == 0 || !nested) {
                     TemplateListLayoutRegistry.Cell cell = layout.place(index);
-                    position.addProperty("relativeTo", listId);
-                    int offsetX = GsonHelper.getAsInt(position, "x", 0);
-                    int offsetY = GsonHelper.getAsInt(position, "y", 0);
-                    position.addProperty("x", addCoordinate(cell.x(), offsetX));
-                    position.addProperty("y", addCoordinate(cell.y(), offsetY));
+                    placePosition(position, listId, cell.x(), cell.y());
                     if (!widget.has("size") || !widget.get("size").isJsonObject()) {
                         widget.add("size", new JsonObject());
                     }
@@ -145,16 +141,43 @@ public final class TemplateListExpander {
                     }
 
                 } else {
-                    if (position.has("relativeTo")) {
-                        String reference = position.get("relativeTo").getAsString();
-                        position.addProperty("relativeTo", remap(reference, ids));
-                    }
+                    remapPosition(position, ids);
                 }
                 widget.add("position", position);
                 result.add(new Entry(widget, context, parentId));
             }
         }
         return List.copyOf(result);
+    }
+
+    private static void placePosition(JsonObject position, String target, int x, int y) {
+        if (position.has("anchors")) {
+            for (JsonElement raw : position.getAsJsonArray("anchors")) {
+                JsonObject constraint = raw.getAsJsonObject();
+                constraint.addProperty("relativeTo", target);
+                constraint.addProperty("x", addCoordinate(x, GsonHelper.getAsInt(constraint, "x", 0)));
+                constraint.addProperty("y", addCoordinate(y, GsonHelper.getAsInt(constraint, "y", 0)));
+            }
+            return;
+        }
+        position.addProperty("relativeTo", target);
+        position.addProperty("x", addCoordinate(x, GsonHelper.getAsInt(position, "x", 0)));
+        position.addProperty("y", addCoordinate(y, GsonHelper.getAsInt(position, "y", 0)));
+    }
+
+    private static void remapPosition(JsonObject position, Map<String, String> ids) {
+        if (position.has("anchors")) {
+            for (JsonElement raw : position.getAsJsonArray("anchors")) {
+                JsonObject constraint = raw.getAsJsonObject();
+                if (constraint.has("relativeTo")) {
+                    constraint.addProperty("relativeTo", remap(constraint.get("relativeTo").getAsString(), ids));
+                }
+            }
+            return;
+        }
+        if (position.has("relativeTo")) {
+            position.addProperty("relativeTo", remap(position.get("relativeTo").getAsString(), ids));
+        }
     }
 
     private static int addCoordinate(int coordinate, int offset) {

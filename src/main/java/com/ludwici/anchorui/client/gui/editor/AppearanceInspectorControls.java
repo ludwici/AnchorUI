@@ -11,7 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class AppearanceInspectorControls {
-    public record Control(WidgetEditorRegistry.Field field, String value, boolean modified) {
+    public record Control(WidgetEditorRegistry.Field field, String value, boolean modified, String sourceValue) {
+        public Control(WidgetEditorRegistry.Field field, String value, boolean modified) {
+            this(field, value, modified, value);
+        }
+
         public boolean textual() {
             return switch (field.kind()) {
                 case TEXT, COLOR, TEXTURE -> true;
@@ -34,13 +38,22 @@ public final class AppearanceInspectorControls {
             JsonElement source = read(settings, field.path());
             String value = source != null && source.isJsonPrimitive()
                     ? source.getAsString() : field.fallback().getAsString();
+            String original = value;
             JsonElement override = offsets.settingOverride(id, "appearance", field.path());
             if (override != null) {
                 value = override.getAsString();
             }
-            result.add(new Control(field, value, override != null));
+            result.add(new Control(field, value, override != null && !sameValue(field, value, original), original));
         }
         return List.copyOf(result);
+    }
+
+    public static boolean sameValue(WidgetEditorRegistry.Field field, String current, String original) {
+        try {
+            return parse(field, current).equals(parse(field, original));
+        } catch (RuntimeException exception) {
+            return current.equals(original);
+        }
     }
 
     public static JsonElement read(JsonObject settings, String path) {

@@ -125,6 +125,8 @@ public final class AnchorHudManager {
     private HudLayoutOffsets editingOffsets;
     private boolean storageLoaded;
     private String lastSaveError;
+    private String layoutError;
+    private List<String> layoutWarnings = List.of();
     private long builtRevision = -1;
     private int builtWidth = -1;
     private int builtHeight = -1;
@@ -688,6 +690,14 @@ public final class AnchorHudManager {
         return lastSaveError;
     }
 
+    public String getLayoutError() {
+        return layoutError;
+    }
+
+    public List<String> getLayoutWarnings() {
+        return layoutWarnings;
+    }
+
     public void cancelEditing() {
         if (editingOffsets != null) {
             editingOffsets = null;
@@ -1183,6 +1193,7 @@ public final class AnchorHudManager {
 
         widgets = List.copyOf(created);
         relayout(warnings);
+        layoutWarnings = List.copyOf(warnings);
         for (String warning : warnings) {
             AnchorUI.LOGGER.warn("Anchor UI HUD: {}", warning);
         }
@@ -1239,7 +1250,9 @@ public final class AnchorHudManager {
             this.clippingContainers = Set.copyOf(clippingContainers);
             updateScrolledTransforms();
             applyVisibility();
+            layoutError = null;
         } catch (IllegalArgumentException exception) {
+            layoutError = exception.getMessage();
             AnchorUI.LOGGER.error("Anchor UI HUD layout rejected ({}x{}, {} widgets): {}", builtWidth, builtHeight, widgets.size(), exception.getMessage());
             layoutBounds = Map.of();
             collapsingLayoutParents = Set.of();
@@ -1282,5 +1295,7 @@ public final class AnchorHudManager {
         renderFailures.clear();
         widgetAnimations.clear();
         widgetSizeTransitions.clear();
+        layoutError = null;
+        layoutWarnings = List.of();
     }
 }

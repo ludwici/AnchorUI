@@ -108,6 +108,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     private List<PlacedWidget> visibilityOrder = List.of();
     private final Map<String, UiEventBindings> widgetEventBindings = new HashMap<>();
     private final Map<String, WidgetAnimation> widgetAnimations = new HashMap<>();
+    private final Map<String, WidgetSizeTransition> widgetSizeTransitions = new HashMap<>();
     private final Map<String, AbstractWidget> animatedWidgetTargets = new HashMap<>();
     private final Map<String, String> animationDefinitions = new HashMap<>();
     private boolean closingWithAnimation;
@@ -1100,6 +1101,20 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         }
 
         placedWidgets = List.copyOf(created);
+        widgetSizeTransitions.clear();
+        for (PlacedWidget placed : created) {
+            if (placed.widget() instanceof ProgressWidget) {
+                continue;
+            }
+            try {
+                WidgetSizeTransition transition = WidgetSizeTransition.parse(placed.style().resolvedSettings, placed.context(), false);
+                if (transition != null) {
+                    widgetSizeTransitions.put(placed.id(), transition);
+                }
+            } catch (IllegalArgumentException exception) {
+                warnings.add("Invalid sizeTransition for widget '" + placed.id() + "': " + exception.getMessage());
+            }
+        }
         Set<String> animationIds = new HashSet<>();
         for (PlacedWidget placed : created) {
             animationIds.add(placed.id());
@@ -1469,11 +1484,22 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             if (clip != null && (clip.width() == 0 || clip.height() == 0)) {
                 continue;
             }
+            WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+            WidgetSizeTransition sizeTransition = editingPreview ? null : widgetSizeTransitions.get(placed.id());
+            AnchorLayout.Bounds sizeClip = null;
+            if (sizeTransition != null && layoutBounds.containsKey(placed.id())) {
+                sizeClip = sizeTransition.clippedBounds(layoutBounds.get(placed.id()), transform, animationState, now);
+                if (sizeClip.width() == 0 || sizeClip.height() == 0) {
+                    continue;
+                }
+            }
             if (clip != null) {
                 graphics.enableScissor(clip.x(), clip.y(), clip.x() + clip.width(), clip.y() + clip.height());
             }
+            if (sizeClip != null) {
+                graphics.enableScissor(sizeClip.x(), sizeClip.y(), sizeClip.x() + sizeClip.width(), sizeClip.y() + sizeClip.height());
+            }
             try {
-                WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
                 boolean mouseInside = !obscuredByPopup && widget.visible && !closingWithAnimation
                         && (clip == null || WidgetContainers.contains(clip, mouseX, mouseY));
                 int widgetMouseX = mouseInside ? (int) Math.floor(WidgetAnimation.inverseX(widget, animationState, transform.inverseX(mouseX))) : Integer.MIN_VALUE;
@@ -1505,6 +1531,9 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                     graphics.pose().popPose();
                 }
             } finally {
+                if (sizeClip != null) {
+                    graphics.disableScissor();
+                }
                 if (clip != null) {
                     graphics.disableScissor();
                 }
@@ -1717,7 +1746,11 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             return false;
         }
         WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
-        return WidgetContainers.contains(WidgetAnimation.physicalBounds(frame, transform, animation), mouseX, mouseY);
+        if (!WidgetContainers.contains(WidgetAnimation.physicalBounds(frame, transform, animation), mouseX, mouseY)) {
+            return false;
+        }
+        WidgetSizeTransition transition = widgetSizeTransitions.get(placed.id());
+        return transition == null || WidgetContainers.contains(transition.clippedBounds(frame, transform, animation, now), mouseX, mouseY);
     }
 
     private boolean insideClip(PlacedWidget placed, double mouseX, double mouseY) {

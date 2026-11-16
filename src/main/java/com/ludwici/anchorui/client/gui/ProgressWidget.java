@@ -58,17 +58,8 @@ public final class ProgressWidget extends AnchoredWidget {
         double max = maximum.get(context);
         double fraction = ProgressMath.fraction(current, max);
         int filled = (int) Math.round(width * (fillTransition == null ? fraction : fillTransition.widthFraction(fraction, System.nanoTime())));
-        if (filled > 0) {
-            if (textures.has("fill")) {
-                graphics.enableScissor(left, top, left + filled, top + height);
-                try {
-                    textures.render(graphics, "fill", left, top, width, height, "normal");
-                } finally {
-                    graphics.disableScissor();
-                }
-            } else {
-                graphics.fill(left, top, left + filled, top + height, fillColor);
-            }
+        if (filled > 0 && !textures.renderClippedWidth(graphics, "fill", left, top, width, height, filled, "normal")) {
+            graphics.fill(left, top, left + filled, top + height, fillColor);
         }
         renderFrame(graphics);
         if (showText) {

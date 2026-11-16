@@ -91,6 +91,42 @@ public final class TextureRegion {
             RenderSystem.disableBlend();
         }
     }
+    public void renderClippedWidth(GuiGraphics graphics, int x, int y, int width, int height, int visibleWidth) {
+        int drawn = Math.max(0, Math.min(width, visibleWidth));
+        if (drawn <= 0 || width <= 0 || height <= 0) {
+            return;
+        }
+        if (drawn == width) {
+            render(graphics, x, y, width, height);
+            return;
+        }
+        float alpha = (tint >>> 24 & 0xFF) / 255f;
+        float red = (tint >>> 16 & 0xFF) / 255f;
+        float green = (tint >>> 8 & 0xFF) / 255f;
+        float blue = (tint & 0xFF) / 255f;
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShaderColor(red, green, blue, alpha);
+        try {
+            if (nineSlice == null) {
+                int croppedSource = Math.max(1, Math.min(sourceWidth, (int) Math.round(sourceWidth * drawn / (double) width)));
+                graphics.blit(texture, x, y, drawn, height, (float) u, (float) v, croppedSource, sourceHeight, textureWidth, textureHeight);
+            } else {
+                for (NineSlice.Tile tile : tiles(width, height)) {
+                    int tileVisible = Math.max(0, Math.min(tile.width(), drawn - tile.x()));
+                    if (tileVisible == 0) {
+                        continue;
+                    }
+                    int croppedSource = Math.max(1, Math.min(tile.sourceWidth(), (int) Math.round(tile.sourceWidth() * tileVisible / (double) tile.width())));
+                    graphics.blit(texture, x + tile.x(), y + tile.y(), tileVisible, tile.height(), (float) (u + tile.u()), (float) (v + tile.v()), croppedSource, tile.sourceHeight(), textureWidth, textureHeight);
+                }
+            }
+        } finally {
+            RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+            RenderSystem.disableBlend();
+        }
+    }
+
     private List<NineSlice.Tile> tiles(int width, int height) {
         if (cachedWidth != width || cachedHeight != height) {
             cachedTiles = NineSlice.tiles(width, height, sourceWidth, sourceHeight, nineSlice);

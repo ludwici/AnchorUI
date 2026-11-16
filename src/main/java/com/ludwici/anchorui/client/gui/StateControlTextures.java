@@ -102,6 +102,28 @@ public final class StateControlTextures {
         return true;
     }
 
+    public boolean renderClippedWidth(GuiGraphics graphics, String part, int x, int y, int width, int height, int visibleWidth, String... states) {
+        Map<String, TextureRegion> variants = sprites.get(part);
+        if (variants == null || width <= 0 || height <= 0) {
+            return false;
+        }
+        TextureRegion texture = null;
+        for (String state : states) {
+            texture = variants.get(state);
+            if (texture != null) {
+                break;
+            }
+        }
+        if (texture == null) {
+            texture = variants.get("normal");
+        }
+        if (texture == null) {
+            return false;
+        }
+        texture.renderClippedWidth(graphics, x, y, width, height, visibleWidth);
+        return true;
+    }
+
     public boolean has(String part) {
         return sprites.containsKey(part);
     }

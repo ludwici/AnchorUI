@@ -23,6 +23,7 @@ import com.ludwici.anchorui.client.gui.editor.InspectorSections;
 import com.ludwici.anchorui.client.gui.editor.EditorDiagnostics;
 import com.ludwici.anchorui.client.gui.editor.AnchorInspectorRows;
 import com.ludwici.anchorui.client.gui.editor.AnchorInspectorControls;
+import com.ludwici.anchorui.client.gui.editor.EditorAnchorGuide;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorCheckbox;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorButton;
 import com.ludwici.anchorui.client.gui.editor.EditorExitConfirmation;
@@ -118,6 +119,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     private int maxInspectorScroll;
     private NativeContainerScrollPanel inspectorScrollBar;
     private ItemLoreScreen.EditorHandle selected;
+    private int focusedAnchorIndex = -1;
     private Button hide;
     private Button parent;
     private Button reset;
@@ -252,6 +254,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             inspectedId = null;
             sourceProperties = List.of();
             inspectorSections.collapse("source");
+            focusedAnchorIndex = -1;
             resetInspectorScroll();
         }
         selected = null;
@@ -380,18 +383,31 @@ public final class AnchorScreenEditorScreen extends Screen {
         }
         String id = selected.id();
         List<PositionElement.Constraint> values = target.editorAnchorConstraints(id);
+        if (action.index() >= 0) {
+            focusedAnchorIndex = action.index();
+        }
         try {
             switch (action.field()) {
                 case "add" -> {
-                    if (updateAnchor(id, AnchorInspectorControls.add(values)) && !inspectorSections.expanded("constraint:" + id + ":" + values.size())) {
-                        inspectorSections.toggle("constraint:" + id + ":" + values.size());
+                    if (updateAnchor(id, AnchorInspectorControls.add(values))) {
+                        focusedAnchorIndex = values.size();
+                        if (!inspectorSections.expanded("constraint:" + id + ":" + values.size())) {
+                            inspectorSections.toggle("constraint:" + id + ":" + values.size());
+                        }
                     }
                 }
                 case "reset" -> {
                     status = target.editorResetAnchorConstraints(id) ? "" : target.editorLayoutFailure();
+                    if (status.isEmpty()) {
+                        focusedAnchorIndex = -1;
+                    }
                     refreshSelection();
                 }
-                case "delete" -> updateAnchor(id, AnchorInspectorControls.remove(values, action.index()));
+                case "delete" -> {
+                    if (updateAnchor(id, AnchorInspectorControls.remove(values, action.index()))) {
+                        focusedAnchorIndex = Math.min(action.index(), values.size() - 2);
+                    }
+                }
                 case "point", "anchor", "relativeTo" -> openAnchorChoice(action, row, id, values);
                 case "x", "y" -> {
                     int plus = panelX() + inspectorWidth - 25;
@@ -541,6 +557,7 @@ public final class AnchorScreenEditorScreen extends Screen {
                 graphics.drawString(font, handle.id(), b.x(), b.y() - 10, color, false);
             }
         }
+        renderAnchorGuide(graphics);
         if (dragging && snapped != null) {
             if (snapped.guideX() != null) {
                 graphics.fill(snapped.guideX(), 0, snapped.guideX() + 1, height, GUIDES);
@@ -586,6 +603,30 @@ public final class AnchorScreenEditorScreen extends Screen {
             exitConfirmation.render(graphics, font, mouseX, mouseY, partialTick);
         } finally {
             graphics.pose().popPose();
+        }
+    }
+
+    private void renderAnchorGuide(GuiGraphics graphics) {
+        if (compact || inspectorCollapsed || selected == null || focusedAnchorIndex < 0 || !inspectorSections.expanded("anchors")) {
+            return;
+        }
+        List<PositionElement.Constraint> anchors = target.editorAnchorConstraints(selected.id());
+        if (focusedAnchorIndex >= anchors.size()) {
+            focusedAnchorIndex = -1;
+            return;
+        }
+        PositionElement.Constraint constraint = anchors.get(focusedAnchorIndex);
+        AnchorLayout.Bounds targetBounds = "screen".equals(constraint.relativeTo()) ? new AnchorLayout.Bounds(0, 0, width, height) : null;
+        if (targetBounds == null) {
+            for (ItemLoreScreen.EditorHandle handle : frameHandles) {
+                if (handle.id().equals(constraint.relativeTo())) {
+                    targetBounds = handle.bounds();
+                    break;
+                }
+            }
+        }
+        if (targetBounds != null) {
+            EditorAnchorGuide.draw(graphics, font, EditorAnchorGuide.connect(selected.bounds(), targetBounds, constraint), width, height);
         }
     }
 
@@ -870,7 +911,7 @@ public final class AnchorScreenEditorScreen extends Screen {
                 for (int index = 0; index < anchors.size(); index++) {
                     PositionElement.Constraint entry = anchors.get(index);
                     String section = "constraint:" + selected.id() + ":" + index;
-                    appendSection(lines, section, "  #" + (index + 1) + (index == 0 ? " (primary)" : "") + " " + entry.point() + " -> " + entry.anchor());
+                    appendSection(lines, section, (focusedAnchorIndex == index ? "  > #" : "  #") + (index + 1) + (index == 0 ? " (primary)" : "") + " " + entry.point() + " -> " + entry.anchor());
                     if (!inspectorSections.expanded(section)) {
                         continue;
                     }
@@ -1085,7 +1126,13 @@ public final class AnchorScreenEditorScreen extends Screen {
                 && mouseX < visiblePanelX() + visiblePanelWidth()
                 && mouseY >= panelTop && mouseY < panelTop + (inspectorCollapsed ? 27 : expandedPanelHeight())) {
             if (insideInspector(mouseX, mouseY)) {
-                if (inspectorSections.click(mouseY, inspectorTop(), inspectorBottom(), inspectorScroll, INSPECTOR_LINE_HEIGHT)) {
+                String section = inspectorSections.headerAt(mouseY, inspectorTop(), inspectorBottom(), inspectorScroll, INSPECTOR_LINE_HEIGHT);
+                if (section != null) {
+                    String prefix = selected == null ? "" : "constraint:" + selected.id() + ":";
+                    if (!prefix.isEmpty() && section.startsWith(prefix)) {
+                        focusedAnchorIndex = Integer.parseInt(section.substring(prefix.length()));
+                    }
+                    inspectorSections.toggle(section);
                     return true;
                 }
                 if (clickAnchorAction(mouseX, mouseY) || clickAnimationAction(mouseY)) {

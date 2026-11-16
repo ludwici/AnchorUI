@@ -274,7 +274,12 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         try {
             HudLayoutOffsets candidate = editingScreenOffsets.copy();
             HudLayoutOffsets.Offset offset = candidate.get(id);
-            candidate.setAnchorConstraints(id, new PositionElement(anchors).translated(-offset.x(), -offset.y()).anchors);
+            for (PlacedWidget placed : placedWidgets) {
+                if (placed.id().equals(id)) {
+                    candidate.setAnchorConstraints(id, new PositionElement(anchors).translated(-offset.x(), -offset.y()).anchors, placed.position());
+                    break;
+                }
+            }
             return useCandidate(candidate);
         } catch (RuntimeException exception) {
             lastLayoutFailure = exception.getMessage();

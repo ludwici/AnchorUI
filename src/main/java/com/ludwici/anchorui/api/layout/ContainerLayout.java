@@ -66,6 +66,7 @@ public final class ContainerLayout {
         }
 
         private final Map<String, Entry> entries = new HashMap<>();
+        private final AnchorLayout.Cache anchors = new AnchorLayout.Cache();
 
         ContainerAutoLayout.Arrangement arrange(String container, ContainerAutoLayout layout, int width, int height,
                                                 List<StackLayout.Item> items, boolean autoWidth, boolean autoHeight) {
@@ -90,6 +91,7 @@ public final class ContainerLayout {
 
         public void clear() {
             entries.clear();
+            anchors.clear();
         }
     }
 
@@ -227,7 +229,9 @@ public final class ContainerLayout {
                 }
             }
 
-            Map<String, AnchorLayout.Bounds> resolved = AnchorLayout.resolve(screenWidth, screenHeight, effective.values(), warnings);
+            Map<String, AnchorLayout.Bounds> resolved = cache == null
+                    ? AnchorLayout.resolve(screenWidth, screenHeight, effective.values(), warnings)
+                    : AnchorLayout.resolve(screenWidth, screenHeight, effective.values(), cache.anchors, warnings);
             boolean changed = false;
             for (var entry : autoSizes.entrySet()) {
                 String id = entry.getKey();

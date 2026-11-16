@@ -94,6 +94,7 @@ public class LoreResourceCompilerTest {
         assertEquals("Valid replacement", second.screens().get(id("screens/consumer")).entities.getFirst().text);
         assertEquals(1, second.issues().size());
         assertEquals(LoreResourceCompiler.Severity.WARNING, second.issues().getFirst().severity());
+        assertEquals(id("templates/shared"), second.issues().getFirst().resource());
     }
 
     @Test

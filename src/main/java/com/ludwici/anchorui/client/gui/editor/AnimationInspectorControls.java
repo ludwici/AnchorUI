@@ -72,6 +72,7 @@ public final class AnimationInspectorControls {
         for (int index = 0; index < tracks.size(); index++) {
             JsonObject track = tracks.get(index).getAsJsonObject();
             String prefix = "animations.t" + index + ".";
+            result.add(new AppearanceInspectorControls.Control(WidgetEditorRegistry.Field.text(prefix + "id", "Animation ID", ""), track.get("id").getAsString(), false));
             add(result, track, WidgetEditorRegistry.Field.choice(prefix + "trigger", "Trigger", "open", "open", "show", "hide", "change", "close"), "trigger");
             add(result, track, WidgetEditorRegistry.Field.choice(prefix + "preset", "Effect", "custom", "custom", "fade", "slideLeft", "slideRight", "slideUp", "zoom"), "preset");
             add(result, track, WidgetEditorRegistry.Field.integer(prefix + "duration", "Duration (ms)", 300, 1, 10000, 50), "duration");
@@ -156,7 +157,13 @@ public final class AnimationInspectorControls {
         int index = Integer.parseInt(path[1].substring(1));
         JsonObject track = result.get(index).getAsJsonObject();
         if (path.length == 3) {
+            if (path[2].equals("id")) {
+                return result;
+            }
             track.remove(path[2]);
+            if (path[2].equals("trigger")) {
+                track.remove("watch");
+            }
         } else {
             if (track.has(path[2])) {
                 JsonObject frame = track.getAsJsonObject(path[2]);

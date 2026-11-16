@@ -68,6 +68,15 @@ public final class HudLayoutOffsets {
         anchors.remove(qualified);
     }
 
+    public void setAnchorConstraints(String id, List<PositionElement.Constraint> constraints, PositionElement source) {
+        List<PositionElement.Constraint> validated = new PositionElement(constraints).anchors;
+        if (validated.equals(source.anchors)) {
+            clearAnchor(id);
+        } else {
+            setAnchorConstraints(id, validated);
+        }
+    }
+
     public void clearAnchorConstraints(String id) {
         anchorLists.remove(WidgetIds.id(id, "anchorui"));
     }

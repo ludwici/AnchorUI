@@ -372,8 +372,9 @@ public final class AnchorScreenEditorScreen extends Screen {
         try {
             switch (action.field()) {
                 case "add" -> {
-                    updateAnchor(id, AnchorInspectorControls.add(values));
-                    inspectorSections.toggle("constraint:" + id + ":" + values.size());
+                    if (updateAnchor(id, AnchorInspectorControls.add(values)) && !inspectorSections.expanded("constraint:" + id + ":" + values.size())) {
+                        inspectorSections.toggle("constraint:" + id + ":" + values.size());
+                    }
                 }
                 case "reset" -> {
                     status = target.editorResetAnchorConstraints(id) ? "" : target.editorLayoutFailure();

@@ -366,3 +366,13 @@ within the same editor session.
 See [Declarative animations](ANIMATIONS.md) for the implemented dynamic
 list of named tracks, independent triggers and millisecond delays.
 Each track also has its own collapsible settings section.
+
+### Smooth RPG health and food bar fill
+
+The RPG HUD demo now interpolates the **visible filled width** of both
+progress bars with `sizeTransition` rather than smoothing the entire
+widget's transform. The configured background, frame, padding and
+current value text are unchanged. Textured fills are clipped instead
+of being stretched. For custom designs, a separate `anchorui:image`
+or panel can have its visible width/height bound through the **same**
+`sizeTransition` mechanism. See [Animation API](ANIMATIONS.md).

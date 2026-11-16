@@ -65,3 +65,26 @@ client is required to check visual rendering and hitboxes.
 
 Vanilla F3+T is **not** intercepted in an open GUI. Close the screen first,
 reload from the world, and reopen to inspect changed resource-pack JSON.
+
+## Custom triggers and visual-size changes
+
+- [ ] Register a test client mod with
+  `UiAnimationTriggerRegistry.registerCondition(ResourceLocation, predicate)`.
+  Attach `trigger: "yourmod:test_trigger"` to a screen animation; toggle
+  false→true twice (with a false value between) and verify two replays.
+- [ ] Repeat with a `RevisionSource` that increments on a client event;
+  verify an unchanged revision causes no repeat animation.
+- [ ] In F8, enter a custom namespaced Trigger ID; Save, reopen, and verify
+  that the animation is not silently converted back to a built-in trigger.
+- [ ] Enable the RPG HUD with `/anchorui test rpg on`. Damage/heal the
+  player and consume food. Both filled areas should transition smoothly
+  in either direction, while frames and numbers remain fixed/accurate.
+- [ ] Add a custom textured `anchorui:image` with bound `sizeTransition.width`
+  next to a fixed background. Verify texture detail remains undistorted
+  as the visible width changes.
+- [ ] Change the bound fraction several times during an active transition;
+  the next motion should continue from the current visual width without
+  suddenly jumping back to a previous target.
+- [ ] Check nested layout, scroll and parent scale animations: the
+  cropping rectangle must match the rendered widget, with no overflow
+  outside parent scissors.

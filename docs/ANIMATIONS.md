@@ -64,7 +64,7 @@ to use `animations`. There is no automatic migration layer.
 | Property | Purpose |
 |---|---|
 | `id` | Unique stable animation ID within a widget |
-| `trigger` | `open`, `show`, `hide`, `close`, or `change` |
+| `trigger` | `open`, `show`, `hide`, `close`, `change`, or a Java-registered namespaced ID such as `mymod:quest_completed` |
 | `preset` | `fade`, `slideLeft`, `slideRight`, `slideUp`, `zoom`, or `custom` |
 | `duration` | Playback length in milliseconds, 1–10000; default 300 |
 | `delay` | Wait before playback, in milliseconds, 0–60000; default 0 |
@@ -156,3 +156,136 @@ combined with an independent health-change effect.
 
 See [Stage 5 QA](QA_STAGE_5.md). Minecraft vanilla F3+T behavior is
 unchanged: reload resource packs from the world after closing the GUI.
+
+## Java-defined namespaced triggers
+
+You can register your own trigger logic, then reference its ID as
+`trigger` in any animation array:
+
+```json
+{
+  "animations": [
+    {
+      "id": "quest_glow",
+      "trigger": "mymod:quest_completed",
+      "duration": 500,
+      "delay": 100,
+      "preset": "zoom",
+      "easing": "outCubic"
+    }
+  ]
+}
+```
+
+Register the trigger **once**, during your mod's client initialization:
+
+```java
+UiAnimationTriggerRegistry.registerCondition(ResourceLocation.fromNamespaceAndPath("mymod", "quest_completed"), context -> MyQuestClientState.justCompletedQuest());
+```
+
+A condition triggers only on a **false → true** transition. It must become
+false before another true value can start it again. For an event which may
+occur several times, register a monotonically increasing revision:
+
+```java
+UiAnimationTriggerRegistry.register(ResourceLocation.fromNamespaceAndPath("mymod", "quest_completed"), context -> MyQuestClientEvents.getCompletionRevision());
+```
+
+Increase the revision in your mod's Java event handler when a quest is
+completed. AnchorUI samples that counter when the associated animated
+widget renders and starts the animation if the revision increased. The
+initial value is remembered rather than played immediately. This API does
+not install a global tick listener, does not need an AnchorUI-specific
+event bus, and does not implement quest progression itself.
+
+The F8 editor's **Trigger ID** field accepts the standard trigger names
+or custom namespaced IDs. Keep IDs registered before any screen/HUD that
+uses them is displayed. Use a *client-side* data source: the condition
+and revision callbacks are evaluated while rendering on the client.
+
+## General-purpose visual size transitions
+
+`sizeTransition` smoothly interpolates the **visible width and/or height**
+of a widget as numeric data changes. It is a reusable visual-size primitive,
+not a progress-bar-only `smoothFill` option. Its cropping happens after
+layout and leaves the original anchor and size unchanged, so nearby widgets
+do not jump. Textured widgets render at their original size and are **cropped**,
+rather than having their artwork squeezed into a smaller rectangle.
+
+For example, put a textured `anchorui:image` on top of a separate background
+panel, then crop the image to the player's health percentage:
+
+```json
+{
+  "type": "anchorui:image",
+  "id": "mymod:health_fill",
+  "texture": "mymod:textures/gui/health_fill.png",
+  "size": {
+    "width": 180,
+    "height": 16
+  },
+  "sizeTransition": {
+    "duration": 420,
+    "easing": "easeOut",
+    "width": {
+      "value": {
+        "bind": "anchorui:player.health",
+        "fallback": 0
+      },
+      "max": {
+        "bind": "anchorui:player.max_health",
+        "fallback": 20
+      }
+    }
+  }
+}
+```
+
+The same `sizeTransition` property can be used on ordinary panels and
+other authored visual widgets. A `height` object works analogously to
+`width`; both can be present. Each computes its own fraction
+`value / max` (clamped to 0..1) and animates independently. The duration
+is 1–10000 milliseconds (default: 400 ms), and easing supports the same
+values as named animation tracks (default: `easeOut`). On first display
+the interpolator starts at the *actual* fraction; subsequent changes
+animate from the currently displayed fraction, even when changes happen
+rapidly.
+
+### Built-in RPG progress bars
+
+An `anchorui:progress` already knows its `value` and `max`, so it can
+use just the transition settings:
+
+```json
+{
+  "type": "anchorui:progress",
+  "id": "mypack:health",
+  "size": {
+    "width": 180,
+    "height": 16
+  },
+  "value": {
+    "bind": "anchorui:player.health",
+    "fallback": 0
+  },
+  "max": {
+    "bind": "anchorui:player.max_health",
+    "fallback": 20
+  },
+  "sizeTransition": {
+    "duration": 420,
+    "easing": "easeOut"
+  }
+}
+```
+
+Here only the **inner filled width** animates. The outer bar border and
+text remain fixed, while numeric health text updates immediately. Textures
+specified as `textures.fill` are cropped to the filled width, not stretched.
+The bundled `rpg_status.json` enables this for health and food. Test via
+`/anchorui test rpg on`, then take damage or consume food to see the change.
+
+For a wholly custom bar look, use separate background and fill widgets
+with `sizeTransition` on the fill element. No built-in progress artwork
+is required. An independent `animations` array can still fade/slide/scale
+the widget as usual.

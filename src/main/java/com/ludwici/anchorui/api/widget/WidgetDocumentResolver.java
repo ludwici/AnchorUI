@@ -39,6 +39,9 @@ public final class WidgetDocumentResolver {
         JsonArray inline = array(document, "entities");
         int index = 0;
         for (JsonElement raw : inline) {
+            if (!raw.isJsonObject()) {
+                throw new IllegalArgumentException("Entity #" + index + " must be a JSON object");
+            }
             JsonObject element = raw.getAsJsonObject().deepCopy();
             JsonObject output;
             if (element.has("ref")) {
@@ -62,8 +65,8 @@ public final class WidgetDocumentResolver {
                 normalizePosition(element, namespace);
                 output = element;
                 if (!output.has("id") || output.get("id").getAsString().isBlank()) {
-                    String type = output.get("type").getAsString();
-                    String name = type.substring(type.lastIndexOf(':') + 1).replace('/', '_') + "_" + index;
+                    String widgetType = requireType(output, "entity #" + index);
+                    String name = widgetType.substring(widgetType.lastIndexOf(':') + 1).replace('/', '_') + "_" + index;
                     output.addProperty("id", name);
                 }
             }
@@ -99,15 +102,16 @@ public final class WidgetDocumentResolver {
     private static void addNested(Map<String, JsonObject> elements, Map<String, String> widgetParents,
                                   JsonObject original, String namespace, Map<String, JsonObject> templates,
                                   Consumer<String> warningSink, int caseDepth, String parentId) {
-        if ("anchorui:cases".equals(original.get("type").getAsString())) {
+        String id = original.has("id") ? original.get("id").getAsString() : "<unknown>";
+        String type = requireType(original, id);
+        if ("anchorui:cases".equals(type)) {
             expandCases(elements, widgetParents, original, templates, warningSink, caseDepth, parentId);
             return;
         }
         JsonArray children = array(original, "children");
         JsonObject parent = original.deepCopy();
         parent.remove("children");
-        String id = parent.get("id").getAsString();
-        if (!children.isEmpty() && !WidgetContainers.supportsChildren(parent.get("type").getAsString())) {
+        if (!children.isEmpty() && !WidgetContainers.supportsChildren(type)) {
             throw new IllegalArgumentException("Widget '" + id + "' cannot contain children; use anchorui:panel");
         }
         add(elements, parent);
@@ -117,6 +121,9 @@ public final class WidgetDocumentResolver {
 
         int index = 0;
         for (JsonElement raw : children) {
+            if (!raw.isJsonObject()) {
+                throw new IllegalArgumentException("Child #" + index + " of '" + id + "' must be a JSON object");
+            }
             JsonObject child = raw.getAsJsonObject().deepCopy();
             String childNamespace = WidgetIds.namespace(id);
             boolean ownId = child.has("id") && !child.get("id").getAsString().isBlank();
@@ -306,6 +313,14 @@ public final class WidgetDocumentResolver {
         if (position.has("relativeTo")) {
             position.addProperty("relativeTo", WidgetIds.reference(position.get("relativeTo").getAsString(), namespace));
         }
+    }
+
+    private static String requireType(JsonObject widget, String location) {
+        JsonElement type = widget.get("type");
+        if (type == null || !type.isJsonPrimitive() || !type.getAsJsonPrimitive().isString() || type.getAsString().isBlank()) {
+            throw new IllegalArgumentException("Widget '" + location + "' requires a non-empty string 'type' or a valid 'ref'");
+        }
+        return type.getAsString();
     }
 
     private static JsonArray array(JsonObject root, String key) {

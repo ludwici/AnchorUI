@@ -173,7 +173,8 @@ public final class WidgetEditorRegistry {
     }
 
     public static void register(ResourceLocation type, List<Field> fields) {
-        Objects.requireNonNull(type);
+        Objects.requireNonNull(type, "Widget editor type must not be null");
+        Objects.requireNonNull(fields, "Widget editor fields must not be null");
         List<Field> values = List.copyOf(fields);
         java.util.Set<String> names = new java.util.HashSet<>();
         for (Field field : values) {
@@ -182,7 +183,7 @@ public final class WidgetEditorRegistry {
             }
         }
         if (FIELDS.putIfAbsent(type, values) != null) {
-            throw new IllegalArgumentException("Editor fields already registered for " + type);
+            throw new IllegalStateException("Anchor UI editor fields already registered for " + type);
         }
     }
 

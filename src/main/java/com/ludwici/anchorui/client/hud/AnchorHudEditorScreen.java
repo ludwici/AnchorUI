@@ -997,7 +997,7 @@ public final class AnchorHudEditorScreen extends Screen {
             if (inspectorSections.expanded("animation")) {
                 appendAnimationAction(lines, "[+] Add animation", "add", -1);
                 JsonArray tracks = manager.getAnimations(active.id());
-                List<AppearanceInspectorControls.Control> controls = AnimationInspectorControls.describe(tracks);
+                List<AppearanceInspectorControls.Control> controls = AnimationInspectorControls.describe(tracks, manager.getDefaultAnimations(active.id()));
                 for (int index = 0; index < tracks.size(); index++) {
                     JsonObject track = tracks.get(index).getAsJsonObject();
                     String trackId = track.get("id").getAsString();

@@ -140,7 +140,8 @@ The completed functionality above does **not** imply finished visual consistency
 - [ ] Consolidate and document stable APIs for widgets, templates, actions, layout factories, data sources, formatters, conditions and resource reload.
 - [x] Add opt-in revision-aware source caching for expensive providers in `BoundData` and `BoundCondition`, including atomic `registerMutable` revisions, context invalidation, live-provider compatibility, and regression tests. See [Data bindings](docs/DATA_BINDINGS.md).
 - [ ] Profile revision-aware providers in large screens, nested lists and multi-widget HUDs; consider shared invalidation only if measured results justify it.
-- [ ] Investigate partial layout recalculation for large screens and keyed lists; instance retention is already implemented.
+- [x] Cache independent built-in row/column/grid arrangements per screen, reusing unchanged child order, sizes, layout rules and available space across editor, condition and keyed-list relayouts. Custom Java layouts remain live; automated cache invalidation tests cover these boundaries.
+- [ ] Investigate deeper partial anchor/clip resolution for very large screens and keyed lists; the per-container arrangement cache deliberately retains the existing full anchor-resolution correctness path.
 - [ ] Improve diagnostics for unknown types/refs, missing assets and invalid actions/conditions.
 - [ ] Expand automated and in-client QA for F3+T, GUI resize/scale, multiple resource packs, keyboard focus, multiplayer and client-only behavior.
 - [ ] Publish public English documentation (GitBook) with copyable examples and clear compatibility guarantees.

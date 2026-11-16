@@ -22,6 +22,8 @@ Core decisions:
 
 - [x] Nine-point `AnchorLayout` with `point`, `anchor`, `relativeTo`, offsets, parent chains, resize support and diagnostics for bad references/cycles.
 - [x] Support any number of constraints per widget with `position.anchors`; opposing points derive dynamic width/height and override `size.width/height` and corresponding `autoSize` axes. Resolve multiple targets, validate overconstraints, retain dependency-aware caching, preserve F8 offsets and integrate nested padding, row/column/grid and template lists. See [Multiple anchors](docs/MULTI_ANCHORS.md).
+- [x] Expose every effective anchor constraint in a collapsible `ANCHORS (N)` section of both F8 inspectors, with primary marker, target IDs, offsets and dynamic-axis summary. Keep secondary anchors intact when editing the primary or dragging a widget.
+- [x] Persist HUD and screen F8 overrides as formatted multi-line JSON with two-space indentation and round-trip compatibility for compact legacy files; preserve the existing atomic-save behavior.
 - [x] HUD JSON composition across mods and resource packs, separately toggled test and RPG HUD demos.
 - [x] F8 HUD editor and context-sensitive screen editor: drag, parent/anchor selection, magnetic snapping, visibility overrides, reset, inspector and persistent local positioning.
 - [x] Read-only vanilla HUD anchors for layout alignment; no modification of vanilla HUD elements.

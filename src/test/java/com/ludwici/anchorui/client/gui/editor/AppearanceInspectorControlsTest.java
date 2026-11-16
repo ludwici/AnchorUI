@@ -121,7 +121,7 @@ public class AppearanceInspectorControlsTest {
         var type = ResourceLocation.fromNamespaceAndPath("editor_tests", "custom");
         WidgetEditorRegistry.register(type, List.of(WidgetEditorRegistry.Field.text("caption", "Caption", "Hello"), WidgetEditorRegistry.Field.integer("width", "Width", 40, 0, 300, 1)));
         assertEquals("caption", WidgetEditorRegistry.fields(type).getFirst().path());
-        assertThrows(IllegalArgumentException.class, () -> WidgetEditorRegistry.register(type, List.of()));
+        assertThrows(IllegalStateException.class, () -> WidgetEditorRegistry.register(type, List.of()));
         assertThrows(IllegalArgumentException.class, () -> WidgetEditorRegistry.Field.text("onClick", "Action", ""));
         assertThrows(IllegalArgumentException.class, () -> WidgetEditorRegistry.Field.text("position.x", "Position", ""));
 

@@ -13,11 +13,16 @@ public class InspectorSectionsTest {
         assertTrue(sections.expanded("widget"));
         assertTrue(sections.expanded("layout"));
         assertTrue(sections.expanded("visual"));
+        assertTrue(sections.expanded("anchors"));
+        assertFalse(sections.expanded("constraint:demo:bar:0"));
         assertFalse(sections.expanded("animation"));
         assertFalse(sections.expanded("source"));
         assertFalse(sections.expanded("diagnostics"));
         assertEquals("DIAGNOSTICS (1 error, 2 warnings) [+]", sections.label("diagnostics", "DIAGNOSTICS (1 error, 2 warnings)"));
         assertEquals("ANIMATION [+]", sections.label("animation", "ANIMATION"));
+        sections.toggle("constraint:demo:bar:0");
+        assertTrue(sections.expanded("constraint:demo:bar:0"));
+        assertFalse(sections.expanded("constraint:demo:bar:1"));
         sections.toggle("animation");
         assertTrue(sections.expanded("animation"));
         assertEquals("ANIMATION [-]", sections.label("animation", "ANIMATION"));

@@ -10,13 +10,13 @@ import java.util.List;
 
 public final class BoundData {
     private final DataBindingSpec spec;
-    private final DataValueRegistry.Provider provider;
+    private final DataSourceSnapshot source;
     private final List<String> path;
     private final DataFormatterRegistry.Formatter formatter;
 
     private BoundData(DataBindingSpec spec, DataValueRegistry.Provider provider, DataFormatterRegistry.Formatter formatter) {
         this.spec = spec;
-        this.provider = provider;
+        this.source = provider == null ? null : new DataSourceSnapshot(provider);
         this.formatter = formatter;
         this.path = DataValuePaths.tokens(spec.path());
     }
@@ -43,11 +43,11 @@ public final class BoundData {
     }
 
     public JsonElement get(WidgetContext context) {
-        if (provider == null) {
+        if (source == null) {
             return spec.literal().deepCopy();
         }
         try {
-            JsonElement raw = provider.read(context);
+            JsonElement raw = source.read(context);
             JsonElement value = DataValuePaths.resolve(raw, path);
             if (value == null || value.isJsonNull()) {
                 return spec.fallback().deepCopy();
@@ -65,6 +65,6 @@ public final class BoundData {
     }
 
     public boolean isBound() {
-        return provider != null;
+        return source != null;
     }
 }

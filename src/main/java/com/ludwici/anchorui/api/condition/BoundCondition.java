@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.api.binding.DataValuePaths;
 import com.ludwici.anchorui.api.binding.DataValueRegistry;
+import com.ludwici.anchorui.api.binding.DataSourceSnapshot;
 import com.ludwici.anchorui.api.widget.WidgetContext;
 import net.minecraft.resources.ResourceLocation;
 
@@ -16,12 +17,12 @@ import java.util.Set;
 
 public final class BoundCondition {
     private final ConditionExpression expression;
-    private final Map<String, DataValueRegistry.Provider> providers;
+    private final Map<String, DataSourceSnapshot> providers;
     private final String property;
     private final Set<String> reportedFailures = new HashSet<>();
     private final Map<String, JsonElement> valuesScratch = new HashMap<>();
 
-    private BoundCondition(ConditionExpression expression, Map<String, DataValueRegistry.Provider> providers, String property) {
+    private BoundCondition(ConditionExpression expression, Map<String, DataSourceSnapshot> providers, String property) {
         this.expression = expression;
         this.providers = providers;
         this.property = property;
@@ -35,13 +36,13 @@ public final class BoundCondition {
                                        boolean missingBindingFallback) {
         try {
             ConditionExpression expression = ConditionExpression.parse(json.get(property), defaultValue, missingBindingFallback);
-            Map<String, DataValueRegistry.Provider> providers = new HashMap<>();
+            Map<String, DataSourceSnapshot> providers = new HashMap<>();
             for (String source : expression.sources()) {
                 ResourceLocation id = ResourceLocation.tryParse(source);
                 if (id == null) {
                     throw new IllegalArgumentException("Invalid condition source: " + source);
                 }
-                providers.put(source, DataValueRegistry.find(id).orElseThrow(() -> new IllegalArgumentException("Unknown condition data source: " + source)));
+                providers.put(source, new DataSourceSnapshot(DataValueRegistry.find(id).orElseThrow(() -> new IllegalArgumentException("Unknown condition data source: " + source))));
             }
             return new BoundCondition(expression, Map.copyOf(providers), property);
         } catch (IllegalArgumentException exception) {

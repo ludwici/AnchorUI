@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.ToLongFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
@@ -23,20 +24,39 @@ public final class DataValueRegistry {
         JsonElement read(WidgetContext context);
     }
 
-    public static final class MutableValue implements Provider {
-        private final AtomicReference<JsonElement> current;
+    /**
+     * A provider whose output is unchanged while its revision is unchanged for
+     * a particular WidgetContext. Revisions must increase whenever observable
+     * source data changes, including values used by context-dependent formatters.
+     */
+    public interface RevisionedProvider extends Provider {
+        long revision(WidgetContext context);
+    }
+
+    public static final class MutableValue implements RevisionedProvider {
+        private record Snapshot(JsonElement value, long revision) {
+        }
+
+        private final AtomicReference<Snapshot> current;
 
         private MutableValue(JsonElement initial) {
-            current = new AtomicReference<>(copy(initial));
+            current = new AtomicReference<>(new Snapshot(copy(initial), 0L));
         }
 
         public void set(JsonElement updated) {
-            current.set(copy(updated));
+            JsonElement replacement = copy(updated);
+            current.updateAndGet(previous -> previous.value().equals(replacement)
+                    ? previous : new Snapshot(replacement, previous.revision() + 1L));
         }
 
         @Override
         public JsonElement read(WidgetContext context) {
-            return current.get().deepCopy();
+            return current.get().value().deepCopy();
+        }
+
+        @Override
+        public long revision(WidgetContext context) {
+            return current.get().revision();
         }
     }
 
@@ -51,6 +71,30 @@ public final class DataValueRegistry {
         if (PROVIDERS.putIfAbsent(id, provider) != null) {
             throw new IllegalStateException("Anchor UI data source already registered: " + id);
         }
+    }
+
+    /**
+     * Registers an expensive source that advertises changes with a cheap,
+     * context-aware revision. Ordinary providers remain live, with no cache.
+     */
+    public static void registerRevisioned(ResourceLocation id, RevisionedProvider provider) {
+        register(id, provider);
+    }
+
+    public static void registerRevisioned(ResourceLocation id, ToLongFunction<WidgetContext> revision, Provider provider) {
+        Objects.requireNonNull(revision, "Data revision source must not be null");
+        Objects.requireNonNull(provider, "Revisioned data provider must not be null");
+        registerRevisioned(id, new RevisionedProvider() {
+            @Override
+            public long revision(WidgetContext context) {
+                return revision.applyAsLong(context);
+            }
+
+            @Override
+            public JsonElement read(WidgetContext context) {
+                return provider.read(context);
+            }
+        });
     }
 
     public static Optional<Provider> find(ResourceLocation id) {

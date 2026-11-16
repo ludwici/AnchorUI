@@ -20,6 +20,7 @@ public final class ProgressWidget extends AnchoredWidget {
     private final int borderColor;
     private final int borderWidth;
     private final boolean showText;
+    private final WidgetSizeTransition fillTransition;
 
     public ProgressWidget(WidgetContext context, JsonObject settings, LoreStyle.Element style) {
         super(style.size.width > 0 ? style.size.width : 160, style.size.height > 0 ? style.size.height : 14, style);
@@ -35,6 +36,7 @@ public final class ProgressWidget extends AnchoredWidget {
             throw new IllegalArgumentException("Progress borderWidth must be between 0 and 256");
         }
         textures = new StateControlTextures(context, appearance);
+        fillTransition = WidgetSizeTransition.parse(appearance, context, true);
         showText = GsonHelper.getAsBoolean(appearance, "showText", false);
         active = false;
     }
@@ -54,9 +56,19 @@ public final class ProgressWidget extends AnchoredWidget {
         }
         double current = value.get(context);
         double max = maximum.get(context);
-        int filled = (int) Math.round(width * ProgressMath.fraction(current, max));
-        if (filled > 0 && !textures.render(graphics, "fill", left, top, filled, height, "normal")) {
-            graphics.fill(left, top, left + filled, top + height, fillColor);
+        double fraction = ProgressMath.fraction(current, max);
+        int filled = (int) Math.round(width * (fillTransition == null ? fraction : fillTransition.widthFraction(fraction, System.nanoTime())));
+        if (filled > 0) {
+            if (textures.has("fill")) {
+                graphics.enableScissor(left, top, left + filled, top + height);
+                try {
+                    textures.render(graphics, "fill", left, top, width, height, "normal");
+                } finally {
+                    graphics.disableScissor();
+                }
+            } else {
+                graphics.fill(left, top, left + filled, top + height, fillColor);
+            }
         }
         renderFrame(graphics);
         if (showText) {

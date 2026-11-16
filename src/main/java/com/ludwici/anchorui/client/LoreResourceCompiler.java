@@ -106,7 +106,8 @@ public final class LoreResourceCompiler {
 
         for (var entry : rawTemplates.entrySet()) {
             if (rawDefinitions.put(entry.getKey(), entry.getValue()) != null) {
-                issues.add(new Issue(Severity.WARNING, entry.getKey(), "Template from templates/ overrides a definition from widgets/", null));
+                ResourceLocation templateResource = ResourceLocation.fromNamespaceAndPath(entry.getKey().getNamespace(), "templates/" + entry.getKey().getPath());
+                issues.add(new Issue(Severity.WARNING, templateResource, "Template '" + entry.getKey() + "' overrides a definition from widgets/", null));
             }
         }
         WidgetDefinitionRegistry definitions = new WidgetDefinitionRegistry(rawDefinitions);

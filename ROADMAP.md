@@ -145,8 +145,10 @@ The completed functionality above does **not** imply finished visual consistency
 - [ ] Investigate partial transform/clipping/scroll resolution for very large screens and keyed lists; anchor dependency checks still traverse the graph, while the retained full path preserves correct validation and diagnostics.
 - [x] Improve early JSON diagnostics for missing template imports/references (including resource paths and nested/case locations), malformed entity/child entries and missing widget types; action compilation now identifies the failing event field. Add regression tests.
 - [x] Surface runtime screen/HUD build and layout diagnostics in a collapsible F8 inspector section with deduplicated warnings, bounded display, counts and preserved details in the log. Show specific rejected anchor/layout reasons instead of generic errors; cover diagnostics formatting in tests.
-- [ ] Continue diagnostics review for missing visual assets, resource reload failures and conditions in loaded packs. Client rendering and reload-path integration QA remain pending.
-- [ ] Expand automated and in-client QA for F3+T, GUI resize/scale, multiple resource packs, keyboard focus, multiplayer and client-only behavior.
+- [x] Isolate malformed resource-pack entries with a validated snapshot compiler, preserve valid widgets when an invalid template would override them, report file-specific load failures, and publish screen/HUD/style/template maps atomically on F3+T. Show relevant reload issues in both F8 inspectors. See [Resource reload and diagnostics](docs/RESOURCE_RELOAD.md).
+- [ ] Continue diagnostics review for runtime missing textures/styles and condition errors; validate F3+T behavior in a live Minecraft client. Automated resource compiler and inspector regression tests do not replace client integration QA.
+- [x] Add automated isolation tests for invalid resource roots, styles, templates, HUDs, screens, missing optional imports and repeated snapshots; validate scoped F8 reload issue display and run them in CI.
+- [ ] Complete in-client QA for F3+T, GUI resize/scale, multiple resource packs, keyboard focus, multiplayer and client-only behavior. Use the [resource reload checklist](docs/RESOURCE_RELOAD.md).
 - [ ] Publish public English documentation (GitBook) with copyable examples and clear compatibility guarantees.
 - [ ] Run CI for each supported version/loader branch once ports are in scope.
 

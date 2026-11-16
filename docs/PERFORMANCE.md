@@ -13,6 +13,7 @@ Anchor UI is designed for ordinary resource-pack screens, reactive client-side H
 | 9-slice textures | Draw up to nine pieces | UV tile descriptions are cached until the destination dimensions change. Texture image data itself remains managed by Minecraft. |
 | Widget lists in F8 | Compare the current entry snapshot, draw only rows in the visible scroll viewport | Namespace sorting and section construction are reused until the list or visibility changes. Click-to-select uses constant-time row lookup. |
 | Revision-aware bindings | Read a lightweight revision number when a revisioned provider is referenced | Compiled bindings and conditions reuse defensive JSON snapshots until the revision or context changes; unversioned providers remain live. |
+| Automatic row/column/grid layout | No arrangement pass during normal rendering | Each screen reuses its last built-in arrangement per container when available width/height, child order, intrinsic sizes, rules, collapse state and layout configuration are unchanged. Custom Java layout implementations are always recalculated. |
 | HUD and screen editors | Build one handle snapshot per editor frame | Reuse that snapshot across drawing, hit tests and list contents, instead of repeatedly assembling handles. |
 
 The renderer **does not cache actual dynamic values indefinitely**. Text, progress values, collections and visibility bindings still read their providers in the normal rendering lifecycle so the UI responds to changed gameplay state. Existing bound text and list widgets already avoid rebuilding formatted lines while their resolved content and width remain equal.
@@ -24,6 +25,7 @@ The renderer **does not cache actual dynamic values indefinitely**. Text, progre
 - The screen/HUD editor applies layout changes when the user moves an element or updates its anchors or parent.
 - Changes to the number of player-heart rows or the number of visible effect-icon rows update the vanilla positional references.
 - The list inspector is transient and does not modify the in-game HUD update frequency.
+- Screen relayout still resolves anchors, transforms, clipping and scrolling with the existing full-layout path. Only unchanged independent built-in container arrangements are reused. The cache is private to each screen instance and prunes removed container IDs; no global cache or additional tick handler is introduced.
 
 ## Profiling in the Minecraft client
 
@@ -41,7 +43,7 @@ Record per-frame CPU usage and allocation rate with a client profiler (for examp
 
 - Further profiling of revision-aware providers with large, frequently updated objects and multi-widget usage. The implemented `RevisionedProvider` API is opt-in and caches **per binding**, not globally; expensive providers still need cheap revision checks and explicit invalidation from their owning mod.
 - Dirty-rectangle / invalidation-aware screen rendering for very large mostly-static UI trees.
-- Partial layout recalculation for editor dragging when many unrelated widgets exist.
+- Deeper dirty-subtree anchor and clipping resolution during editor dragging when many unrelated widgets exist; the built-in container arrangement cache is already implemented.
 - A client-side integration test fixture for scaled hit targets, nested clipping, resource reloads and UI render ordering.
 
 The existing runtime contains no additional server tick loop for these optimizations.

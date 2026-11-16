@@ -11,7 +11,11 @@ import java.util.List;
 import java.util.Objects;
 
 public final class LayoutInspectorControls {
-    public record Control(String section, String field, String label, String value, boolean modified) {
+    public record Control(String section, String field, String label, String value, boolean modified, String sourceValue) {
+        public Control(String section, String field, String label, String value, boolean modified) {
+            this(section, field, label, value, modified, value);
+        }
+
         public String key() {
             return section + "." + field;
         }
@@ -45,49 +49,80 @@ public final class LayoutInspectorControls {
                 && WidgetContainers.supportsChildren(type.getAsString());
         if (container) {
             String layout = value(effective, "layout", "type", "none");
-            controls.add(control(overrides, id, "layout", "type", "Layout", layout));
+            controls.add(control(overrides, id, source, "layout", "type", "Layout", layout));
             if ("row".equals(layout) || "column".equals(layout)
                     || "anchorui:row".equals(layout) || "anchorui:column".equals(layout)) {
-                controls.add(control(overrides, id, "layout", "gap", "Gap", value(effective, "layout", "gap", "0")));
-                controls.add(control(overrides, id, "layout", "align", "Align", value(effective, "layout", "align", "start")));
-                controls.add(control(overrides, id, "layout", "justify", "Justify", value(effective, "layout", "justify", "start")));
-                controls.add(control(overrides, id, "layout", "wrap", "Wrap", value(effective, "layout", "wrap", "false")));
-                controls.add(control(overrides, id, "layout", "lineGap", "Line gap", value(effective, "layout", "lineGap", value(effective, "layout", "gap", "0"))));
-                controls.add(control(overrides, id, "layout", "collapseHidden", "Collapse", value(effective, "layout", "collapseHidden", "false")));
+                controls.add(control(overrides, id, source, "layout", "gap", "Gap", value(effective, "layout", "gap", "0")));
+                controls.add(control(overrides, id, source, "layout", "align", "Align", value(effective, "layout", "align", "start")));
+                controls.add(control(overrides, id, source, "layout", "justify", "Justify", value(effective, "layout", "justify", "start")));
+                controls.add(control(overrides, id, source, "layout", "wrap", "Wrap", value(effective, "layout", "wrap", "false")));
+                controls.add(control(overrides, id, source, "layout", "lineGap", "Line gap", value(effective, "layout", "lineGap", value(effective, "layout", "gap", "0"))));
+                controls.add(control(overrides, id, source, "layout", "collapseHidden", "Collapse", value(effective, "layout", "collapseHidden", "false")));
             } else if ("grid".equals(layout) || "anchorui:grid".equals(layout)) {
-                controls.add(control(overrides, id, "layout", "columns", "Columns", value(effective, "layout", "columns", "1")));
-                controls.add(control(overrides, id, "layout", "gap", "Gap", value(effective, "layout", "gap", "0")));
-                controls.add(control(overrides, id, "layout", "columnGap", "Col gap", value(effective, "layout", "columnGap", value(effective, "layout", "gap", "0"))));
-                controls.add(control(overrides, id, "layout", "rowGap", "Row gap", value(effective, "layout", "rowGap", value(effective, "layout", "gap", "0"))));
-                controls.add(control(overrides, id, "layout", "cellWidth", "Cell W", value(effective, "layout", "cellWidth", "0")));
-                controls.add(control(overrides, id, "layout", "cellHeight", "Cell H", value(effective, "layout", "cellHeight", "0")));
-                controls.add(control(overrides, id, "layout", "justifyItems", "Cell X", value(effective, "layout", "justifyItems", "start")));
-                controls.add(control(overrides, id, "layout", "alignItems", "Cell Y", value(effective, "layout", "alignItems", "start")));
-                controls.add(control(overrides, id, "layout", "collapseHidden", "Collapse", value(effective, "layout", "collapseHidden", "false")));
+                controls.add(control(overrides, id, source, "layout", "columns", "Columns", value(effective, "layout", "columns", "1")));
+                controls.add(control(overrides, id, source, "layout", "gap", "Gap", value(effective, "layout", "gap", "0")));
+                controls.add(control(overrides, id, source, "layout", "columnGap", "Col gap", value(effective, "layout", "columnGap", value(effective, "layout", "gap", "0"))));
+                controls.add(control(overrides, id, source, "layout", "rowGap", "Row gap", value(effective, "layout", "rowGap", value(effective, "layout", "gap", "0"))));
+                controls.add(control(overrides, id, source, "layout", "cellWidth", "Cell W", value(effective, "layout", "cellWidth", "0")));
+                controls.add(control(overrides, id, source, "layout", "cellHeight", "Cell H", value(effective, "layout", "cellHeight", "0")));
+                controls.add(control(overrides, id, source, "layout", "justifyItems", "Cell X", value(effective, "layout", "justifyItems", "start")));
+                controls.add(control(overrides, id, source, "layout", "alignItems", "Cell Y", value(effective, "layout", "alignItems", "start")));
+                controls.add(control(overrides, id, source, "layout", "collapseHidden", "Collapse", value(effective, "layout", "collapseHidden", "false")));
             }
         }
         if (structuralChild || gridChild) {
             String enabled = value(effective, "layoutItem", "enabled", "true");
             if (!gridChild) {
-                controls.add(control(overrides, id, "layoutItem", "enabled", "Auto item", enabled));
+                controls.add(control(overrides, id, source, "layoutItem", "enabled", "Auto item", enabled));
             }
             if (gridChild || Boolean.parseBoolean(enabled)) {
                 if (!gridChild) {
-                    controls.add(control(overrides, id, "layoutItem", "grow", "Grow", value(effective, "layoutItem", "grow", "0")));
-                    controls.add(control(overrides, id, "layoutItem", "shrink", "Shrink", value(effective, "layoutItem", "shrink", "0")));
+                    controls.add(control(overrides, id, source, "layoutItem", "grow", "Grow", value(effective, "layoutItem", "grow", "0")));
+                    controls.add(control(overrides, id, source, "layoutItem", "shrink", "Shrink", value(effective, "layoutItem", "shrink", "0")));
                 }
-                controls.add(control(overrides, id, "layoutItem", "minWidth", "Min W", value(effective, "layoutItem", "minWidth", "0")));
-                controls.add(control(overrides, id, "layoutItem", "maxWidth", "Max W", value(effective, "layoutItem", "maxWidth", "16384")));
-                controls.add(control(overrides, id, "layoutItem", "minHeight", "Min H", value(effective, "layoutItem", "minHeight", "0")));
-                controls.add(control(overrides, id, "layoutItem", "maxHeight", "Max H", value(effective, "layoutItem", "maxHeight", "16384")));
+                controls.add(control(overrides, id, source, "layoutItem", "minWidth", "Min W", value(effective, "layoutItem", "minWidth", "0")));
+                controls.add(control(overrides, id, source, "layoutItem", "maxWidth", "Max W", value(effective, "layoutItem", "maxWidth", "16384")));
+                controls.add(control(overrides, id, source, "layoutItem", "minHeight", "Min H", value(effective, "layoutItem", "minHeight", "0")));
+                controls.add(control(overrides, id, source, "layoutItem", "maxHeight", "Max H", value(effective, "layoutItem", "maxHeight", "16384")));
             }
         }
         return List.copyOf(controls);
     }
 
-    private static Control control(HudLayoutOffsets overrides, String id, String section, String field,
+    private static Control control(HudLayoutOffsets overrides, String id, JsonObject source, String section, String field,
                                    String label, String value) {
-        return new Control(section, field, label, value, overrides.settingOverride(id, section, field) != null);
+        String original = sourceValue(source, section, field);
+        JsonElement override = overrides.settingOverride(id, section, field);
+        return new Control(section, field, label, value, override != null && !sameValue(value, original), original);
+    }
+
+    public static boolean sameValue(String current, String original) {
+        if (current.equals(original) || current.equals("anchorui:" + original) || original.equals("anchorui:" + current)) {
+            return true;
+        }
+        if (("true".equalsIgnoreCase(current) || "false".equalsIgnoreCase(current))
+                && ("true".equalsIgnoreCase(original) || "false".equalsIgnoreCase(original))) {
+            return Boolean.parseBoolean(current) == Boolean.parseBoolean(original);
+        }
+        try {
+            return new java.math.BigDecimal(current).compareTo(new java.math.BigDecimal(original)) == 0;
+        } catch (NumberFormatException exception) {
+            return false;
+        }
+    }
+
+    private static String sourceValue(JsonObject source, String section, String field) {
+        String fallback = switch (field) {
+            case "type" -> "none";
+            case "enabled" -> "true";
+            case "wrap", "collapseHidden" -> "false";
+            case "columns" -> "1";
+            case "align", "justify", "justifyItems", "alignItems" -> "start";
+            case "maxWidth", "maxHeight" -> "16384";
+            case "lineGap", "columnGap", "rowGap" -> value(source, "layout", "gap", "0");
+            default -> "0";
+        };
+        return value(source, section, field, fallback);
     }
 
     private static String value(JsonObject settings, String section, String field, String fallback) {

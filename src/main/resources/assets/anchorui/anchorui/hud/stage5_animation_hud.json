@@ -34,6 +34,14 @@
             "opacity": 1,
             "x": 0
           }
+        },
+        {
+          "id": "custom_pulse",
+          "trigger": "anchorui:test_pulse",
+          "preset": "zoom",
+          "duration": 360,
+          "delay": 120,
+          "easing": "easeOut"
         }
       ]
     },

@@ -28,6 +28,19 @@ public final class LoreResourceCompiler {
         public String display() {
             return resource + ": " + message;
         }
+
+        public boolean appliesToScreen(ResourceLocation screenId) {
+            return resource.equals(screenId) || sharedResource();
+        }
+
+        public boolean appliesToHud() {
+            return resource.getPath().startsWith("hud/") || sharedResource();
+        }
+
+        private boolean sharedResource() {
+            String path = resource.getPath();
+            return path.startsWith("style/") || path.startsWith("widgets/") || path.startsWith("templates/");
+        }
     }
 
     public record Snapshot(Map<ResourceLocation, LoreEntity> screens, Map<ResourceLocation, LoreStyle> styles,

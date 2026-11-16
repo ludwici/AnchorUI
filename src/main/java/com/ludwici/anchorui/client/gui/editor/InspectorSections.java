@@ -31,14 +31,22 @@ public final class InspectorSections {
         expanded.put(id, !expanded(id));
     }
 
-    public boolean click(double mouseY, int top, int bottom, int scroll, int rowHeight) {
+    public String headerAt(double mouseY, int top, int bottom, int scroll, int rowHeight) {
         for (var entry : headers.entrySet()) {
             int rowY = top - scroll + entry.getValue() * rowHeight;
             if (rowY >= top && rowY + rowHeight <= bottom && mouseY >= rowY && mouseY < rowY + rowHeight) {
-                toggle(entry.getKey());
-                return true;
+                return entry.getKey();
             }
         }
-        return false;
+        return null;
+    }
+
+    public boolean click(double mouseY, int top, int bottom, int scroll, int rowHeight) {
+        String id = headerAt(mouseY, top, bottom, scroll, rowHeight);
+        if (id == null) {
+            return false;
+        }
+        toggle(id);
+        return true;
     }
 }

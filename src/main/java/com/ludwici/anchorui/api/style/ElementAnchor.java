@@ -21,6 +21,14 @@ public enum ElementAnchor {
         this.vertical = vertical;
     }
 
+    public int horizontal() {
+        return horizontal;
+    }
+
+    public int vertical() {
+        return vertical;
+    }
+
     public int x(int width) {
         return width * horizontal / 2;
     }

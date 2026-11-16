@@ -45,6 +45,8 @@ The editor **does not forward gameplay clicks** to the underlying JSON buttons w
 
 If widget construction or layout resolution produces errors or warnings, the inspector shows a **DIAGNOSTICS (errors, warnings)** category above the widget-specific fields. It starts collapsed to keep the inspector compact; click the heading to expand messages. Warnings from missing widget types, invalid conditions/animations, and anchor/layout validation use the same snapshot that is reported in `latest.log`. Duplicate warnings are collapsed and only the first 24 entries are shown; the header counts every unique warning and the inspector explains when additional messages remain in the log. Long messages wrap inside the existing inspector scroll viewport.
 
+The diagnostics also include resource reload failures for the current screen and shared styles/definitions/templates, with the resource ID and error severity. Unrelated screen or HUD resource errors are filtered out. See [Resource reload and diagnostics](RESOURCE_RELOAD.md) for the isolation policy and F3+T test checklist.
+
 When an editor operation is rejected, the status message uses the underlying layout validator's reason where available (for example, a circular anchor relationship), rather than an unspecific `Invalid layout`. Valid screen state and saved overrides are retained after a rejected change. Source JSON remains read-only.
 
 ## Where are layouts stored?

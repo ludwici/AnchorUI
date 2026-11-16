@@ -27,7 +27,7 @@ public final class EditorExitConfirmation {
         int spacing = 5;
         int buttonWidth = (dialogWidth - 20 - spacing * 2) / 3;
         int buttonY = top + 69;
-        discardButton = Button.builder(Component.literal("Discard"), button -> {
+        discardButton = Button.builder(Component.literal("Discard & Exit"), button -> {
             open = false;
             discard.run();
         }).bounds(left + 5, buttonY, buttonWidth, 20).build();

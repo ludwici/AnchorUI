@@ -56,11 +56,12 @@ public class ContainerLayoutCacheTest {
         assertNotSame(changedChild, changedOrder);
         var changedLayout = cache.arrange("demo:row", row(5), 201, 40, items, false, false);
         assertNotSame(changedOrder, changedLayout);
-        assertNotSame(changedLayout, cache.arrange("demo:row", row(5), 201, 40, items, true, false));
+        var changedAutoSize = cache.arrange("demo:row", row(5), 201, 40, items, true, false);
+        assertNotSame(changedLayout, changedAutoSize);
 
         cache.retain(Set.of());
         var afterRemoval = cache.arrange("demo:row", row(5), 201, 40, items, true, false);
-        assertNotSame(changedLayout, afterRemoval);
+        assertNotSame(changedAutoSize, afterRemoval);
         assertSame(afterRemoval, cache.arrange("demo:row", row(5), 201, 40, items, true, false));
     }
 

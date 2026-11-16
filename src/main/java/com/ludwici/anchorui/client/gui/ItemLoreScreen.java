@@ -265,6 +265,15 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         }
     }
 
+    public List<PositionElement.Constraint> editorAnchorConstraints(String id) {
+        for (PlacedWidget placed : placedWidgets) {
+            if (placed.id().equals(id)) {
+                return placed.frame(currentScreenOffsets()).position().anchors;
+            }
+        }
+        return List.of();
+    }
+
     public List<EditorHandle> editorHandles() {
         List<EditorHandle> handles = new ArrayList<>();
         HudLayoutOffsets offsets = currentScreenOffsets();

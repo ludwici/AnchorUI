@@ -3,6 +3,7 @@ package com.ludwici.anchorui.client.test;
 import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.KeyRegistry;
 import com.ludwici.anchorui.api.LoreEntity;
+import com.ludwici.anchorui.api.animation.UiAnimationTriggerRegistry;
 import com.ludwici.anchorui.client.LoreLoader;
 import com.ludwici.anchorui.client.ScreenIds;
 import com.ludwici.anchorui.client.hud.AnchorHudManager;
@@ -20,9 +21,16 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
+import java.util.concurrent.atomic.AtomicLong;
 
 @EventBusSubscriber(modid = AnchorUI.MODID, value = Dist.CLIENT)
 public final class AnchorUITestCommands {
+    private static final AtomicLong TEST_PULSE_REVISION = new AtomicLong();
+
+    static {
+        UiAnimationTriggerRegistry.register(ResourceLocation.fromNamespaceAndPath("anchorui", "test_pulse"), context -> TEST_PULSE_REVISION.get());
+    }
+
     private static TestScene pending;
     private static boolean pendingHudEditor;
     private static ResourceLocation pendingScreen;
@@ -39,6 +47,7 @@ public final class AnchorUITestCommands {
         registerHudTest(test, "hud1");
         registerHudTest(test, "rpg");
         registerHudTest(test, "animation");
+        test.then(Commands.literal("pulse").executes(context -> testPulse()));
         registerHudTest(test, "binding");
         registerHudTest(test, "conditions");
         registerHudTest(test, "vanilla");
@@ -64,6 +73,15 @@ public final class AnchorUITestCommands {
 
     private static void registerHudTest(com.mojang.brigadier.builder.LiteralArgumentBuilder<net.minecraft.commands.CommandSourceStack> test, String group) {
         test.then(Commands.literal(group).executes(context -> setHud(group, !AnchorHudManager.INSTANCE.isTestEnabled(group))).then(Commands.literal("on").executes(context -> setHud(group, true))).then(Commands.literal("off").executes(context -> setHud(group, false))));
+    }
+
+    private static int testPulse() {
+        TEST_PULSE_REVISION.incrementAndGet();
+        var player = Minecraft.getInstance().player;
+        if (player != null) {
+            player.displayClientMessage(Component.literal("Anchor UI animation trigger: anchorui:test_pulse"), false);
+        }
+        return Command.SINGLE_SUCCESS;
     }
 
     private static int setHud(String group, boolean enabled) {
@@ -123,7 +141,7 @@ public final class AnchorUITestCommands {
     private static int listScenes() {
         var player = Minecraft.getInstance().player;
         if (player != null) {
-            player.displayClientMessage(Component.literal("Anchor UI — /anchorui test <scene1..scene14>, hud1, rpg or binding"), false);
+            player.displayClientMessage(Component.literal("Anchor UI — /anchorui test <scene>, animation, rpg, pulse and other HUD groups"), false);
             for (TestScene scene : TestScene.values()) {
                 player.displayClientMessage(Component.literal("/anchorui test " + scene.id() + " — " + scene.title()), false);
             }

@@ -20,6 +20,7 @@ import com.ludwici.anchorui.client.gui.editor.AnchorInspectorControls;
 import com.ludwici.anchorui.client.LoreLoader;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorCheckbox;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorButton;
+import com.ludwici.anchorui.client.gui.editor.EditorExitConfirmation;
 import com.ludwici.anchorui.client.gui.editor.EditorColorPicker;
 import com.ludwici.anchorui.client.gui.ColorPickerColor;
 import com.ludwici.anchorui.client.gui.NativeContainerScrollPanel;
@@ -141,6 +142,7 @@ public final class AnchorHudEditorScreen extends Screen {
     private String inspectedId;
     private List<String> sourceProperties = List.of();
     private String status = "";
+    private EditorExitConfirmation exitConfirmation;
     private double dragStartX;
     private double dragStartY;
     private int startOffsetX;
@@ -168,6 +170,7 @@ public final class AnchorHudEditorScreen extends Screen {
         snapResult = null;
         controls.clear();
         editorDropdown.close();
+        exitConfirmation = new EditorExitConfirmation(width, height, this::discardAndClose, this::saveAndClose);
         widgetList.resize(width, height);
         if (!editorStarted) {
             manager.beginEditing();
@@ -231,7 +234,7 @@ public final class AnchorHudEditorScreen extends Screen {
             status = "Restored all HUD defaults";
         }).bounds(right, actionsY + BUTTON_STEP, halfWidth, BUTTON_HEIGHT).build());
         addControl(Button.builder(Component.literal("Save"), button -> saveAndClose()).bounds(left, actionsY + BUTTON_STEP * 2, halfWidth, BUTTON_HEIGHT).build());
-        addControl(Button.builder(Component.literal("Cancel"), button -> onClose()).bounds(right, actionsY + BUTTON_STEP * 2, halfWidth, BUTTON_HEIGHT).build());
+        addControl(Button.builder(Component.literal("Cancel"), button -> requestClose()).bounds(right, actionsY + BUTTON_STEP * 2, halfWidth, BUTTON_HEIGHT).build());
         createAppearanceInput();
     }
 
@@ -493,6 +496,19 @@ public final class AnchorHudEditorScreen extends Screen {
         }
     }
 
+    private void requestClose() {
+        if (manager.hasUnsavedChanges()) {
+            exitConfirmation.show();
+        } else {
+            discardAndClose();
+        }
+    }
+
+    private void discardAndClose() {
+        manager.cancelEditing();
+        minecraft.setScreen(null);
+    }
+
     @Override
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
     }
@@ -609,8 +625,8 @@ public final class AnchorHudEditorScreen extends Screen {
             for (Button control : controls) {
                 control.visible = !compact && !inspectorCollapsed;
             }
-            int backgroundMouseX = editingAppearance == null && editingAnchor == null ? mouseX : Integer.MIN_VALUE;
-            int backgroundMouseY = editingAppearance == null && editingAnchor == null ? mouseY : Integer.MIN_VALUE;
+            int backgroundMouseX = editingAppearance == null && editingAnchor == null && !exitConfirmation.isOpen() ? mouseX : Integer.MIN_VALUE;
+            int backgroundMouseY = editingAppearance == null && editingAnchor == null && !exitConfirmation.isOpen() ? mouseY : Integer.MIN_VALUE;
             super.render(graphics, backgroundMouseX, backgroundMouseY, partialTick);
             if (!compact) {
                 widgetList.render(graphics, font, backgroundMouseX, backgroundMouseY, frameEntries, selected != null ? selected : inspectedVanilla, choosingParent);
@@ -622,6 +638,7 @@ public final class AnchorHudEditorScreen extends Screen {
             if (colorPickerDialog != null) {
                 colorPickerDialog.render(graphics, font, mouseX, mouseY, partialTick, width, height, status);
             }
+            exitConfirmation.render(graphics, font, mouseX, mouseY, partialTick);
         } finally {
             graphics.pose().popPose();
         }
@@ -1171,6 +1188,9 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (exitConfirmation.isOpen()) {
+            return exitConfirmation.mouseClicked(mouseX, mouseY, button);
+        }
         if (colorPickerDialog != null) {
             return colorPickerDialog.mouseClicked(mouseX, mouseY, button);
         }
@@ -1323,6 +1343,9 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (exitConfirmation.isOpen()) {
+            return true;
+        }
         if (colorPickerDialog != null) {
             return colorPickerDialog.mouseDragged(mouseX, mouseY, button, dragX, dragY);
         }
@@ -1370,6 +1393,9 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (exitConfirmation.isOpen()) {
+            return true;
+        }
         if (colorPickerDialog != null) {
             return colorPickerDialog.mouseReleased(mouseX, mouseY, button);
         }
@@ -1396,6 +1422,9 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (exitConfirmation.isOpen()) {
+            return true;
+        }
         if (colorPickerDialog != null) {
             return true;
         }
@@ -1420,6 +1449,9 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (exitConfirmation.isOpen()) {
+            return exitConfirmation.keyPressed(keyCode);
+        }
         if (colorPickerDialog != null) {
             return colorPickerDialog.keyPressed(keyCode, scanCode, modifiers);
         }
@@ -1438,7 +1470,7 @@ public final class AnchorHudEditorScreen extends Screen {
             return appearanceInput.keyPressed(keyCode, scanCode, modifiers);
         }
         if (KeyRegistry.EDIT_HUD.isActiveAndMatches(InputConstants.getKey(keyCode, scanCode))) {
-            saveAndClose();
+            requestClose();
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_ESCAPE && choosingParent) {
@@ -1484,6 +1516,9 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
+        if (exitConfirmation.isOpen()) {
+            return true;
+        }
         if (colorPickerDialog != null) {
             return colorPickerDialog.charTyped(codePoint, modifiers);
         }
@@ -1492,8 +1527,7 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public void onClose() {
-        manager.cancelEditing();
-        super.onClose();
+        requestClose();
     }
 
     @Override

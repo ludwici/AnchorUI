@@ -8,6 +8,8 @@ import com.ludwici.anchorui.client.hud.AnchorHudManager;
 import com.ludwici.anchorui.client.hud.HudInspectorProperties;
 import com.ludwici.anchorui.client.hud.HudLayoutOffsets;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
+import com.ludwici.anchorui.client.gui.editor.AnimationInspectorControls;
 import com.ludwici.anchorui.client.hud.HudSnap;
 import com.ludwici.anchorui.client.gui.NativeContainerScrollPanel;
 import com.ludwici.anchorui.client.gui.editor.WidgetListPanel;
@@ -30,6 +32,8 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public final class AnchorScreenEditorScreen extends Screen {
     private static final int WIDTH = 222;
@@ -74,6 +78,11 @@ public final class AnchorScreenEditorScreen extends Screen {
             return mouseX >= x && mouseX < x + RESET_SIZE && mouseY >= y && mouseY < y + RESET_SIZE;
         }
     }
+
+    private record AnimationAction(String operation, int trackIndex) {
+    }
+
+    private final Map<Integer, AnimationAction> animationActions = new HashMap<>();
 
     private final ItemLoreScreen target;
     private final WidgetListPanel widgetList;
@@ -705,6 +714,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     private List<InspectorLine> inspectorLines() {
         List<InspectorLine> lines = new ArrayList<>();
         inspectorSections.clearHeaders();
+        animationActions.clear();
         if (selected == null) {
             appendInspectorLine(lines, "SELECT A WIDGET", SELECTED, null, false);
             appendInspectorLine(lines, "Click a widget or the Widgets list", 0xFFE5EEF5, null, false);
@@ -747,19 +757,41 @@ public final class AnchorScreenEditorScreen extends Screen {
         }
         List<AppearanceInspectorControls.Control> appearanceControls = target.editorAppearanceControls(selected.id());
         if (!appearanceControls.isEmpty()) {
-            boolean animationSection = false;
             appendSection(lines, "visual", "VISUAL / CONTENT");
-            for (AppearanceInspectorControls.Control control : appearanceControls) {
-                if (!animationSection && control.field().path().startsWith("animation.")) {
-                    animationSection = true;
-                    appendSection(lines, "animation", "ANIMATION");
+            if (inspectorSections.expanded("visual")) {
+                for (AppearanceInspectorControls.Control control : appearanceControls) {
+                    String label = control.booleanField() ? control.field().label() : control.field().label() + ": " + control.value();
+                    String clipped = font.plainSubstrByWidth(label, Math.max(38, (int) ((inspectorWidth - 98) / INSPECTOR_SCALE)));
+                    lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(), control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null, control.modified(), null, control));
                 }
-                if (!inspectorSections.expanded(animationSection ? "animation" : "visual")) {
+            }
+        }
+        appendSection(lines, "animation", "ANIMATION");
+        if (inspectorSections.expanded("animation")) {
+            appendAnimationAction(lines, "[+] Add animation", "add", -1);
+            JsonArray tracks = target.editorAnimations(selected.id());
+            List<AppearanceInspectorControls.Control> controls = AnimationInspectorControls.describe(tracks);
+            for (int index = 0; index < tracks.size(); index++) {
+                JsonObject track = tracks.get(index).getAsJsonObject();
+                String trackId = track.get("id").getAsString();
+                String trigger = track.has("trigger") ? track.get("trigger").getAsString() : "open";
+                String key = "track:" + selected.id() + ":" + trackId;
+                appendSection(lines, key, "  " + trackId + " (" + trigger + ")");
+                if (!inspectorSections.expanded(key)) {
                     continue;
                 }
-                String label = control.booleanField() ? control.field().label() : control.field().label() + ": " + control.value();
-                String clipped = font.plainSubstrByWidth(label, Math.max(38, (int) ((inspectorWidth - 98) / INSPECTOR_SCALE)));
-                lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(), control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null, control.modified(), null, control));
+                String prefix = "animations.t" + index + ".";
+                for (AppearanceInspectorControls.Control control : controls) {
+                    if (control.field().path().startsWith(prefix)) {
+                        String label = control.booleanField() ? control.field().label() : control.field().label() + ": " + control.value();
+                        String clipped = font.plainSubstrByWidth(label, Math.max(38, (int) ((inspectorWidth - 98) / INSPECTOR_SCALE)));
+                        lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(), control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null, control.modified(), null, control));
+                    }
+                }
+                appendAnimationAction(lines, "    Duplicate " + trackId, "duplicate", index);
+                appendAnimationAction(lines, "    Move up", "up", index);
+                appendAnimationAction(lines, "    Move down", "down", index);
+                appendAnimationAction(lines, "    Delete " + trackId, "delete", index);
             }
         }
         appendSection(lines, "source", "SOURCE JSON (read only)");
@@ -775,6 +807,35 @@ public final class AnchorScreenEditorScreen extends Screen {
             }
         }
         return lines;
+    }
+
+    private void appendAnimationAction(List<InspectorLine> lines, String title, String action, int index) {
+        animationActions.put(lines.size(), new AnimationAction(action, index));
+        appendInspectorLine(lines, title, action.equals("delete") ? 0xFFFF9887 : 0xFF92DFCE, null, false);
+    }
+
+    private boolean clickAnimationAction(double mouseY) {
+        int row = (int) Math.floor((mouseY - inspectorTop() + inspectorScroll) / INSPECTOR_LINE_HEIGHT);
+        AnimationAction action = animationActions.get(row);
+        if (action == null || selected == null) {
+            return false;
+        }
+        try {
+            JsonArray before = target.editorAnimations(selected.id());
+            JsonArray after = switch (action.operation()) {
+                case "add" -> AnimationInspectorControls.create(before);
+                case "duplicate" -> AnimationInspectorControls.duplicate(before, action.trackIndex());
+                case "delete" -> AnimationInspectorControls.delete(before, action.trackIndex());
+                case "up" -> AnimationInspectorControls.move(before, action.trackIndex(), -1);
+                case "down" -> AnimationInspectorControls.move(before, action.trackIndex(), 1);
+                default -> before;
+            };
+            status = target.editorSetAnimations(selected.id(), after) ? "" : target.screenSaveError();
+            refreshSelection();
+        } catch (RuntimeException exception) {
+            status = exception.getMessage();
+        }
+        return true;
     }
 
     private void appendSection(List<InspectorLine> lines, String id, String title) {
@@ -873,6 +934,9 @@ public final class AnchorScreenEditorScreen extends Screen {
                 && mouseY >= panelTop && mouseY < panelTop + (inspectorCollapsed ? 27 : expandedPanelHeight())) {
             if (insideInspector(mouseX, mouseY)) {
                 if (inspectorSections.click(mouseY, inspectorTop(), inspectorBottom(), inspectorScroll, INSPECTOR_LINE_HEIGHT)) {
+                    return true;
+                }
+                if (clickAnimationAction(mouseY)) {
                     return true;
                 }
                 for (AppearanceHitbox hitbox : appearanceHitboxes) {

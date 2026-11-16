@@ -79,12 +79,12 @@ translation 0 and scale 1, or the corresponding preset's start/end value.
 
 ### Delay behavior
 
-A track starts its delay timer when its trigger fires. **Until its delay ends
-it contributes a neutral transform**, so another track can animate the widget
-during that period. At the end of the delay, the track begins interpolating
-from its `from` frame to its `to` frame. A delayed `fade` will therefore
-switch to its starting opacity when its delay expires; pair it with another
-track if a different pre-delay appearance is needed.
+A track starts its delay timer when its trigger fires. For `open` and
+`show` animations, **the starting keyframe is held during the delay**,
+so a delayed fade-in remains invisible until it begins and a delayed
+slide-in waits at its starting offset. For `change`, `hide` and `close`,
+the track contributes a neutral transform until the delay expires, then
+interpolates from `from` to `to`. Multiple tracks remain independent.
 
 A `hide` transition keeps the widget visually rendered through its delay and
 duration but makes it non-interactive immediately. For a `close` transition,
@@ -101,8 +101,8 @@ At each frame:
 - Scale = product of active scale values.
 - X/Y = sum of active translation offsets.
 
-Values are bounded before sending them to rendering. A delayed track makes
-no visual contribution until it starts. A triggered track retains its final
+Values are bounded before sending them to rendering. A delayed entry track holds its starting pose; a delayed change or exit track
+makes no visual contribution until it starts. A triggered track retains its final
 frame until the runtime clears it on a conflicting visibility/close trigger;
 authors should normally use neutral `to` values for entrance/change tracks.
 When the **same** track is triggered again during playback, it continues

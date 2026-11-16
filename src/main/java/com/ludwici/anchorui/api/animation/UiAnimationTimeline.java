@@ -25,7 +25,7 @@ public final class UiAnimationTimeline {
 
         private Frame frame(long now) {
             if (pending(now)) {
-                return Frame.IDENTITY;
+                return track.trigger() == Trigger.OPEN || track.trigger() == Trigger.SHOW ? from : Frame.IDENTITY;
             }
             double elapsed = Math.max(0.0, (now - startNanos - delayNanos()) / (track.durationMillis() * 1000000.0));
             return from.between(track.to(), track.easing().apply(elapsed));

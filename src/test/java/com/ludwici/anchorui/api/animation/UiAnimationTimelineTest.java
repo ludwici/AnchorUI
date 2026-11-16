@@ -33,7 +33,7 @@ public class UiAnimationTimelineTest {
         UiAnimationTimeline timeline = new UiAnimationTimeline(parsed);
         timeline.update(true, Map.of(), 0L);
         assertEquals(0.0, timeline.sample(0L).opacity(), 0.00001);
-        assertEquals(0.0, timeline.sample(0L).x(), 0.00001);
+        assertEquals(-20.0, timeline.sample(0L).x(), 0.00001);
         assertEquals(0.5, timeline.sample(100000000L).opacity(), 0.00001);
         assertEquals(-20.0, timeline.sample(100000000L).x(), 0.00001);
         assertEquals(-10.0, timeline.sample(200000000L).x(), 0.00001);
@@ -49,7 +49,7 @@ public class UiAnimationTimelineTest {
                 {"animations":[{"id":"late","trigger":"open","delay":250,"duration":100,"preset":"fade"}]}
                 """));
         timeline.update(true, Map.of(), 0L);
-        assertEquals(1.0, timeline.sample(200000000L).opacity(), 0.00001);
+        assertEquals(0.0, timeline.sample(200000000L).opacity(), 0.00001);
         assertEquals(0.0, timeline.sample(250000000L).opacity(), 0.00001);
         assertEquals(0.5, timeline.sample(300000000L).opacity(), 0.00001);
         assertEquals(1.0, timeline.sample(350000000L).opacity(), 0.00001);

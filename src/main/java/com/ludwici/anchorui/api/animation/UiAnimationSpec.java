@@ -209,8 +209,7 @@ public final class UiAnimationSpec {
                 throw new IllegalArgumentException("Invalid frame field '" + entry.getKey() + "'");
             }
         }
-        return new Frame(number(object, "opacity", fallback.opacity()), number(object, "x", fallback.x()),
-                number(object, "y", fallback.y()), number(object, "scale", fallback.scale()));
+        return new Frame(number(object, "opacity", fallback.opacity()), number(object, "x", fallback.x()), number(object, "y", fallback.y()), number(object, "scale", fallback.scale()));
     }
 
     private static String string(JsonObject value, String key, String fallback) {

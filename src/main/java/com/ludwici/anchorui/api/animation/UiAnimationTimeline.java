@@ -130,8 +130,7 @@ public final class UiAnimationTimeline {
             y += frame.y();
             scale *= frame.scale();
         }
-        return new Frame(Math.max(0.0, Math.min(1.0, opacity)), Math.max(-4096.0, Math.min(4096.0, x)),
-                Math.max(-4096.0, Math.min(4096.0, y)), Math.max(0.01, Math.min(4.0, scale)));
+        return new Frame(Math.max(0.0, Math.min(1.0, opacity)), Math.max(-4096.0, Math.min(4096.0, x)), Math.max(-4096.0, Math.min(4096.0, y)), Math.max(0.01, Math.min(4.0, scale)));
     }
 
     public boolean finished(long nowNanos) {

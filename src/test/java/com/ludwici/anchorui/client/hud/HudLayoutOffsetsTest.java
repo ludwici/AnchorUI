@@ -179,6 +179,57 @@ public class HudLayoutOffsetsTest {
         assertThrows(IllegalArgumentException.class, () -> positioned(parent, child, overrides));
     }
 
+    @Test
+    public void completeAnchorListsSurviveStorageAndRemainIndependentOfDragOffsets() throws IOException {
+        String id = "demo:between";
+        Path path = directory.resolve("anchorui/screens/demo/panel.json");
+        PositionElement defaults = new PositionElement(ElementAnchor.CENTER, ElementAnchor.CENTER, "screen", 0, 0);
+        List<PositionElement.Constraint> edited = List.of(new PositionElement.Constraint(ElementAnchor.LEFT, ElementAnchor.RIGHT, "demo:left", 8, -2), new PositionElement.Constraint(ElementAnchor.RIGHT, ElementAnchor.LEFT, "demo:right", -8, -2));
+        HudLayoutOffsets overrides = new HudLayoutOffsets();
+        overrides.set(id, 14, 19);
+        overrides.setAnchorConstraints(id, edited);
+        HudLayoutStorage.save(path, overrides);
+
+        HudLayoutOffsets restored = HudLayoutStorage.load(path);
+        assertTrue(restored.sameAs(overrides));
+        assertEquals(2, restored.anchorConstraints(id).size());
+        assertEquals(edited, restored.anchorConstraints(id));
+        assertEquals(22, restored.effectivePosition(id, defaults).translated(restored.get(id).x(), restored.get(id).y()).anchors.getFirst().x());
+        assertEquals(17, restored.effectivePosition(id, defaults).translated(restored.get(id).x(), restored.get(id).y()).anchors.get(1).y());
+        assertTrue(restored.toJson().getAsJsonObject("offsets").getAsJsonObject(id).get("anchors").isJsonArray());
+
+        restored.setAnchor(id, new HudLayoutOffsets.AnchorOverride("demo:changed", ElementAnchor.TOPLEFT, ElementAnchor.TOPRIGHT));
+        assertEquals(2, restored.anchorConstraints(id).size());
+        assertEquals("demo:changed", restored.anchorConstraints(id).getFirst().relativeTo());
+        assertEquals(edited.get(1), restored.anchorConstraints(id).get(1));
+
+        restored.clearAnchor(id);
+        assertEquals(null, restored.anchorConstraints(id));
+        assertEquals(null, restored.anchor(id));
+        assertEquals(14, restored.get(id).x());
+        assertEquals(19, restored.get(id).y());
+        assertEquals(defaults.anchors, restored.effectivePosition(id, defaults).anchors);
+    }
+
+    @Test
+    public void copyingAndResettingSavedAnchorConstraintsDoesNotMutatePreviousVersion() {
+        String id = "demo:panel";
+        HudLayoutOffsets original = new HudLayoutOffsets();
+        List<PositionElement.Constraint> anchors = List.of(new PositionElement.Constraint(ElementAnchor.LEFT, ElementAnchor.LEFT, "screen", 10, 0), new PositionElement.Constraint(ElementAnchor.RIGHT, ElementAnchor.RIGHT, "screen", -10, 0));
+        original.setAnchorConstraints(id, anchors);
+        HudLayoutOffsets edited = original.copy();
+        edited.setAnchorConstraints(id, List.of(anchors.getFirst()));
+        assertFalse(original.sameAs(edited));
+        assertEquals(2, original.anchorConstraints(id).size());
+        edited.reset(id);
+        assertEquals(null, edited.anchorConstraints(id));
+        assertEquals(2, original.anchorConstraints(id).size());
+        edited.setAnchorConstraints(id, anchors);
+        edited.resetAll();
+        assertEquals(null, edited.anchorConstraints(id));
+        assertEquals(2, original.anchorConstraints(id).size());
+    }
+
     private static java.util.Map<String, AnchorLayout.Bounds> positioned(PositionElement parent, PositionElement child, HudLayoutOffsets overrides) {
         return AnchorLayout.resolve(640, 360, List.of(new AnchorLayout.Frame("moda:parent", adjusted("moda:parent", parent, overrides), 90, 18), new AnchorLayout.Frame("modb:child", adjusted("modb:child", child, overrides), 60, 12)));
     }

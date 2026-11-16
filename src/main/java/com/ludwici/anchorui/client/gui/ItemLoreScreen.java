@@ -85,9 +85,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                                 ContainerLayout.AutoSize autoSize, ContainerScroll.Config scroll, int preferredWidth, int preferredHeight) {
         private AnchorLayout.Frame frame(HudLayoutOffsets offsets) {
             HudLayoutOffsets.Offset delta = offsets.get(id);
-            HudLayoutOffsets.AnchorOverride anchor = offsets.anchor(id);
-            PositionElement effective = (anchor == null ? position
-                    : position.withPrimary(anchor.point(), anchor.anchor(), anchor.relativeTo())).translated(delta.x(), delta.y());
+            PositionElement effective = offsets.effectivePosition(id, position).translated(delta.x(), delta.y());
             return new AnchorLayout.Frame(id, effective, preferredWidth, preferredHeight);
         }
     }
@@ -263,6 +261,30 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             editingScreenOffsets = null;
             applyScreenOffsets(savedScreenOffsets);
         }
+    }
+
+    public boolean editorSetAnchorConstraints(String id, List<PositionElement.Constraint> anchors) {
+        if (editingScreenOffsets == null || !layoutBounds.containsKey(id)) {
+            return false;
+        }
+        try {
+            HudLayoutOffsets candidate = editingScreenOffsets.copy();
+            HudLayoutOffsets.Offset offset = candidate.get(id);
+            candidate.setAnchorConstraints(id, new PositionElement(anchors).translated(-offset.x(), -offset.y()).anchors);
+            return useCandidate(candidate);
+        } catch (RuntimeException exception) {
+            lastLayoutFailure = exception.getMessage();
+            return false;
+        }
+    }
+
+    public boolean editorResetAnchorConstraints(String id) {
+        if (editingScreenOffsets == null || !layoutBounds.containsKey(id)) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingScreenOffsets.copy();
+        candidate.clearAnchor(id);
+        return useCandidate(candidate);
     }
 
     public List<PositionElement.Constraint> editorAnchorConstraints(String id) {

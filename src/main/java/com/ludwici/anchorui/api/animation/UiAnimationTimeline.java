@@ -1,6 +1,7 @@
 package com.ludwici.anchorui.api.animation;
 
 import com.google.gson.JsonElement;
+import net.minecraft.resources.ResourceLocation;
 import com.ludwici.anchorui.api.animation.UiAnimationSpec.Frame;
 import com.ludwici.anchorui.api.animation.UiAnimationSpec.Track;
 import com.ludwici.anchorui.api.animation.UiAnimationSpec.Trigger;
@@ -35,6 +36,7 @@ public final class UiAnimationTimeline {
     private final UiAnimationSpec spec;
     private final Map<String, Running> running = new LinkedHashMap<>();
     private final Map<String, JsonElement> watched = new HashMap<>();
+    private final Map<ResourceLocation, Long> lastCustomRevisions = new HashMap<>();
     private boolean initialized;
     private boolean visible;
 
@@ -43,10 +45,15 @@ public final class UiAnimationTimeline {
     }
 
     public void update(boolean visible, Map<String, JsonElement> values, long nowNanos) {
+        update(visible, values, Map.of(), nowNanos);
+    }
+
+    public void update(boolean visible, Map<String, JsonElement> values, Map<ResourceLocation, Long> customRevisions, long nowNanos) {
         if (!initialized) {
             initialized = true;
             this.visible = visible;
             remember(values);
+            rememberCustom(customRevisions);
             if (visible) {
                 begin(Trigger.OPEN, nowNanos);
             }
@@ -56,23 +63,40 @@ public final class UiAnimationTimeline {
             this.visible = visible;
             if (visible) {
                 removeTriggers(Trigger.HIDE, Trigger.CLOSE);
+                rememberCustom(customRevisions);
                 begin(Trigger.SHOW, nowNanos);
             } else {
-                removeTriggers(Trigger.OPEN, Trigger.SHOW, Trigger.CHANGE);
+                removeTriggers(Trigger.OPEN, Trigger.SHOW, Trigger.CHANGE, Trigger.CUSTOM);
                 begin(Trigger.HIDE, nowNanos);
             }
         } else if (visible) {
             for (Track track : spec.tracks()) {
-                if (track.enabled() && track.trigger() == Trigger.CHANGE) {
+                if (!track.enabled()) {
+                    continue;
+                }
+                if (track.trigger() == Trigger.CHANGE) {
                     JsonElement next = values == null ? null : values.get(track.id());
                     JsonElement previous = watched.get(track.id());
                     if (next != null && previous != null && !next.equals(previous)) {
                         launch(track, nowNanos);
                     }
+                } else if (track.trigger() == Trigger.CUSTOM) {
+                    Long revision = customRevisions.get(track.customTrigger());
+                    Long previous = lastCustomRevisions.get(track.customTrigger());
+                    if (revision != null && previous != null && revision > previous) {
+                        launch(track, nowNanos);
+                    }
                 }
             }
         }
+        rememberCustom(customRevisions);
         remember(values);
+    }
+
+    private void rememberCustom(Map<ResourceLocation, Long> revisions) {
+        if (revisions != null) {
+            lastCustomRevisions.putAll(revisions);
+        }
     }
 
     private void remember(Map<String, JsonElement> values) {

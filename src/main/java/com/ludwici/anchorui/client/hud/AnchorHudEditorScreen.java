@@ -17,6 +17,7 @@ import com.ludwici.anchorui.client.gui.editor.InspectorSections;
 import com.ludwici.anchorui.client.gui.editor.EditorDiagnostics;
 import com.ludwici.anchorui.client.gui.editor.AnchorInspectorRows;
 import com.ludwici.anchorui.client.gui.editor.AnchorInspectorControls;
+import com.ludwici.anchorui.client.gui.editor.EditorAnchorGuide;
 import com.ludwici.anchorui.client.LoreLoader;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorCheckbox;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorButton;
@@ -139,6 +140,7 @@ public final class AnchorHudEditorScreen extends Screen {
     private int maxInspectorScroll;
     private int inspectorScroll;
     private String selected;
+    private int focusedAnchorIndex = -1;
     private String inspectedId;
     private List<String> sourceProperties = List.of();
     private String status = "";
@@ -252,15 +254,30 @@ public final class AnchorHudEditorScreen extends Screen {
         }
         String id = selected;
         List<PositionElement.Constraint> values = manager.getAnchorConstraints(id);
+        if (action.index() >= 0) {
+            focusedAnchorIndex = action.index();
+        }
         try {
             switch (action.field()) {
                 case "add" -> {
-                    if (updateAnchor(id, AnchorInspectorControls.add(values)) && !inspectorSections.expanded("constraint:" + id + ":" + values.size())) {
-                        inspectorSections.toggle("constraint:" + id + ":" + values.size());
+                    if (updateAnchor(id, AnchorInspectorControls.add(values))) {
+                        focusedAnchorIndex = values.size();
+                        if (!inspectorSections.expanded("constraint:" + id + ":" + values.size())) {
+                            inspectorSections.toggle("constraint:" + id + ":" + values.size());
+                        }
                     }
                 }
-                case "reset" -> status = manager.resetPreviewAnchorConstraints(id) ? "" : manager.getPreviewLayoutFailure();
-                case "delete" -> updateAnchor(id, AnchorInspectorControls.remove(values, action.index()));
+                case "reset" -> {
+                    status = manager.resetPreviewAnchorConstraints(id) ? "" : manager.getPreviewLayoutFailure();
+                    if (status.isEmpty()) {
+                        focusedAnchorIndex = -1;
+                    }
+                }
+                case "delete" -> {
+                    if (updateAnchor(id, AnchorInspectorControls.remove(values, action.index()))) {
+                        focusedAnchorIndex = Math.min(action.index(), values.size() - 2);
+                    }
+                }
                 case "point", "anchor", "relativeTo" -> openAnchorChoice(action, row, id, values);
                 case "x", "y" -> {
                     int plus = panelX + panelWidth - 25;
@@ -484,6 +501,7 @@ public final class AnchorHudEditorScreen extends Screen {
             inspectedVanilla = null;
             sourceProperties = List.of();
             inspectorSections.collapse("source");
+            focusedAnchorIndex = -1;
             inspectorScroll = 0;
         }
     }
@@ -578,6 +596,7 @@ public final class AnchorHudEditorScreen extends Screen {
             }
         }
 
+        renderAnchorGuide(graphics, active);
         if (draggingWidget && snapResult != null) {
             Integer guideX = snapResult.guideX();
             Integer guideY = snapResult.guideY();
@@ -645,6 +664,38 @@ public final class AnchorHudEditorScreen extends Screen {
 
         if (handles.isEmpty()) {
             graphics.drawCenteredString(font, "No HUD widgets. Enable Demo in the panel.", width / 2, height / 2, 0xFFFFD37C);
+        }
+    }
+
+    private void renderAnchorGuide(GuiGraphics graphics, AnchorHudManager.HudHandle active) {
+        if (compact || inspectorCollapsed || active == null || focusedAnchorIndex < 0 || !inspectorSections.expanded("anchors")) {
+            return;
+        }
+        List<PositionElement.Constraint> anchors = manager.getAnchorConstraints(active.id());
+        if (focusedAnchorIndex >= anchors.size()) {
+            focusedAnchorIndex = -1;
+            return;
+        }
+        PositionElement.Constraint constraint = anchors.get(focusedAnchorIndex);
+        AnchorLayout.Bounds targetBounds = "screen".equals(constraint.relativeTo()) ? new AnchorLayout.Bounds(0, 0, width, height) : null;
+        if (targetBounds == null) {
+            for (AnchorHudManager.HudHandle handle : frameHandles) {
+                if (handle.id().equals(constraint.relativeTo())) {
+                    targetBounds = handle.bounds();
+                    break;
+                }
+            }
+        }
+        if (targetBounds == null) {
+            for (VanillaHudGeometry.Reference vanilla : frameVanillaHandles) {
+                if (vanilla.id().equals(constraint.relativeTo())) {
+                    targetBounds = vanilla.bounds();
+                    break;
+                }
+            }
+        }
+        if (targetBounds != null) {
+            EditorAnchorGuide.draw(graphics, font, EditorAnchorGuide.connect(active.bounds(), targetBounds, constraint), width, height);
         }
     }
 
@@ -952,7 +1003,7 @@ public final class AnchorHudEditorScreen extends Screen {
                     for (int index = 0; index < anchors.size(); index++) {
                         PositionElement.Constraint entry = anchors.get(index);
                         String section = "constraint:" + active.id() + ":" + index;
-                        appendSection(lines, section, "  #" + (index + 1) + (index == 0 ? " (primary)" : "") + " " + entry.point() + " -> " + entry.anchor());
+                        appendSection(lines, section, (focusedAnchorIndex == index ? "  > #" : "  #") + (index + 1) + (index == 0 ? " (primary)" : "") + " " + entry.point() + " -> " + entry.anchor());
                         if (!inspectorSections.expanded(section)) {
                             continue;
                         }
@@ -1243,7 +1294,13 @@ public final class AnchorHudEditorScreen extends Screen {
                 }
             }
             if (selected != null && insideInspector(mouseX, mouseY)) {
-                if (inspectorSections.click(mouseY, inspectorTop(), inspectorBottom(), inspectorScroll, INSPECTOR_LINE_HEIGHT)) {
+                String section = inspectorSections.headerAt(mouseY, inspectorTop(), inspectorBottom(), inspectorScroll, INSPECTOR_LINE_HEIGHT);
+                if (section != null) {
+                    String prefix = "constraint:" + selected + ":";
+                    if (section.startsWith(prefix)) {
+                        focusedAnchorIndex = Integer.parseInt(section.substring(prefix.length()));
+                    }
+                    inspectorSections.toggle(section);
                     return true;
                 }
                 if (clickAnchorAction(mouseX, mouseY) || clickAnimationAction(mouseY)) {

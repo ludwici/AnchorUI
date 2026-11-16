@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.JsonOps;
 import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 
@@ -77,6 +78,28 @@ public class DataFormatterRegistryTest {
                   }
                 }
                 """), "text", new JsonPrimitive(""), DataBindingSpec.Kind.STRING));
+    }
+
+    @Test
+    public void typedFormatterCodecReceivesOnlyConfigurationFields() {
+        DataValueRegistry.registerString(id("metadata_input"), context -> "anything");
+        DataFormatterRegistry.register(id("metadata_free"), Codec.PASSTHROUGH, (value, context, options) -> {
+            JsonObject arguments = options.convert(JsonOps.INSTANCE).getValue().getAsJsonObject();
+            return new JsonPrimitive(arguments.has("type") ? "type leaked to codec" : arguments.get("suffix").getAsString());
+        });
+        BoundData binding = BoundData.parse(json("""
+                {
+                  "text": {
+                    "bind": "formatter_test:metadata_input",
+                    "format": {
+                      "type": "formatter_test:metadata_free",
+                      "suffix": "clean"
+                    },
+                    "fallback": "missing"
+                  }
+                }
+                """), "text", new JsonPrimitive(""), DataBindingSpec.Kind.STRING);
+        assertEquals("clean", binding.get(null).getAsString());
     }
 
     @Test

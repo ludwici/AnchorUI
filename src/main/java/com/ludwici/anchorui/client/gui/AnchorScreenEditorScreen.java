@@ -25,6 +25,7 @@ import com.ludwici.anchorui.client.gui.editor.AnchorInspectorRows;
 import com.ludwici.anchorui.client.gui.editor.AnchorInspectorControls;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorCheckbox;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorButton;
+import com.ludwici.anchorui.client.gui.editor.EditorExitConfirmation;
 import com.ludwici.anchorui.client.gui.editor.EditorColorPicker;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphics;
@@ -138,6 +139,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     private double startY;
     private HudLayoutOffsets.Offset startOffset;
     private String status = "";
+    private EditorExitConfirmation exitConfirmation;
 
     public AnchorScreenEditorScreen(ItemLoreScreen target) {
         super(Component.literal("Anchor UI Screen Editor"));
@@ -152,6 +154,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         }
         controls.clear();
         editorDropdown.close();
+        exitConfirmation = new EditorExitConfirmation(width, height, this::discardAndClose, this::save);
         widgetList.resize(width, height);
         inspectorWidth = Math.min(WIDTH, Math.max(150, width - 116));
         if (panelLeft < 0) {
@@ -165,7 +168,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         int x = panelX();
         int y = panelTop;
         add(x + 7, y + 29, 100, "Save", button -> save());
-        add(x + 114, y + 29, 100, "Cancel", button -> cancel());
+        add(x + 114, y + 29, 100, "Cancel", button -> requestClose());
         hide = add(x + 7, y + 53, 100, "Hide", button -> toggleHidden());
         reset = add(x + 114, y + 53, 100, "Reset", button -> reset());
         parent = add(x + 7, y + 77, 100, "Parent", button -> pickParent());
@@ -331,7 +334,15 @@ public final class AnchorScreenEditorScreen extends Screen {
         }
     }
 
-    private void cancel() {
+    private void requestClose() {
+        if (target.hasUnsavedScreenChanges()) {
+            exitConfirmation.show();
+        } else {
+            discardAndClose();
+        }
+    }
+
+    private void discardAndClose() {
         target.cancelScreenEditing();
         minecraft.setScreen(target);
     }
@@ -539,7 +550,8 @@ public final class AnchorScreenEditorScreen extends Screen {
             }
         }
         if (compact) {
-            graphics.drawString(font, "Screen Editor (Tab: show panel, F8: save)", 8, 7, SELECTED, false);
+            graphics.drawString(font, "Screen Editor (Tab: show panel, F8: exit)", 8, 7, SELECTED, false);
+            exitConfirmation.render(graphics, font, mouseX, mouseY, partialTick);
             return;
         }
         graphics.pose().pushPose();
@@ -560,8 +572,8 @@ public final class AnchorScreenEditorScreen extends Screen {
                     graphics.drawString(font, message, x + 8, y + expandedPanelHeight() - 14, 0xFFFFD16B, false);
                 }
             }
-            int backgroundMouseX = editingAppearance == null && editingAnchor == null ? mouseX : Integer.MIN_VALUE;
-            int backgroundMouseY = editingAppearance == null && editingAnchor == null ? mouseY : Integer.MIN_VALUE;
+            int backgroundMouseX = editingAppearance == null && editingAnchor == null && !exitConfirmation.isOpen() ? mouseX : Integer.MIN_VALUE;
+            int backgroundMouseY = editingAppearance == null && editingAnchor == null && !exitConfirmation.isOpen() ? mouseY : Integer.MIN_VALUE;
             super.render(graphics, backgroundMouseX, backgroundMouseY, partialTick);
             widgetList.render(graphics, font, backgroundMouseX, backgroundMouseY, frameEntries, selected == null ? null : selected.id(), pickingParent);
             editorDropdown.render(graphics, font, mouseX, mouseY);
@@ -571,6 +583,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             if (colorPickerDialog != null) {
                 colorPickerDialog.render(graphics, font, mouseX, mouseY, partialTick, width, height, status);
             }
+            exitConfirmation.render(graphics, font, mouseX, mouseY, partialTick);
         } finally {
             graphics.pose().popPose();
         }
@@ -1029,6 +1042,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (exitConfirmation.isOpen()) {
+            return exitConfirmation.mouseClicked(mouseX, mouseY, button);
+        }
         if (colorPickerDialog != null) {
             return colorPickerDialog.mouseClicked(mouseX, mouseY, button);
         }
@@ -1161,6 +1177,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (exitConfirmation.isOpen()) {
+            return true;
+        }
         if (colorPickerDialog != null) {
             return colorPickerDialog.mouseDragged(mouseX, mouseY, button, dragX, dragY);
         }
@@ -1205,6 +1224,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (exitConfirmation.isOpen()) {
+            return true;
+        }
         if (colorPickerDialog != null) {
             return colorPickerDialog.mouseReleased(mouseX, mouseY, button);
         }
@@ -1235,6 +1257,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (exitConfirmation.isOpen()) {
+            return true;
+        }
         if (colorPickerDialog != null) {
             return true;
         }
@@ -1259,6 +1284,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (exitConfirmation.isOpen()) {
+            return exitConfirmation.keyPressed(keyCode);
+        }
         if (colorPickerDialog != null) {
             return colorPickerDialog.keyPressed(keyCode, scanCode, modifiers);
         }
@@ -1277,7 +1305,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             return appearanceInput.keyPressed(keyCode, scanCode, modifiers);
         }
         if (KeyRegistry.EDIT_HUD.isActiveAndMatches(InputConstants.getKey(keyCode, scanCode))) {
-            save();
+            requestClose();
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
@@ -1287,7 +1315,7 @@ public final class AnchorScreenEditorScreen extends Screen {
                 updateControls();
                 return true;
             }
-            cancel();
+            requestClose();
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_TAB) {
@@ -1327,6 +1355,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
+        if (exitConfirmation.isOpen()) {
+            return true;
+        }
         if (colorPickerDialog != null) {
             return colorPickerDialog.charTyped(codePoint, modifiers);
         }
@@ -1335,7 +1366,7 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public void onClose() {
-        cancel();
+        requestClose();
     }
 
     @Override

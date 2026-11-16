@@ -95,6 +95,7 @@ public final class AnchorHudManager {
 
     private WidgetInstanceRegistry registry = new WidgetInstanceRegistry();
     private List<PlacedWidget> widgets = List.of();
+    private final Map<String, JsonObject> sourceSettingsById = new HashMap<>();
     private List<PlacedWidget> visibilityOrder = List.of();
     private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
     private Set<String> collapsingLayoutParents = Set.of();
@@ -727,7 +728,7 @@ public final class AnchorHudManager {
         }
         for (PlacedWidget placed : widgets) {
             if (placed.id().equals(id)) {
-                return LayoutInspectorControls.describe(id, placed.style().resolvedSettings, offsets, parentId != null, gridChild);
+                return LayoutInspectorControls.describe(id, sourceSettingsById.getOrDefault(id, placed.style().resolvedSettings), offsets, parentId != null, gridChild);
             }
         }
         return List.of();
@@ -740,7 +741,7 @@ public final class AnchorHudManager {
                 if (definition == null) {
                     return List.of();
                 }
-                JsonObject settings = placed.style().resolvedSettings.deepCopy();
+                JsonObject settings = sourceSettingsById.getOrDefault(id, placed.style().resolvedSettings).deepCopy();
                 if (definition.settings.has("text") && definition.settings.get("text").isJsonPrimitive()) {
                     settings.add("text", definition.settings.get("text").deepCopy());
                 }
@@ -759,7 +760,7 @@ public final class AnchorHudManager {
         for (PlacedWidget placed : widgets) {
             if (placed.id().equals(id)) {
                 LoreEntity.UiElement definition = registry.definition(id).orElse(null);
-                JsonObject settings = placed.style().resolvedSettings;
+                JsonObject settings = sourceSettingsById.getOrDefault(id, placed.style().resolvedSettings);
                 if (settings.has("animations")) {
                     return UiAnimationSpec.array(settings);
                 }
@@ -1149,6 +1150,7 @@ public final class AnchorHudManager {
         builtTestGroups = Set.copyOf(enabledTestGroups);
         registry = new WidgetInstanceRegistry();
         widgets = List.of();
+        sourceSettingsById.clear();
         layoutBounds = Map.of();
         collapsingLayoutParents = Set.of();
         collapsedLayoutHidden = Set.of();
@@ -1206,6 +1208,8 @@ public final class AnchorHudManager {
                         ? element : new LoreEntity.UiElement(effectiveSettings);
                 LoreStyle theme = LoreLoader.INSTANCE.getStyle(effectiveSettings.has("style") ? effectiveSettings.get("style").getAsString() : entity.style);
                 LoreStyle.Element style = theme.get(element.type, effectiveSettings);
+                LoreStyle.Element sourceStyle = effectiveSettings == element.settings ? style
+                        : LoreLoader.INSTANCE.getStyle(element.settings.has("style") ? element.settings.get("style").getAsString() : entity.style).get(element.type, element.settings);
                 WidgetContext context = new WidgetContext(minecraft, null, ItemStack.EMPTY, entity, registry);
                 AbstractWidget widget = factory.create(context, visualElement, style);
                 if (widget == null) {
@@ -1224,6 +1228,7 @@ public final class AnchorHudManager {
                 BoundCondition visibleWhen = BoundCondition.parse(element.settings, "visibleWhen", true);
                 BoundCondition enabledWhen = BoundCondition.parse(element.settings, "enabledWhen", true, false);
                 registry.attach(definition.id(), widget);
+                sourceSettingsById.put(definition.id(), sourceStyle.resolvedSettings.deepCopy());
                 boolean panel = widget instanceof com.ludwici.anchorui.client.gui.PanelWidget;
                 created.add(new PlacedWidget(definition.id(), widget, style, anchored, widget.visible, widget.active, context, visibleWhen, enabledWhen, entity.widgetParents.get(definition.id()), panel && (WidgetContainers.clipChildren(element.settings) || style.scroll.enabled()), panel ? WidgetContainers.group(element.settings) : null, panel ? style.autoSize : ContainerLayout.AutoSize.NONE, panel ? style.scroll : ContainerScroll.Config.NONE, widget.getWidth(), widget.getHeight()));
                 if (!(widget instanceof ProgressWidget)) {

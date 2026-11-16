@@ -751,13 +751,15 @@ public final class AnchorHudManager {
     }
 
     public JsonArray getAnimations(String id) {
+        JsonArray changed = currentOffsets().animationOverride(id);
+        return changed == null ? getDefaultAnimations(id) : changed;
+    }
+
+    public JsonArray getDefaultAnimations(String id) {
         for (PlacedWidget placed : widgets) {
             if (placed.id().equals(id)) {
                 LoreEntity.UiElement definition = registry.definition(id).orElse(null);
                 JsonObject settings = placed.style().resolvedSettings;
-                if (currentOffsets().animationOverride(id) != null) {
-                    return currentOffsets().animationOverride(id);
-                }
                 if (settings.has("animations")) {
                     return UiAnimationSpec.array(settings);
                 }
@@ -785,7 +787,11 @@ public final class AnchorHudManager {
         try {
             WidgetAnimation.parse(animationDocument(tracks), null, widgets.stream().filter(p -> p.id().equals(id)).findFirst().orElseThrow().context());
             HudLayoutOffsets candidate = editingOffsets.copy();
-            candidate.setAnimationOverride(id, tracks);
+            if (AnimationInspectorControls.sameTracks(tracks, getDefaultAnimations(id))) {
+                candidate.clearAnimationOverride(id);
+            } else {
+                candidate.setAnimationOverride(id, tracks);
+            }
             return previewAppearance(id, candidate);
         } catch (RuntimeException exception) {
             lastSaveError = exception.getMessage();

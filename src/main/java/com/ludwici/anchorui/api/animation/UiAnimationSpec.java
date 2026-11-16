@@ -3,6 +3,7 @@ package com.ludwici.anchorui.api.animation;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -13,7 +14,7 @@ import java.util.Set;
 
 public final class UiAnimationSpec {
     public enum Trigger {
-        OPEN, SHOW, HIDE, CHANGE, CLOSE
+        OPEN, SHOW, HIDE, CHANGE, CLOSE, CUSTOM
     }
 
     public enum Easing {
@@ -56,7 +57,7 @@ public final class UiAnimationSpec {
         }
     }
 
-    public record Track(String id, Trigger trigger, long durationMillis, long delayMillis, Easing easing,
+    public record Track(String id, Trigger trigger, ResourceLocation customTrigger, long durationMillis, long delayMillis, Easing easing,
                         Frame from, Frame to, JsonElement watch, boolean enabled) {
         public Track {
             if (id == null || !id.matches("[A-Za-z][A-Za-z0-9_-]*")) {
@@ -64,6 +65,9 @@ public final class UiAnimationSpec {
             }
             if (durationMillis < 1 || durationMillis > 10000 || delayMillis < 0 || delayMillis > 60000) {
                 throw new IllegalArgumentException("Animation duration must be 1..10000ms and delay must be 0..60000ms");
+            }
+            if ((trigger == Trigger.CUSTOM) != (customTrigger != null)) {
+                throw new IllegalArgumentException("Custom animation '" + id + "' requires a namespaced trigger ID");
             }
             if (trigger == Trigger.CHANGE && watch == null && enabled) {
                 throw new IllegalArgumentException("Animation '" + id + "' with trigger change requires watch");
@@ -154,8 +158,18 @@ public final class UiAnimationSpec {
                 case "hide" -> Trigger.HIDE;
                 case "change" -> Trigger.CHANGE;
                 case "close" -> Trigger.CLOSE;
-                default -> throw new IllegalArgumentException("Invalid trigger '" + event + "' in animation '" + id + "'");
+                default -> Trigger.CUSTOM;
             };
+            ResourceLocation customTrigger = null;
+            if (trigger == Trigger.CUSTOM) {
+                if (event.indexOf(':') <= 0 || event.endsWith(":")) {
+                    throw new IllegalArgumentException("Custom trigger for animation '" + id + "' must be namespaced (example: mymod:quest_completed)");
+                }
+                customTrigger = ResourceLocation.tryParse(event);
+                if (customTrigger == null) {
+                    throw new IllegalArgumentException("Invalid custom trigger '" + event + "' in animation '" + id + "'");
+                }
+            }
             long duration = integer(value, "duration", 300, 1, 10000);
             long delay = integer(value, "delay", 0, 0, 60000);
             Easing easing = switch (string(value, "easing", "linear")) {
@@ -190,7 +204,7 @@ public final class UiAnimationSpec {
             Frame from = frame(value, "from", defaultsFrom);
             Frame to = frame(value, "to", defaultsTo);
             boolean enabled = booleanValue(value, "enabled", true);
-            result.add(new Track(id, trigger, duration, delay, easing, from, to, value.get("watch"), enabled));
+            result.add(new Track(id, trigger, customTrigger, duration, delay, easing, from, to, value.get("watch"), enabled));
         }
         return result;
     }

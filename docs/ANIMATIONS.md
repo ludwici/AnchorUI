@@ -203,6 +203,20 @@ or custom namespaced IDs. Keep IDs registered before any screen/HUD that
 uses them is displayed. Use a *client-side* data source: the condition
 and revision callbacks are evaluated while rendering on the client.
 
+### Built-in test trigger
+
+Enable the animation HUD and fire its test-only Java revision source from
+the client command:
+
+```text
+/anchorui test animation on
+/anchorui test pulse
+```
+
+The HUD title plays a delayed zoom effect whenever `anchorui:test_pulse`
+increments. This demonstrates the same registry API that other mods can
+register. It is not a built-in trigger for production use.
+
 ## General-purpose visual size transitions
 
 `sizeTransition` smoothly interpolates the **visible width and/or height**

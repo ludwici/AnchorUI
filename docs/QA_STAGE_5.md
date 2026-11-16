@@ -88,3 +88,14 @@ reload from the world, and reopen to inspect changed resource-pack JSON.
 - [ ] Check nested layout, scroll and parent scale animations: the
   cropping rectangle must match the rendered widget, with no overflow
   outside parent scissors.
+
+To verify the bundled custom trigger without a second mod, run:
+
+```text
+/anchorui test animation on
+/anchorui test pulse
+```
+
+The animated HUD title should zoom after its 120ms delay. Running
+`/anchorui test pulse` again should replay it without requiring the
+HUD to be rebuilt.

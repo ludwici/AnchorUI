@@ -846,7 +846,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             appendInspectorLine(lines, "Click a widget or the Widgets list", 0xFFE5EEF5, null, false);
             appendInspectorLine(lines, "Arrows: 1px | Shift: 10px", 0xFFE5EEF5, null, false);
             appendInspectorLine(lines, "Center X / Y: magnetic guides", 0xFFE5EEF5, null, false);
-            appendInspectorLine(lines, "Ctrl+S: save | Esc: cancel", 0xFFE5EEF5, null, false);
+            appendInspectorLine(lines, "Ctrl+S: save | Esc: exit", 0xFFE5EEF5, null, false);
             return lines;
         }
 

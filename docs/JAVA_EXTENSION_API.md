@@ -134,6 +134,12 @@ event. A missing registration is reported and can be supplied later;
 an exception from another mod's trigger is reported once and isolated
 from the rest of the UI.
 
+## Resource reload snapshots
+
+`LoreLoader.INSTANCE.getRevision()` increments when a new client resource snapshot is published. The related read-only accessors `getData()`, `getStyles()`, `getDefinitions()` and `getHudDocuments()` expose the currently loaded documents. The new `getResourceIssues()` accessor returns immutable issue records with severity, resource ID, message and optional cause. These can be used by custom development tools; built-in F8 inspectors already filter them by screen/HUD relevance.
+
+Resource-pack JSON definitions belong to the reload lifecycle, but the global Java extension registries **do not**: register factories once during client startup, never inside reload callbacks. Valid `templates/` definitions override corresponding `widgets/` definitions, while malformed templates cannot replace working widget definitions. See [Resource reload and diagnostics](RESOURCE_RELOAD.md) for failure boundaries, in-client F3+T tests and limitations of the Minecraft JSON parser.
+
 ## Validations and error boundaries
 
 - Every Java registry rejects duplicate IDs with `IllegalStateException`. Registering twice on resource reload is a mod integration error. The animation-trigger and F8 editor-field registries now follow the same duplicate contract as widget types, templates, data sources, formatters, actions and layout factories.
@@ -156,7 +162,6 @@ from the rest of the UI.
 
 This is the **initial API audit**, not the final stability review. Before
 a release we still need to assess high-frequency provider caching/epoch
-invalidation, profile large nested layouts, strengthen resource-pack reload
-integration tests, verify GUI scale/focus/popup layering in game and publish
+invalidation, profile large nested layouts, complete in-client resource-pack reload QA, verify GUI scale/focus/popup layering in game and publish
 the full English GitBook reference. No ABI stability guarantee has been
 issued for `1.21.1`.

@@ -24,7 +24,11 @@ public final class UiEventBindings {
         for (String name : names) {
             JsonElement json = settings.get(name);
             if (json != null && !json.isJsonNull()) {
-                handlers.put(name, UiActionRegistry.compileEvent(context, json));
+                try {
+                    handlers.put(name, UiActionRegistry.compileEvent(context, json));
+                } catch (IllegalArgumentException exception) {
+                    throw new IllegalArgumentException("Invalid UI event '" + name + "': " + exception.getMessage(), exception);
+                }
             }
         }
         return new UiEventBindings(handlers);

@@ -177,25 +177,49 @@ public final class AnimationInspectorControls {
     }
 
     public static JsonArray reset(JsonArray current, AppearanceInspectorControls.Control control) {
+        return reset(current, control, new JsonArray());
+    }
+
+    public static JsonArray reset(JsonArray current, AppearanceInspectorControls.Control control, JsonArray source) {
         JsonArray result = current.deepCopy();
         String[] path = control.field().path().split("\\.");
         int index = Integer.parseInt(path[1].substring(1));
         JsonObject track = result.get(index).getAsJsonObject();
+        JsonObject original = null;
+        for (JsonElement entry : source) {
+            JsonObject sourceTrack = entry.getAsJsonObject();
+            if (sourceTrack.get("id").getAsString().equals(track.get("id").getAsString())) {
+                original = sourceTrack;
+                break;
+            }
+        }
         if (path.length == 3) {
             if (path[2].equals("id")) {
                 return result;
             }
-            track.remove(path[2]);
+            if (original != null && original.has(path[2])) {
+                track.add(path[2], original.get(path[2]).deepCopy());
+            } else {
+                track.remove(path[2]);
+            }
             if (path[2].equals("trigger")) {
-                track.remove("watch");
+                if (original != null && original.has("watch")) {
+                    track.add("watch", original.get("watch").deepCopy());
+                } else {
+                    track.remove("watch");
+                }
             }
         } else {
-            if (track.has(path[2])) {
-                JsonObject frame = track.getAsJsonObject(path[2]);
+            JsonObject frame = track.has(path[2]) ? track.getAsJsonObject(path[2]) : new JsonObject();
+            if (original != null && original.has(path[2]) && original.getAsJsonObject(path[2]).has(path[3])) {
+                frame.add(path[3], original.getAsJsonObject(path[2]).get(path[3]).deepCopy());
+            } else {
                 frame.remove(path[3]);
-                if (frame.isEmpty()) {
-                    track.remove(path[2]);
-                }
+            }
+            if (frame.isEmpty()) {
+                track.remove(path[2]);
+            } else {
+                track.add(path[2], frame);
             }
         }
         return validated(result);

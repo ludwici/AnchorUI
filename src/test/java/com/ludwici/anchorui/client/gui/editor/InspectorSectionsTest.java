@@ -16,7 +16,7 @@ public class InspectorSectionsTest {
         assertFalse(sections.expanded("animation"));
         assertFalse(sections.expanded("source"));
         assertFalse(sections.expanded("diagnostics"));
-        assertEquals("DIAGNOSTICS (1 errors, 2 warnings) [+]", sections.label("diagnostics", "DIAGNOSTICS (1 errors, 2 warnings)"));
+        assertEquals("DIAGNOSTICS (1 error, 2 warnings) [+]", sections.label("diagnostics", "DIAGNOSTICS (1 error, 2 warnings)"));
         assertEquals("ANIMATION [+]", sections.label("animation", "ANIMATION"));
         sections.toggle("animation");
         assertTrue(sections.expanded("animation"));

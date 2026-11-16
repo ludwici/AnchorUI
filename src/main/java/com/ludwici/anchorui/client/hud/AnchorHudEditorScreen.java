@@ -929,7 +929,7 @@ public final class AnchorHudEditorScreen extends Screen {
             appendLine(lines, "Drag widgets to move.", 0xFFE5EEF5);
             appendLine(lines, "Auto-align: 6 px (Alt: bypass)", 0xFFE5EEF5);
             appendLine(lines, "Arrows: 1 px / Shift: 10 px", 0xFFE5EEF5);
-            appendLine(lines, "Ctrl+S: save / Esc: cancel", 0xFFE5EEF5);
+            appendLine(lines, "Ctrl+S: save / Esc: exit", 0xFFE5EEF5);
         } else {
             appendSection(lines, "widget", "CURRENT WIDGET");
             if (inspectorSections.expanded("widget")) {

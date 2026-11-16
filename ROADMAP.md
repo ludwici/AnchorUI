@@ -25,6 +25,8 @@ Core decisions:
 - [x] Expose every effective anchor constraint in a collapsible `ANCHORS (N)` section of both F8 inspectors, with primary marker, target IDs, offsets and dynamic-axis summary. Keep secondary anchors intact when editing the primary or dragging a widget.
 - [x] Make `ANCHORS` a full editor in HUD and screen F8: add/duplicate and delete constraints, independently edit Point/Anchor/Relative to and X/Y via dropdowns or numeric inputs, preserve drag offsets, reject invalid intermediate geometry, and save the complete list to per-widget JSON overrides. Remove old Point/Anchor toolbar buttons.
 - [x] Persist HUD and screen F8 overrides as formatted multi-line JSON with two-space indentation and round-trip compatibility for compact legacy files; preserve the existing atomic-save behavior.
+- [x] Normalize visual/layout/animation/anchor edits back to resource values, clear redundant overrides and restore correct modified highlights and unsaved-state detection in both F8 inspectors.
+- [x] Confirm unsaved F8 editor exits from Esc, F8 and Cancel with three actions: discard and exit, save and exit, or stay editing. Keep the preview live beneath the modal; Save/Ctrl+S remain explicit save shortcuts.
 - [x] HUD JSON composition across mods and resource packs, separately toggled test and RPG HUD demos.
 - [x] F8 HUD editor and context-sensitive screen editor: drag, parent/anchor selection, magnetic snapping, visibility overrides, reset, inspector and persistent local positioning.
 - [x] Read-only vanilla HUD anchors for layout alignment; no modification of vanilla HUD elements.

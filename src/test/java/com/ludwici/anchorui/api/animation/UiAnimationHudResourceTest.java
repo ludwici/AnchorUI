@@ -29,6 +29,10 @@ public class UiAnimationHudResourceTest {
                 if (widget.get("id").getAsString().contains("health")) {
                     assertTrue(spec.tracks().stream().anyMatch(track -> track.trigger() == UiAnimationSpec.Trigger.CHANGE && track.watch() != null));
                     assertTrue(spec.tracks().stream().anyMatch(track -> track.delayMillis() > 0));
+                    assertTrue(widget.has("sizeTransition"));
+                }
+                if (widget.get("id").getAsString().contains("title")) {
+                    assertTrue(spec.tracks().stream().anyMatch(track -> track.trigger() == UiAnimationSpec.Trigger.CUSTOM && track.customTrigger().toString().equals("anchorui:test_pulse")));
                 }
                 count++;
             }

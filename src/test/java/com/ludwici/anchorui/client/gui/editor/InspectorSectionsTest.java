@@ -47,6 +47,20 @@ public class InspectorSectionsTest {
     }
 
     @Test
+    public void headerLookupSelectsScrolledAnchorRowsWithoutTogglingState() {
+        InspectorSections sections = new InspectorSections();
+        sections.register("anchors", 0);
+        sections.register("constraint:demo:bar:0", 3);
+        sections.register("constraint:demo:bar:1", 11);
+        assertEquals("constraint:demo:bar:1", sections.headerAt(107, 100, 200, 136, 13));
+        assertFalse(sections.expanded("constraint:demo:bar:1"));
+        assertTrue(sections.click(107, 100, 200, 136, 13));
+        assertTrue(sections.expanded("constraint:demo:bar:1"));
+        assertEquals(null, sections.headerAt(200, 100, 200, 0, 13));
+        assertEquals(null, sections.headerAt(90, 100, 200, 0, 13));
+    }
+
+    @Test
     public void sourceCollapseIsIndependentFromOtherCategories() {
         InspectorSections sections = new InspectorSections();
         sections.toggle("source");

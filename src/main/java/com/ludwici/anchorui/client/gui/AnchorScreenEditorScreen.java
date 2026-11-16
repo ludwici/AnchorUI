@@ -364,7 +364,7 @@ public final class AnchorScreenEditorScreen extends Screen {
                     }
                     ElementAnchor chosen = ElementAnchor.fromString(value);
                     boolean changed = target.editorAnchor(id, selected.relativeTo(), pointChoice ? chosen : selected.point(), pointChoice ? selected.anchor() : chosen);
-                    status = changed ? "" : "Invalid anchor position";
+                    status = changed ? "" : target.editorLayoutFailure();
                     refreshSelection();
                 });
     }
@@ -378,7 +378,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         String current = control.value().replace("anchorui:", "");
         editorDropdown.open(hitbox.x() - 106, hitbox.y(), EditorInspectorButton.SIZE, RESET_SIZE, width, height,
                 LayoutInspectorControls.choices(control), current, value -> {
-                    status = target.editorSetLayout(id, control, value) ? "" : "Invalid layout value or constraints";
+                    status = target.editorSetLayout(id, control, value) ? "" : target.editorLayoutFailure();
                     refreshSelection();
                 });
     }
@@ -984,7 +984,7 @@ public final class AnchorScreenEditorScreen extends Screen {
                         boolean changed = selected != null && (hitbox.direction() == 0
                                 ? target.editorResetLayout(selected.id(), hitbox.control())
                                 : target.editorAdjustLayout(selected.id(), hitbox.control(), hitbox.direction()));
-                        status = changed ? "" : "Invalid layout value or constraints";
+                        status = changed ? "" : target.editorLayoutFailure();
                         refreshSelection();
                         return true;
                     }

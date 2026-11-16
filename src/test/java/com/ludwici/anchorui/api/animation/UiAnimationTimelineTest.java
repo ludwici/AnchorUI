@@ -128,6 +128,30 @@ public class UiAnimationTimelineTest {
     }
 
     @Test
+    public void customNamespacedTriggerFiresOnRisingConditionOrIncreasingRevision() {
+        var custom = net.minecraft.resources.ResourceLocation.parse("test:quest_completed");
+        UiAnimationTimeline timeline = new UiAnimationTimeline(spec("""
+                {
+                  "animations": [
+                    {"id":"flash","trigger":"test:quest_completed","duration":200,"preset":"zoom"},
+                    {"id":"fade","trigger":"test:quest_completed","delay":30,"duration":100,"preset":"fade"}
+                  ]
+                }
+                """));
+        timeline.update(true, Map.of(), Map.of(custom, 0L), 0L);
+        assertEquals(1.0, timeline.sample(100000000L).scale(), 0.00001);
+        timeline.update(true, Map.of(), Map.of(custom, 1L), 100000000L);
+        assertEquals(0.82, timeline.sample(100000000L).scale(), 0.00001);
+        timeline.update(true, Map.of(), Map.of(custom, 1L), 150000000L);
+        assertEquals(0.865, timeline.sample(150000000L).scale(), 0.00001);
+        timeline.update(true, Map.of(), Map.of(custom, 0L), 350000000L);
+        assertEquals(1.0, timeline.sample(350000000L).scale(), 0.00001);
+        timeline.update(true, Map.of(), Map.of(custom, 1L), 400000000L);
+        assertEquals(0.82, timeline.sample(400000000L).scale(), 0.00001);
+        assertThrows(IllegalArgumentException.class, () -> spec("{\"animations\":[{\"id\":\"bad\",\"trigger\":\"quest_completed\"}]}"));
+    }
+
+    @Test
     public void localListOverridesDocumentDefaultsAndCanBeEmpty() {
         var defaults = JsonParser.parseString("""
                 [{"id":"default","trigger":"open","preset":"fade"}]

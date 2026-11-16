@@ -85,25 +85,29 @@ public class UiEventBindingsTest {
 
     @Test
     public void rejectsUnknownActionsAndMalformedEventDefinitions() {
-        assertThrows(IllegalArgumentException.class, () -> UiEventBindings.compile(null, json("""
+        IllegalArgumentException unknown = assertThrows(IllegalArgumentException.class, () -> UiEventBindings.compile(null, json("""
                 {
                   "onOpen": {
                     "type": "ui_events_test:not_registered"
                   }
                 }
                 """), "onOpen"));
-        assertThrows(IllegalArgumentException.class, () -> UiEventBindings.compile(null, json("""
+        assertTrue(unknown.getMessage().contains("onOpen"));
+        assertTrue(unknown.getMessage().contains("ui_events_test:not_registered"));
+        IllegalArgumentException malformed = assertThrows(IllegalArgumentException.class, () -> UiEventBindings.compile(null, json("""
                 {
                   "onHoverEnter": 42
                 }
                 """), "onHoverEnter"));
-        assertThrows(IllegalArgumentException.class, () -> UiEventBindings.compile(null, json("""
+        assertTrue(malformed.getMessage().contains("onHoverEnter"));
+        IllegalArgumentException invalidId = assertThrows(IllegalArgumentException.class, () -> UiEventBindings.compile(null, json("""
                 {
                   "onChange": {
                     "type": "not_namespaced"
                   }
                 }
                 """), "onChange"));
+        assertTrue(invalidId.getMessage().contains("onChange"));
     }
 
     @Test

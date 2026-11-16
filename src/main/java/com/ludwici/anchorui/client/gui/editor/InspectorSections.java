@@ -16,7 +16,7 @@ public final class InspectorSections {
     }
 
     public boolean expanded(String id) {
-        return expanded.getOrDefault(id, !id.equals("animation") && !id.equals("source") && !id.startsWith("track:"));
+        return expanded.getOrDefault(id, !id.equals("animation") && !id.equals("source") && !id.equals("diagnostics") && !id.startsWith("track:"));
     }
 
     public void collapse(String id) {

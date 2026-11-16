@@ -16,6 +16,7 @@ import com.ludwici.anchorui.client.gui.editor.AppearanceInspectorControls;
 import com.ludwici.anchorui.client.gui.editor.InspectorSections;
 import com.ludwici.anchorui.client.gui.editor.EditorDiagnostics;
 import com.ludwici.anchorui.client.gui.editor.AnchorInspectorRows;
+import com.ludwici.anchorui.client.gui.editor.AnchorInspectorControls;
 import com.ludwici.anchorui.client.LoreLoader;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorCheckbox;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorButton;
@@ -47,7 +48,7 @@ public final class AnchorHudEditorScreen extends Screen {
     private static final int PANEL_WIDTH = 218;
     private static final int BUTTON_HEIGHT = 17;
     private static final int BUTTON_STEP = 20;
-    private static final int FOOTER_HEIGHT = 85;
+    private static final int FOOTER_HEIGHT = 65;
     private static final int HEADER_HEIGHT = 34;
     private static final int INSPECTOR_LINE_HEIGHT = 13;
     private static final float INSPECTOR_SCALE = 0.83F;
@@ -95,7 +96,11 @@ public final class AnchorHudEditorScreen extends Screen {
     private record AnimationAction(String operation, int trackIndex) {
     }
 
+    private record AnchorAction(int index, String field) {
+    }
+
     private final Map<Integer, AnimationAction> animationActions = new HashMap<>();
+    private final Map<Integer, AnchorAction> anchorActions = new HashMap<>();
 
     private final AnchorHudManager manager = AnchorHudManager.INSTANCE;
     private final WidgetListPanel widgetList = new WidgetListPanel("anchorui");
@@ -114,6 +119,8 @@ public final class AnchorHudEditorScreen extends Screen {
     private AppearanceInspectorControls.Control editingAppearance;
     private EditorColorPicker colorPickerDialog;
     private String editingAppearanceId;
+    private AnchorAction editingAnchor;
+    private String editingAnchorId;
     private final List<VanillaParentHitbox> vanillaParentHitboxes = new ArrayList<>();
     private int vanillaViewMode = 1;
     private String inspectedVanilla;
@@ -144,8 +151,6 @@ public final class AnchorHudEditorScreen extends Screen {
     private int dragPanelY;
     private Button resetButton;
     private Button hideButton;
-    private Button pointButton;
-    private Button anchorButton;
     private Button parentButton;
     private Button demoButton;
     private Button vanillaButton;
@@ -201,8 +206,6 @@ public final class AnchorHudEditorScreen extends Screen {
             };
         }).bounds(panelX + panelWidth - 114, panelY + 3, 62, 16).build());
 
-        pointButton = addControl(Button.builder(Component.literal("Point ▼"), button -> openAnchorDropdown(true)).bounds(left, actionsY, halfWidth, BUTTON_HEIGHT).build());
-        anchorButton = addControl(Button.builder(Component.literal("Anchor ▼"), button -> openAnchorDropdown(false)).bounds(right, actionsY, halfWidth, BUTTON_HEIGHT).build());
         parentButton = addControl(Button.builder(Component.literal("Pick parent"), button -> {
             if (selected != null) {
                 editorDropdown.close();
@@ -210,55 +213,26 @@ public final class AnchorHudEditorScreen extends Screen {
                 draggingWidget = false;
                 status = choosingParent ? "Click a widget or empty space (screen)" : "Parent selection cancelled";
             }
-        }).bounds(left, actionsY + BUTTON_STEP, halfWidth, BUTTON_HEIGHT).build());
+        }).bounds(left, actionsY, halfWidth, BUTTON_HEIGHT).build());
         hideButton = addControl(Button.builder(Component.literal("Hide"), button -> {
             if (selected != null) {
                 manager.togglePreviewHidden(selected);
                 status = "Visibility changed";
             }
-        }).bounds(right, actionsY + BUTTON_STEP, halfWidth, BUTTON_HEIGHT).build());
+        }).bounds(right, actionsY, halfWidth, BUTTON_HEIGHT).build());
         resetButton = addControl(Button.builder(Component.literal("Reset"), button -> {
             if (selected != null) {
                 manager.resetPreviewOffset(selected);
                 status = "Restored widget defaults";
             }
-        }).bounds(left, actionsY + BUTTON_STEP * 2, halfWidth, BUTTON_HEIGHT).build());
+        }).bounds(left, actionsY + BUTTON_STEP, halfWidth, BUTTON_HEIGHT).build());
         addControl(Button.builder(Component.literal("Reset all"), button -> {
             manager.resetAllPreviewOffsets();
             status = "Restored all HUD defaults";
-        }).bounds(right, actionsY + BUTTON_STEP * 2, halfWidth, BUTTON_HEIGHT).build());
-        addControl(Button.builder(Component.literal("Save"), button -> saveAndClose()).bounds(left, actionsY + BUTTON_STEP * 3, halfWidth, BUTTON_HEIGHT).build());
-        addControl(Button.builder(Component.literal("Cancel"), button -> onClose()).bounds(right, actionsY + BUTTON_STEP * 3, halfWidth, BUTTON_HEIGHT).build());
+        }).bounds(right, actionsY + BUTTON_STEP, halfWidth, BUTTON_HEIGHT).build());
+        addControl(Button.builder(Component.literal("Save"), button -> saveAndClose()).bounds(left, actionsY + BUTTON_STEP * 2, halfWidth, BUTTON_HEIGHT).build());
+        addControl(Button.builder(Component.literal("Cancel"), button -> onClose()).bounds(right, actionsY + BUTTON_STEP * 2, halfWidth, BUTTON_HEIGHT).build());
         createAppearanceInput();
-    }
-
-    private void openAnchorDropdown(boolean pointChoice) {
-        if (selected == null) {
-            return;
-        }
-        AnchorHudManager.HudHandle handle = null;
-        for (AnchorHudManager.HudHandle entry : frameHandles) {
-            if (entry.id().equals(selected)) {
-                handle = entry;
-                break;
-            }
-        }
-        if (handle == null) {
-            return;
-        }
-        String id = selected;
-        Button source = pointChoice ? pointButton : anchorButton;
-        String current = (pointChoice ? handle.point() : handle.anchor()).name();
-        editorDropdown.open(source.getX(), source.getY(), source.getWidth(), source.getHeight(),
-                width, height, ANCHOR_CHOICES, current, value -> {
-                    if (!id.equals(selected)) {
-                        return;
-                    }
-                    ElementAnchor chosen = ElementAnchor.fromString(value);
-                    boolean changed = pointChoice ? manager.setPreviewPoint(id, chosen)
-                            : manager.setPreviewAnchor(id, chosen);
-                    status = changed ? "" : manager.getPreviewLayoutFailure();
-                });
     }
 
     private void openLayoutDropdown(LayoutHitbox hitbox) {
@@ -368,14 +342,12 @@ public final class AnchorHudEditorScreen extends Screen {
         int top = actionsTop();
         demoButton.setPosition(panelX + panelWidth - 46, panelY + 3);
         vanillaButton.setPosition(panelX + panelWidth - 114, panelY + 3);
-        pointButton.setPosition(left, top);
-        anchorButton.setPosition(right, top);
-        parentButton.setPosition(left, top + BUTTON_STEP);
-        hideButton.setPosition(right, top + BUTTON_STEP);
-        resetButton.setPosition(left, top + BUTTON_STEP * 2);
+        parentButton.setPosition(left, top);
+        hideButton.setPosition(right, top);
+        resetButton.setPosition(left, top + BUTTON_STEP);
+        controls.get(5).setPosition(right, top + BUTTON_STEP);
+        controls.get(6).setPosition(left, top + BUTTON_STEP * 2);
         controls.get(7).setPosition(right, top + BUTTON_STEP * 2);
-        controls.get(8).setPosition(left, top + BUTTON_STEP * 3);
-        controls.get(9).setPosition(right, top + BUTTON_STEP * 3);
     }
 
     private void refreshFrameHandles() {
@@ -531,8 +503,6 @@ public final class AnchorHudEditorScreen extends Screen {
 
             resetButton.active = selected != null && !choosingParent;
             hideButton.active = selected != null && !choosingParent;
-            pointButton.active = selected != null && !choosingParent;
-            anchorButton.active = selected != null && !choosingParent;
             parentButton.active = selected != null;
             hideButton.setMessage(Component.literal(active != null && active.hiddenByUser() ? "Show" : "Hide"));
             parentButton.setMessage(Component.literal(choosingParent ? "Cancel parent" : "Pick parent"));

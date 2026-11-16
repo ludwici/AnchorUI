@@ -4,6 +4,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
+import com.ludwici.anchorui.api.animation.UiAnimationSpec;
+import com.ludwici.anchorui.client.gui.editor.AnimationInspectorControls;
 import com.ludwici.anchorui.api.action.UiEventBindings;
 import com.ludwici.anchorui.api.animation.UiAnimationSpec;
 import com.ludwici.anchorui.api.state.UiLocalState;
@@ -473,7 +476,52 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         return List.of();
     }
 
+    public JsonArray editorAnimations(String id) {
+        for (PlacedWidget placed : placedWidgets) {
+            if (placed.id().equals(id)) {
+                JsonObject settings = placed.style().resolvedSettings;
+                return settings.has("animations") ? UiAnimationSpec.array(settings) : loreEntity.animations.deepCopy();
+            }
+        }
+        return new JsonArray();
+    }
+
+    public boolean editorSetAnimations(String id, JsonArray tracks) {
+        if (editingScreenOffsets == null || widgetRegistry.widget(id).isEmpty()) {
+            return false;
+        }
+        HudLayoutOffsets previous = editingScreenOffsets;
+        HudLayoutOffsets candidate = previous.copy();
+        try {
+            candidate.setAnimationOverride(id, tracks);
+            JsonObject settings = new JsonObject();
+            settings.add("animations", tracks);
+            WidgetAnimation.parse(settings, null, placedWidgets.stream().filter(p -> p.id().equals(id)).findFirst().orElseThrow().context());
+        } catch (RuntimeException exception) {
+            screenSaveError = exception.getMessage();
+            return false;
+        }
+        editingScreenOffsets = candidate;
+        buildWidgets(false);
+        if (layoutError != null || widgetRegistry.widget(id).isEmpty()) {
+            editingScreenOffsets = previous;
+            buildWidgets(false);
+            screenSaveError = "Invalid animation settings";
+            return false;
+        }
+        screenSaveError = "";
+        return true;
+    }
+
     public boolean editorSetAppearance(String id, AppearanceInspectorControls.Control control, String value) {
+        if (control.field().path().startsWith("animations.")) {
+            try {
+                return editorSetAnimations(id, AnimationInspectorControls.set(editorAnimations(id), control, value));
+            } catch (RuntimeException exception) {
+                screenSaveError = exception.getMessage();
+                return false;
+            }
+        }
         if (editingScreenOffsets == null || widgetRegistry.widget(id).isEmpty()) {
             return false;
         }
@@ -500,6 +548,14 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     }
 
     public boolean editorResetAppearance(String id, AppearanceInspectorControls.Control control) {
+        if (control.field().path().startsWith("animations.")) {
+            try {
+                return editorSetAnimations(id, AnimationInspectorControls.reset(editorAnimations(id), control));
+            } catch (RuntimeException exception) {
+                screenSaveError = exception.getMessage();
+                return false;
+            }
+        }
         if (editingScreenOffsets == null) {
             return false;
         }

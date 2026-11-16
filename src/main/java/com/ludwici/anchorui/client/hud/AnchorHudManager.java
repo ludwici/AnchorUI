@@ -1,6 +1,9 @@
 package com.ludwici.anchorui.client.hud;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
+import com.ludwici.anchorui.api.animation.UiAnimationSpec;
+import com.ludwici.anchorui.client.gui.editor.AnimationInspectorControls;
 import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.api.LoreEntity;
 import com.ludwici.anchorui.api.animation.UiAnimationSpec;
@@ -731,7 +734,64 @@ public final class AnchorHudManager {
         return List.of();
     }
 
+    public JsonArray getAnimations(String id) {
+        for (PlacedWidget placed : widgets) {
+            if (placed.id().equals(id)) {
+                LoreEntity.UiElement definition = registry.definition(id).orElse(null);
+                JsonObject settings = placed.style().resolvedSettings;
+                if (currentOffsets().animationOverride(id) != null) {
+                    return currentOffsets().animationOverride(id);
+                }
+                if (settings.has("animations")) {
+                    return UiAnimationSpec.array(settings);
+                }
+                return definition == null ? new JsonArray() : sourceAnimations(id);
+            }
+        }
+        return new JsonArray();
+    }
+
+    private JsonArray sourceAnimations(String id) {
+        for (var entry : LoreLoader.INSTANCE.getHudDocuments().values()) {
+            for (LoreEntity.UiElement element : entry.entity().entities) {
+                if (id.equals(element.id)) {
+                    return entry.entity().animations.deepCopy();
+                }
+            }
+        }
+        return new JsonArray();
+    }
+
+    public boolean setPreviewAnimations(String id, JsonArray tracks) {
+        if (editingOffsets == null || !isCustomWidget(id)) {
+            return false;
+        }
+        try {
+            WidgetAnimation.parse(animationDocument(tracks), null, widgets.stream().filter(p -> p.id().equals(id)).findFirst().orElseThrow().context());
+            HudLayoutOffsets candidate = editingOffsets.copy();
+            candidate.setAnimationOverride(id, tracks);
+            return previewAppearance(id, candidate);
+        } catch (RuntimeException exception) {
+            lastSaveError = exception.getMessage();
+            return false;
+        }
+    }
+
+    private static JsonObject animationDocument(JsonArray tracks) {
+        JsonObject json = new JsonObject();
+        json.add("animations", tracks);
+        return json;
+    }
+
     public boolean setPreviewAppearance(String id, AppearanceInspectorControls.Control control, String value) {
+        if (control.field().path().startsWith("animations.")) {
+            try {
+                return setPreviewAnimations(id, AnimationInspectorControls.set(getAnimations(id), control, value));
+            } catch (RuntimeException exception) {
+                lastSaveError = exception.getMessage();
+                return false;
+            }
+        }
         if (editingOffsets == null || !isCustomWidget(id)) {
             return false;
         }
@@ -748,6 +808,14 @@ public final class AnchorHudManager {
     }
 
     public boolean resetPreviewAppearance(String id, AppearanceInspectorControls.Control control) {
+        if (control.field().path().startsWith("animations.")) {
+            try {
+                return setPreviewAnimations(id, AnimationInspectorControls.reset(getAnimations(id), control));
+            } catch (RuntimeException exception) {
+                lastSaveError = exception.getMessage();
+                return false;
+            }
+        }
         if (editingOffsets == null || !isCustomWidget(id)) {
             return false;
         }

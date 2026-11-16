@@ -73,7 +73,7 @@ public final class AnimationInspectorControls {
             JsonObject track = tracks.get(index).getAsJsonObject();
             String prefix = "animations.t" + index + ".";
             result.add(new AppearanceInspectorControls.Control(WidgetEditorRegistry.Field.text(prefix + "id", "Animation ID", ""), track.get("id").getAsString(), false));
-            add(result, track, WidgetEditorRegistry.Field.choice(prefix + "trigger", "Trigger", "open", "open", "show", "hide", "change", "close"), "trigger");
+            add(result, track, WidgetEditorRegistry.Field.text(prefix + "trigger", "Trigger ID", "open"), "trigger");
             add(result, track, WidgetEditorRegistry.Field.choice(prefix + "preset", "Effect", "custom", "custom", "fade", "slideLeft", "slideRight", "slideUp", "zoom"), "preset");
             add(result, track, WidgetEditorRegistry.Field.integer(prefix + "duration", "Duration (ms)", 300, 1, 10000, 50), "duration");
             add(result, track, WidgetEditorRegistry.Field.integer(prefix + "delay", "Delay (ms)", 0, 0, 60000, 50), "delay");

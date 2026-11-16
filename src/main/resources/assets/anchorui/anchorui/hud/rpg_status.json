@@ -44,7 +44,11 @@
         "fallback": 20
       },
       "showText": true,
-      "color": "#FFFFFF"
+      "color": "#FFFFFF",
+      "sizeTransition": {
+        "duration": 420,
+        "easing": "easeOut"
+      }
     },
     {
       "type": "anchorui:progress",
@@ -67,7 +71,11 @@
       },
       "max": 20,
       "showText": true,
-      "color": "#FFFFFF"
+      "color": "#FFFFFF",
+      "sizeTransition": {
+        "duration": 420,
+        "easing": "easeOut"
+      }
     }
   ],
   "testGroup": "rpg"

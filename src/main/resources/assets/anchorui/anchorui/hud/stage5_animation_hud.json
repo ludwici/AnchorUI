@@ -103,7 +103,11 @@
             "fallback": 20
           }
         }
-      ]
+      ],
+      "sizeTransition": {
+        "duration": 420,
+        "easing": "easeOut"
+      }
     },
     {
       "type": "anchorui:progress",
@@ -141,7 +145,11 @@
             "y": 0
           }
         }
-      ]
+      ],
+      "sizeTransition": {
+        "duration": 420,
+        "easing": "easeOut"
+      }
     }
   ]
 }

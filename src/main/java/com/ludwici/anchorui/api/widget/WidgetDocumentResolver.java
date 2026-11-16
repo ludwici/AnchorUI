@@ -148,7 +148,17 @@ public final class WidgetDocumentResolver {
             child.addProperty("id", WidgetIds.id(child.get("id").getAsString(), childNamespace));
             normalizePosition(child, childNamespace);
             JsonObject position = child.has("position") && child.get("position").isJsonObject() ? child.getAsJsonObject("position") : new JsonObject();
-            if (!position.has("relativeTo")) {
+            if (position.has("anchors") && position.get("anchors").isJsonArray()) {
+                for (JsonElement rawAnchor : position.getAsJsonArray("anchors")) {
+                    if (!rawAnchor.isJsonObject()) {
+                        throw new IllegalArgumentException("Child #" + index + " of '" + id + "' has a non-object position anchor");
+                    }
+                    JsonObject constraint = rawAnchor.getAsJsonObject();
+                    if (!constraint.has("relativeTo")) {
+                        constraint.addProperty("relativeTo", id);
+                    }
+                }
+            } else if (!position.has("relativeTo")) {
                 position.addProperty("relativeTo", id);
             }
             child.add("position", position);

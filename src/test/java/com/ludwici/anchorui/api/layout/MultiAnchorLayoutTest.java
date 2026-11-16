@@ -108,14 +108,14 @@ public class MultiAnchorLayoutTest {
     }
 
     @Test
-    public void rejectsConflictingRedundantOrNegativeAnchorsAndCrossAnchorCycles() {
+    public void overlappingAnchorAxesDoNotBlockMovementButNegativeSpansAndCyclesAreRejected() {
         AnchorLayout.Frame conflicting = frame("demo:conflict", 30, 20, """
                 {"anchors":[
                   {"point":"TOPLEFT","anchor":"TOPLEFT","x":10},
                   {"point":"BOTTOMLEFT","anchor":"BOTTOMLEFT","x":15}
                 ]}
                 """);
-        assertTrue(assertThrows(IllegalArgumentException.class, () -> AnchorLayout.resolve(300, 200, List.of(conflicting))).getMessage().contains("Conflicting horizontal"));
+        assertEquals(new AnchorLayout.Bounds(10, 0, 30, 200), AnchorLayout.resolve(300, 200, List.of(conflicting)).get("demo:conflict"));
 
         AnchorLayout.Frame negative = frame("demo:negative", 30, 20, """
                 {"anchors":[
@@ -132,7 +132,7 @@ public class MultiAnchorLayoutTest {
                   {"point":"CENTER","anchor":"CENTER","x":5}
                 ]}
                 """);
-        assertTrue(assertThrows(IllegalArgumentException.class, () -> AnchorLayout.resolve(300, 200, List.of(overconstrained))).getMessage().contains("Over-constrained"));
+        assertEquals(new AnchorLayout.Bounds(10, 100, 280, 1), AnchorLayout.resolve(300, 200, List.of(overconstrained)).get("demo:over"));
 
         AnchorLayout.Frame cycle = frame("demo:cycle", 30, 20, """
                 {"anchors":[
@@ -144,6 +144,64 @@ public class MultiAnchorLayoutTest {
                 {"point":"TOPLEFT","anchor":"TOPLEFT","relativeTo":"demo:cycle"}
                 """);
         assertTrue(assertThrows(IllegalArgumentException.class, () -> AnchorLayout.resolve(300, 200, List.of(cycle, dependent))).getMessage().contains("Circular"));
+    }
+
+    @Test
+    public void leftRightTargetsCanMoveIndependentlyVertically() {
+        AnchorLayout.Frame left = frame("demo:left", 84, 26, """
+                {"point":"BOTTOMLEFT","anchor":"BOTTOMLEFT","x":18,"y":-26}
+                """);
+        AnchorLayout.Frame right = frame("demo:right", 84, 26, """
+                {"point":"BOTTOMRIGHT","anchor":"BOTTOMRIGHT","x":-18,"y":-26}
+                """);
+        AnchorLayout.Frame between = frame("demo:between", 1, 10, """
+                {"anchors":[
+                  {"point":"LEFT","anchor":"RIGHT","relativeTo":"demo:left","x":8},
+                  {"point":"RIGHT","anchor":"LEFT","relativeTo":"demo:right","x":-8}
+                ]}
+                """);
+
+        AnchorLayout.Cache cache = new AnchorLayout.Cache();
+        var sameY = AnchorLayout.resolve(500, 200, List.of(between, right, left), cache, warning -> {});
+        assertEquals(new AnchorLayout.Bounds(110, 156, 280, 10), sameY.get("demo:between"));
+
+        AnchorLayout.Frame raisedRight = frame("demo:right", 84, 26, """
+                {"point":"BOTTOMRIGHT","anchor":"BOTTOMRIGHT","x":-18,"y":-67}
+                """);
+        var rightMoved = AnchorLayout.resolve(500, 200, List.of(between, raisedRight, left), cache, warning -> {});
+        assertEquals(sameY.get("demo:between"), rightMoved.get("demo:between"));
+        assertEquals(sameY.get("demo:left"), rightMoved.get("demo:left"));
+        assertEquals(raiseY(200, -67, 26), rightMoved.get("demo:right").y());
+
+        AnchorLayout.Frame loweredLeft = frame("demo:left", 84, 26, """
+                {"point":"BOTTOMLEFT","anchor":"BOTTOMLEFT","x":18,"y":-6}
+                """);
+        var leftMoved = AnchorLayout.resolve(500, 200, List.of(between, raisedRight, loweredLeft), cache, warning -> {});
+        assertEquals(new AnchorLayout.Bounds(110, 176, 280, 10), leftMoved.get("demo:between"));
+    }
+
+    private static int raiseY(int screenHeight, int offset, int frameHeight) {
+        return screenHeight + offset - frameHeight;
+    }
+
+    @Test
+    public void explicitTopAndBottomControlYIndependentlyFromLeftRightWidth() {
+        AnchorLayout.Frame left = frame("demo:left", 20, 20, """
+                {"point":"TOPLEFT","anchor":"TOPLEFT","x":10,"y":65}
+                """);
+        AnchorLayout.Frame right = frame("demo:right", 20, 20, """
+                {"point":"TOPLEFT","anchor":"TOPLEFT","x":270,"y":130}
+                """);
+        AnchorLayout.Frame box = frame("demo:box", 5, 9, """
+                {"anchors":[
+                  {"point":"LEFT","anchor":"RIGHT","relativeTo":"demo:left"},
+                  {"point":"RIGHT","anchor":"LEFT","relativeTo":"demo:right"},
+                  {"point":"TOP","anchor":"TOP","relativeTo":"screen","y":30},
+                  {"point":"BOTTOM","anchor":"BOTTOM","relativeTo":"screen","y":-40}
+                ]}
+                """);
+        var bounds = AnchorLayout.resolve(320, 240, List.of(box, left, right));
+        assertEquals(new AnchorLayout.Bounds(30, 30, 240, 170), bounds.get("demo:box"));
     }
 
     @Test

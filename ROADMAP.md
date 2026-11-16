@@ -137,14 +137,15 @@ The completed functionality above does **not** imply finished visual consistency
 **Priority: continuous.**
 
 - [x] Audit the existing Java registries and implement first API consistency fixes: shared namespaced ID validation, typed formatter argument normalization, and fault-isolated custom animation triggers with regression tests. See [Java extension API](docs/JAVA_EXTENSION_API.md).
-- [ ] Consolidate and document stable APIs for widgets, templates, actions, layout factories, data sources, formatters, conditions and resource reload.
+- [ ] Consolidate and document stable APIs for widgets, templates, actions, layout factories, data sources, formatters, conditions and resource reload. Initial registry consistency pass now aligns animation-trigger and F8 editor duplicate/null exception contracts with the other Java registries; public ABI stability is not yet promised.
 - [x] Add opt-in revision-aware source caching for expensive providers in `BoundData` and `BoundCondition`, including atomic `registerMutable` revisions, context invalidation, live-provider compatibility, and regression tests. See [Data bindings](docs/DATA_BINDINGS.md).
 - [ ] Profile revision-aware providers in large screens, nested lists and multi-widget HUDs; consider shared invalidation only if measured results justify it.
 - [x] Cache independent built-in row/column/grid arrangements per screen, reusing unchanged child order, sizes, layout rules and available space across editor, condition and keyed-list relayouts. Custom Java layouts remain live; automated cache invalidation tests cover these boundaries.
 - [x] Add dependency-aware per-screen anchor snapshots: unchanged frame definitions and target bounds reuse their resolved geometry, while resize, reparenting, removed frames and cycles are handled correctly. Covered by independent unit tests.
 - [ ] Investigate partial transform/clipping/scroll resolution for very large screens and keyed lists; anchor dependency checks still traverse the graph, while the retained full path preserves correct validation and diagnostics.
 - [x] Improve early JSON diagnostics for missing template imports/references (including resource paths and nested/case locations), malformed entity/child entries and missing widget types; action compilation now identifies the failing event field. Add regression tests.
-- [ ] Continue diagnostics review for runtime unknown widget types, missing visual assets and invalid conditions in loaded resource packs and editor flows.
+- [x] Surface runtime screen/HUD build and layout diagnostics in a collapsible F8 inspector section with deduplicated warnings, bounded display, counts and preserved details in the log. Show specific rejected anchor/layout reasons instead of generic errors; cover diagnostics formatting in tests.
+- [ ] Continue diagnostics review for missing visual assets, resource reload failures and conditions in loaded packs. Client rendering and reload-path integration QA remain pending.
 - [ ] Expand automated and in-client QA for F3+T, GUI resize/scale, multiple resource packs, keyboard focus, multiplayer and client-only behavior.
 - [ ] Publish public English documentation (GitBook) with copyable examples and clear compatibility guarantees.
 - [ ] Run CI for each supported version/loader branch once ports are in scope.

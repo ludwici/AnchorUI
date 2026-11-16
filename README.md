@@ -42,7 +42,7 @@ resourcepacks/
                 └── style/
 ```
 
-Enable the pack in Minecraft's Resource Packs menu. Anchor UI already reads JSON from `assets/<namespace>/anchorui/` through the client resource reload listener, including resources provided by other mods or enabled resource packs. Resource packs also carry textures and can be reloaded with F3+T.
+Enable the pack in Minecraft's Resource Packs menu. Anchor UI already reads JSON from `assets/<namespace>/anchorui/` through the client resource reload listener, including resources provided by other mods or enabled resource packs. Resource packs also carry textures and can be reloaded with F3+T. Invalid entries are diagnosed without discarding unrelated valid screens and HUDs; see [Resource reload and diagnostics](docs/RESOURCE_RELOAD.md) for the error policy and test checklist.
 
 ## JSON layouts and styles
 

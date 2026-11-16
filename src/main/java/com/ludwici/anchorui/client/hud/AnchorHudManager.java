@@ -819,7 +819,11 @@ public final class AnchorHudManager {
             return false;
         }
         HudLayoutOffsets candidate = editingOffsets.copy();
-        candidate.setSettingOverride(id, "appearance", control.field().path(), parsed);
+        if (AppearanceInspectorControls.sameValue(control.field(), parsed.getAsString(), control.sourceValue())) {
+            candidate.clearSettingOverride(id, "appearance", control.field().path());
+        } else {
+            candidate.setSettingOverride(id, "appearance", control.field().path(), parsed);
+        }
         return previewAppearance(id, candidate);
     }
 
@@ -867,7 +871,12 @@ public final class AnchorHudManager {
             return false;
         }
         HudLayoutOffsets candidate = editingOffsets.copy();
-        candidate.setSettingOverride(id, control.section(), control.field(), LayoutInspectorControls.stepped(control, direction));
+        com.google.gson.JsonElement next = LayoutInspectorControls.stepped(control, direction);
+        if (LayoutInspectorControls.sameValue(next.getAsString(), control.sourceValue())) {
+            candidate.clearSettingOverride(id, control.section(), control.field());
+        } else {
+            candidate.setSettingOverride(id, control.section(), control.field(), next);
+        }
         return usePreviewLayout(candidate);
     }
 
@@ -876,7 +885,11 @@ public final class AnchorHudManager {
             return false;
         }
         HudLayoutOffsets candidate = editingOffsets.copy();
-        candidate.setSettingOverride(id, control.section(), control.field(), new com.google.gson.JsonPrimitive(value));
+        if (LayoutInspectorControls.sameValue(value, control.sourceValue())) {
+            candidate.clearSettingOverride(id, control.section(), control.field());
+        } else {
+            candidate.setSettingOverride(id, control.section(), control.field(), new com.google.gson.JsonPrimitive(value));
+        }
         return usePreviewLayout(candidate);
     }
 

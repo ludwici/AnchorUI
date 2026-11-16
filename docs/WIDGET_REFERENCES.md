@@ -97,6 +97,8 @@ Fields absent in the override come from `moda:header`. This enables reusable com
 
 Templates may themselves reference another template using `"ref": "othermod:template"`. Circular template inheritance is reported as an error. Missing definitions raise a warning during resource loading; unavailable imports or references are skipped while the other widgets remain available. An anchor to the absent widget falls back to `screen` with its own warning.
 
+Missing reference diagnostics identify the location, such as `Import 'othermod:template'`, `Entity #2 ref`, `Child #0 of 'mymod:panel' ref`, or `Conditional branch 'mymod:status/case_0' ref`. They also give the expected `assets/<namespace>/anchorui/widgets/<path>.json` and `assets/<namespace>/anchorui/templates/<path>.json` resource paths, or indicate that a Java template can be registered. An entry with no valid `type`/`ref`, or a non-object element in `entities` or `children`, is rejected with its widget ID or array index rather than an unhelpful JSON access exception.
+
 ## Named Template List rows
 
 The `anchorui:template_list` widget can use `"template": "moda:quest_row"` instead of embedding a full row object. The name resolves to a reusable definition at `assets/moda/anchorui/templates/quest_row.json`, an existing `widgets/quest_row.json`, or a Java definition provided by `WidgetTemplateRegistry.register(...)`. Dedicated `templates/` files override matching `widgets/` files. Resource-pack files override Java defaults of the same ID.

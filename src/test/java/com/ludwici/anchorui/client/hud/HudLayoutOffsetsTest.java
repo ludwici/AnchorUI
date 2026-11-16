@@ -212,6 +212,22 @@ public class HudLayoutOffsetsTest {
     }
 
     @Test
+    public void changingAnchorOffsetBackToSourceRemovesOverrideAndClearsDirtyState() {
+        String id = "demo:bar";
+        PositionElement source = new PositionElement(List.of(new PositionElement.Constraint(ElementAnchor.LEFT, ElementAnchor.RIGHT, "demo:left", 8, 0), new PositionElement.Constraint(ElementAnchor.RIGHT, ElementAnchor.LEFT, "demo:right", -8, 0)));
+        HudLayoutOffsets saved = new HudLayoutOffsets();
+        HudLayoutOffsets current = saved.copy();
+        current.setAnchorConstraints(id, List.of(new PositionElement.Constraint(ElementAnchor.LEFT, ElementAnchor.RIGHT, "demo:left", 9, 0), source.anchors.get(1)), source);
+        assertFalse(current.sameAs(saved));
+        assertEquals(2, current.anchorConstraints(id).size());
+
+        current.setAnchorConstraints(id, source.anchors, source);
+        assertEquals(null, current.anchorConstraints(id));
+        assertEquals(null, current.anchor(id));
+        assertTrue(current.sameAs(saved));
+    }
+
+    @Test
     public void copyingAndResettingSavedAnchorConstraintsDoesNotMutatePreviousVersion() {
         String id = "demo:panel";
         HudLayoutOffsets original = new HudLayoutOffsets();

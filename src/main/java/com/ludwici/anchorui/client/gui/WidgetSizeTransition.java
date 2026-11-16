@@ -7,6 +7,9 @@ import com.ludwici.anchorui.api.animation.UiSizeInterpolator;
 import com.ludwici.anchorui.api.binding.BoundNumber;
 import com.ludwici.anchorui.api.binding.ProgressMath;
 import com.ludwici.anchorui.api.widget.WidgetContext;
+import com.ludwici.anchorui.api.layout.AnchorLayout;
+import com.ludwici.anchorui.api.layout.WidgetTransforms;
+import com.ludwici.anchorui.api.animation.UiAnimationSpec;
 
 /**
  * Resolves target visual size from bindings and animates it without
@@ -88,6 +91,14 @@ public final class WidgetSizeTransition {
             throw new IllegalArgumentException("sizeTransition." + name + " requires value and max");
         }
         return new Dimension(BoundNumber.parse(source, "value", 0.0), BoundNumber.parse(source, "max", 1.0), new UiSizeInterpolator(duration, easing));
+    }
+
+    public AnchorLayout.Bounds clippedBounds(AnchorLayout.Bounds layout,
+                                             WidgetTransforms.Transform parent, UiAnimationSpec.Frame animation, long now) {
+        AnchorLayout.Bounds physical = WidgetAnimation.physicalBounds(layout, parent, animation);
+        int width = (int) Math.ceil(physical.width() * widthFraction(1.0, now));
+        int height = (int) Math.ceil(physical.height() * heightFraction(1.0, now));
+        return new AnchorLayout.Bounds(physical.x(), physical.y(), Math.max(0, width), Math.max(0, height));
     }
 
     public double widthFraction(double implicit, long now) {

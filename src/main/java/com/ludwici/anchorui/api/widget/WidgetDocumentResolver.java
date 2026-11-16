@@ -33,7 +33,7 @@ public final class WidgetDocumentResolver {
                 if (warningSink == null) {
                     throw exception;
                 }
-                warningSink.accept(exception.getMessage());
+                warningSink.accept("Import '" + id + "': " + exception.getMessage());
             }
         }
         JsonArray inline = array(document, "entities");
@@ -51,7 +51,7 @@ public final class WidgetDocumentResolver {
                     if (warningSink == null) {
                         throw exception;
                     }
-                    warningSink.accept(exception.getMessage());
+                    warningSink.accept("Entity #" + index + " ref '" + referenced + "': " + exception.getMessage());
                     index++;
                     continue;
                 }
@@ -130,7 +130,7 @@ public final class WidgetDocumentResolver {
                     if (warningSink == null) {
                         throw exception;
                     }
-                    warningSink.accept(exception.getMessage());
+                    warningSink.accept("Child #" + index + " of '" + id + "' ref '" + templateId + "': " + exception.getMessage());
                     index++;
                     continue;
                 }
@@ -212,7 +212,7 @@ public final class WidgetDocumentResolver {
                 if (warningSink == null) {
                     throw exception;
                 }
-                warningSink.accept(exception.getMessage());
+                warningSink.accept("Conditional branch '" + id + "' ref '" + reference + "': " + exception.getMessage());
                 return;
             }
         }
@@ -270,7 +270,7 @@ public final class WidgetDocumentResolver {
 
     public static final class UnknownWidgetDefinitionException extends IllegalArgumentException {
         public UnknownWidgetDefinitionException(String id) {
-            super("Unknown widget definition: " + id);
+            super("Unknown widget definition: " + id + ". Expected assets/" + WidgetIds.namespace(id) + "/anchorui/widgets/" + id.substring(id.indexOf(':') + 1) + ".json or assets/" + WidgetIds.namespace(id) + "/anchorui/templates/" + id.substring(id.indexOf(':') + 1) + ".json, or a Java-registered template");
         }
     }
 

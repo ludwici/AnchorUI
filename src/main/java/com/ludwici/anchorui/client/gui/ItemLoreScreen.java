@@ -229,6 +229,10 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         return screenSaveError;
     }
 
+    String editorLayoutFailure() {
+        return lastLayoutFailure == null || lastLayoutFailure.isBlank() ? "Invalid layout value or constraints" : lastLayoutFailure;
+    }
+
     public boolean saveScreenEditing() {
         if (editingScreenOffsets == null) {
             return true;

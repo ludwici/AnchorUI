@@ -13,6 +13,7 @@ import com.ludwici.anchorui.api.style.ElementAnchor;
 import com.ludwici.anchorui.api.widget.WidgetEditorRegistry;
 import com.ludwici.anchorui.client.gui.editor.AppearanceInspectorControls;
 import com.ludwici.anchorui.client.gui.editor.InspectorSections;
+import com.ludwici.anchorui.client.gui.editor.EditorDiagnostics;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorCheckbox;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorButton;
 import com.ludwici.anchorui.client.gui.editor.EditorColorPicker;
@@ -790,6 +791,18 @@ public final class AnchorHudEditorScreen extends Screen {
         }
         if (!status.isEmpty()) {
             appendLine(lines, status, 0xFFFFCF64);
+        }
+        EditorDiagnostics.Summary diagnostics = EditorDiagnostics.summarize(manager.getLayoutError(), manager.getLayoutWarnings());
+        if (!diagnostics.empty()) {
+            appendSection(lines, "diagnostics", diagnostics.title());
+            if (inspectorSections.expanded("diagnostics")) {
+                for (EditorDiagnostics.Entry entry : diagnostics.entries()) {
+                    appendLine(lines, entry.severity().name() + ": " + entry.message(), entry.severity() == EditorDiagnostics.Severity.ERROR ? 0xFFFF968C : 0xFFFFC778);
+                }
+                if (diagnostics.omitted() > 0) {
+                    appendLine(lines, "... " + diagnostics.omitted() + " more warnings (see latest.log)", 0xFF96AEBE);
+                }
+            }
         }
         if (active == null && inspectedVanilla != null) {
             appendLine(lines, "VANILLA HUD (READ ONLY)", VANILLA_COLOR);

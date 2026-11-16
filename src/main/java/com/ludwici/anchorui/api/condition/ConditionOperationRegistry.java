@@ -1,6 +1,7 @@
 package com.ludwici.anchorui.api.condition;
 
 import com.google.gson.JsonElement;
+import com.ludwici.anchorui.api.UiIdentifiers;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Map;
@@ -65,10 +66,8 @@ public final class ConditionOperationRegistry {
 
     private static void registerDefinition(String id, Definition definition) {
         Objects.requireNonNull(id, "Condition operation id must not be null");
-        if (!id.matches("[a-z0-9_.-]+:[a-z0-9_./-]+")) {
-            throw new IllegalArgumentException("Condition operation id must be namespaced: " + id);
-        }
-        if (OPERATIONS.putIfAbsent(id, definition) != null) {
+        String qualifiedId = UiIdentifiers.requireNamespaced(id, "Condition operation").toString();
+        if (OPERATIONS.putIfAbsent(qualifiedId, definition) != null) {
             throw new IllegalStateException("Anchor UI condition operation already registered: " + id);
         }
     }

@@ -3,6 +3,7 @@ package com.ludwici.anchorui.api.animation;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.ludwici.anchorui.api.UiIdentifiers;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
@@ -162,13 +163,7 @@ public final class UiAnimationSpec {
             };
             ResourceLocation customTrigger = null;
             if (trigger == Trigger.CUSTOM) {
-                if (event.indexOf(':') <= 0 || event.endsWith(":")) {
-                    throw new IllegalArgumentException("Custom trigger for animation '" + id + "' must be namespaced (example: mymod:quest_completed)");
-                }
-                customTrigger = ResourceLocation.tryParse(event);
-                if (customTrigger == null) {
-                    throw new IllegalArgumentException("Invalid custom trigger '" + event + "' in animation '" + id + "'");
-                }
+                customTrigger = UiIdentifiers.requireNamespaced(event, "custom trigger for animation '" + id + "'");
             }
             long duration = integer(value, "duration", 300, 1, 10000);
             long delay = integer(value, "delay", 0, 0, 60000);

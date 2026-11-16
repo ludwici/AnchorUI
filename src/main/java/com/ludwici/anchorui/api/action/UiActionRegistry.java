@@ -3,6 +3,7 @@ package com.ludwici.anchorui.api.action;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ludwici.anchorui.api.condition.BoundCondition;
+import com.ludwici.anchorui.api.UiIdentifiers;
 import com.ludwici.anchorui.api.widget.WidgetConfigDecoder;
 import com.ludwici.anchorui.api.widget.WidgetContext;
 import com.mojang.serialization.Codec;
@@ -110,10 +111,7 @@ public final class UiActionRegistry {
             throw new IllegalArgumentException("UI action type must be a namespaced identifier");
         }
         String rawId = type.getAsString();
-        ResourceLocation id = ResourceLocation.tryParse(rawId);
-        if (id == null || !rawId.contains(":")) {
-            throw new IllegalArgumentException("Invalid UI action id: " + rawId);
-        }
+        ResourceLocation id = UiIdentifiers.requireNamespaced(rawId, "UI action");
         EventFactory factory = FACTORIES.get(id);
         if (factory == null) {
             throw new IllegalArgumentException("Unknown UI action type: " + id);

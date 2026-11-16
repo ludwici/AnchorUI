@@ -6,6 +6,7 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ludwici.anchorui.api.binding.DataValuePaths;
+import com.ludwici.anchorui.api.UiIdentifiers;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -186,9 +187,7 @@ public final class ConditionExpression {
                 throw new IllegalArgumentException("Condition binding requires a namespaced string 'bind'");
             }
             String source = sourceElement.getAsString();
-            if (!source.matches("[a-z0-9_.-]+:[a-z0-9_./-]+")) {
-                throw new IllegalArgumentException("Invalid namespaced condition source: " + source);
-            }
+            UiIdentifiers.requireNamespaced(source, "condition data source");
             String path = "";
             if (object.has("path")) {
                 JsonElement rawPath = object.get("path");

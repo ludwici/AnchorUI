@@ -3,6 +3,7 @@ package com.ludwici.anchorui.api.binding;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ludwici.anchorui.api.widget.WidgetConfigDecoder;
+import com.ludwici.anchorui.api.UiIdentifiers;
 import com.ludwici.anchorui.api.widget.WidgetContext;
 import com.mojang.serialization.Codec;
 import net.minecraft.resources.ResourceLocation;
@@ -41,7 +42,9 @@ public final class DataFormatterRegistry {
         Objects.requireNonNull(codec, "Data formatter configuration codec must not be null");
         Objects.requireNonNull(formatter, "Configured data formatter must not be null");
         registerFactory(id, config -> {
-            T options = WidgetConfigDecoder.decode(codec, config);
+            JsonObject arguments = config.deepCopy();
+            arguments.remove("type");
+            T options = WidgetConfigDecoder.decode(codec, arguments);
             return (value, context) -> formatter.format(value, context, options);
         });
     }
@@ -75,10 +78,7 @@ public final class DataFormatterRegistry {
             throw new IllegalArgumentException("Formatter must be a namespaced string or a configuration object");
         }
 
-        ResourceLocation id = ResourceLocation.tryParse(rawId);
-        if (id == null || !rawId.contains(":")) {
-            throw new IllegalArgumentException("Invalid namespaced formatter id: " + rawId);
-        }
+        ResourceLocation id = UiIdentifiers.requireNamespaced(rawId, "data formatter");
         Factory factory = FACTORIES.get(id);
         if (factory == null) {
             throw new IllegalArgumentException("Unknown data formatter: " + id);

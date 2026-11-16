@@ -4,6 +4,7 @@ import com.ludwici.anchorui.api.widget.WidgetContext;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.OptionalLong;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
@@ -24,18 +25,15 @@ public final class UiAnimationTriggerRegistry {
     }
 
     public static void register(ResourceLocation id, RevisionSource source) {
-        if (id == null || source == null) {
-            throw new IllegalArgumentException("Animation trigger ID and source cannot be null");
-        }
+        Objects.requireNonNull(id, "Animation trigger ID must not be null");
+        Objects.requireNonNull(source, "Animation trigger source must not be null");
         if (SOURCES.putIfAbsent(id, source) != null) {
-            throw new IllegalArgumentException("Animation trigger already registered: " + id);
+            throw new IllegalStateException("Anchor UI animation trigger already registered: " + id);
         }
     }
 
     public static void registerCondition(ResourceLocation id, Predicate<WidgetContext> condition) {
-        if (condition == null) {
-            throw new IllegalArgumentException("Animation trigger condition cannot be null");
-        }
+        Objects.requireNonNull(condition, "Animation trigger condition must not be null");
         register(id, context -> condition.test(context) ? 1L : 0L);
     }
 

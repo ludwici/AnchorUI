@@ -364,7 +364,10 @@ public final class WidgetDocumentResolver {
         for (var entry : overrides.entrySet()) {
             JsonElement previous = result.get(entry.getKey());
             JsonElement value = entry.getValue();
-            if (previous != null && previous.isJsonObject() && value.isJsonObject()) {
+            if ("position".equals(entry.getKey()) && previous != null && previous.isJsonObject() && value.isJsonObject()
+                    && (previous.getAsJsonObject().has("anchors") || value.getAsJsonObject().has("anchors"))) {
+                result.add(entry.getKey(), value.deepCopy());
+            } else if (previous != null && previous.isJsonObject() && value.isJsonObject()) {
                 result.add(entry.getKey(), merge(previous.getAsJsonObject(), value.getAsJsonObject()));
             } else {
                 result.add(entry.getKey(), value.deepCopy());

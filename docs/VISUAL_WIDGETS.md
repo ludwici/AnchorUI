@@ -102,6 +102,8 @@ For texture-based styling of interactive controls (`anchorui:checkbox`, `anchoru
 }
 ```
 
+Panels, progress bars, images, text and other widgets can stretch to their parent or to multiple target widgets using `position.anchors`. Opposite LEFT/RIGHT points determine their width instead of `size.width`; TOP/BOTTOM points determine height. See [Multiple anchors](MULTI_ANCHORS.md).
+
 **Every `anchorui:panel` is already a parent for its `children`**, with or without a `layout` setting. No extra container widget, context wrapper or parent ID is required. Panels support optional fill, borders and rounded corners. If `fillColor` is omitted, the usual style `background.color` is used. `anchorui:container` remains a compatibility alias for a panel primarily used for layout.
 
 ## Nested children

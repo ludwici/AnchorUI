@@ -18,6 +18,7 @@ import com.ludwici.anchorui.client.gui.editor.EditorDropdown;
 import com.ludwici.anchorui.api.widget.WidgetEditorRegistry;
 import com.ludwici.anchorui.client.gui.editor.AppearanceInspectorControls;
 import com.ludwici.anchorui.client.gui.editor.InspectorSections;
+import com.ludwici.anchorui.client.gui.editor.EditorDiagnostics;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorCheckbox;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorButton;
 import com.ludwici.anchorui.client.gui.editor.EditorColorPicker;
@@ -715,6 +716,18 @@ public final class AnchorScreenEditorScreen extends Screen {
         List<InspectorLine> lines = new ArrayList<>();
         inspectorSections.clearHeaders();
         animationActions.clear();
+        EditorDiagnostics.Summary diagnostics = EditorDiagnostics.summarize(target.getLayoutError(), target.getLayoutWarnings());
+        if (!diagnostics.empty()) {
+            appendSection(lines, "diagnostics", diagnostics.title());
+            if (inspectorSections.expanded("diagnostics")) {
+                for (EditorDiagnostics.Entry entry : diagnostics.entries()) {
+                    appendInspectorLine(lines, entry.severity().name() + ": " + entry.message(), entry.severity() == EditorDiagnostics.Severity.ERROR ? 0xFFFF968C : 0xFFFFC778, null, false);
+                }
+                if (diagnostics.omitted() > 0) {
+                    appendInspectorLine(lines, "... " + diagnostics.omitted() + " more warnings (see latest.log)", 0xFF96AEBE, null, false);
+                }
+            }
+        }
         if (selected == null) {
             appendInspectorLine(lines, "SELECT A WIDGET", SELECTED, null, false);
             appendInspectorLine(lines, "Click a widget or the Widgets list", 0xFFE5EEF5, null, false);

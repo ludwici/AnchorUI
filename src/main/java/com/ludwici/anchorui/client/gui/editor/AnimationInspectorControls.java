@@ -111,9 +111,9 @@ public final class AnimationInspectorControls {
                     JsonObject keyframe = track.has(endpoint) ? track.getAsJsonObject(endpoint) : new JsonObject();
                     JsonObject originalFrame = original != null && original.has(endpoint) ? original.getAsJsonObject(endpoint) : null;
                     add(result, keyframe, originalFrame, WidgetEditorRegistry.Field.number(prefix + endpoint + ".opacity", endpoint + " opacity", 1, 0, 1, 0.1), "opacity");
-                    add(result, keyframe, WidgetEditorRegistry.Field.number(prefix + endpoint + ".x", endpoint + " X", 0, -4096, 4096, 1), "x");
-                    add(result, keyframe, WidgetEditorRegistry.Field.number(prefix + endpoint + ".y", endpoint + " Y", 0, -4096, 4096, 1), "y");
-                    add(result, keyframe, WidgetEditorRegistry.Field.number(prefix + endpoint + ".scale", endpoint + " scale", 1, 0.01, 4, 0.05), "scale");
+                    add(result, keyframe, originalFrame, WidgetEditorRegistry.Field.number(prefix + endpoint + ".x", endpoint + " X", 0, -4096, 4096, 1), "x");
+                    add(result, keyframe, originalFrame, WidgetEditorRegistry.Field.number(prefix + endpoint + ".y", endpoint + " Y", 0, -4096, 4096, 1), "y");
+                    add(result, keyframe, originalFrame, WidgetEditorRegistry.Field.number(prefix + endpoint + ".scale", endpoint + " scale", 1, 0.01, 4, 0.05), "scale");
                 }
             }
         }

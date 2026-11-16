@@ -530,6 +530,11 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     }
 
     public JsonArray editorAnimations(String id) {
+        JsonArray edited = currentScreenOffsets().animationOverride(id);
+        return edited == null ? editorDefaultAnimations(id) : edited;
+    }
+
+    public JsonArray editorDefaultAnimations(String id) {
         for (PlacedWidget placed : placedWidgets) {
             if (placed.id().equals(id)) {
                 JsonObject settings = placed.style().resolvedSettings;
@@ -546,7 +551,11 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         HudLayoutOffsets previous = editingScreenOffsets;
         HudLayoutOffsets candidate = previous.copy();
         try {
-            candidate.setAnimationOverride(id, tracks);
+            if (AnimationInspectorControls.sameTracks(tracks, editorDefaultAnimations(id))) {
+                candidate.clearAnimationOverride(id);
+            } else {
+                candidate.setAnimationOverride(id, tracks);
+            }
             JsonObject settings = new JsonObject();
             settings.add("animations", tracks);
             WidgetAnimation.parse(settings, null, placedWidgets.stream().filter(p -> p.id().equals(id)).findFirst().orElseThrow().context());

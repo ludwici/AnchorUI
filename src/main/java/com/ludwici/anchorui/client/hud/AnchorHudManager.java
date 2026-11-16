@@ -125,6 +125,7 @@ public final class AnchorHudManager {
     private HudLayoutOffsets editingOffsets;
     private boolean storageLoaded;
     private String lastSaveError;
+    private String previewLayoutFailure;
     private String layoutError;
     private List<String> layoutWarnings = List.of();
     private long builtRevision = -1;
@@ -307,6 +308,7 @@ public final class AnchorHudManager {
     }
 
     private boolean changePreviewAnchor(String id, HudLayoutOffsets.AnchorOverride override) {
+        previewLayoutFailure = null;
         if (editingOffsets == null) {
             return false;
         }
@@ -328,6 +330,7 @@ public final class AnchorHudManager {
         try {
             resolveBounds(candidate);
         } catch (IllegalArgumentException exception) {
+            previewLayoutFailure = exception.getMessage();
             return false;
         }
         editingOffsets = candidate;
@@ -694,6 +697,10 @@ public final class AnchorHudManager {
         return layoutError;
     }
 
+    public String getPreviewLayoutFailure() {
+        return previewLayoutFailure == null || previewLayoutFailure.isBlank() ? "Invalid layout value or constraints" : previewLayoutFailure;
+    }
+
     public List<String> getLayoutWarnings() {
         return layoutWarnings;
     }
@@ -887,9 +894,11 @@ public final class AnchorHudManager {
     }
 
     private boolean usePreviewLayout(HudLayoutOffsets candidate) {
+        previewLayoutFailure = null;
         try {
             resolveLayout(candidate, null);
         } catch (IllegalArgumentException exception) {
+            previewLayoutFailure = exception.getMessage();
             return false;
         }
         editingOffsets = candidate;
@@ -1297,5 +1306,6 @@ public final class AnchorHudManager {
         widgetSizeTransitions.clear();
         layoutError = null;
         layoutWarnings = List.of();
+        previewLayoutFailure = null;
     }
 }

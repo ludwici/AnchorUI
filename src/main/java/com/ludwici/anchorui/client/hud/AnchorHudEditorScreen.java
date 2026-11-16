@@ -252,7 +252,7 @@ public final class AnchorHudEditorScreen extends Screen {
         try {
             switch (action.field()) {
                 case "add" -> {
-                    if (updateAnchor(id, AnchorInspectorControls.add(values))) {
+                    if (updateAnchor(id, AnchorInspectorControls.add(values)) && !inspectorSections.expanded("constraint:" + id + ":" + values.size())) {
                         inspectorSections.toggle("constraint:" + id + ":" + values.size());
                     }
                 }

@@ -6,6 +6,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ludwici.anchorui.api.animation.UiAnimationSpec;
 import com.ludwici.anchorui.api.animation.UiAnimationTimeline;
+import com.ludwici.anchorui.api.animation.UiAnimationTriggerRegistry;
+import net.minecraft.resources.ResourceLocation;
 import com.ludwici.anchorui.api.binding.BoundData;
 import com.ludwici.anchorui.api.binding.DataBindingSpec;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
@@ -16,15 +18,19 @@ import net.minecraft.client.gui.components.AbstractWidget;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 public final class WidgetAnimation {
     private final UiAnimationTimeline timeline;
     private final Map<String, BoundData> watches;
+    private final Set<ResourceLocation> customTriggerIds;
     private final WidgetContext context;
 
-    private WidgetAnimation(UiAnimationTimeline timeline, Map<String, BoundData> watches, WidgetContext context) {
+    private WidgetAnimation(UiAnimationTimeline timeline, Map<String, BoundData> watches, Set<ResourceLocation> customTriggerIds, WidgetContext context) {
         this.timeline = timeline;
         this.watches = Map.copyOf(watches);
+        this.customTriggerIds = Set.copyOf(customTriggerIds);
         this.context = context;
     }
 
@@ -34,8 +40,15 @@ public final class WidgetAnimation {
             return null;
         }
         Map<String, BoundData> watches = new HashMap<>();
+        Set<ResourceLocation> customIds = new HashSet<>();
         for (UiAnimationSpec.Track track : spec.tracks()) {
-            if (!track.enabled() || track.watch() == null) {
+            if (!track.enabled()) {
+                continue;
+            }
+            if (track.customTrigger() != null) {
+                customIds.add(track.customTrigger());
+            }
+            if (track.watch() == null) {
                 continue;
             }
             JsonObject holder = new JsonObject();
@@ -46,7 +59,7 @@ public final class WidgetAnimation {
             }
             watches.put(track.id(), bound);
         }
-        return new WidgetAnimation(new UiAnimationTimeline(spec), watches, context);
+        return new WidgetAnimation(new UiAnimationTimeline(spec), watches, customIds, context);
     }
 
     public void update(boolean visible, long now) {
@@ -54,7 +67,13 @@ public final class WidgetAnimation {
         for (var entry : watches.entrySet()) {
             values.put(entry.getKey(), entry.getValue().get(context));
         }
-        timeline.update(visible, values, now);
+        Map<ResourceLocation, Long> revisions = new HashMap<>();
+        if (visible) {
+            for (ResourceLocation id : customTriggerIds) {
+                UiAnimationTriggerRegistry.sample(id, context).ifPresent(revision -> revisions.put(id, revision));
+            }
+        }
+        timeline.update(visible, values, revisions, now);
     }
 
     public UiAnimationSpec.Frame frame(long now) {

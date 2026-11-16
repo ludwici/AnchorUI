@@ -1,5 +1,7 @@
 package com.ludwici.anchorui.client.gui.editor;
 
+import com.ludwici.anchorui.client.LoreResourceCompiler;
+
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -33,26 +35,44 @@ public final class EditorDiagnostics {
     }
 
     public static Summary summarize(String error, List<String> warnings) {
-        List<Entry> entries = new ArrayList<>();
-        Set<String> uniqueWarnings = new LinkedHashSet<>();
-        String normalizedError = error == null ? "" : error.trim();
-        if (!normalizedError.isEmpty()) {
-            entries.add(new Entry(Severity.ERROR, normalizedError));
+        return summarize(error, warnings, List.of());
+    }
+
+    public static Summary summarize(String error, List<String> warnings, List<LoreResourceCompiler.Issue> resources) {
+        Set<Entry> unique = new LinkedHashSet<>();
+        if (error != null && !error.isBlank()) {
+            unique.add(new Entry(Severity.ERROR, error.trim()));
+        }
+        for (LoreResourceCompiler.Issue issue : resources) {
+            if (issue.severity() == LoreResourceCompiler.Severity.ERROR) {
+                unique.add(new Entry(Severity.ERROR, issue.display()));
+            }
         }
         if (warnings != null) {
             for (String warning : warnings) {
                 if (warning != null && !warning.isBlank()) {
-                    uniqueWarnings.add(warning.trim());
+                    unique.add(new Entry(Severity.WARNING, warning.trim()));
                 }
             }
         }
-        for (String warning : uniqueWarnings) {
-            if (entries.size() >= MAX_VISIBLE) {
-                break;
+        for (LoreResourceCompiler.Issue issue : resources) {
+            if (issue.severity() == LoreResourceCompiler.Severity.WARNING) {
+                unique.add(new Entry(Severity.WARNING, issue.display()));
             }
-            entries.add(new Entry(Severity.WARNING, warning));
         }
-        int count = uniqueWarnings.size() + (normalizedError.isEmpty() ? 0 : 1);
-        return new Summary(List.copyOf(entries), normalizedError.isEmpty() ? 0 : 1, uniqueWarnings.size(), Math.max(0, count - entries.size()));
+        List<Entry> entries = new ArrayList<>();
+        int errors = 0;
+        int warningCount = 0;
+        for (Entry entry : unique) {
+            if (entry.severity() == Severity.ERROR) {
+                errors++;
+            } else {
+                warningCount++;
+            }
+            if (entries.size() < MAX_VISIBLE) {
+                entries.add(entry);
+            }
+        }
+        return new Summary(List.copyOf(entries), errors, warningCount, Math.max(0, unique.size() - entries.size()));
     }
 }

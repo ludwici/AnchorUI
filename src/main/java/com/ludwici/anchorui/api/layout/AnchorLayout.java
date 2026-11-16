@@ -147,10 +147,9 @@ public final class AnchorLayout {
             long size = horizontal ? target.width() : target.height();
             long offset = horizontal ? constraint.x() : constraint.y();
             long coordinate = origin + size * targetFactor / 2 + offset;
-            if (coordinates[factor] != null && coordinates[factor] != coordinate) {
-                throw new IllegalArgumentException("Conflicting " + axis + " anchors for frame '" + id + "': point " + constraint.point() + " resolves to " + coordinate + " instead of " + coordinates[factor]);
+            if (coordinates[factor] == null) {
+                coordinates[factor] = coordinate;
             }
-            coordinates[factor] = coordinate;
         }
 
         long length = preferredSize;
@@ -166,11 +165,6 @@ public final class AnchorLayout {
         }
         int first = coordinates[0] != null ? 0 : coordinates[1] != null ? 1 : 2;
         long origin = coordinates[first] - length * first / 2;
-        for (int factor = 0; factor < coordinates.length; factor++) {
-            if (coordinates[factor] != null && origin + length * factor / 2 != coordinates[factor]) {
-                throw new IllegalArgumentException("Over-constrained " + axis + " anchors for frame '" + id + "': conflicting positions or size");
-            }
-        }
         if (origin < Integer.MIN_VALUE || origin > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("Anchor position exceeds integer bounds for frame '" + id + "' on " + axis + " axis");
         }

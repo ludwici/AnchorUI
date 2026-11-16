@@ -34,11 +34,9 @@ public class ContainerLayoutCacheTest {
 
     private static ContainerLayout.Result resolve(ContainerLayout.Cache cache, List<AnchorLayout.Frame> frames,
                                                   Map<String, ContainerAutoLayout> layouts, Set<String> hidden) {
-        return ContainerLayout.resolve(500, 320, frames, Map.of("demo:row", new PaddingElement(4, 4, 4, 4), "demo:grid", new PaddingElement()),
-                Map.of(), Map.of("demo:a", "demo:row", "demo:b", "demo:row", "demo:c", "demo:grid", "demo:d", "demo:grid"),
-                layouts, Map.of(), hidden, Set.of(), cache, message -> {
-                    throw new AssertionError(message);
-                });
+        return ContainerLayout.resolve(500, 320, frames, Map.of("demo:row", new PaddingElement(4, 4, 4, 4), "demo:grid", new PaddingElement()), Map.of(), Map.of("demo:a", "demo:row", "demo:b", "demo:row", "demo:c", "demo:grid", "demo:d", "demo:grid"), layouts, Map.of(), hidden, Set.of(), cache, message -> {
+            throw new AssertionError(message);
+        });
     }
 
     @Test
@@ -90,13 +88,7 @@ public class ContainerLayoutCacheTest {
     public void cachedIndependentContainersMatchFullLayoutAfterVisibilityAndSizeChanges() {
         ContainerLayout.Cache cache = new ContainerLayout.Cache();
         Map<String, ContainerAutoLayout> layouts = Map.of("demo:row", row(6), "demo:grid", grid(2));
-        List<AnchorLayout.Frame> frames = List.of(
-                frame("demo:row", "screen", 10, 12, 150, 45),
-                frame("demo:grid", "screen", 170, 12, 180, 90),
-                frame("demo:a", "demo:row", 0, 0, 20, 10),
-                frame("demo:b", "demo:row", 0, 0, 30, 15),
-                frame("demo:c", "demo:grid", 0, 0, 18, 18),
-                frame("demo:d", "demo:grid", 0, 0, 24, 25));
+        List<AnchorLayout.Frame> frames = List.of(frame("demo:row", "screen", 10, 12, 150, 45), frame("demo:grid", "screen", 170, 12, 180, 90), frame("demo:a", "demo:row", 0, 0, 20, 10), frame("demo:b", "demo:row", 0, 0, 30, 15), frame("demo:c", "demo:grid", 0, 0, 18, 18), frame("demo:d", "demo:grid", 0, 0, 24, 25));
         var initial = resolve(cache, frames, layouts, Set.of());
         assertEquals(resolve(null, frames, layouts, Set.of()), initial);
         assertEquals(initial, resolve(cache, frames, layouts, Set.of()));
@@ -105,8 +97,7 @@ public class ContainerLayoutCacheTest {
         assertEquals(resolve(null, frames, layouts, Set.of("demo:b")), hidden);
         assertEquals(20, hidden.bounds().get("demo:a").width());
 
-        List<AnchorLayout.Frame> resized = List.of(frames.get(0), frames.get(1), frames.get(2),
-                frame("demo:b", "demo:row", 0, 0, 40, 15), frames.get(4), frames.get(5));
+        List<AnchorLayout.Frame> resized = List.of(frames.get(0), frames.get(1), frames.get(2), frame("demo:b", "demo:row", 0, 0, 40, 15), frames.get(4), frames.get(5));
         assertEquals(resolve(null, resized, layouts, Set.of()), resolve(cache, resized, layouts, Set.of()));
         assertEquals(resolve(null, resized, layouts, Set.of("demo:d")), resolve(cache, resized, layouts, Set.of("demo:d")));
         cache.clear();

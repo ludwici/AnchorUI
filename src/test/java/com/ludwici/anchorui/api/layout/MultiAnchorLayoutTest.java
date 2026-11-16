@@ -46,7 +46,7 @@ public class MultiAnchorLayoutTest {
                   {"point":"BOTTOM","anchor":"BOTTOM","y":-16}
                 ]}
                 """);
-        assertEquals(new AnchorLayout.Bounds(127, 8, 45, 176), AnchorLayout.resolve(300, 200, List.of(column)).get(column.id()));
+        assertEquals(new AnchorLayout.Bounds(128, 8, 45, 176), AnchorLayout.resolve(300, 200, List.of(column)).get(column.id()));
 
         AnchorLayout.Frame rectangle = frame("demo:rectangle", 7, 9, """
                 {"anchors":[

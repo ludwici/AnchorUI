@@ -155,10 +155,17 @@ public final class ContainerLayout {
         }
         List<String> layoutOrder = new ArrayList<>(layouts.keySet());
         layoutOrder.sort(java.util.Comparator.comparingInt(id -> structuralDepth(id, parents)));
+        Map<String, AutoSize> effectiveAutoSizes = new LinkedHashMap<>();
         Map<String, Size> sizes = new LinkedHashMap<>();
+        boolean hasDynamicAnchors = false;
         for (AnchorLayout.Frame frame : definitions.values()) {
-            AutoSize auto = autoSizes.getOrDefault(frame.id(), AutoSize.NONE);
+            AutoSize requested = autoSizes.getOrDefault(frame.id(), AutoSize.NONE);
+            boolean dynamicWidth = frame.position().dynamicWidth();
+            boolean dynamicHeight = frame.position().dynamicHeight();
+            AutoSize auto = new AutoSize(requested.width() && !dynamicWidth, requested.height() && !dynamicHeight);
+            effectiveAutoSizes.put(frame.id(), auto);
             sizes.put(frame.id(), new Size(auto.width() ? 1 : frame.width(), auto.height() ? 1 : frame.height()));
+            hasDynamicAnchors |= dynamicWidth || dynamicHeight;
         }
 
         for (int iteration = 0; iteration < 32; iteration++) {
@@ -166,6 +173,19 @@ public final class ContainerLayout {
             for (AnchorLayout.Frame frame : definitions.values()) {
                 Size size = sizes.get(frame.id());
                 effective.put(frame.id(), new AnchorLayout.Frame(frame.id(), frame.position(), size.width(), size.height()));
+            }
+            if (hasDynamicAnchors) {
+                Map<String, AnchorLayout.Bounds> preliminary = AnchorLayout.resolve(screenWidth, screenHeight, effective.values(), warning -> {});
+                for (AnchorLayout.Frame frame : definitions.values()) {
+                    if (!frame.position().dynamicWidth() && !frame.position().dynamicHeight()) {
+                        continue;
+                    }
+                    AnchorLayout.Bounds bounds = preliminary.get(frame.id());
+                    Size old = sizes.get(frame.id());
+                    int width = frame.position().dynamicWidth() ? bounds.width() : old.width();
+                    int height = frame.position().dynamicHeight() ? bounds.height() : old.height();
+                    effective.put(frame.id(), new AnchorLayout.Frame(frame.id(), frame.position(), width, height));
+                }
             }
             Set<String> managed = new HashSet<>();
             Map<String, Size> intrinsic = new LinkedHashMap<>();
@@ -183,6 +203,9 @@ public final class ContainerLayout {
                         continue;
                     }
                     var position = child.position();
+                    if (position.anchors.size() > 1) {
+                        continue;
+                    }
                     StackLayout.Rules rules = itemRules.getOrDefault(childId, StackLayout.Rules.DEFAULT);
                     if (!grid) {
                         if (unmanaged.contains(childId) || !rules.managed()
@@ -196,7 +219,7 @@ public final class ContainerLayout {
                     int offsetY = grid ? 0 : position.y;
                     items.add(new StackLayout.Item(childId, child.width(), child.height(), offsetX, offsetY, rules));
                 }
-                AutoSize auto = autoSizes.getOrDefault(container, AutoSize.NONE);
+                AutoSize auto = effectiveAutoSizes.getOrDefault(container, AutoSize.NONE);
                 ContainerAutoLayout.Arrangement arrangement = cache == null
                         ? layout.arrange(availableWidth, availableHeight, items, auto.width(), auto.height())
                         : cache.arrange(container, layout, availableWidth, availableHeight, items, auto.width(), auto.height());
@@ -221,10 +244,13 @@ public final class ContainerLayout {
                     continue;
                 }
                 var position = child.position();
-                if (entry.getValue().equals(position.relativeTo)
+                if (position.anchors.size() > 1) {
+                    var padded = position.paddedRelativeTo(entry.getValue(), parentPadding);
+                    effective.put(childId, new AnchorLayout.Frame(childId, padded, child.width(), child.height()));
+                } else if (entry.getValue().equals(position.relativeTo)
                         && position.point == ElementAnchor.TOPLEFT
                         && position.anchor == ElementAnchor.TOPLEFT) {
-                    var padded = new com.ludwici.anchorui.api.style.PositionElement(position.point, position.anchor, position.relativeTo, position.x + parentPadding.left, position.y + parentPadding.top);
+                    var padded = position.translated(parentPadding.left, parentPadding.top);
                     effective.put(childId, new AnchorLayout.Frame(childId, padded, child.width(), child.height()));
                 }
             }
@@ -233,7 +259,19 @@ public final class ContainerLayout {
                     ? AnchorLayout.resolve(screenWidth, screenHeight, effective.values(), warnings)
                     : AnchorLayout.resolve(screenWidth, screenHeight, effective.values(), cache.anchors, warnings);
             boolean changed = false;
-            for (var entry : autoSizes.entrySet()) {
+            for (AnchorLayout.Frame frame : definitions.values()) {
+                if (!frame.position().dynamicWidth() && !frame.position().dynamicHeight()) {
+                    continue;
+                }
+                AnchorLayout.Bounds bounds = resolved.get(frame.id());
+                Size previous = sizes.get(frame.id());
+                Size next = new Size(frame.position().dynamicWidth() ? bounds.width() : previous.width(), frame.position().dynamicHeight() ? bounds.height() : previous.height());
+                if (!next.equals(previous)) {
+                    sizes.put(frame.id(), next);
+                    changed = true;
+                }
+            }
+            for (var entry : effectiveAutoSizes.entrySet()) {
                 String id = entry.getKey();
                 AutoSize auto = entry.getValue();
                 if (!auto.enabled()) {
@@ -275,7 +313,8 @@ public final class ContainerLayout {
             if (!changed) {
                 Map<String, Size> actualSizes = new LinkedHashMap<>();
                 for (AnchorLayout.Frame frame : effective.values()) {
-                    actualSizes.put(frame.id(), new Size(frame.width(), frame.height()));
+                    AnchorLayout.Bounds bounds = resolved.get(frame.id());
+                    actualSizes.put(frame.id(), new Size(bounds.width(), bounds.height()));
                 }
                 if (cache != null) {
                     cache.retain(layouts.keySet());

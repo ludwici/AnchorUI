@@ -370,7 +370,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             return false;
         }
         PositionElement p = original.position();
-        if (p.relativeTo.equals(parent) && p.point == point && p.anchor == anchor) {
+        if (candidate.anchorConstraints(id) == null && p.relativeTo.equals(parent) && p.point == point && p.anchor == anchor) {
             candidate.clearAnchor(id);
         } else {
             candidate.setAnchor(id, new HudLayoutOffsets.AnchorOverride(parent, point, anchor));

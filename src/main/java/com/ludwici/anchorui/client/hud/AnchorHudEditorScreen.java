@@ -10,10 +10,12 @@ import com.ludwici.anchorui.client.gui.editor.WidgetListPanel;
 import com.ludwici.anchorui.client.gui.editor.LayoutInspectorControls;
 import com.ludwici.anchorui.client.gui.editor.EditorDropdown;
 import com.ludwici.anchorui.api.style.ElementAnchor;
+import com.ludwici.anchorui.api.style.PositionElement;
 import com.ludwici.anchorui.api.widget.WidgetEditorRegistry;
 import com.ludwici.anchorui.client.gui.editor.AppearanceInspectorControls;
 import com.ludwici.anchorui.client.gui.editor.InspectorSections;
 import com.ludwici.anchorui.client.gui.editor.EditorDiagnostics;
+import com.ludwici.anchorui.client.gui.editor.AnchorInspectorRows;
 import com.ludwici.anchorui.client.LoreLoader;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorCheckbox;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorButton;
@@ -845,6 +847,16 @@ public final class AnchorHudEditorScreen extends Screen {
                 appendLine(lines, "Magnet: 6 px | hold Alt to bypass", 0xFF96AEBE);
                 appendEditableLine(lines, "user offset: " + active.offset().x() + ", " + active.offset().y(), AnchorHudManager.EditableProperty.OFFSET, active);
                 appendEditableLine(lines, "visible: " + active.visible(), AnchorHudManager.EditableProperty.VISIBILITY, active);
+            }
+            List<PositionElement.Constraint> anchors = manager.getAnchorConstraints(active.id());
+            if (!anchors.isEmpty()) {
+                appendSection(lines, "anchors", "ANCHORS (" + anchors.size() + ")");
+                if (inspectorSections.expanded("anchors")) {
+                    appendLine(lines, AnchorInspectorRows.dimensions(anchors), 0xFF96AEBE);
+                    for (String line : AnchorInspectorRows.describe(anchors)) {
+                        appendLine(lines, line, 0xFFE5EEF5);
+                    }
+                }
             }
             List<LayoutInspectorControls.Control> layoutControls = manager.getLayoutControls(active.id());
             if (!layoutControls.isEmpty()) {

@@ -50,7 +50,7 @@ public final class ClientEvents {
 
 Для примера также потребуются импорты `java.util.concurrent.atomic.AtomicInteger`, `com.ludwici.anchorui.api.widget.AnchorWidgetRegistry` и стандартных классов NeoForge и Minecraft.
 
-Типизация распространяется и на вложенные объекты: можно определить вложенный record, например `AnimationConfig`, создать для него свой `Codec<AnimationConfig>` и включить его через `AnimationConfig.CODEC.fieldOf("animation")` в основной `RecordCodecBuilder`.
+Типизация распространяется и на вложенные объекты: можно определить вложенный record для собственных параметров виджета и включить его `Codec` в основной `RecordCodecBuilder`. Для системных анимаций используется встроенный массив `animations`, он не требует повторной регистрации в `Codec` конкретного виджета.
 
 **Совместимость:** старый `AnchorWidgetRegistry.register(type, WidgetFactory)` остаётся доступным. В нём сторонний код может самостоятельно читать `element.settings` как `JsonObject`. Для новых виджетов рекомендуется перегрузка с `Codec<T>` и `ConfiguredWidgetFactory<T>`.
 
@@ -199,3 +199,8 @@ WidgetEditorRegistry.register(badge, List.of(
 
 Кнопка `R` сбрасывает только выбранное визуальное поле; `Reset` полностью сбрасывает overrides выбранного экземпляра.
 
+
+
+## Public Java API audit
+
+The current cross-registry overview, registration lifecycle and error contracts are documented in [JAVA_EXTENSION_API.md](JAVA_EXTENSION_API.md). The API is still under development and has no pre-release binary compatibility guarantee.

@@ -40,3 +40,6 @@ AnchorUI provides reusable, JSON-driven tools for assembling Minecraft HUDs and 
 - Do not rebuild unchanged widget instances unnecessarily or add server tick loops merely to watch UI data.
 - The integrating mod/server validates any gameplay-affecting action.
 - Keep backwards compatibility for existing authored UI where feasible and document intentional changes.
+
+
+**Stage 6 API audit (initial pass):** centralized namespaced ID validation across actions, data formatters, conditions and animation triggers; typed formatter options now omit reserved `type`; exceptions in custom Java animation triggers are logged and isolated. See [Java Extension API](JAVA_EXTENSION_API.md). Further performance, lifecycle and release checks remain open.

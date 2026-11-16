@@ -136,6 +136,7 @@ The completed functionality above does **not** imply finished visual consistency
 
 **Priority: continuous.**
 
+- [x] Audit the existing Java registries and implement first API consistency fixes: shared namespaced ID validation, typed formatter argument normalization, and fault-isolated custom animation triggers with regression tests. See [Java extension API](docs/JAVA_EXTENSION_API.md).
 - [ ] Consolidate and document stable APIs for widgets, templates, actions, layout factories, data sources, formatters, conditions and resource reload.
 - [ ] Explore dirty/epoch-based binding invalidation for expensive providers; retain existing live bindings and event-published providers.
 - [ ] Investigate partial layout recalculation for large screens and keyed lists; instance retention is already implemented.

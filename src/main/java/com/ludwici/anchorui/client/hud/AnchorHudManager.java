@@ -836,7 +836,7 @@ public final class AnchorHudManager {
     public boolean resetPreviewAppearance(String id, AppearanceInspectorControls.Control control) {
         if (control.field().path().startsWith("animations.")) {
             try {
-                return setPreviewAnimations(id, AnimationInspectorControls.reset(getAnimations(id), control));
+                return setPreviewAnimations(id, AnimationInspectorControls.reset(getAnimations(id), control, getDefaultAnimations(id)));
             } catch (RuntimeException exception) {
                 lastSaveError = exception.getMessage();
                 return false;

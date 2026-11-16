@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.ludwici.anchorui.AnchorUI;
 import com.ludwici.anchorui.api.animation.UiAnimationSpec;
 import com.ludwici.anchorui.api.animation.UiAnimationTimeline;
 import com.ludwici.anchorui.api.animation.UiAnimationTriggerRegistry;
@@ -25,6 +26,7 @@ public final class WidgetAnimation {
     private final UiAnimationTimeline timeline;
     private final Map<String, BoundData> watches;
     private final Set<ResourceLocation> customTriggerIds;
+    private final Set<ResourceLocation> warnedCustomTriggers = new HashSet<>();
     private final WidgetContext context;
 
     private WidgetAnimation(UiAnimationTimeline timeline, Map<String, BoundData> watches, Set<ResourceLocation> customTriggerIds, WidgetContext context) {
@@ -70,7 +72,20 @@ public final class WidgetAnimation {
         Map<ResourceLocation, Long> revisions = new HashMap<>();
         if (visible) {
             for (ResourceLocation id : customTriggerIds) {
-                UiAnimationTriggerRegistry.sample(id, context).ifPresent(revision -> revisions.put(id, revision));
+                if (!UiAnimationTriggerRegistry.contains(id)) {
+                    if (warnedCustomTriggers.add(id)) {
+                        AnchorUI.LOGGER.warn("Unknown AnchorUI animation trigger '{}'; register it in Java before opening the UI", id);
+                    }
+                    continue;
+                }
+                try {
+                    UiAnimationTriggerRegistry.sample(id, context).ifPresent(revision -> revisions.put(id, revision));
+                    warnedCustomTriggers.remove(id);
+                } catch (RuntimeException exception) {
+                    if (warnedCustomTriggers.add(id)) {
+                        AnchorUI.LOGGER.error("AnchorUI animation trigger '{}' failed during evaluation; retaining the previous animation state", id, exception);
+                    }
+                }
             }
         }
         timeline.update(visible, values, revisions, now);

@@ -5,6 +5,7 @@ import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.layout.WidgetContainers;
 import com.ludwici.anchorui.api.style.ElementAnchor;
 import com.ludwici.anchorui.client.hud.AnchorHudManager;
+import com.ludwici.anchorui.client.LoreLoader;
 import com.ludwici.anchorui.client.hud.HudInspectorProperties;
 import com.ludwici.anchorui.client.hud.HudLayoutOffsets;
 import com.google.gson.JsonObject;
@@ -716,7 +717,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         List<InspectorLine> lines = new ArrayList<>();
         inspectorSections.clearHeaders();
         animationActions.clear();
-        EditorDiagnostics.Summary diagnostics = EditorDiagnostics.summarize(target.getLayoutError(), target.getLayoutWarnings());
+        EditorDiagnostics.Summary diagnostics = EditorDiagnostics.summarize(target.getLayoutError(), target.getLayoutWarnings(), LoreLoader.INSTANCE.getResourceIssues().stream().filter(issue -> issue.appliesToScreen(target.editorResourceId())).toList());
         if (!diagnostics.empty()) {
             appendSection(lines, "diagnostics", diagnostics.title());
             if (inspectorSections.expanded("diagnostics")) {
@@ -724,7 +725,7 @@ public final class AnchorScreenEditorScreen extends Screen {
                     appendInspectorLine(lines, entry.severity().name() + ": " + entry.message(), entry.severity() == EditorDiagnostics.Severity.ERROR ? 0xFFFF968C : 0xFFFFC778, null, false);
                 }
                 if (diagnostics.omitted() > 0) {
-                    appendInspectorLine(lines, "... " + diagnostics.omitted() + " more warnings (see latest.log)", 0xFF96AEBE, null, false);
+                    appendInspectorLine(lines, "... " + diagnostics.omitted() + " more issues (see latest.log)", 0xFF96AEBE, null, false);
                 }
             }
         }

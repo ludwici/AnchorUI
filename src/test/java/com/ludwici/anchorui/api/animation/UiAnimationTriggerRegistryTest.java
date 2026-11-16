@@ -20,7 +20,7 @@ public class UiAnimationTriggerRegistryTest {
         assertEquals(0L, UiAnimationTriggerRegistry.sample(id, null).orElseThrow());
         revision.incrementAndGet();
         assertEquals(1L, UiAnimationTriggerRegistry.sample(id, null).orElseThrow());
-        assertThrows(IllegalArgumentException.class, () -> UiAnimationTriggerRegistry.register(id, context -> 0L));
+        assertThrows(IllegalStateException.class, () -> UiAnimationTriggerRegistry.register(id, context -> 0L));
     }
 
     @Test

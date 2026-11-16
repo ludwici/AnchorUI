@@ -25,7 +25,7 @@ public final class EditorDiagnostics {
         }
 
         public String title() {
-            return "DIAGNOSTICS (" + errors + " errors, " + warnings + " warnings)";
+            return "DIAGNOSTICS (" + errors + (errors == 1 ? " error, " : " errors, ") + warnings + (warnings == 1 ? " warning)" : " warnings)");
         }
     }
 

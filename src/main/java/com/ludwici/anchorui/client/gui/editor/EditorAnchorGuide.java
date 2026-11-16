@@ -28,7 +28,7 @@ public final class EditorAnchorGuide {
     public static Connection connect(AnchorLayout.Bounds widget, AnchorLayout.Bounds target, PositionElement.Constraint anchor) {
         Point from = point(widget, anchor.point());
         Point to = point(target, anchor.anchor());
-        return new Connection(from, to, new Point(Math.addExact(to.x(), anchor.x()), Math.addExact(to.y(), anchor.y())), anchor.x(), anchor.y());
+        return new Connection(from, to, new Point(bounded((long) to.x() + anchor.x()), bounded((long) to.y() + anchor.y())), anchor.x(), anchor.y());
     }
 
     public static void draw(GuiGraphics graphics, Font font, Connection guide, int screenWidth, int screenHeight) {
@@ -49,8 +49,8 @@ public final class EditorAnchorGuide {
             mark(graphics, guide.widget(), WIDGET_COLOR, screenWidth, screenHeight);
             String offset = "X " + signed(guide.offsetX()) + "  Y " + signed(guide.offsetY());
             int labelWidth = font.width(offset) + 6;
-            int x = Math.max(1, Math.min((guide.target().x() + guide.widget().x()) / 2 + 6, screenWidth - labelWidth - 1));
-            int y = Math.max(1, Math.min((guide.target().y() + guide.widget().y()) / 2 - 13, screenHeight - 12));
+            int x = bounded(Math.max(1L, Math.min(((long) guide.target().x() + guide.widget().x()) / 2 + 6, (long) screenWidth - labelWidth - 1)));
+            int y = bounded(Math.max(1L, Math.min(((long) guide.target().y() + guide.widget().y()) / 2 - 13, (long) screenHeight - 12)));
             graphics.fill(x - 1, y - 1, x + labelWidth + 1, y + 11, 0xE01A2836);
             graphics.drawString(font, offset, x + 2, y + 1, 0xFFE4F6F7, false);
         } finally {
@@ -60,6 +60,10 @@ public final class EditorAnchorGuide {
 
     private static String signed(int value) {
         return value > 0 ? "+" + value : Integer.toString(value);
+    }
+
+    private static int bounded(long value) {
+        return (int) Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, value));
     }
 
     private static void mark(GuiGraphics graphics, Point point, int color, int screenWidth, int screenHeight) {
@@ -73,17 +77,18 @@ public final class EditorAnchorGuide {
     }
 
     private static void dottedLine(GuiGraphics graphics, Point from, Point to, int screenWidth, int screenHeight, int color) {
-        int dx = to.x() - from.x();
-        int dy = to.y() - from.y();
-        int steps = Math.max(Math.abs(dx), Math.abs(dy));
-        if (steps == 0) {
+        long dx = (long) to.x() - from.x();
+        long dy = (long) to.y() - from.y();
+        long distance = Math.max(Math.abs(dx), Math.abs(dy));
+        if (distance == 0) {
             return;
         }
-        for (int step = 0; step <= steps; step += 3) {
-            int x = from.x() + (int) ((long) dx * step / steps);
-            int y = from.y() + (int) ((long) dy * step / steps);
+        int samples = (int) Math.max(1L, Math.min(512L, distance / 3L));
+        for (int step = 0; step <= samples; step++) {
+            long x = from.x() + dx * step / samples;
+            long y = from.y() + dy * step / samples;
             if (x >= 0 && y >= 0 && x < screenWidth && y < screenHeight) {
-                graphics.fill(x, y, x + 1, y + 1, color);
+                graphics.fill((int) x, (int) y, (int) x + 1, (int) y + 1, color);
             }
         }
     }

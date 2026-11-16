@@ -616,7 +616,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     public boolean editorResetAppearance(String id, AppearanceInspectorControls.Control control) {
         if (control.field().path().startsWith("animations.")) {
             try {
-                return editorSetAnimations(id, AnimationInspectorControls.reset(editorAnimations(id), control));
+                return editorSetAnimations(id, AnimationInspectorControls.reset(editorAnimations(id), control, editorDefaultAnimations(id)));
             } catch (RuntimeException exception) {
                 screenSaveError = exception.getMessage();
                 return false;

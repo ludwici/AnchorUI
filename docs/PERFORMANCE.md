@@ -25,7 +25,7 @@ The renderer **does not cache actual dynamic values indefinitely**. Text, progre
 - The screen/HUD editor applies layout changes when the user moves an element or updates its anchors or parent.
 - Changes to the number of player-heart rows or the number of visible effect-icon rows update the vanilla positional references.
 - The list inspector is transient and does not modify the in-game HUD update frequency.
-- Screen relayout still resolves anchors, transforms, clipping and scrolling with the existing full-layout path. Only unchanged independent built-in container arrangements are reused. The cache is private to each screen instance and prunes removed container IDs; no global cache or additional tick handler is introduced.
+- Screen relayout reuses unchanged built-in container arrangements **and** resolved anchor bounds. Each anchor entry is keyed by the frame definition and its resolved target bounds, so editing or moving a parent invalidates dependent widgets without invalidating unrelated frames. The complete anchor graph is still traversed to detect bad references and cycles. Transforms, clipping and scrolling retain their existing full-resolution path. Both caches are private to the screen instance, prune removed IDs, and need no global cache or tick handler.
 
 ## Profiling in the Minecraft client
 
@@ -43,7 +43,7 @@ Record per-frame CPU usage and allocation rate with a client profiler (for examp
 
 - Further profiling of revision-aware providers with large, frequently updated objects and multi-widget usage. The implemented `RevisionedProvider` API is opt-in and caches **per binding**, not globally; expensive providers still need cheap revision checks and explicit invalidation from their owning mod.
 - Dirty-rectangle / invalidation-aware screen rendering for very large mostly-static UI trees.
-- Deeper dirty-subtree anchor and clipping resolution during editor dragging when many unrelated widgets exist; the built-in container arrangement cache is already implemented.
+- Deeper incremental transform, clipping and scroll-limit resolution during editor dragging when many unrelated widgets exist. Container arrangements and anchor bounds are already cached, but dependency validation still traverses the frame graph.
 - A client-side integration test fixture for scaled hit targets, nested clipping, resource reloads and UI render ordering.
 
 The existing runtime contains no additional server tick loop for these optimizations.

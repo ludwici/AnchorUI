@@ -218,6 +218,10 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         return editingScreenOffsets != null;
     }
 
+    public boolean hasUnsavedScreenChanges() {
+        return editingScreenOffsets != null && !editingScreenOffsets.sameAs(savedScreenOffsets);
+    }
+
     public String editorNamespace() {
         return documentId == null ? loreEntity.namespace : documentId.getNamespace();
     }

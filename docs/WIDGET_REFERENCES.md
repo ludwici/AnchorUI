@@ -19,7 +19,7 @@ Anchor UI identifies a **widget factory** by `type` and an individual **widget i
 - `"id": "othermod:header"` or `"relativeTo": "othermod:header"` keeps that namespace.
 - `"relativeTo": "screen"` references the current screen and is always available.
 
-All IDs are validated and duplicate fully qualified IDs in one screen are rejected. The anchor solver can resolve references in any element order, and still detects cycles. An anchor targeting an absent widget falls back to the screen with a warning.
+All IDs are validated and duplicate fully qualified IDs in one screen are rejected. The anchor solver can resolve references in any element order, and still detects cycles. An anchor targeting an absent widget falls back to the screen with a warning. A widget can also declare a `position.anchors` array with multiple points and different `relativeTo` targets; each target is validated and tracked independently. Opposite points derive dynamic dimensions, and conflicting constraints are rejected. See [Multiple anchors](MULTI_ANCHORS.md).
 
 ## Export a reusable widget from another mod
 
@@ -79,7 +79,7 @@ The resulting screen contains the imported `moda:header` and the local `modb:des
 
 ## Reuse a template with customized settings
 
-A `ref` entry instantiates the exported definition and deep-merges an overlay of settings:
+A `ref` entry instantiates the exported definition and deep-merges an overlay of settings. The `position` value is replaced as a whole when either version uses `position.anchors`, avoiding accidental mixing of legacy single-anchor coordinates with multiple constraints:
 
 ```json
 {

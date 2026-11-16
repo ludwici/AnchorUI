@@ -45,8 +45,7 @@ public final class DataValueRegistry {
 
         public void set(JsonElement updated) {
             JsonElement replacement = copy(updated);
-            current.updateAndGet(previous -> previous.value().equals(replacement)
-                    ? previous : new Snapshot(replacement, previous.revision() + 1L));
+            current.updateAndGet(previous -> previous.value().equals(replacement) ? previous : new Snapshot(replacement, previous.revision() + 1L));
         }
 
         @Override

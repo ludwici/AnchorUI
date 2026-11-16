@@ -31,7 +31,7 @@ While **Parent** is active, click a container in the Widgets list to **move the 
 
 1. Click any outlined widget to select it. Drag it to reposition the widget. A 6 GUI-pixel magnet helps align it with other visible widgets along X/Y; hold **Alt** to bypass snapping.
 2. Use arrow keys for one-pixel nudges (10 pixels with **Shift**).
-3. **Point ▼** and **Anchor ▼** open a dropdown with all nine anchor locations. Pick a value directly instead of cycling. The menu opens above the toolbar when there is insufficient space below.
+3. **Point ▼** and **Anchor ▼** open a dropdown with all nine anchor locations. Pick a value directly instead of cycling. The menu opens above the toolbar when there is insufficient space below. For `position.anchors` arrays, these controls edit the **first** anchor only; secondary constraints are preserved and all anchors move together during dragging/nudging. Further anchor points are currently authored in JSON. See [Multiple anchors](MULTI_ANCHORS.md).
 4. Use **Parent** and click a panel/container or select it in the Widgets list. The selected widget is immediately made its child. For a Grid parent, Grid automatically assigns its cell using the parent's layout settings; child position fields are not required. Click empty world to detach the widget to the screen root. Escape cancels the picker; invalid/circular references are rejected.
 5. **Hide/Show** toggles local widget visibility. **Reset** restores the selected widget's defaults; **Reset all** clears all overrides for the open screen.
 6. **Save**, **F8** or **Ctrl+S** saves and returns to the original screen. **Cancel** or **Esc** discards edits and returns to the screen.

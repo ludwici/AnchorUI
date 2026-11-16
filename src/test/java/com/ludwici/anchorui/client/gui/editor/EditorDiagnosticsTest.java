@@ -1,5 +1,7 @@
 package com.ludwici.anchorui.client.gui.editor;
 
+import com.ludwici.anchorui.client.LoreResourceCompiler;
+import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -46,4 +48,25 @@ public class EditorDiagnosticsTest {
         assertEquals("Widget 22", summary.entries().getLast().message());
         assertEquals("DIAGNOSTICS (1 error, 40 warnings)", summary.title());
     }
+    @Test
+    public void includesOnlyRelevantResourceErrorsAndPreservesSeverity() {
+        LoreResourceCompiler.Issue screen = new LoreResourceCompiler.Issue(LoreResourceCompiler.Severity.ERROR, ResourceLocation.parse("othermod:screens/failed"), "Invalid entities", null);
+        LoreResourceCompiler.Issue hud = new LoreResourceCompiler.Issue(LoreResourceCompiler.Severity.ERROR, ResourceLocation.parse("othermod:hud/failed"), "Invalid HUD state", null);
+        LoreResourceCompiler.Issue template = new LoreResourceCompiler.Issue(LoreResourceCompiler.Severity.WARNING, ResourceLocation.parse("othermod:templates/shared"), "Overrides widgets definition", null);
+        assertTrue(screen.appliesToScreen(ResourceLocation.parse("othermod:screens/failed")));
+        assertFalse(screen.appliesToScreen(ResourceLocation.parse("othermod:screens/different")));
+        assertFalse(screen.appliesToHud());
+        assertTrue(hud.appliesToHud());
+        assertTrue(template.appliesToHud());
+        assertTrue(template.appliesToScreen(ResourceLocation.parse("othermod:screens/anything")));
+
+        EditorDiagnostics.Summary summary = EditorDiagnostics.summarize("Broken anchor", List.of("Missing widget"), List.of(screen, hud, template).stream().filter(issue -> issue.appliesToScreen(ResourceLocation.parse("othermod:screens/failed"))).toList());
+        assertEquals(2, summary.errors());
+        assertEquals(2, summary.warnings());
+        assertEquals(4, summary.entries().size());
+        assertEquals(EditorDiagnostics.Severity.ERROR, summary.entries().get(1).severity());
+        assertTrue(summary.entries().get(1).message().contains("othermod:screens/failed"));
+        assertTrue(summary.entries().get(3).message().contains("othermod:templates/shared"));
+    }
+
 }

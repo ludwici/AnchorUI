@@ -4,6 +4,7 @@ import com.ludwici.anchorui.KeyRegistry;
 import com.ludwici.anchorui.api.layout.AnchorLayout;
 import com.ludwici.anchorui.api.layout.WidgetContainers;
 import com.ludwici.anchorui.api.style.ElementAnchor;
+import com.ludwici.anchorui.api.style.PositionElement;
 import com.ludwici.anchorui.client.hud.AnchorHudManager;
 import com.ludwici.anchorui.client.LoreLoader;
 import com.ludwici.anchorui.client.hud.HudInspectorProperties;
@@ -20,6 +21,7 @@ import com.ludwici.anchorui.api.widget.WidgetEditorRegistry;
 import com.ludwici.anchorui.client.gui.editor.AppearanceInspectorControls;
 import com.ludwici.anchorui.client.gui.editor.InspectorSections;
 import com.ludwici.anchorui.client.gui.editor.EditorDiagnostics;
+import com.ludwici.anchorui.client.gui.editor.AnchorInspectorRows;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorCheckbox;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorButton;
 import com.ludwici.anchorui.client.gui.editor.EditorColorPicker;
@@ -755,6 +757,16 @@ public final class AnchorScreenEditorScreen extends Screen {
             appendInspectorLine(lines, "size: " + bounds.width() + " x " + bounds.height(), 0xFFE5EEF5, null, false);
             appendProperty(lines, "user offset: " + selected.offset().x() + ", " + selected.offset().y(), AnchorHudManager.EditableProperty.OFFSET);
             appendProperty(lines, "visible: " + selected.visible(), AnchorHudManager.EditableProperty.VISIBILITY);
+        }
+        List<PositionElement.Constraint> anchors = target.editorAnchorConstraints(selected.id());
+        if (!anchors.isEmpty()) {
+            appendSection(lines, "anchors", "ANCHORS (" + anchors.size() + ")");
+            if (inspectorSections.expanded("anchors")) {
+                appendInspectorLine(lines, AnchorInspectorRows.dimensions(anchors), 0xFF96AEBE, null, false);
+                for (String line : AnchorInspectorRows.describe(anchors)) {
+                    appendInspectorLine(lines, line, 0xFFE5EEF5, null, false);
+                }
+            }
         }
         List<LayoutInspectorControls.Control> layoutControls = target.editorLayoutControls(selected.id());
         if (!layoutControls.isEmpty()) {

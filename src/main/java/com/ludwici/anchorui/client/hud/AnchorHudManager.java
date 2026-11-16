@@ -86,10 +86,8 @@ public final class AnchorHudManager {
         private PositionElement effectivePosition(HudLayoutOffsets offsets) {
             HudLayoutOffsets.Offset delta = offsets.get(id);
             HudLayoutOffsets.AnchorOverride anchor = offsets.anchor(id);
-            ElementAnchor point = anchor == null ? position.point : anchor.point();
-            ElementAnchor targetPoint = anchor == null ? position.anchor : anchor.anchor();
-            String relativeTo = anchor == null ? position.relativeTo : anchor.relativeTo();
-            return new PositionElement(point, targetPoint, relativeTo, position.x + delta.x(), position.y + delta.y());
+            return (anchor == null ? position
+                    : position.withPrimary(anchor.point(), anchor.anchor(), anchor.relativeTo())).translated(delta.x(), delta.y());
         }
 
         private AnchorLayout.Frame frame(HudLayoutOffsets offsets) {
@@ -1167,8 +1165,7 @@ public final class AnchorHudManager {
                 }
                 widget.visible = widget.visible && !style.hidden;
                 PositionElement position = style.position;
-                String relativeTo = WidgetIds.reference(position.relativeTo, entity.namespace);
-                PositionElement anchored = new PositionElement(position.point, position.anchor, relativeTo, position.x, position.y);
+                PositionElement anchored = position.withReferences(relativeTo -> WidgetIds.reference(relativeTo, entity.namespace));
                 BoundCondition visibleWhen = BoundCondition.parse(element.settings, "visibleWhen", true);
                 BoundCondition enabledWhen = BoundCondition.parse(element.settings, "enabledWhen", true, false);
                 registry.attach(definition.id(), widget);

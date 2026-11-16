@@ -865,7 +865,6 @@ public final class AnchorScreenEditorScreen extends Screen {
         if (!anchors.isEmpty()) {
             appendSection(lines, "anchors", "ANCHORS (" + anchors.size() + ")");
             if (inspectorSections.expanded("anchors")) {
-                appendInspectorLine(lines, AnchorInspectorRows.dimensions(anchors), 0xFF96AEBE, null, false);
                 appendAnchorAction(lines, "[+] Add anchor", -1, "add");
                 appendAnchorAction(lines, "Reset anchors to resource defaults", -1, "reset");
                 for (int index = 0; index < anchors.size(); index++) {

@@ -31,6 +31,8 @@ import com.ludwici.anchorui.api.widget.WidgetInstanceRegistry;
 import com.ludwici.anchorui.client.LoreLoader;
 import com.ludwici.anchorui.client.gui.AnchoredWidget;
 import com.ludwici.anchorui.client.gui.WidgetAnimation;
+import com.ludwici.anchorui.client.gui.WidgetSizeTransition;
+import com.ludwici.anchorui.client.gui.ProgressWidget;
 import com.ludwici.anchorui.client.gui.NativeContainerScrollPanel;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -118,6 +120,7 @@ public final class AnchorHudManager {
     private Set<String> clippingContainers = Set.of();
     private final Set<String> renderFailures = new HashSet<>();
     private final Map<String, WidgetAnimation> widgetAnimations = new HashMap<>();
+    private final Map<String, WidgetSizeTransition> widgetSizeTransitions = new HashMap<>();
     private HudLayoutOffsets savedOffsets = new HudLayoutOffsets();
     private HudLayoutOffsets editingOffsets;
     private boolean storageLoaded;
@@ -1013,13 +1016,24 @@ public final class AnchorHudManager {
             if (clip != null && (clip.width() == 0 || clip.height() == 0)) {
                 continue;
             }
+            WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
+            WidgetSizeTransition sizeTransition = editorPreview ? null : widgetSizeTransitions.get(placed.id());
+            AnchorLayout.Bounds sizeClip = null;
+            if (sizeTransition != null && layoutBounds.containsKey(placed.id())) {
+                sizeClip = sizeTransition.clippedBounds(layoutBounds.get(placed.id()), transform, frame, now);
+                if (sizeClip.width() == 0 || sizeClip.height() == 0) {
+                    continue;
+                }
+            }
             graphics.pose().pushPose();
             if (clip != null) {
                 graphics.enableScissor(clip.x(), clip.y(), clip.x() + clip.width(), clip.y() + clip.height());
             }
+            if (sizeClip != null) {
+                graphics.enableScissor(sizeClip.x(), sizeClip.y(), sizeClip.x() + sizeClip.width(), sizeClip.y() + sizeClip.height());
+            }
             boolean originalVisible = widget.visible;
             try {
-                WidgetTransforms.Transform transform = transforms.getOrDefault(placed.id(), WidgetTransforms.IDENTITY);
                 graphics.pose().translate(transform.translateX(), transform.translateY(), 0);
                 graphics.pose().scale((float) transform.scale(), (float) transform.scale(), 1.0F);
                 WidgetAnimation.applyPose(graphics, widget, frame);
@@ -1043,6 +1057,9 @@ public final class AnchorHudManager {
                 if (frame.opacity() < 1.0) {
                     graphics.flush();
                     graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+                }
+                if (sizeClip != null) {
+                    graphics.disableScissor();
                 }
                 if (clip != null) {
                     graphics.disableScissor();
@@ -1071,6 +1088,7 @@ public final class AnchorHudManager {
         draggedScrollPanel = null;
         renderFailures.clear();
         widgetAnimations.clear();
+        widgetSizeTransitions.clear();
 
         List<Description> declared = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
@@ -1137,6 +1155,16 @@ public final class AnchorHudManager {
                 registry.attach(definition.id(), widget);
                 boolean panel = widget instanceof com.ludwici.anchorui.client.gui.PanelWidget;
                 created.add(new PlacedWidget(definition.id(), widget, style, anchored, widget.visible, widget.active, context, visibleWhen, enabledWhen, entity.widgetParents.get(definition.id()), panel && (WidgetContainers.clipChildren(element.settings) || style.scroll.enabled()), panel ? WidgetContainers.group(element.settings) : null, panel ? style.autoSize : ContainerLayout.AutoSize.NONE, panel ? style.scroll : ContainerScroll.Config.NONE, widget.getWidth(), widget.getHeight()));
+                if (!(widget instanceof ProgressWidget)) {
+                    try {
+                        WidgetSizeTransition sizeTransition = WidgetSizeTransition.parse(style.resolvedSettings, context, false);
+                        if (sizeTransition != null) {
+                            widgetSizeTransitions.put(definition.id(), sizeTransition);
+                        }
+                    } catch (IllegalArgumentException exception) {
+                        warnings.add("Invalid sizeTransition for HUD widget '" + definition.id() + "': " + exception.getMessage());
+                    }
+                }
                 try {
                     WidgetAnimation animation = WidgetAnimation.parse(style.resolvedSettings, entity.animations, context);
                     if (animation != null) {
@@ -1253,5 +1281,6 @@ public final class AnchorHudManager {
         registry = new WidgetInstanceRegistry();
         renderFailures.clear();
         widgetAnimations.clear();
+        widgetSizeTransitions.clear();
     }
 }

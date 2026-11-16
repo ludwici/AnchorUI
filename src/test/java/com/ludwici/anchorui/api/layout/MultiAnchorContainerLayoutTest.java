@@ -73,7 +73,7 @@ public class MultiAnchorContainerLayoutTest {
                 {"point":"TOPLEFT","anchor":"TOPLEFT","relativeTo":"demo:grid"}
                 """);
         var result = ContainerLayout.resolve(500, 300, List.of(grid, child, other), Map.of(grid.id(), new PaddingElement()), Map.of(), Map.of(child.id(), grid.id(), other.id(), grid.id()), Map.of(grid.id(), ContainerAutoLayout.parse(json("""
-                {"layout":{"type":"grid","columns":2,"columnGap":10}}
+                {"layout":{"type":"grid","columns":2,"columnGap":10,"justifyItems":"stretch"}}
                 """))), Map.of(), Set.of(), Set.of(), warning -> {});
         assertEquals(new AnchorLayout.Bounds(18, 26, 284, 18), result.bounds().get(child.id()));
         assertEquals(new AnchorLayout.Bounds(10, 20, 145, 18), result.bounds().get(other.id()));

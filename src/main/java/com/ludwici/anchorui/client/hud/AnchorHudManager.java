@@ -924,6 +924,15 @@ public final class AnchorHudManager {
         return List.copyOf(entries);
     }
 
+    public List<PositionElement.Constraint> getAnchorConstraints(String id) {
+        for (PlacedWidget placed : widgets) {
+            if (placed.id().equals(id)) {
+                return placed.effectivePosition(currentOffsets()).anchors;
+            }
+        }
+        return List.of();
+    }
+
     public List<HudHandle> getHandles() {
         List<HudHandle> result = new ArrayList<>();
         HudLayoutOffsets offsets = currentOffsets();

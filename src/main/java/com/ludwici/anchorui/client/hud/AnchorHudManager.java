@@ -85,9 +85,7 @@ public final class AnchorHudManager {
                                 ContainerScroll.Config scroll, int preferredWidth, int preferredHeight) {
         private PositionElement effectivePosition(HudLayoutOffsets offsets) {
             HudLayoutOffsets.Offset delta = offsets.get(id);
-            HudLayoutOffsets.AnchorOverride anchor = offsets.anchor(id);
-            return (anchor == null ? position
-                    : position.withPrimary(anchor.point(), anchor.anchor(), anchor.relativeTo())).translated(delta.x(), delta.y());
+            return offsets.effectivePosition(id, position).translated(delta.x(), delta.y());
         }
 
         private AnchorLayout.Frame frame(HudLayoutOffsets offsets) {
@@ -922,6 +920,30 @@ public final class AnchorHudManager {
             entries.add(new WidgetListPanel.Entry(placed.id(), placed.widget().visible, false, type, currentOffsets().containerParent(placed.id(), placed.containerParent())));
         }
         return List.copyOf(entries);
+    }
+
+    public boolean setPreviewAnchorConstraints(String id, List<PositionElement.Constraint> anchors) {
+        if (editingOffsets == null || !isCustomWidget(id)) {
+            return false;
+        }
+        try {
+            HudLayoutOffsets candidate = editingOffsets.copy();
+            HudLayoutOffsets.Offset offset = candidate.get(id);
+            candidate.setAnchorConstraints(id, new PositionElement(anchors).translated(-offset.x(), -offset.y()).anchors);
+            return usePreviewLayout(candidate);
+        } catch (RuntimeException exception) {
+            previewLayoutFailure = exception.getMessage();
+            return false;
+        }
+    }
+
+    public boolean resetPreviewAnchorConstraints(String id) {
+        if (editingOffsets == null || !isCustomWidget(id)) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingOffsets.copy();
+        candidate.clearAnchor(id);
+        return usePreviewLayout(candidate);
     }
 
     public List<PositionElement.Constraint> getAnchorConstraints(String id) {

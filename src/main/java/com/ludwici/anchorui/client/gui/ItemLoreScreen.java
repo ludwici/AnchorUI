@@ -86,9 +86,8 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         private AnchorLayout.Frame frame(HudLayoutOffsets offsets) {
             HudLayoutOffsets.Offset delta = offsets.get(id);
             HudLayoutOffsets.AnchorOverride anchor = offsets.anchor(id);
-            PositionElement effective = anchor == null
-                    ? new PositionElement(position.point, position.anchor, position.relativeTo, position.x + delta.x(), position.y + delta.y())
-                    : new PositionElement(anchor.point(), anchor.anchor(), anchor.relativeTo(), position.x + delta.x(), position.y + delta.y());
+            PositionElement effective = (anchor == null ? position
+                    : position.withPrimary(anchor.point(), anchor.anchor(), anchor.relativeTo())).translated(delta.x(), delta.y());
             return new AnchorLayout.Frame(id, effective, preferredWidth, preferredHeight);
         }
     }
@@ -1097,7 +1096,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                         selfDispatchingClicks.add(definition.id());
                     }
                     PositionElement p = style.position;
-                    PositionElement position = new PositionElement(p.point, p.anchor, WidgetIds.reference(p.relativeTo, loreEntity.namespace), p.x, p.y);
+                    PositionElement position = p.withReferences(relativeTo -> WidgetIds.reference(relativeTo, loreEntity.namespace));
                     created.add(new PlacedWidget(definition.id(), retainedWidget.widget(), style, position, retainedWidget.context(), retainedWidget.visibleWhen(), retainedWidget.enabledWhen(), retainedWidget.baseVisible(), retainedWidget.baseActive(), resolvedWidgetParents.getOrDefault(definition.id(), retainedWidget.containerParent()), retainedWidget.clipChildren(), retainedWidget.group(), retainedWidget.autoSize(), retainedWidget.scroll(), retainedWidget.preferredWidth(), retainedWidget.preferredHeight()));
                 } else {
                     WidgetContext widgetContext = rowContext == null ? context : context.withItemContext(rowContext);
@@ -1231,8 +1230,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         }
         widget.visible = widget.visible && !settings.hidden;
         PositionElement p = settings.position;
-        String relativeTo = WidgetIds.reference(p.relativeTo, loreEntity.namespace);
-        PositionElement position = new PositionElement(p.point, p.anchor, relativeTo, p.x, p.y);
+        PositionElement position = p.withReferences(relativeTo -> WidgetIds.reference(relativeTo, loreEntity.namespace));
         BoundCondition visibleWhen = BoundCondition.parse(element.settings, "visibleWhen", true);
         BoundCondition enabledWhen = BoundCondition.parse(element.settings, "enabledWhen", true, false);
         UiEventBindings events = UiEventBindings.compile(context, element.settings, "onClick", "onHoverEnter", "onHoverLeave", "onChange");

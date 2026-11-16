@@ -50,7 +50,10 @@ public class LoreStyle {
         for (var entry : overrides.entrySet()) {
             JsonElement original = result.get(entry.getKey());
             JsonElement value = entry.getValue();
-            if (original != null && original.isJsonObject() && value.isJsonObject()) {
+            if ("position".equals(entry.getKey()) && original != null && original.isJsonObject() && value.isJsonObject()
+                    && (original.getAsJsonObject().has("anchors") || value.getAsJsonObject().has("anchors"))) {
+                result.add(entry.getKey(), value.deepCopy());
+            } else if (original != null && original.isJsonObject() && value.isJsonObject()) {
                 result.add(entry.getKey(), merge(original.getAsJsonObject(), value.getAsJsonObject()));
             } else {
                 result.add(entry.getKey(), value.deepCopy());

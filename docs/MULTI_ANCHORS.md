@@ -97,20 +97,22 @@ Constraints can use **different target widgets**.
 }
 ```
 
-Here the middle panel automatically fills the gap between the two cards, leaving 8 pixels on each side. Its width changes as either card moves. Both target cards must have a compatible vertical center, since the `LEFT` and `RIGHT` points also constrain the panel's Y coordinate.
+Here the middle panel automatically fills the gap between the two cards, leaving 8 pixels on each side. Its width changes as either card moves. **The target cards may have different vertical positions**: the first `LEFT` attachment determines the bar's vertical center, while the `RIGHT` attachment supplies its second horizontal edge. Moving the right card vertically no longer blocks the layout or forces the left card to follow it. To make the bar follow the right card's Y position instead, put the right attachment first. Move both anchors together using the F8 editor offset to reposition the bar without changing its width.
 
 Short target IDs resolve in the widget/document namespace. `screen` is reserved. References in any order are supported; unknown targets warn and fall back to the screen, while circular dependencies raise errors.
 
 ## Arbitrarily many anchors
 
-The array may contain any number of constraints. They must **agree geometrically**:
+The array may contain any number of constraints. Each coordinate is resolved independently using the widget points on that axis:
 
-- Two distinct horizontal point coordinates (`LEFT`, `CENTER`, `RIGHT`) determine width; two distinct vertical coordinates (`TOP`, `CENTER`, `BOTTOM`) determine height.
-- Additional constraints with the same point coordinate must resolve to the same screen coordinate.
-- Three horizontal or vertical coordinates are accepted when the middle position matches the derived center. The engine uses Minecraft-compatible integer GUI-pixel rounding.
-- Negative computed sizes, incompatible coordinates and anchor cycles raise contextual layout errors instead of silently choosing a size.
+- Two distinct horizontal points (`LEFT`, `CENTER`, `RIGHT`) can determine width; two distinct vertical points (`TOP`, `CENTER`, `BOTTOM`) can determine height. The corresponding `size` field is then ignored.
+- If several attachments provide the **same point on one axis**, the **first** attachment determines that coordinate. Another point may still contribute to the other axis. For example, the first `LEFT` attachment controls the Y center, while the later `RIGHT` attachment provides the opposite X edge, without overriding Y.
+- When both outside edges (`LEFT` and `RIGHT`, or `TOP` and `BOTTOM`) are set, they determine the corresponding size. Additional `CENTER` coordinates do not over-constrain the result; outside edges take precedence on that axis.
+- Two different points including `CENTER` can also determine the size. Negative computed sizes, out-of-range positions and circular references remain errors.
 
-For example, adding a `CENTER` constraint can verify a width already derived from `LEFT` and `RIGHT`. It does **not** override those edges.
+This is AnchorUI's deterministic, **WoW-inspired** resolution rule, not a claim that every undocumented conflict or protected-frame restriction in Blizzard's UI engine behaves identically. The JSON format is unchanged; no `axis` field or other per-constraint switch is required.
+
+To control vertical placement independently of `LEFT` + `RIGHT` width, change the first anchor's `y` offset, move the widget in F8, or add `TOP` / `BOTTOM` attachments. Those vertical endpoints may define the height without the horizontal attachments forcing their Y positions.
 
 ### Parsing and overriding positions
 

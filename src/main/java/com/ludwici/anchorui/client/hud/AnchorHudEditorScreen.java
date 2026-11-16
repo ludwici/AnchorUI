@@ -14,6 +14,7 @@ import com.ludwici.anchorui.api.widget.WidgetEditorRegistry;
 import com.ludwici.anchorui.client.gui.editor.AppearanceInspectorControls;
 import com.ludwici.anchorui.client.gui.editor.InspectorSections;
 import com.ludwici.anchorui.client.gui.editor.EditorDiagnostics;
+import com.ludwici.anchorui.client.LoreLoader;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorCheckbox;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorButton;
 import com.ludwici.anchorui.client.gui.editor.EditorColorPicker;
@@ -792,7 +793,7 @@ public final class AnchorHudEditorScreen extends Screen {
         if (!status.isEmpty()) {
             appendLine(lines, status, 0xFFFFCF64);
         }
-        EditorDiagnostics.Summary diagnostics = EditorDiagnostics.summarize(manager.getLayoutError(), manager.getLayoutWarnings());
+        EditorDiagnostics.Summary diagnostics = EditorDiagnostics.summarize(manager.getLayoutError(), manager.getLayoutWarnings(), LoreLoader.INSTANCE.getResourceIssues().stream().filter(issue -> issue.appliesToHud()).toList());
         if (!diagnostics.empty()) {
             appendSection(lines, "diagnostics", diagnostics.title());
             if (inspectorSections.expanded("diagnostics")) {
@@ -800,7 +801,7 @@ public final class AnchorHudEditorScreen extends Screen {
                     appendLine(lines, entry.severity().name() + ": " + entry.message(), entry.severity() == EditorDiagnostics.Severity.ERROR ? 0xFFFF968C : 0xFFFFC778);
                 }
                 if (diagnostics.omitted() > 0) {
-                    appendLine(lines, "... " + diagnostics.omitted() + " more warnings (see latest.log)", 0xFF96AEBE);
+                    appendLine(lines, "... " + diagnostics.omitted() + " more issues (see latest.log)", 0xFF96AEBE);
                 }
             }
         }

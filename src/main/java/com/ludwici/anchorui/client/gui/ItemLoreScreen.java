@@ -475,7 +475,12 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             return false;
         }
         HudLayoutOffsets candidate = editingScreenOffsets.copy();
-        candidate.setSettingOverride(id, control.section(), control.field(), LayoutInspectorControls.stepped(control, direction));
+        JsonElement next = LayoutInspectorControls.stepped(control, direction);
+        if (LayoutInspectorControls.sameValue(next.getAsString(), control.sourceValue())) {
+            candidate.clearSettingOverride(id, control.section(), control.field());
+        } else {
+            candidate.setSettingOverride(id, control.section(), control.field(), next);
+        }
         return useCandidate(candidate);
     }
 
@@ -485,7 +490,11 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             return false;
         }
         HudLayoutOffsets candidate = editingScreenOffsets.copy();
-        candidate.setSettingOverride(id, control.section(), control.field(), new com.google.gson.JsonPrimitive(value));
+        if (LayoutInspectorControls.sameValue(value, control.sourceValue())) {
+            candidate.clearSettingOverride(id, control.section(), control.field());
+        } else {
+            candidate.setSettingOverride(id, control.section(), control.field(), new com.google.gson.JsonPrimitive(value));
+        }
         return useCandidate(candidate);
     }
 
@@ -574,7 +583,11 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         }
         HudLayoutOffsets previous = editingScreenOffsets;
         HudLayoutOffsets candidate = previous.copy();
-        candidate.setSettingOverride(id, "appearance", control.field().path(), parsed);
+        if (AppearanceInspectorControls.sameValue(control.field(), parsed.getAsString(), control.sourceValue())) {
+            candidate.clearSettingOverride(id, "appearance", control.field().path());
+        } else {
+            candidate.setSettingOverride(id, "appearance", control.field().path(), parsed);
+        }
         editingScreenOffsets = candidate;
         buildWidgets(false);
         if (layoutError != null || widgetRegistry.widget(id).isEmpty()) {

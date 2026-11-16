@@ -68,6 +68,42 @@ public class AnimationInspectorControlsTest {
         assertTrue(UiAnimationSpec.parse(document(tracks)).tracks().getFirst().enabled());
     }
 
+    @Test
+    public void sourceValuesAreNotHighlightedAndReturningToOriginalRemovesSemanticChanges() {
+        JsonArray source = JsonParser.parseString("""
+                [{"id":"intro","preset":"fade","duration":900,"delay":150}]
+                """).getAsJsonArray();
+        var original = AnimationInspectorControls.describe(source, source);
+        assertFalse(original.stream().anyMatch(AppearanceInspectorControls.Control::modified));
+
+        JsonArray edited = AnimationInspectorControls.set(source, field(source, "animations.t0.duration"), "800");
+        var changed = AnimationInspectorControls.describe(edited, source);
+        assertTrue(changed.stream().filter(control -> control.field().path().endsWith(".duration")).findFirst().orElseThrow().modified());
+        assertFalse(AnimationInspectorControls.sameTracks(edited, source));
+
+        edited = AnimationInspectorControls.set(edited, field(edited, "animations.t0.duration"), "900");
+        assertTrue(AnimationInspectorControls.sameTracks(edited, source));
+        assertFalse(AnimationInspectorControls.describe(edited, source).stream().anyMatch(AppearanceInspectorControls.Control::modified));
+
+        edited = AnimationInspectorControls.set(edited, field(edited, "animations.t0.delay"), "200");
+        edited = AnimationInspectorControls.reset(edited, field(edited, "animations.t0.delay"), source);
+        assertEquals(150, edited.get(0).getAsJsonObject().get("delay").getAsInt());
+        assertTrue(AnimationInspectorControls.sameTracks(edited, source));
+    }
+
+    @Test
+    public void omittedAnimationDefaultsAreEquivalentToExplicitDefaultValues() {
+        JsonArray source = JsonParser.parseString("""
+                [{"id":"fade_in","preset":"fade"}]
+                """).getAsJsonArray();
+        JsonArray edited = AnimationInspectorControls.set(source, field(source, "animations.t0.delay"), "100");
+        assertFalse(AnimationInspectorControls.sameTracks(source, edited));
+
+        edited = AnimationInspectorControls.set(edited, field(edited, "animations.t0.delay"), "0");
+        assertTrue(AnimationInspectorControls.sameTracks(source, edited));
+        assertFalse(AnimationInspectorControls.describe(edited, source).stream().anyMatch(AppearanceInspectorControls.Control::modified));
+    }
+
     private static com.google.gson.JsonObject document(JsonArray tracks) {
         var json = new com.google.gson.JsonObject();
         json.add("animations", tracks);

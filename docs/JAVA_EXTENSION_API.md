@@ -136,8 +136,8 @@ from the rest of the UI.
 
 ## Validations and error boundaries
 
-- Every Java registry rejects duplicate IDs. Registering twice on resource
-  reload is a mod integration error.
+- Every Java registry rejects duplicate IDs with `IllegalStateException`. Registering twice on resource reload is a mod integration error. The animation-trigger and F8 editor-field registries now follow the same duplicate contract as widget types, templates, data sources, formatters, actions and layout factories.
+- Null required registration IDs, factories, callbacks, fields and similar inputs raise `NullPointerException` at registration time. Validation of malformed JSON configuration still raises `IllegalArgumentException`; runtime provider/factory errors are handled at their documented isolation boundary.
 - A malformed or unknown namespaced action/formatter/operator is rejected
   during JSON compilation; codecs receive their typed argument data,
   never arbitrary code from JSON.
@@ -147,6 +147,7 @@ from the rest of the UI.
 - Runtime data-binding and formatter failures use the binding fallback
   value. Animation trigger callbacks are also isolated so one third-party
   exception does not stop the HUD/screen render.
+- F8 screen/HUD inspectors expose widget/layout build diagnostics in a collapsible **DIAGNOSTICS** category. The full details are also logged; the inspector displays a bounded set of deduplicated warnings, and editor layout failures report the validator's reason without saving an invalid change.
 - Resource packs are **not trusted server commands**. UI visibility,
   conditions and client-side actions must not grant items, permissions or
   affect authoritative gameplay state without server validation.

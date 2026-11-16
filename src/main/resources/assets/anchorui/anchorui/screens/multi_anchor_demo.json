@@ -1,0 +1,169 @@
+{
+  "entities": [
+    {
+      "type": "anchorui:text",
+      "id": "anchorui:multi_anchor_heading",
+      "text": "Multiple anchors - resize the window or GUI Scale",
+      "position": {
+        "point": "TOPLEFT",
+        "anchor": "TOPLEFT",
+        "x": 18,
+        "y": 12
+      },
+      "size": {
+        "width": 350,
+        "height": 18
+      }
+    },
+    {
+      "type": "anchorui:panel",
+      "id": "anchorui:multi_anchor_panel",
+      "position": {
+        "anchors": [
+          {
+            "point": "TOPLEFT",
+            "anchor": "TOPLEFT",
+            "relativeTo": "screen",
+            "x": 18,
+            "y": 44
+          },
+          {
+            "point": "TOPRIGHT",
+            "anchor": "TOPRIGHT",
+            "relativeTo": "screen",
+            "x": -18,
+            "y": 44
+          }
+        ]
+      },
+      "size": {
+        "width": 10,
+        "height": 70
+      },
+      "padding": {
+        "left": 9,
+        "right": 9,
+        "top": 7,
+        "bottom": 7
+      },
+      "fillColor": "#D8233449",
+      "borderColor": "#FF79D0CD",
+      "borderWidth": 1,
+      "children": [
+        {
+          "type": "anchorui:text",
+          "id": "anchorui:multi_anchor_text",
+          "text": "Stretching panel: width comes from both anchors, not size.width",
+          "position": {
+            "anchors": [
+              {
+                "point": "TOPLEFT",
+                "anchor": "TOPLEFT",
+                "y": 6
+              },
+              {
+                "point": "TOPRIGHT",
+                "anchor": "TOPRIGHT",
+                "y": 6
+              }
+            ]
+          },
+          "size": {
+            "width": 10,
+            "height": 18
+          },
+          "wrap": true
+        },
+        {
+          "type": "anchorui:progress",
+          "id": "anchorui:multi_anchor_progress",
+          "position": {
+            "anchors": [
+              {
+                "point": "TOPLEFT",
+                "anchor": "TOPLEFT",
+                "y": 35
+              },
+              {
+                "point": "TOPRIGHT",
+                "anchor": "TOPRIGHT",
+                "y": 35
+              }
+            ]
+          },
+          "size": {
+            "width": 1,
+            "height": 12
+          },
+          "value": 70,
+          "max": 100,
+          "fillColor": "#FF69DCC9",
+          "background": {
+            "color": "#FF111F2D"
+          }
+        }
+      ]
+    },
+    {
+      "type": "anchorui:panel",
+      "id": "anchorui:multi_anchor_left",
+      "position": {
+        "point": "BOTTOMLEFT",
+        "anchor": "BOTTOMLEFT",
+        "x": 18,
+        "y": -26
+      },
+      "size": {
+        "width": 84,
+        "height": 26
+      },
+      "fillColor": "#FF38506A",
+      "borderColor": "#FFBDCFDF",
+      "borderWidth": 1
+    },
+    {
+      "type": "anchorui:panel",
+      "id": "anchorui:multi_anchor_right",
+      "position": {
+        "point": "BOTTOMRIGHT",
+        "anchor": "BOTTOMRIGHT",
+        "x": -18,
+        "y": -26
+      },
+      "size": {
+        "width": 84,
+        "height": 26
+      },
+      "fillColor": "#FF38506A",
+      "borderColor": "#FFBDCFDF",
+      "borderWidth": 1
+    },
+    {
+      "type": "anchorui:progress",
+      "id": "anchorui:multi_anchor_between",
+      "position": {
+        "anchors": [
+          {
+            "point": "LEFT",
+            "anchor": "RIGHT",
+            "relativeTo": "anchorui:multi_anchor_left",
+            "x": 8
+          },
+          {
+            "point": "RIGHT",
+            "anchor": "LEFT",
+            "relativeTo": "anchorui:multi_anchor_right",
+            "x": -8
+          }
+        ]
+      },
+      "size": {
+        "width": 1,
+        "height": 10
+      },
+      "value": 45,
+      "max": 100,
+      "fillColor": "#FFDFAF78"
+    }
+  ]
+}

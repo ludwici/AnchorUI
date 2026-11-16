@@ -313,6 +313,22 @@ public final class WidgetDocumentResolver {
         if (position.has("relativeTo")) {
             position.addProperty("relativeTo", WidgetIds.reference(position.get("relativeTo").getAsString(), namespace));
         }
+        if (position.has("anchors")) {
+            if (!position.get("anchors").isJsonArray()) {
+                throw new IllegalArgumentException("position.anchors must be a JSON array");
+            }
+            int index = 0;
+            for (JsonElement raw : position.getAsJsonArray("anchors")) {
+                if (!raw.isJsonObject()) {
+                    throw new IllegalArgumentException("position.anchors[" + index + "] must be an object");
+                }
+                JsonObject constraint = raw.getAsJsonObject();
+                if (constraint.has("relativeTo")) {
+                    constraint.addProperty("relativeTo", WidgetIds.reference(constraint.get("relativeTo").getAsString(), namespace));
+                }
+                index++;
+            }
+        }
     }
 
     private static String requireType(JsonObject widget, String location) {

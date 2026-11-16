@@ -34,7 +34,7 @@ While **Parent** is active, click a container in the Widgets list to **move the 
 3. Expand **ANCHORS (N)** in the inspector to edit every widget anchor independently. Each constraint has a collapsible summary; click **Point**, **Anchor** or **Relative to** to choose from dropdowns, or edit X/Y using +/- (Shift for 10 pixels) and direct integer input. **[+] Add anchor** duplicates an existing attachment without an immediate layout jump; **[-] Delete this anchor** removes it (at least one must remain). Reset anchors restores resource defaults. Each change is layout-validated, and invalid geometry is rejected without losing previous values. The old Point/Anchor toolbar buttons are gone; dragging and nudging translate all anchors together. See [Multiple anchors](MULTI_ANCHORS.md).
 4. Use **Parent** and click a panel/container or select it in the Widgets list. The selected widget is immediately made its child. For a Grid parent, Grid automatically assigns its cell using the parent's layout settings; child position fields are not required. Click empty world to detach the widget to the screen root. Escape cancels the picker; invalid/circular references are rejected.
 5. **Hide/Show** toggles local widget visibility. **Reset** restores the selected widget's defaults; **Reset all** clears all overrides for the open screen.
-6. **Save**, **F8** or **Ctrl+S** saves and returns to the original screen. **Cancel** or **Esc** discards edits and returns to the screen.
+6. **Save** or **Ctrl+S** explicitly saves and returns to the original screen. **F8**, **Esc** or **Cancel** requests exit. If any preview changes are unsaved, a modal offers **Discard & Exit**, **Save & Exit**, or **Cancel** (stay in editor). If there is nothing to save, exit is immediate. F8 no longer silently saves changes.
 7. Drag the editor panel by its title bar. Press **Tab** to temporarily hide the panel while positioning widgets.
 
 The editor uses the same widget factory, anchors, nesting, container clipping and scaling as normal screen rendering. Containers and their anchored children move together, and the editor's hitboxes and pointer calculations use the final visually scaled bounds.
@@ -74,13 +74,13 @@ Opening and exiting F8 is a temporary editor transition, not closing and reopeni
 1. Run `/anchorui screen open anchorui:advanced_layout_demo`. Verify the heading, buttons, switch, colored container panels, and grid are visible outside the editor.
 2. Press **F8**. The **same actual elements** must remain visible behind the cyan/yellow selection outlines; the outlines alone are **not** a valid preview.
 3. Collapse and expand the left Widgets list, select different elements, adjust a harmless layout property, and confirm their actual content stays rendered. An explicitly hidden child should disappear from the UI while its handle remains selectable from the list.
-4. Save with F8, reopen the editor, and Cancel. The display and Local UI State should be preserved without unintended `onOpen`/`onClose` actions. In the normal screen toggle **Show optional grid item**, then reopen F8: visibility and grid compaction should agree with the latest state.
+4. Make a change and press F8 to open the unsaved-changes dialog, choose **Save & Exit**, reopen the editor, then use **Cancel** and **Discard & Exit** for a different edit. The display and Local UI State should be preserved without unintended `onOpen`/`onClose` actions. In the normal screen toggle **Show optional grid item**, then reopen F8: visibility and grid compaction should agree with the latest state.
 5. Repeat with `anchorui:editor_components_demo` to verify text, progress fill, checkbox colors, panel borders, and image textures. Check that opening an appearance edit dialog does not activate the underlying UI controls.
 
 ## Suggested manual checks
 
 - Open the visual demo, F8, move a textured panel and its child, save, then reopen the screen: both should retain their relative placement.
-- Reopen the editor, change layout and press Esc: the last saved layout should return.
+- Reopen the editor, change layout and press Esc: choose **Discard & Exit** to restore the last saved layout; choose **Cancel** to keep editing. Try reversing the original edit before pressing Esc and confirm that the dialog is not shown.
 - Toggle a hidden widget, reset it, then verify that clicks are not sent to an ordinary action button while editing.
 - Try magnet snapping, hold Alt for free movement, and use arrow keys for fine positioning.
 - Verify `scale`, `scaleOrigin`, `clipChildren`, and nested panels during movement.

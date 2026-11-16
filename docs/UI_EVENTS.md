@@ -38,7 +38,7 @@ Register on the client during `FMLClientSetupEvent.enqueueWork`, before AnchorUI
 
 The `UiEvent` record exposes `name()`, `targetId()`, `value()`, and `item()`. Widget IDs are resolved, namespaced IDs from the AnchorUI widget registry; screen events use the document ID (or `namespace:screen` for programmatically constructed screens). The `value()` accessor returns a defensive copy.
 
-Both the old and new actions compile once at screen construction. Duplicate registrations fail immediately. Unknown IDs and malformed event actions are rejected at screen/widget creation. Runtime action failures are logged once per event binding and do not crash the screen.
+Both the old and new actions compile once at screen construction. Duplicate registrations fail immediately. Unknown IDs and malformed event actions are rejected at screen/widget creation. Compilation errors identify the offending JSON event field (for example `Invalid UI event 'onClick': Unknown UI action type: mymod:missing_action`); the screen/widget build log identifies the document or widget. Runtime action failures are logged once per event binding and do not crash the screen.
 
 ## Template List event context
 

@@ -125,6 +125,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     private Style queuedRichTextTooltip;
     private final Map<String, Boolean> visibilityScratch = new HashMap<>();
     private final Map<String, Boolean> enabledScratch = new HashMap<>();
+    private final ContainerLayout.Cache containerLayoutCache = new ContainerLayout.Cache();
     private Map<String, AnchorLayout.Bounds> layoutBounds = Map.of();
     private Set<String> collapsingLayoutParents = Set.of();
     private Set<String> collapsedLayoutHidden = Set.of();
@@ -698,7 +699,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 }
             }
             ContainerLayout.Result result = ContainerLayout.resolve(width, height, frames, containers, autoSizes, parents,
-                    stackLayouts, itemRules, hidden, manual, warning -> {
+                    stackLayouts, itemRules, hidden, manual, containerLayoutCache, warning -> {
                         if (warnings != null) {
                             warnings.add(warning);
                         }

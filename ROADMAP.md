@@ -21,6 +21,7 @@ Core decisions:
 ### Anchors, composition and editing
 
 - [x] Nine-point `AnchorLayout` with `point`, `anchor`, `relativeTo`, offsets, parent chains, resize support and diagnostics for bad references/cycles.
+- [x] Support any number of constraints per widget with `position.anchors`; opposing points derive dynamic width/height and override `size.width/height` and corresponding `autoSize` axes. Resolve multiple targets, validate overconstraints, retain dependency-aware caching, preserve F8 offsets and integrate nested padding, row/column/grid and template lists. See [Multiple anchors](docs/MULTI_ANCHORS.md).
 - [x] HUD JSON composition across mods and resource packs, separately toggled test and RPG HUD demos.
 - [x] F8 HUD editor and context-sensitive screen editor: drag, parent/anchor selection, magnetic snapping, visibility overrides, reset, inspector and persistent local positioning.
 - [x] Read-only vanilla HUD anchors for layout alignment; no modification of vanilla HUD elements.
@@ -68,11 +69,11 @@ The completed functionality above does **not** imply finished visual consistency
 - [x] Add explicit per-child `layoutItem.grow` / `shrink` weights and min/max width/height constraints, leaving weights at zero unless configured.
 - [x] Add optional row/column `wrap` and `lineGap`, with per-line distribution and natural cross-axis auto-sizing.
 - [x] Add independent panel/container `grid` with columns, configurable gaps/cell sizes, per-cell align/stretch and hidden-cell reflow.
-- [x] Make every direct structural Grid child automatically managed by its parent settings, regardless of legacy child anchors or `layoutItem.enabled`; simplify F8 Parent to direct container insertion and hide generated internal context fields.
+- [x] Make every direct structural Grid child automatically managed by its parent settings, regardless of legacy single child anchors or `layoutItem.enabled`; simplify F8 Parent to direct container insertion and hide generated internal context fields. Explicit **multiple** anchors now opt a child out of Grid management so its authored constraints can stretch it instead.
 - [x] Treat `anchorui:panel` as a default parent without additional authored container/context nodes; keep nested hierarchy outside per-widget JSON, use Panel IDs for child anchors and apply padding in layout resolution. Do not accept removed `/__content` anchors; Panel padding and viewport geometry are computed directly.
 - [x] Preserve Screen Editor inspector scroll when changing values via `+`/`-` with SOURCE JSON collapsed; show one parent label instead of duplicated internal parent/anchor details.
 - [x] Add focused geometry tests for constrained flex, wrapping in both axes, grid auto sizing, cell alignment and hidden cells.
-- [x] Scope decision: CSS-like features (grid spans, named tracks, richer responsive constraints and fine-grained incremental layout) are **deferred extensions**, not unfinished requirements of the current Grid release. Reassess them only for a concrete use case.
+- [x] Scope decision: CSS-like features (grid spans, named tracks and fine-grained incremental layout) remain **deferred extensions**. Multi-anchor responsive sizing was subsequently implemented for the concrete stretch use case; it does not introduce CSS Grid track/span syntax.
 - [x] Update HUD and screen F8 editors to inspect and edit row/column/grid/flex layout fields using persisted per-widget overrides, and browse nested widget structure in a collapsible hierarchy.
 - [x] Distinguish coordinate anchor targets from structural container parents in both F8 editors; support container/content/move picker, move-to-root, cycle-safe saved overrides and default-collapsed read-only source JSON.
 - [x] Expand automated Stage 1/2 regression coverage for reserve-vs-collapse semantics, row/grid conditional reflow, autoSize with hidden manual children, F8 override Save/Cancel, widget ID retention, resize/wrapping and scroll clamping; add a dedicated visual comparison demo.

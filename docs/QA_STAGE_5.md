@@ -1,61 +1,67 @@
-# Stage 5 — Animation acceptance checks
+# Stage 5 — Animation tracks QA
 
-Build and unit tests verify animation configuration and timing, not the
-Minecraft renderer. The visual checks below must run in a real 1.21.1 client.
+Run these checks in Minecraft 1.21.1, with a build containing the
+`animations` array implementation. JUnit covers parsing and timing; a
+client is required to check visual rendering and hitboxes.
 
-## Animated screen
+## Screen and runtime
 
 ```text
 /anchorui screen open anchorui:stage5_animation_demo
 ```
 
-- [ ] Reopen the screen: heading and buttons fade, slide and scale without
-  disturbing their final anchors or sizes.
-- [ ] Click **Toggle panel** repeatedly: panel hides with an exit effect,
-  immediately loses mouse interaction, then animates back in.
-- [ ] Click **Trigger pulse** repeatedly: bound change restarts from its
-  current frame without an obvious jump.
-- [ ] Click a button *during* its entrance: the click and hover regions must
-  follow the visible position rather than the final anchor.
-- [ ] Drag or scroll any animated interactive widget using a separate pack:
-  drag distances and coordinates must follow its displayed scale, and
-  clipping prevents hidden/clipped children from receiving mouse events.
-- [ ] **Close with fade** finishes its transition before returning to the
-  previous screen, and controls stop accepting input during closing.
+- [ ] Reopen: each element enters smoothly. The central panel executes
+  **two simultaneous open tracks** (fade + delayed motion).
+- [ ] The delayed movement begins after its configured wait without
+  changing the element's final anchor or its layout position.
+- [ ] Toggle panel repeatedly: exit becomes non-interactive immediately;
+  entrance is restored after reappearing.
+- [ ] Trigger pulse repeatedly: data-change animation is independent of
+  the entrance tracks and continues from the current frame on retrigger.
+- [ ] Clicking/dragging/wheeling an animated element follows its actual
+  scaled visual hitbox; children respect clipping/parent scroll constraints.
+- [ ] Close with fade waits for the longest `delay + duration` of its
+  enabled closing tracks and doesn't accept input during the transition.
 
-## Animated HUD
+## HUD
 
 ```text
 /anchorui test animation on
 ```
 
-- [ ] The heading and two progress bars appear in the upper-right area and
-  animate independently. They do not modify the existing RPG HUD.
-- [ ] Cause player health to change; the health bar briefly scales and
-  returns to normal. It should not pulse continuously while health is steady.
-- [ ] Open the HUD F8 editor: widget bounds, list, inspector and dragging
-  are stable even though runtime animations exist.
-- [ ] Hide the HUD using the normal Minecraft Hide GUI setting: no UI
-  shows behind a hidden HUD. Disable with `/anchorui test animation off`.
+- [ ] Header, health and food bars enter; health starts with simultaneous
+  effects including delayed motion.
+- [ ] Taking damage triggers the health watch without re-running unrelated
+  open effects.
+- [ ] F8 editor previews use stationary geometry and remain selectable.
+- [ ] Disable via `/anchorui test animation off`. Nothing remains rendered.
 
-## Animation inspector
+## Dynamic F8 editor (both screen and HUD)
 
-On either demo open **F8**, select a widget and scroll to **ANIMATION**.
-Change Open effect to Fade/Zoom or Slide, choose duration and easing,
-then Save. Reopen to verify the new transition. Reopen F8 and reset one field;
-confirm the stored override is removed without resetting other fields.
-Test Cancel to ensure unsaved changes do not persist. Try both screen and
-HUD editors.
+- [ ] Open **ANIMATION [+]**, add three tracks, give each a unique ID.
+- [ ] Expand an individual track header. Change its Trigger, Effect,
+  Duration, **Delay (ms)**, Easing, Enabled.
+- [ ] Duplicate a track, reorder it up/down, delete another, verify no
+  duplicate IDs and no unexpected changes to other tracks.
+- [ ] For Custom, edit both keyframes (opacity/X/Y/scale) and reopen.
+- [ ] Change a trigger to `change`: it starts disabled. Enter the
+  **Watch binding JSON**, then enable it. Invalid binding data reports
+  an error without corrupting the saved configuration.
+- [ ] Save, reopen and verify the complete list persists. Cancel leaves
+  saved values unchanged; individual reset buttons affect only that field.
+- [ ] Collapse/expand ANIMATION and the individual tracks; verify scroll
+  height, hitboxes and inspector position update correctly.
+- [ ] Try the editor at a narrow GUI scale and with nested scrollable
+  children. Check Select popups and the Color Picker still layer correctly.
 
-## Interaction and performance
+## JSON validation
 
-- [ ] Test nested scrollable panels while a child uses Fade + Scale.
-- [ ] Test dropdowns, tooltips, color picker and editor overlays, including
-  animation in an ancestor container, at different GUI scales.
-- [ ] Confirm opening a large screen with many nonanimated elements does
-  not create a repeating full layout rebuild or global tick work.
-- [ ] Ensure a malformed animation property identifies the widget in the
-  log, rather than crashing the client or invalidating unrelated widgets.
+- [ ] Invalid/duplicated animation ID, negative delay, invalid preset,
+  invalid watch, invalid from/to frame or oversized duration should report
+  the offending widget/animation in latest.log.
+- [ ] The removed singular `animation` object must not silently work;
+  use the `animations` array exclusively.
+- [ ] Explicit widget `animations: []` overrides document defaults.
 
-F3+T is unchanged: close the GUI and reload resources from the Minecraft
-world before reopening the screen.
+Vanilla F3+T is **not** intercepted in an open GUI. Close the screen first,
+reload from the world, and reopen to inspect changed resource-pack JSON.

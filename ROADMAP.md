@@ -123,9 +123,9 @@ The completed functionality above does **not** imply finished visual consistency
 **Status: implementation available for screens and HUD; final in-client QA remains.**
 
 - [x] Implement generic fade, slide, opacity and scale interpolation on screen and HUD widgets without changing anchored layout coordinates.
-- [x] Support open, close (screens), show, hide and bound-state `change` triggers, with configurable durations and easing; add reusable JSON presets.
+- [x] Support any number of named concurrent animation tracks (including multiple of the same trigger), independent change watches, per-track duration, **delay (ms)** and easing.
 - [x] Map pointer hitboxes, hover, click, release, drag and wheel input through animated transforms; preserve clipping and stable static F8 preview.
-- [x] Offer Open/Show/Hide/Close effect, duration and easing in both F8 inspectors. Persist per-widget overrides through existing Save/Cancel/Reset behavior.
+- [x] Provide dynamic collapsible track editing in both F8 inspectors, including add, duplicate, reorder, delete, trigger, preset, custom frames and delay. Persist complete track arrays with Save/Cancel.
 - [x] Avoid global tick handlers and per-frame widget-tree recreation. Update only configured animated screen widgets; for HUD widgets piggyback on existing HUD rendering.
 - [ ] Finish in-game testing of nested scrolling, clipped animated children, popups, GUI scales, editor overrides and high-widget-count performance; see [Stage 5 QA](docs/QA_STAGE_5.md).
 

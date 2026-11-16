@@ -363,6 +363,6 @@ SOURCE JSON initially start collapsed to keep the inspector compact.
 Section expansion remains consistent when selecting another widget
 within the same editor session.
 
-See [Animation tracks v2 design](ANIMATION_TRACKS_DESIGN.md) for the
-proposed future dynamic animation list; v2 is a design proposal, not
-the behavior of the current fixed-trigger inspector.
+See [Declarative animations](ANIMATIONS.md) for the implemented dynamic
+list of named tracks, independent triggers and millisecond delays.
+Each track also has its own collapsible settings section.

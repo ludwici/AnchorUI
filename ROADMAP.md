@@ -138,7 +138,8 @@ The completed functionality above does **not** imply finished visual consistency
 
 - [x] Audit the existing Java registries and implement first API consistency fixes: shared namespaced ID validation, typed formatter argument normalization, and fault-isolated custom animation triggers with regression tests. See [Java extension API](docs/JAVA_EXTENSION_API.md).
 - [ ] Consolidate and document stable APIs for widgets, templates, actions, layout factories, data sources, formatters, conditions and resource reload.
-- [ ] Explore dirty/epoch-based binding invalidation for expensive providers; retain existing live bindings and event-published providers.
+- [x] Add opt-in revision-aware source caching for expensive providers in `BoundData` and `BoundCondition`, including atomic `registerMutable` revisions, context invalidation, live-provider compatibility, and regression tests. See [Data bindings](docs/DATA_BINDINGS.md).
+- [ ] Profile revision-aware providers in large screens, nested lists and multi-widget HUDs; consider shared invalidation only if measured results justify it.
 - [ ] Investigate partial layout recalculation for large screens and keyed lists; instance retention is already implemented.
 - [ ] Improve diagnostics for unknown types/refs, missing assets and invalid actions/conditions.
 - [ ] Expand automated and in-client QA for F3+T, GUI resize/scale, multiple resource packs, keyboard focus, multiplayer and client-only behavior.

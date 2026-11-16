@@ -180,7 +180,50 @@ balance.set(new JsonPrimitive(newBalance));
 
 A JSON widget reads the latest value through `{"bind":"mymod:player.balance","fallback":0}`. Mutable providers support any JSON value (number, string, boolean, object or list). Values are copied when published to prevent accidental modification after an update.
 
-This **push-style publication** does not schedule a tick, perform network synchronization or create an event bus on its own. Your mod is responsible for publishing client-safe updates and for synchronizing server-authoritative information. The UI still reads the latest cached value when rendering. Choose a polling provider for inexpensive live fields, and a mutable provider for values that are costly to calculate or arrive asynchronously.
+This **push-style publication** does not schedule a tick, perform network synchronization or create an event bus on its own. Your mod is responsible for publishing client-safe updates and for synchronizing server-authoritative information. The UI reads published values through a revision-aware per-binding snapshot, so unchanged data is not cloned on every render. Choose a polling provider for inexpensive live fields, and a mutable provider for values that are costly to calculate or arrive asynchronously.
+
+### Revision-aware data sources (opt-in)
+
+For an expensive provider that can cheaply tell whether its data has changed, register it with a revision counter. The source supplies **two independent functions**: a cheap, context-aware revision and a more expensive read.
+
+```java
+AtomicLong manaRevision = new AtomicLong();
+
+DataValueRegistry.registerRevisioned(
+    ResourceLocation.fromNamespaceAndPath("mymod", "player.mana_stats"),
+    context -> manaRevision.get(),
+    context -> makeManaStatsJson(context.minecraft().player)
+);
+```
+
+In your own client-side event handler, call `manaRevision.incrementAndGet()` whenever the stats used by that provider change. `makeManaStatsJson` is a helper supplied by your mod, not by AnchorUI.
+
+A binding that references `mymod:player.mana_stats` checks the revision at each evaluation, but calls the expensive read only when the revision differs or the widget context changes. For example:
+
+```json
+{
+  "text": {
+    "bind": "mymod:player.mana_stats",
+    "path": "mana",
+    "fallback": 0
+  }
+}
+```
+
+You can also implement `DataValueRegistry.RevisionedProvider` directly and use `DataValueRegistry.registerRevisioned(id, provider)`.
+
+`registerMutable(id, initial)` is **automatically revisioned**: `set(updated)` publishes a defensive copy and advances the revision only when the JSON value actually differs. This is the simplest option when your data is already available in client-side events or packets.
+
+**Correctness rules:**
+
+- Revisions must change whenever the provider's visible JSON content changes for an unchanged `WidgetContext`. If you cannot guarantee that, use an ordinary live provider.
+- The revision callback must be cheap and free from side effects. It is still checked on each binding evaluation. Do not put expensive JSON serialization in the revision function.
+- Each compiled binding/condition owns its own snapshot. This is **not** one global cache across all UI widgets or Minecraft worlds. Source snapshots are discarded when the widget/condition is rebuilt.
+- Cached JSON values are defensively copied so formatters and consumers cannot modify the saved snapshot. A formatter still executes when a bound value is requested, preserving its normal contextual behavior.
+- If a provider read fails or the revision changes while a read is underway, no out-of-date cache entry is committed. Normal fallback handling continues.
+- If your provider is associated with a particular player, world or item context, advance the revision whenever its data changes, or rebuild the widget when the relevant context changes. The cache also checks the identity of the `WidgetContext` instance.
+
+**No JSON syntax change is required.** Existing bindings, template expressions, conditions, lists and progress values use the same `bind` and `fallback` structure. A live provider without revision support continues to be invoked on each read.
 
 Data is display-only. JSON bindings cannot run arbitrary Java, issue commands, modify player inventory or award quests.
 

@@ -26,7 +26,8 @@ this when integrations need to parse user-supplied strings.
 | Template list layout | `TemplateListLayoutRegistry.register(id, codec, factory)` | `layout.type` in `anchorui:template_list` | A factory returns a cell-placement function; errors include the layout ID and item index |
 | Action/event | `UiActionRegistry.registerEvent(id, codec, factory)` | `onClick`, `onOpen`, `onChange`, etc. | Compile an event handler once per UI instance; event payload available in `UiEvent` |
 | Data source | `DataValueRegistry.registerNumber/String/Boolean/Object/List` | `{"bind":"mymod:mana"}` | Read client-side information when the consuming widget evaluates it |
-| Published value | `DataValueRegistry.registerMutable` | Same as above | Push updated snapshots from client packet/state callbacks; avoids expensive provider recomputation |
+| Published value | `DataValueRegistry.registerMutable` | Same as above | Push updated snapshots from client packet/state callbacks; advances revision only when published JSON changes |
+| Revision-aware data source | `DataValueRegistry.registerRevisioned(id, revision, provider)` | Same `bind` syntax | Cache expensive source data in each compiled binding/condition until context or revision changes; ordinary providers stay live |
 | Formatter | `DataFormatterRegistry.register(id, codec, formatter)` | `format: {"type":"mymod:formatter",...}` | Decode typed options once; reserved `type` is removed before the codec sees options |
 | Condition operation | `ConditionOperationRegistry.register/ registerUnary` | `op: "mymod:has_rank"` | Pure boolean client predicate over already resolved JSON operands |
 | Animation trigger | `UiAnimationTriggerRegistry.register/ registerCondition` | `trigger: "mymod:quest_completed"` | Poll the registered revision/condition only for widgets with that custom track |
@@ -83,8 +84,23 @@ DataValueRegistry.MutableValue mana = DataValueRegistry.registerMutable(Resource
 ```
 
 When your own client packet updates mana, call `mana.set(new JsonPrimitive(newMana))`.
-The data source is still read during rendering, but it is a cheap snapshot.
+The mutable source is revisioned: each compiled binding checks a cheap
+revision and reads the published JSON snapshot only when it changes.
 No server tick loop or global widget-polling timer is added by this API.
+
+For expensive calculated sources, register separate revision and read
+functions:
+
+```java
+AtomicLong statsEpoch = new AtomicLong();
+DataValueRegistry.registerRevisioned(ResourceLocation.fromNamespaceAndPath("mymod", "player.stats"), context -> statsEpoch.get(), context -> buildStatsJson(context.minecraft().player));
+```
+
+The integrating mod increments `statsEpoch` when the corresponding data
+changes. Ordinary providers with no revision remain live, and
+`DataValueRegistry.RevisionedProvider` can be implemented directly.
+See [Data bindings](DATA_BINDINGS.md) for the cache's context, fallback
+and thread-safety contracts.
 
 `NumericDataRegistry` remains a legacy numeric adapter over
 `DataValueRegistry`; for new integrations use the typed registry directly.

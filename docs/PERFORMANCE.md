@@ -12,6 +12,7 @@ Anchor UI is designed for ordinary resource-pack screens, reactive client-side H
 | Rounded panels | Draw vertical bands containing neighboring rows of identical geometry | Rounded outline calculations and band grouping are cached until the panel size changes. |
 | 9-slice textures | Draw up to nine pieces | UV tile descriptions are cached until the destination dimensions change. Texture image data itself remains managed by Minecraft. |
 | Widget lists in F8 | Compare the current entry snapshot, draw only rows in the visible scroll viewport | Namespace sorting and section construction are reused until the list or visibility changes. Click-to-select uses constant-time row lookup. |
+| Revision-aware bindings | Read a lightweight revision number when a revisioned provider is referenced | Compiled bindings and conditions reuse defensive JSON snapshots until the revision or context changes; unversioned providers remain live. |
 | HUD and screen editors | Build one handle snapshot per editor frame | Reuse that snapshot across drawing, hit tests and list contents, instead of repeatedly assembling handles. |
 
 The renderer **does not cache actual dynamic values indefinitely**. Text, progress values, collections and visibility bindings still read their providers in the normal rendering lifecycle so the UI responds to changed gameplay state. Existing bound text and list widgets already avoid rebuilding formatted lines while their resolved content and width remain equal.
@@ -38,7 +39,7 @@ Record per-frame CPU usage and allocation rate with a client profiler (for examp
 
 ## Future opportunities
 
-- A dirty/epoch-aware typed binding API for data providers that can tell the UI exactly when data changes. This needs an explicit provider contract; naive caching could leave gameplay text and quest information stale.
+- Further profiling of revision-aware providers with large, frequently updated objects and multi-widget usage. The implemented `RevisionedProvider` API is opt-in and caches **per binding**, not globally; expensive providers still need cheap revision checks and explicit invalidation from their owning mod.
 - Dirty-rectangle / invalidation-aware screen rendering for very large mostly-static UI trees.
 - Partial layout recalculation for editor dragging when many unrelated widgets exist.
 - A client-side integration test fixture for scaled hit targets, nested clipping, resource reloads and UI render ordering.

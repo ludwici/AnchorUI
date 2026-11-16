@@ -36,6 +36,17 @@ public class EditorAnchorGuideTest {
     }
 
     @Test
+    public void extremeOffsetsDoNotOverflowGuidePoints() {
+        AnchorLayout.Bounds widget = new AnchorLayout.Bounds(12, 20, 14, 14);
+        AnchorLayout.Bounds target = new AnchorLayout.Bounds(Integer.MAX_VALUE - 30, 10, 20, 20);
+        PositionElement.Constraint anchor = new PositionElement.Constraint(ElementAnchor.LEFT, ElementAnchor.RIGHT, "demo:far", Integer.MAX_VALUE, -9);
+        EditorAnchorGuide.Connection guide = EditorAnchorGuide.connect(widget, target, anchor);
+        assertEquals(Integer.MAX_VALUE, guide.offsetTarget().x());
+        assertEquals(11, guide.offsetTarget().y());
+        assertEquals(new EditorAnchorGuide.Point(12, 27), guide.widget());
+    }
+
+    @Test
     public void zeroOffsetsOrVanillaBoundsUseSameGeometry() {
         AnchorLayout.Bounds widget = new AnchorLayout.Bounds(100, 52, 82, 18);
         AnchorLayout.Bounds vanillaHotbar = new AnchorLayout.Bounds(91, 200, 182, 22);

@@ -25,6 +25,8 @@ Each UI frame may declare a unique `id` and a `position`. `point` is the attachm
 
 `point` and `anchor` accept `TOPLEFT`, `TOP`, `TOPRIGHT`, `LEFT`, `CENTER`, `RIGHT`, `BOTTOMLEFT`, `BOTTOM`, and `BOTTOMRIGHT`. If either point is omitted, it defaults to the other. `relativeTo` defaults to `screen`. Positive X offsets move right and positive Y offsets move down. The engine resolves references independently of JSON order, recalculates coordinates when the screen is initialized or resized, and rejects duplicate ids and circular dependencies; unknown references fall back to the screen with a warning.
 
+For responsive layouts, use `position.anchors` to attach **multiple** points of the same widget. `LEFT` plus `RIGHT` gives it a dynamic width (ignoring `size.width`); `TOP` plus `BOTTOM` gives it a dynamic height (ignoring `size.height`). Each anchor can reference a different target widget. See [Multiple anchors and dynamic dimensions](docs/MULTI_ANCHORS.md) and the `/anchorui screen open anchorui:multi_anchor_demo` example.
+
 ## Resource packs
 
 **Modpack authors do not need to write a Java mod or create a separate folder in the game root.** They can distribute Anchor UI documents as a standard Minecraft resource pack under `resourcepacks/`:

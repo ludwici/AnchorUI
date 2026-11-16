@@ -102,6 +102,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     private String screenSaveError = "";
     private WidgetInstanceRegistry widgetRegistry = new WidgetInstanceRegistry();
     private List<PlacedWidget> placedWidgets = List.of();
+    private final Map<String, JsonObject> sourceSettingsById = new HashMap<>();
     private List<PlacedWidget> visibilityOrder = List.of();
     private final Map<String, UiEventBindings> widgetEventBindings = new HashMap<>();
     private final Map<String, WidgetAnimation> widgetAnimations = new HashMap<>();
@@ -473,7 +474,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         }
         for (PlacedWidget placed : placedWidgets) {
             if (placed.id().equals(id)) {
-                return LayoutInspectorControls.describe(id, placed.style().resolvedSettings, offsets, parentId != null, gridChild);
+                return LayoutInspectorControls.describe(id, sourceSettingsById.getOrDefault(id, placed.style().resolvedSettings), offsets, parentId != null, gridChild);
             }
         }
         return List.of();
@@ -524,7 +525,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 if (definition == null) {
                     return List.of();
                 }
-                JsonObject settings = placed.style().resolvedSettings.deepCopy();
+                JsonObject settings = sourceSettingsById.getOrDefault(id, placed.style().resolvedSettings).deepCopy();
                 if (definition.settings.has("text") && definition.settings.get("text").isJsonPrimitive()) {
                     settings.add("text", definition.settings.get("text").deepCopy());
                 }
@@ -542,7 +543,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     public JsonArray editorDefaultAnimations(String id) {
         for (PlacedWidget placed : placedWidgets) {
             if (placed.id().equals(id)) {
-                JsonObject settings = placed.style().resolvedSettings;
+                JsonObject settings = sourceSettingsById.getOrDefault(id, placed.style().resolvedSettings);
                 return settings.has("animations") ? UiAnimationSpec.array(settings) : loreEntity.animations.deepCopy();
             }
         }
@@ -1045,6 +1046,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         }
         loadScreenOffsets();
         placedWidgets = List.of();
+        sourceSettingsById.clear();
         visibilityOrder = List.of();
         widgetEventBindings.clear();
         widgetItemContexts.clear();
@@ -1139,6 +1141,10 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             try {
                 LoreStyle styleSource = element.settings.has("style") ? LoreLoader.INSTANCE.getStyle(element.settings.get("style").getAsString()) : theme;
                 LoreStyle.Element style = definition.legacyStyle() == null ? styleSource.get(element.type, element.settings) : styleSource.get(definition.legacyStyle(), null);
+                LoreEntity.UiElement original = definition.element();
+                LoreStyle originalTheme = original.settings.has("style") ? LoreLoader.INSTANCE.getStyle(original.settings.get("style").getAsString()) : theme;
+                LoreStyle.Element originalStyle = definition.legacyStyle() == null ? originalTheme.get(original.type, original.settings) : originalTheme.get(definition.legacyStyle(), null);
+                sourceSettingsById.put(definition.id(), originalStyle.resolvedSettings.deepCopy());
                 ItemContext rowContext = widgetItemContexts.get(definition.id());
                 RetainedWidget previous = retained.get(definition.id());
                 if (previous != null && TemplateListReuse.canReuse(previous.definition().settings, element.settings, previous.itemContext(), rowContext)) {

@@ -313,7 +313,7 @@ public final class AnchorHudManager {
         }
         HudLayoutOffsets candidate = editingOffsets.copy();
         for (PlacedWidget placed : widgets) {
-            if (placed.id().equals(id) && placed.position().relativeTo.equals(override.relativeTo())
+            if (placed.id().equals(id) && candidate.anchorConstraints(id) == null && placed.position().relativeTo.equals(override.relativeTo())
                     && placed.position().point == override.point() && placed.position().anchor == override.anchor()) {
                 candidate.clearAnchor(id);
                 break;

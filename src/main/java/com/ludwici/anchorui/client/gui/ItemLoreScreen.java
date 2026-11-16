@@ -225,6 +225,10 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         return documentId == null ? loreEntity.namespace : documentId.getNamespace();
     }
 
+    ResourceLocation editorResourceId() {
+        return documentId;
+    }
+
     public String screenSaveError() {
         return screenSaveError;
     }

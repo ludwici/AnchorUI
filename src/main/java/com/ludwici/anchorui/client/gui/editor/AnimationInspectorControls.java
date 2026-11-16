@@ -67,26 +67,50 @@ public final class AnimationInspectorControls {
         return validated(array(tracks));
     }
 
+    public static boolean sameTracks(JsonArray left, JsonArray right) {
+        return UiAnimationSpec.parse(document(left)).tracks().equals(UiAnimationSpec.parse(document(right)).tracks());
+    }
+
+    private static JsonObject document(JsonArray tracks) {
+        JsonObject json = new JsonObject();
+        json.add("animations", tracks);
+        return json;
+    }
+
     public static List<AppearanceInspectorControls.Control> describe(JsonArray tracks) {
+        return describe(tracks, tracks);
+    }
+
+    public static List<AppearanceInspectorControls.Control> describe(JsonArray tracks, JsonArray source) {
         List<AppearanceInspectorControls.Control> result = new ArrayList<>();
         for (int index = 0; index < tracks.size(); index++) {
             JsonObject track = tracks.get(index).getAsJsonObject();
+            JsonObject original = null;
+            for (JsonElement candidate : source) {
+                JsonObject entry = candidate.getAsJsonObject();
+                if (entry.get("id").getAsString().equals(track.get("id").getAsString())) {
+                    original = entry;
+                    break;
+                }
+            }
             String prefix = "animations.t" + index + ".";
-            result.add(new AppearanceInspectorControls.Control(WidgetEditorRegistry.Field.text(prefix + "id", "Animation ID", ""), track.get("id").getAsString(), false));
-            add(result, track, WidgetEditorRegistry.Field.text(prefix + "trigger", "Trigger ID", "open"), "trigger");
-            add(result, track, WidgetEditorRegistry.Field.choice(prefix + "preset", "Effect", "custom", "custom", "fade", "slideLeft", "slideRight", "slideUp", "zoom"), "preset");
-            add(result, track, WidgetEditorRegistry.Field.integer(prefix + "duration", "Duration (ms)", 300, 1, 10000, 50), "duration");
-            add(result, track, WidgetEditorRegistry.Field.integer(prefix + "delay", "Delay (ms)", 0, 0, 60000, 50), "delay");
-            add(result, track, WidgetEditorRegistry.Field.choice(prefix + "easing", "Easing", "linear", "linear", "easeIn", "easeOut", "easeInOut", "outCubic"), "easing");
-            add(result, track, WidgetEditorRegistry.Field.bool(prefix + "enabled", "Enabled", true), "enabled");
+            result.add(new AppearanceInspectorControls.Control(WidgetEditorRegistry.Field.text(prefix + "id", "Animation ID", ""), track.get("id").getAsString(), original == null, original == null ? "" : original.get("id").getAsString()));
+            add(result, track, original, WidgetEditorRegistry.Field.text(prefix + "trigger", "Trigger ID", "open"), "trigger");
+            add(result, track, original, WidgetEditorRegistry.Field.choice(prefix + "preset", "Effect", "custom", "custom", "fade", "slideLeft", "slideRight", "slideUp", "zoom"), "preset");
+            add(result, track, original, WidgetEditorRegistry.Field.integer(prefix + "duration", "Duration (ms)", 300, 1, 10000, 50), "duration");
+            add(result, track, original, WidgetEditorRegistry.Field.integer(prefix + "delay", "Delay (ms)", 0, 0, 60000, 50), "delay");
+            add(result, track, original, WidgetEditorRegistry.Field.choice(prefix + "easing", "Easing", "linear", "linear", "easeIn", "easeOut", "easeInOut", "outCubic"), "easing");
+            add(result, track, original, WidgetEditorRegistry.Field.bool(prefix + "enabled", "Enabled", true), "enabled");
             if ("change".equals(value(track, "trigger", "open"))) {
                 String watch = track.has("watch") ? track.get("watch").toString() : "";
-                result.add(new AppearanceInspectorControls.Control(WidgetEditorRegistry.Field.text(prefix + "watch", "Watch binding JSON", ""), watch, track.has("watch")));
+                String baseline = original != null && original.has("watch") ? original.get("watch").toString() : "";
+                result.add(new AppearanceInspectorControls.Control(WidgetEditorRegistry.Field.text(prefix + "watch", "Watch binding JSON", ""), watch, !watch.equals(baseline), baseline));
             }
             if ("custom".equals(value(track, "preset", "custom"))) {
                 for (String endpoint : List.of("from", "to")) {
                     JsonObject keyframe = track.has(endpoint) ? track.getAsJsonObject(endpoint) : new JsonObject();
-                    add(result, keyframe, WidgetEditorRegistry.Field.number(prefix + endpoint + ".opacity", endpoint + " opacity", 1, 0, 1, 0.1), "opacity");
+                    JsonObject originalFrame = original != null && original.has(endpoint) ? original.getAsJsonObject(endpoint) : null;
+                    add(result, keyframe, originalFrame, WidgetEditorRegistry.Field.number(prefix + endpoint + ".opacity", endpoint + " opacity", 1, 0, 1, 0.1), "opacity");
                     add(result, keyframe, WidgetEditorRegistry.Field.number(prefix + endpoint + ".x", endpoint + " X", 0, -4096, 4096, 1), "x");
                     add(result, keyframe, WidgetEditorRegistry.Field.number(prefix + endpoint + ".y", endpoint + " Y", 0, -4096, 4096, 1), "y");
                     add(result, keyframe, WidgetEditorRegistry.Field.number(prefix + endpoint + ".scale", endpoint + " scale", 1, 0.01, 4, 0.05), "scale");
@@ -96,9 +120,10 @@ public final class AnimationInspectorControls {
         return List.copyOf(result);
     }
 
-    private static void add(List<AppearanceInspectorControls.Control> controls, JsonObject parent, WidgetEditorRegistry.Field field, String property) {
+    private static void add(List<AppearanceInspectorControls.Control> controls, JsonObject parent, JsonObject original, WidgetEditorRegistry.Field field, String property) {
         String text = value(parent, property, field.fallback().getAsString());
-        controls.add(new AppearanceInspectorControls.Control(field, text, parent.has(property)));
+        String source = original == null ? field.fallback().getAsString() : value(original, property, field.fallback().getAsString());
+        controls.add(new AppearanceInspectorControls.Control(field, text, !AppearanceInspectorControls.sameValue(field, text, source), source));
     }
 
     private static String value(JsonObject obj, String property, String fallback) {

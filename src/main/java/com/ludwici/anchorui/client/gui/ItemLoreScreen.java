@@ -24,6 +24,7 @@ import com.ludwici.anchorui.api.layout.StackLayout;
 import com.ludwici.anchorui.api.layout.ContainerAutoLayout;
 import com.ludwici.anchorui.client.gui.editor.LayoutInspectorControls;
 import com.ludwici.anchorui.client.gui.editor.AppearanceInspectorControls;
+import com.ludwici.anchorui.client.gui.editor.EditorWidgetCreation;
 import com.google.gson.JsonElement;
 import com.ludwici.anchorui.client.gui.editor.WidgetListPanel;
 import com.ludwici.anchorui.api.layout.ContainerScroll;
@@ -223,6 +224,59 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         return editingScreenOffsets != null && !editingScreenOffsets.sameAs(savedScreenOffsets);
     }
 
+    public boolean editorIsCreatedWidget(String id) {
+        return currentScreenOffsets().isCreatedWidget(id);
+    }
+
+    public String editorCreateWidget(String type) {
+        if (editingScreenOffsets == null) {
+            screenSaveError = "Screen editor is not initialized";
+            return null;
+        }
+        for (int index = 1; index <= 10000; index++) {
+            String id = "anchorui:editor_" + net.minecraft.resources.ResourceLocation.parse(type).getPath().replace('/', '_') + "_" + index;
+            if (widgetRegistry.definition(id).isPresent() || editingScreenOffsets.isCreatedWidget(id)) {
+                continue;
+            }
+            HudLayoutOffsets candidate = editingScreenOffsets.copy();
+            int delta = ((index - 1) % 7) * 12;
+            candidate.addCreatedWidget(id, EditorWidgetCreation.newWidget(type, id, delta, delta));
+            return applyCreatedWidgets(candidate, id) ? id : null;
+        }
+        screenSaveError = "Too many editor-created widgets";
+        return null;
+    }
+
+    public boolean editorDeleteCreatedWidget(String id) {
+        if (editingScreenOffsets == null || !editingScreenOffsets.isCreatedWidget(id)) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingScreenOffsets.copy();
+        candidate.removeCreatedWidget(id);
+        return applyCreatedWidgets(candidate, null);
+    }
+
+    private boolean applyCreatedWidgets(HudLayoutOffsets candidate, String expectedId) {
+        HudLayoutOffsets previous = editingScreenOffsets;
+        editingScreenOffsets = candidate;
+        buildWidgets(true);
+        try {
+            if (expectedId != null && widgetRegistry.widget(expectedId).isEmpty()) {
+                throw new IllegalArgumentException("Created widget could not be rendered");
+            }
+            if (layoutError != null) {
+                throw new IllegalArgumentException(layoutError);
+            }
+            screenSaveError = "";
+            return true;
+        } catch (RuntimeException exception) {
+            screenSaveError = exception.getMessage();
+            editingScreenOffsets = previous;
+            buildWidgets(true);
+            return false;
+        }
+    }
+
     public String editorNamespace() {
         return documentId == null ? loreEntity.namespace : documentId.getNamespace();
     }
@@ -263,8 +317,13 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
 
     public void cancelScreenEditing() {
         if (editingScreenOffsets != null) {
+            boolean definitionsChanged = !editingScreenOffsets.createdWidgets().equals(savedScreenOffsets.createdWidgets());
             editingScreenOffsets = null;
-            applyScreenOffsets(savedScreenOffsets);
+            if (definitionsChanged) {
+                buildWidgets(true);
+            } else {
+                applyScreenOffsets(savedScreenOffsets);
+            }
         }
     }
 
@@ -703,7 +762,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         }
         HudLayoutOffsets candidate = editingScreenOffsets.copy();
         candidate.resetAll();
-        return useCandidate(candidate);
+        return candidate.createdWidgets().equals(editingScreenOffsets.createdWidgets()) ? useCandidate(candidate) : applyCreatedWidgets(candidate, null);
     }
 
     private boolean useCandidate(HudLayoutOffsets candidate) {
@@ -1112,6 +1171,19 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             layoutError = exception.getMessage();
             AnchorUI.LOGGER.error("Anchor UI widget declaration rejected: {}", layoutError);
             return;
+        }
+
+        for (var entry : currentScreenOffsets().createdWidgets().entrySet()) {
+            try {
+                if (widgetRegistry.definition(entry.getKey()).isPresent()) {
+                    throw new IllegalArgumentException("Created widget conflicts with resource ID: " + entry.getKey());
+                }
+                declare(definitions, new LoreEntity.UiElement(entry.getValue()), entry.getKey(), null);
+            } catch (RuntimeException exception) {
+                layoutError = "Invalid editor-created widget '" + entry.getKey() + "': " + exception.getMessage();
+                AnchorUI.LOGGER.error("Anchor UI created widget declaration rejected: {}", layoutError);
+                return;
+            }
         }
 
         templateLists = List.copyOf(listStates);

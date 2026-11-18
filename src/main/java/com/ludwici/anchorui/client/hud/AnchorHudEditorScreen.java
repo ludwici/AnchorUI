@@ -667,6 +667,7 @@ public final class AnchorHudEditorScreen extends Screen {
             }
 
             resetButton.active = selected != null && !choosingParent;
+            deleteWidgetButton.active = selected != null && manager.isCreatedWidget(selected) && !choosingParent;
             hideButton.active = selected != null && !choosingParent;
             parentButton.active = selected != null;
             hideButton.setMessage(Component.literal(active != null && active.hiddenByUser() ? "Show" : "Hide"));

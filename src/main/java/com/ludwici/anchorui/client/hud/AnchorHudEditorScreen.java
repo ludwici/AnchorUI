@@ -515,6 +515,7 @@ public final class AnchorHudEditorScreen extends Screen {
     }
 
     private void openCreateWidgetMenu() {
+        String parentId = selected != null && manager.isPreviewContainer(selected) ? selected : null;
         editorDropdown.open(panelX + 6, actionsTop() + BUTTON_STEP * 2, panelWidth - 12, BUTTON_HEIGHT, width, height,
                 EditorWidgetCreation.types(), "", type -> {
                     String id = manager.createPreviewWidget(type);
@@ -522,9 +523,10 @@ public final class AnchorHudEditorScreen extends Screen {
                         status = manager.getLastSaveError();
                         return;
                     }
+                    boolean moved = parentId == null || manager.movePreviewIntoContainer(id, parentId);
                     selectWidget(id);
                     refreshFrameHandles();
-                    status = "Created " + id;
+                    status = moved ? "Created " + id : "Created at root; could not add to " + parentId;
                 });
     }
 

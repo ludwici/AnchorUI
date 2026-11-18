@@ -4,7 +4,6 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.ludwici.anchorui.client.gui.TextureImageFormats;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackResources;
-import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 
 import java.util.ArrayList;
@@ -16,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Function;
 
 /** A snapshot of effective image resources in the current client resource packs. */
 public final class EditorTextureCatalog {
@@ -30,6 +30,8 @@ public final class EditorTextureCatalog {
             return texture == null;
         }
     }
+
+    private static final List<String> IMAGE_ROOTS = List.of("textures", "anchorui", "gui", "ui", "images");
 
     private static final class Folder {
         private final String label;
@@ -54,12 +56,21 @@ public final class EditorTextureCatalog {
 
     public static EditorTextureCatalog collect(ResourceManager manager) {
         List<String> packs = manager.listPacks().map(PackResources::packId).toList();
+        return collectFromRoots(packs, root -> {
+            Map<ResourceLocation, String> resources = new LinkedHashMap<>();
+            for (var entry : manager.listResources(root, EditorTextureCatalog::isSupportedImage).entrySet()) {
+                resources.put(entry.getKey(), entry.getValue().sourcePackId());
+            }
+            return resources;
+        });
+    }
+
+    static EditorTextureCatalog collectFromRoots(List<String> packIds, Function<String, Map<ResourceLocation, String>> resourcesAt) {
         Map<ResourceLocation, String> effective = new LinkedHashMap<>();
-        for (var resource : manager.listResources("", EditorTextureCatalog::isSupportedImage).entrySet()) {
-            Resource texture = resource.getValue();
-            effective.put(resource.getKey(), texture.sourcePackId());
+        for (String root : IMAGE_ROOTS) {
+            effective.putAll(resourcesAt.apply(root));
         }
-        return fromEntries(packs, effective);
+        return fromEntries(packIds, effective);
     }
 
     public static boolean available(ResourceManager manager, String name) {

@@ -7,6 +7,7 @@ import com.ludwici.anchorui.api.LoreEntity;
 import com.ludwici.anchorui.api.widget.WidgetDefinitionRegistry;
 import com.ludwici.anchorui.api.style.LoreStyle;
 import com.ludwici.anchorui.client.gui.TextureRegion;
+import com.ludwici.anchorui.client.gui.TextureImageFormats;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
@@ -48,6 +49,7 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
         }
         warnedMissingStyles.clear();
         TextureRegion.clearMissingResourceWarnings();
+        TextureImageFormats.clear();
         snapshot = updated;
         revision++;
     }

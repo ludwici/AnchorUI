@@ -94,13 +94,19 @@ public final class EditorTextureCatalog {
         if (resource.isEmpty()) {
             return null;
         }
-        try (InputStream stream = resource.get().open(); NativeImage image = NativeImage.read(stream)) {
+        try (InputStream stream = resource.get().open()) {
+            return decode(stream);
+        } catch (IOException | RuntimeException exception) {
+            return null;
+        }
+    }
+
+    static ImageInfo decode(InputStream stream) throws IOException {
+        try (NativeImage image = NativeImage.read(stream)) {
             if (image.getWidth() <= 0 || image.getHeight() <= 0) {
                 return null;
             }
             return new ImageInfo(image.getWidth(), image.getHeight());
-        } catch (IOException | RuntimeException exception) {
-            return null;
         }
     }
 

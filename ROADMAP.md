@@ -101,6 +101,7 @@ The completed functionality above does **not** imply finished visual consistency
 - [x] Replace Boolean `-/+` inspector steppers with real checkbox controls in both F8 editors (including Java-registered Boolean fields).
 - [x] Add explicit `focused` / `hoverFocused` button/control texture variants, visible keyboard-focus fallback outlines, and one-open-dropdown popup layering.
 - [x] Share appearance inheritance between progress bars, panels, skinned buttons and state controls; use one HEX parser for background/text/skin colors, respecting `#AARRGGBB` text alpha. Style merging and variant priorities are covered by unit tests.
+- [x] Expose full opacity editing in the shared Color Picker through a draggable alpha gradient and numeric 0–255 input, preserving RGB with transparent ARGB serialization in both HUD and screen F8 editors.
 - [x] Validate equal RPG progress bar dimensions, frame, padding and border inheritance in a dedicated regression test; in-game rendering parity still needs confirmation.
 - [x] Render built-in rich text Tooltip after floating Select popups and outside child scissors; suppress tooltips from text hidden underneath an open popup. The popup remains above ordinary widgets and scroll indicators.
 - [x] Warn once per reload about missing texture files and missing style references, with expected resource paths; include widget ID/type in configuration errors and skip malformed root documents instead of crashing reload.

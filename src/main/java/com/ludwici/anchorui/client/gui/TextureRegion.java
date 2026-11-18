@@ -43,6 +43,14 @@ public final class TextureRegion {
                 && MISSING_WARNED.add(texture)) {
             AnchorUI.LOGGER.warn("AnchorUI missing texture resource '{}'. Expected asset path assets/{}/{}. " + "Check the active resource packs and reload with F3+T after fixing the asset.", texture, texture.getNamespace(), texture.getPath());
         }
+        if (context != null && context.minecraft() != null && context.minecraft().getResourceManager() != null
+                && TextureImageFormats.needsConversion(texture)) {
+            try {
+                TextureImageFormats.ensureRegistered(context.minecraft(), texture);
+            } catch (java.io.IOException exception) {
+                throw new IllegalArgumentException("Cannot decode image texture '" + texture + "': " + exception.getMessage(), exception);
+            }
+        }
         textureWidth = GsonHelper.getAsInt(settings, "textureWidth", 256);
         textureHeight = GsonHelper.getAsInt(settings, "textureHeight", 256);
         u = GsonHelper.getAsInt(settings, "u", 0);

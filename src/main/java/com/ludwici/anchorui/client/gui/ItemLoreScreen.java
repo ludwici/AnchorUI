@@ -600,7 +600,10 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                     && !com.ludwici.anchorui.client.gui.editor.EditorTextureCatalog.available(net.minecraft.client.Minecraft.getInstance().getResourceManager(), parsed.getAsString())) {
                 throw new IllegalArgumentException("Texture is not available in loaded resource packs: " + parsed.getAsString());
             }
-        } catch (RuntimeException exception) {
+            if (control.field().kind() == com.ludwici.anchorui.api.widget.WidgetEditorRegistry.Kind.TEXTURE) {
+                com.ludwici.anchorui.client.gui.TextureImageFormats.ensureRegistered(net.minecraft.client.Minecraft.getInstance(), net.minecraft.resources.ResourceLocation.parse(parsed.getAsString()));
+            }
+        } catch (RuntimeException | java.io.IOException exception) {
             screenSaveError = exception.getMessage();
             return false;
         }

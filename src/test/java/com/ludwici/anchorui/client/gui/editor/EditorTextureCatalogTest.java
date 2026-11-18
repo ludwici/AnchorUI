@@ -44,6 +44,35 @@ public class EditorTextureCatalogTest {
     }
 
     @Test
+    public void discoversModJarTexturesAndAnchorUIImagesWithoutScanningInvalidRoot() {
+        ResourceLocation spellIcon = id("irons_spellbooks:textures/gui/spell_wheel.png");
+        ResourceLocation modItem = id("irons_spellbooks:textures/item/fire_staff.png");
+        ResourceLocation customHud = id("anchorui:anchorui/gui/health_frame.png");
+        ResourceLocation normalGui = id("other_mod:gui/custom_screen.jpg");
+        java.util.Set<String> scanned = new java.util.HashSet<>();
+        EditorTextureCatalog catalog = EditorTextureCatalog.collectFromRoots(List.of("vanilla", "mod/irons_spellbooks", "mod/anchorui", "mod/other_mod"), root -> {
+            assertFalse(root.isBlank(), "ResourceManager rejects an empty starting path");
+            scanned.add(root);
+            return switch (root) {
+                case "textures" -> Map.of(spellIcon, "mod/irons_spellbooks", modItem, "mod/irons_spellbooks");
+                case "anchorui" -> Map.of(customHud, "mod/anchorui");
+                case "gui" -> Map.of(normalGui, "mod/other_mod");
+                default -> Map.of();
+            };
+        });
+        assertTrue(scanned.contains("textures"));
+        assertTrue(scanned.contains("anchorui"));
+        assertEquals(4, catalog.textureCount());
+        assertTrue(catalog.contains(spellIcon));
+        assertTrue(catalog.contains(modItem));
+        assertTrue(catalog.contains(customHud));
+        assertTrue(catalog.contains(normalGui));
+        List<EditorTextureCatalog.Row> entries = catalog.visible(catalog.expandedFor(spellIcon));
+        assertTrue(entries.stream().anyMatch(row -> spellIcon.equals(row.texture())));
+        assertTrue(entries.stream().anyMatch(row -> row.directory() && row.label().equals("irons_spellbooks")));
+    }
+
+    @Test
     public void selectedTextureUsesThePackSupplyingItsEffectiveResource() {
         ResourceLocation overridden = id("minecraft:textures/gui/icons.png");
         EditorTextureCatalog catalog = EditorTextureCatalog.fromEntries(List.of("vanilla", "resource_pack.zip"), Map.of(overridden, "resource_pack.zip"));

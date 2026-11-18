@@ -16,7 +16,7 @@ import java.nio.IntBuffer;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** Decode additional image assets into real Minecraft textures without changing resource-pack files. */
+/** Decode optional JPEG assets into Minecraft textures without changing resource-pack files. */
 public final class TextureImageFormats {
     private static final int MAX_COMPRESSED_BYTES = 64 * 1024 * 1024;
     private static final int MAX_DIMENSION = 16384;
@@ -30,14 +30,21 @@ public final class TextureImageFormats {
         REGISTERED.clear();
     }
 
-    public static boolean needsConversion(ResourceLocation id) {
-        return id != null && !id.getPath().endsWith(".png");
+    public static boolean isSupported(ResourceLocation id) {
+        return id != null && (id.getPath().endsWith(".png") || needsConversion(id));
     }
 
-    public static NativeImage decode(InputStream input) throws IOException {
+    public static boolean needsConversion(ResourceLocation id) {
+        return id != null && (id.getPath().endsWith(".jpg") || id.getPath().endsWith(".jpeg"));
+    }
+
+    public static NativeImage decodeJpeg(InputStream input) throws IOException {
         byte[] bytes = input.readNBytes(MAX_COMPRESSED_BYTES + 1);
-        if (bytes.length == 0 || bytes.length > MAX_COMPRESSED_BYTES) {
-            throw new IOException("Image data is empty or exceeds 64 MiB");
+        if (bytes.length < 3 || bytes.length > MAX_COMPRESSED_BYTES) {
+            throw new IOException("JPEG data is empty or exceeds 64 MiB");
+        }
+        if ((bytes[0] & 0xFF) != 0xFF || (bytes[1] & 0xFF) != 0xD8 || (bytes[2] & 0xFF) != 0xFF) {
+            throw new IOException("Only JPEG image data is accepted");
         }
         ByteBuffer encoded = MemoryUtil.memAlloc(bytes.length);
         try {
@@ -83,6 +90,9 @@ public final class TextureImageFormats {
     }
 
     public static NativeImage open(ResourceManager resources, ResourceLocation id) throws IOException {
+        if (!isSupported(id)) {
+            throw new IOException("Unsupported texture format (expected PNG or JPEG): " + id);
+        }
         var found = resources.getResource(id);
         if (found.isEmpty()) {
             throw new IOException("Missing image resource " + id);
@@ -91,11 +101,14 @@ public final class TextureImageFormats {
             if (!needsConversion(id)) {
                 return NativeImage.read(stream);
             }
-            return decode(stream);
+            return decodeJpeg(stream);
         }
     }
 
     public static void ensureRegistered(Minecraft minecraft, ResourceLocation id) throws IOException {
+        if (!isSupported(id)) {
+            throw new IOException("Unsupported texture format (expected PNG or JPEG): " + id);
+        }
         if (!needsConversion(id) || REGISTERED.contains(id)) {
             return;
         }

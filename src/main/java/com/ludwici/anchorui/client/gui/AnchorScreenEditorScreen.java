@@ -376,6 +376,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     }
 
     private void openCreateWidgetMenu() {
+        String parentId = selected != null && target.editorIsContainer(selected.id()) ? selected.id() : null;
         editorDropdown.open(panelX() + 7, panelTop + 101, inspectorWidth - 14, 20, width, height,
                 EditorWidgetCreation.types(), "", type -> {
                     String id = target.editorCreateWidget(type);
@@ -383,9 +384,10 @@ public final class AnchorScreenEditorScreen extends Screen {
                         status = target.screenSaveError();
                         return;
                     }
+                    boolean moved = parentId == null || target.editorMoveIntoContainer(id, parentId);
                     select(id);
                     refreshFrameHandles();
-                    status = "Created " + id;
+                    status = moved ? "Created " + id : "Created at root; could not add to " + parentId;
                 });
     }
 

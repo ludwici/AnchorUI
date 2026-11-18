@@ -31,11 +31,11 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
     private static final int DEFAULT_HEIGHT = 166;
     private static final int CELL_SIZE = 4;
     private enum DragTarget {
-        NONE, PALETTE, HUE
+        NONE, PALETTE, HUE, ALPHA
     }
 
     private record Geometry(int paletteX, int paletteY, int paletteWidth, int paletteHeight,
-                            int hueX, int fieldsX, int fieldsWidth) {
+                            int hueX, int fieldsX, int fieldsWidth, int alphaX, int alphaY, int alphaWidth) {
     }
 
     private final UiLocalState state;
@@ -45,6 +45,7 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
     private final String label;
     private final EditBox hexInput;
     private final EditBox rgbInput;
+    private final EditBox alphaInput;
     private final int backgroundColor;
     private final int borderColor;
     private Consumer<JsonElement> changeListener = ignored -> {};
@@ -75,6 +76,8 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
         hexInput.setMaxLength(9);
         rgbInput = new EditBox(context.font(), 0, 0, 90, 18, Component.literal("RGB"));
         rgbInput.setMaxLength(32);
+        alphaInput = new EditBox(context.font(), 0, 0, 42, 18, Component.literal("Alpha"));
+        alphaInput.setMaxLength(3);
         updateInputValues();
     }
 
@@ -113,6 +116,9 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
         if (rgbInput.isFocused()) {
             commitInput(rgbInput);
         }
+        if (alphaInput.isFocused()) {
+            commitInput(alphaInput);
+        }
         if (!invalidInput.isEmpty()) {
             return null;
         }
@@ -137,6 +143,9 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
         }
         if (!rgbInput.isFocused()) {
             rgbInput.setValue(ColorPickerColor.rgb(color));
+        }
+        if (!alphaInput.isFocused()) {
+            alphaInput.setValue(Integer.toString(color >>> 24));
         }
     }
 
@@ -164,19 +173,25 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
         int x = getX();
         int y = getY();
         int paletteWidth = Math.min(112, Math.max(80, getWidth() - 157));
-        int paletteHeight = Math.min(112, Math.max(80, getHeight() - 52));
+        int paletteHeight = Math.min(112, Math.max(72, getHeight() - 78));
         int paletteX = x + 8;
         int paletteY = y + 24;
         int hueX = paletteX + paletteWidth + 6;
         int fieldsX = hueX + 20;
-        return new Geometry(paletteX, paletteY, paletteWidth, paletteHeight, hueX, fieldsX, Math.max(50, getRight() - fieldsX - 8));
+        int alphaX = paletteX;
+        int alphaY = paletteY + paletteHeight + 17;
+        int alphaWidth = hueX + 12 - paletteX;
+        return new Geometry(paletteX, paletteY, paletteWidth, paletteHeight, hueX, fieldsX, Math.max(50, getRight() - fieldsX - 8), alphaX, alphaY, alphaWidth);
     }
 
     private void positionInputs(Geometry g) {
         hexInput.setPosition(g.fieldsX(), getY() + 70);
         hexInput.setWidth(g.fieldsWidth());
         rgbInput.setPosition(g.fieldsX(), getY() + 109);
-        rgbInput.setWidth(g.fieldsWidth());
+        int alphaFieldWidth = Math.min(42, Math.max(32, g.fieldsWidth() / 3));
+        rgbInput.setWidth(g.fieldsWidth() - alphaFieldWidth - 5);
+        alphaInput.setPosition(g.fieldsX() + rgbInput.getWidth() + 5, getY() + 109);
+        alphaInput.setWidth(alphaFieldWidth);
     }
 
     private void applyPalette(double mouseX, double mouseY, Geometry g) {
@@ -188,6 +203,12 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
     private void applyHue(double mouseY, Geometry g) {
         hue = clamp((float) ((mouseY - g.paletteY()) / (g.paletteHeight() - 1)));
         setColor(ColorPickerColor.hsvColor(hue, saturation, brightness, color >>> 24));
+    }
+
+    private void applyAlpha(double mouseX, Geometry g) {
+        float fraction = clamp((float) ((mouseX - g.alphaX()) / Math.max(1, g.alphaWidth() - 1)));
+        int alpha = Math.round(fraction * 255.0F);
+        setColor(ColorPickerColor.withAlpha(color, alpha));
     }
 
     private static float clamp(float value) {
@@ -204,7 +225,8 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
         }
         try {
             int next = input == hexInput ? ColorPickerColor.parseHex(input.getValue())
-                    : ColorPickerColor.parseRgb(input.getValue(), color >>> 24);
+                    : input == rgbInput ? ColorPickerColor.parseRgb(input.getValue(), color >>> 24)
+                    : ColorPickerColor.withAlpha(color, ColorPickerColor.parseAlpha(input.getValue()));
             input.setFocused(false);
             setColor(next);
             invalidInput = "";
@@ -221,8 +243,12 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
         if (rgbInput.isFocused()) {
             commitInput(rgbInput);
         }
+        if (alphaInput.isFocused()) {
+            commitInput(alphaInput);
+        }
         hexInput.setFocused(false);
         rgbInput.setFocused(false);
+        alphaInput.setFocused(false);
         updateInputValues();
     }
 
@@ -270,6 +296,20 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
         graphics.fill(g.hueX() - 1, hueMarkerY - 1, g.hueX() + 13, hueMarkerY + 2, 0xFF000000);
         graphics.fill(g.hueX(), hueMarkerY, g.hueX() + 12, hueMarkerY + 1, 0xFFFFFFFF);
 
+        int alpha = color >>> 24;
+        graphics.drawString(context.font(), "Opacity " + Math.round(alpha * 100.0F / 255.0F) + "%", g.alphaX(), g.alphaY() - 12, style.textColor, false);
+        for (int step = 0; step < g.alphaWidth(); step += 4) {
+            int checkerColor = (step / 8 & 1) == 0 ? 0xFFAAAAAA : 0xFF555555;
+            graphics.fill(g.alphaX() + step, g.alphaY(), g.alphaX() + Math.min(step + 4, g.alphaWidth()), g.alphaY() + 9, checkerColor);
+        }
+        for (int step = 0; step < g.alphaWidth(); step += 2) {
+            int fractionAlpha = Math.round(step * 255.0F / Math.max(1, g.alphaWidth() - 1));
+            graphics.fill(g.alphaX() + step, g.alphaY(), g.alphaX() + Math.min(step + 2, g.alphaWidth()), g.alphaY() + 9, ColorPickerColor.withAlpha(color, fractionAlpha));
+        }
+        int alphaMarkerX = g.alphaX() + Math.round(alpha / 255.0F * (g.alphaWidth() - 1));
+        outline(graphics, alphaMarkerX - 2, g.alphaY() - 2, 5, 13, 0xFF000000);
+        graphics.fill(alphaMarkerX, g.alphaY() - 1, alphaMarkerX + 1, g.alphaY() + 10, 0xFFFFFFFF);
+
         for (int previewY = y + 25; previewY < y + 53; previewY += 7) {
             for (int previewX = g.fieldsX(); previewX < g.fieldsX() + g.fieldsWidth(); previewX += 7) {
                 int base = (((previewX - g.fieldsX()) / 7 + (previewY - y - 25) / 7) & 1) == 0
@@ -280,11 +320,13 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
         graphics.fill(g.fieldsX(), y + 25, g.fieldsX() + g.fieldsWidth(), y + 53, color);
         graphics.drawString(context.font(), "HEX", g.fieldsX(), y + 59, style.textColor, false);
         graphics.drawString(context.font(), "RGB", g.fieldsX(), y + 98, style.textColor, false);
+        graphics.drawString(context.font(), "Alpha", alphaInput.getX(), y + 98, style.textColor, false);
         hexInput.render(graphics, mouseX, mouseY, partialTick);
         rgbInput.render(graphics, mouseX, mouseY, partialTick);
+        alphaInput.render(graphics, mouseX, mouseY, partialTick);
         String hint = invalidInput.isEmpty() ? "Enter to apply | Drag to pick" : invalidInput;
         graphics.drawString(context.font(), context.font().plainSubstrByWidth(hint, width - 16), x + 8, y + height - 15, invalidInput.isEmpty() ? style.textColor : 0xFFFF7777, false);
-        if (isFocused() && !hexInput.isFocused() && !rgbInput.isFocused()) {
+        if (isFocused() && !hexInput.isFocused() && !rgbInput.isFocused() && !alphaInput.isFocused()) {
             outline(graphics, x, y, width, height, 0xFFFFD16B);
         }
     }
@@ -312,6 +354,10 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
                 commitInput(rgbInput);
                 rgbInput.setFocused(false);
             }
+            if (alphaInput.isFocused()) {
+                commitInput(alphaInput);
+                alphaInput.setFocused(false);
+            }
             hexInput.setFocused(true);
             hexInput.mouseClicked(mouseX, mouseY, button);
             dragging = DragTarget.NONE;
@@ -322,8 +368,26 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
                 commitInput(hexInput);
                 hexInput.setFocused(false);
             }
+            if (alphaInput.isFocused()) {
+                commitInput(alphaInput);
+                alphaInput.setFocused(false);
+            }
             rgbInput.setFocused(true);
             rgbInput.mouseClicked(mouseX, mouseY, button);
+            dragging = DragTarget.NONE;
+            return true;
+        }
+        if (alphaInput.isMouseOver(mouseX, mouseY)) {
+            if (hexInput.isFocused()) {
+                commitInput(hexInput);
+                hexInput.setFocused(false);
+            }
+            if (rgbInput.isFocused()) {
+                commitInput(rgbInput);
+                rgbInput.setFocused(false);
+            }
+            alphaInput.setFocused(true);
+            alphaInput.mouseClicked(mouseX, mouseY, button);
             dragging = DragTarget.NONE;
             return true;
         }
@@ -334,6 +398,9 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
         } else if (within(mouseX, mouseY, g.hueX(), g.paletteY(), 12, g.paletteHeight())) {
             dragging = DragTarget.HUE;
             applyHue(mouseY, g);
+        } else if (within(mouseX, mouseY, g.alphaX(), g.alphaY() - 2, g.alphaWidth(), 13)) {
+            dragging = DragTarget.ALPHA;
+            applyAlpha(mouseX, g);
         } else {
             dragging = DragTarget.NONE;
         }
@@ -348,8 +415,10 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
         Geometry g = geometry();
         if (dragging == DragTarget.PALETTE) {
             applyPalette(mouseX, mouseY, g);
-        } else {
+        } else if (dragging == DragTarget.HUE) {
             applyHue(mouseY, g);
+        } else {
+            applyAlpha(mouseX, g);
         }
         return true;
     }
@@ -377,6 +446,10 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
                 commitInput(rgbInput);
                 return true;
             }
+            if (alphaInput.isFocused()) {
+                commitInput(alphaInput);
+                return true;
+            }
         }
         if (keyCode == GLFW.GLFW_KEY_TAB && hexInput.isFocused()) {
             commitInput(hexInput);
@@ -384,11 +457,26 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
             rgbInput.setFocused(true);
             return true;
         }
+        if (keyCode == GLFW.GLFW_KEY_TAB && rgbInput.isFocused()) {
+            commitInput(rgbInput);
+            rgbInput.setFocused(false);
+            alphaInput.setFocused(true);
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_TAB && alphaInput.isFocused()) {
+            commitInput(alphaInput);
+            alphaInput.setFocused(false);
+            hexInput.setFocused(true);
+            return true;
+        }
         if (hexInput.isFocused()) {
             return hexInput.keyPressed(keyCode, scanCode, modifiers);
         }
         if (rgbInput.isFocused()) {
             return rgbInput.keyPressed(keyCode, scanCode, modifiers);
+        }
+        if (alphaInput.isFocused()) {
+            return alphaInput.keyPressed(keyCode, scanCode, modifiers);
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
@@ -401,7 +489,10 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
         if (hexInput.isFocused()) {
             return hexInput.charTyped(codePoint, modifiers);
         }
-        return rgbInput.isFocused() && rgbInput.charTyped(codePoint, modifiers);
+        if (rgbInput.isFocused()) {
+            return rgbInput.charTyped(codePoint, modifiers);
+        }
+        return alphaInput.isFocused() && alphaInput.charTyped(codePoint, modifiers);
     }
 
     @Override

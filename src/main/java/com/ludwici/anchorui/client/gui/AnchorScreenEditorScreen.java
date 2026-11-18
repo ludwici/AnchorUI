@@ -29,6 +29,7 @@ import com.ludwici.anchorui.client.gui.editor.EditorInspectorButton;
 import com.ludwici.anchorui.client.gui.editor.EditorExitConfirmation;
 import com.ludwici.anchorui.client.gui.editor.EditorColorPicker;
 import com.ludwici.anchorui.client.gui.editor.EditorTextureBrowser;
+import com.ludwici.anchorui.client.gui.editor.EditorWidgetCreation;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -125,6 +126,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     private Button hide;
     private Button parent;
     private Button reset;
+    private Button deleteWidget;
     private boolean pickingParent;
     private boolean compact;
     private boolean inspectorCollapsed;
@@ -177,6 +179,8 @@ public final class AnchorScreenEditorScreen extends Screen {
         reset = add(x + 114, y + 53, 100, "Reset", button -> reset());
         parent = add(x + 7, y + 77, 100, "Parent", button -> pickParent());
         add(x + 114, y + 77, 100, "Reset all", button -> resetAll());
+        add(x + 7, y + 101, 100, "+ Add widget", button -> openCreateWidgetMenu());
+        deleteWidget = add(x + 114, y + 101, 100, "Delete", button -> deleteCreatedWidget());
         positionControls();
         createAppearanceInput();
         updateControls();
@@ -198,7 +202,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     }
 
     private int inspectorTop() {
-        return panelTop + 108;
+        return panelTop + 132;
     }
 
     private int inspectorBottom() {
@@ -242,6 +246,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         hide.active = hasSelection;
         reset.active = hasSelection;
         parent.active = hasSelection;
+        deleteWidget.active = hasSelection && target.editorIsCreatedWidget(selected.id());
         hide.setMessage(Component.literal(hasSelection && selected.hiddenByUser() ? "Show" : "Hide"));
         parent.setMessage(Component.literal(pickingParent ? "Pick target..." : "Parent"));
         for (Button button : controls) {
@@ -368,6 +373,34 @@ public final class AnchorScreenEditorScreen extends Screen {
     private void resetAll() {
         target.resetAllEditorWidgets();
         refreshSelection();
+    }
+
+    private void openCreateWidgetMenu() {
+        editorDropdown.open(panelX() + 7, panelTop + 101, inspectorWidth - 14, 20, width, height,
+                EditorWidgetCreation.types(), "", type -> {
+                    String id = target.editorCreateWidget(type);
+                    if (id == null) {
+                        status = target.screenSaveError();
+                        return;
+                    }
+                    select(id);
+                    refreshFrameHandles();
+                    status = "Created " + id;
+                });
+    }
+
+    private void deleteCreatedWidget() {
+        if (selected == null || !target.editorIsCreatedWidget(selected.id())) {
+            return;
+        }
+        String id = selected.id();
+        if (target.editorDeleteCreatedWidget(id)) {
+            select(null);
+            refreshFrameHandles();
+            status = "Deleted " + id;
+        } else {
+            status = target.screenSaveError();
+        }
     }
 
     private boolean updateAnchor(String id, List<PositionElement.Constraint> values) {
@@ -584,7 +617,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             graphics.drawString(font, inspectorCollapsed ? "Inspector" : "Screen Editor", x + 8, y + 9, 0xFFFFFFFF, false);
             graphics.drawString(font, inspectorCollapsed ? "[+]" : "[-]", x + visiblePanelWidth() - 27, y + 9, 0xFFFFFFFF, false);
             if (!inspectorCollapsed) {
-                graphics.drawString(font, pickingParent ? "Pick a widget or empty space" : "Drag: magnet 6px | Alt: free", x + 8, y + 99, 0xFFACD9D9, false);
+                graphics.drawString(font, pickingParent ? "Pick a widget or empty space" : "Drag: magnet 6px | Alt: free", x + 8, y + 124, 0xFFACD9D9, false);
                 renderInspector(graphics);
                 if (!status.isEmpty()) {
                     String message = font.plainSubstrByWidth(status, inspectorWidth - 18);

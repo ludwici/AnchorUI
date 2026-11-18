@@ -27,7 +27,7 @@ public final class EditorColorPicker {
         Objects.requireNonNull(onApply);
         this.onCancel = Objects.requireNonNull(onCancel);
         int pickerWidth = Math.max(240, Math.min(288, screenWidth - 24));
-        int pickerHeight = Math.max(152, Math.min(166, screenHeight - 77));
+        int pickerHeight = Math.max(152, Math.min(206, screenHeight - 77));
         width = pickerWidth + 16;
         height = pickerHeight + 72;
         x = Math.max(0, (screenWidth - width) / 2);

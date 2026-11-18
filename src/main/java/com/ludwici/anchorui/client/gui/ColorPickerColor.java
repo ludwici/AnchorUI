@@ -48,6 +48,25 @@ public final class ColorPickerColor {
         return (alpha & 0xFF) << 24 | rgb[0] << 16 | rgb[1] << 8 | rgb[2];
     }
 
+    public static int parseAlpha(String value) {
+        String trimmed = value.trim();
+        if (!trimmed.matches("[0-9]{1,3}")) {
+            throw new IllegalArgumentException("Alpha must be an integer from 0 to 255");
+        }
+        int alpha = Integer.parseInt(trimmed);
+        if (alpha > 255) {
+            throw new IllegalArgumentException("Alpha must be an integer from 0 to 255");
+        }
+        return alpha;
+    }
+
+    public static int withAlpha(int color, int alpha) {
+        if (alpha < 0 || alpha > 255) {
+            throw new IllegalArgumentException("Alpha must be an integer from 0 to 255");
+        }
+        return (alpha << 24) | (color & 0xFFFFFF);
+    }
+
     public static String hex(int color) {
         return (color >>> 24) == 0xFF
                 ? String.format(Locale.ROOT, "#%06X", color & 0xFFFFFF)

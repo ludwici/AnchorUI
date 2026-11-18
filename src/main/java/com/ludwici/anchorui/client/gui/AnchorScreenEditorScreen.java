@@ -28,6 +28,7 @@ import com.ludwici.anchorui.client.gui.editor.EditorInspectorCheckbox;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorButton;
 import com.ludwici.anchorui.client.gui.editor.EditorExitConfirmation;
 import com.ludwici.anchorui.client.gui.editor.EditorColorPicker;
+import com.ludwici.anchorui.client.gui.editor.EditorTextureBrowser;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -110,6 +111,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     private Button appearanceCancel;
     private AppearanceInspectorControls.Control editingAppearance;
     private EditorColorPicker colorPickerDialog;
+    private EditorTextureBrowser textureBrowser;
     private String editingAppearanceId;
     private AnchorAction editingAnchor;
     private String editingAnchorId;
@@ -589,16 +591,19 @@ public final class AnchorScreenEditorScreen extends Screen {
                     graphics.drawString(font, message, x + 8, y + expandedPanelHeight() - 14, 0xFFFFD16B, false);
                 }
             }
-            int backgroundMouseX = editingAppearance == null && editingAnchor == null && !exitConfirmation.isOpen() ? mouseX : Integer.MIN_VALUE;
-            int backgroundMouseY = editingAppearance == null && editingAnchor == null && !exitConfirmation.isOpen() ? mouseY : Integer.MIN_VALUE;
+            int backgroundMouseX = editingAppearance == null && editingAnchor == null && textureBrowser == null && !exitConfirmation.isOpen() ? mouseX : Integer.MIN_VALUE;
+            int backgroundMouseY = editingAppearance == null && editingAnchor == null && textureBrowser == null && !exitConfirmation.isOpen() ? mouseY : Integer.MIN_VALUE;
             super.render(graphics, backgroundMouseX, backgroundMouseY, partialTick);
             widgetList.render(graphics, font, backgroundMouseX, backgroundMouseY, frameEntries, selected == null ? null : selected.id(), pickingParent);
             editorDropdown.render(graphics, font, mouseX, mouseY);
-            if ((editingAppearance != null || editingAnchor != null) && colorPickerDialog == null) {
+            if ((editingAppearance != null || editingAnchor != null) && colorPickerDialog == null && textureBrowser == null) {
                 renderAppearanceModal(graphics, mouseX, mouseY, partialTick);
             }
             if (colorPickerDialog != null) {
                 colorPickerDialog.render(graphics, font, mouseX, mouseY, partialTick, width, height, status);
+            }
+            if (textureBrowser != null) {
+                textureBrowser.render(graphics, font, mouseX, mouseY, partialTick);
             }
             exitConfirmation.render(graphics, font, mouseX, mouseY, partialTick);
         } finally {
@@ -781,6 +786,24 @@ public final class AnchorScreenEditorScreen extends Screen {
             updateControls();
             return;
         }
+        if (control.field().kind() == WidgetEditorRegistry.Kind.TEXTURE) {
+            textureBrowser = new EditorTextureBrowser(minecraft.getResourceManager(), control.value(), width, height,
+                    value -> {
+                        if (target.editorSetAppearance(id, control, value)) {
+                            status = "";
+                            closeAppearanceInput();
+                            refreshSelection();
+                        } else {
+                            status = target.screenSaveError();
+                            textureBrowser.showError(status);
+                        }
+                    }, this::closeAppearanceInput);
+            appearanceInput.visible = false;
+            appearanceApply.visible = false;
+            appearanceCancel.visible = false;
+            updateControls();
+            return;
+        }
         appearanceInput.visible = true;
         appearanceApply.visible = true;
         appearanceCancel.visible = true;
@@ -791,6 +814,7 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     private void closeAppearanceInput() {
         colorPickerDialog = null;
+        textureBrowser = null;
         editingAppearance = null;
         editingAppearanceId = null;
         editingAnchor = null;
@@ -1082,6 +1106,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (textureBrowser != null) {
+            return textureBrowser.mouseClicked(mouseX, mouseY, button);
+        }
         if (exitConfirmation.isOpen()) {
             return exitConfirmation.mouseClicked(mouseX, mouseY, button);
         }
@@ -1223,6 +1250,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (textureBrowser != null) {
+            return textureBrowser.mouseDragged(mouseX, mouseY, button);
+        }
         if (exitConfirmation.isOpen()) {
             return true;
         }
@@ -1270,6 +1300,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (textureBrowser != null) {
+            return textureBrowser.mouseReleased(mouseX, mouseY, button);
+        }
         if (exitConfirmation.isOpen()) {
             return true;
         }
@@ -1303,6 +1336,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (textureBrowser != null) {
+            return textureBrowser.mouseScrolled(mouseX, mouseY, scrollY);
+        }
         if (exitConfirmation.isOpen()) {
             return true;
         }
@@ -1330,6 +1366,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (textureBrowser != null) {
+            return textureBrowser.keyPressed(keyCode);
+        }
         if (exitConfirmation.isOpen()) {
             return exitConfirmation.keyPressed(keyCode);
         }
@@ -1401,6 +1440,9 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
+        if (textureBrowser != null) {
+            return true;
+        }
         if (exitConfirmation.isOpen()) {
             return true;
         }

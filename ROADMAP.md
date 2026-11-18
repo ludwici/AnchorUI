@@ -92,7 +92,7 @@ The completed functionality above does **not** imply finished visual consistency
 **Status: main keyboard, rendering, color/style diagnostics and resource-reload fixes implemented; in-game verification and remaining accessibility/blur QA are still required.**
 
 - [x] Add a component-aware **VISUAL / CONTENT** inspector to HUD and screen F8 editors: editable text, basic colors, texture resource paths, sizes, basic widget styles and typed controls.
-- [x] Replace free-text editing of `Kind.TEXTURE` with a tree browser of active packs/namespaces/folders/image assets for HUD and screen F8. Include all supported native decoder formats (PNG/JPEG/BMP/TGA/PSD/GIF/HDR/PIC/PNM), show hover previews and dimensions, decode-validate images before applying, and reject missing or invalid textures through both browser and direct editor APIs.
+- [x] Replace free-text editing of `Kind.TEXTURE` with a tree browser of active packs/namespaces/folders/image assets for HUD and screen F8. Include PNG and AnchorUI's additional STB-decoded formats (JPEG/BMP/TGA/PSD/GIF/HDR/PIC/PNM), register non-PNG assets as dynamic Minecraft textures for normal widget rendering, show hover previews and original image dimensions, and reject missing or invalid images through both browser and direct editor APIs.
 - [x] Register custom editable widget fields through an explicit Java `WidgetEditorRegistry`; persist appearance overrides separately from resource packs and validate edits.
 - [x] Rebuild edited widget visuals on explicit changes, preserving screen Local UI State, with rollback for invalid widget configurations.
 - [x] Add per-choice Select styles with color/texture state precedence over shared row skins.

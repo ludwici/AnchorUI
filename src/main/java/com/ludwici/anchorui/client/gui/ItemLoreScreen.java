@@ -596,6 +596,10 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         JsonElement parsed;
         try {
             parsed = AppearanceInspectorControls.parse(control.field(), value);
+            if (control.field().kind() == com.ludwici.anchorui.api.widget.WidgetEditorRegistry.Kind.TEXTURE
+                    && !com.ludwici.anchorui.client.gui.editor.EditorTextureCatalog.available(net.minecraft.client.Minecraft.getInstance().getResourceManager(), parsed.getAsString())) {
+                throw new IllegalArgumentException("Texture is not available in loaded resource packs: " + parsed.getAsString());
+            }
         } catch (RuntimeException exception) {
             screenSaveError = exception.getMessage();
             return false;

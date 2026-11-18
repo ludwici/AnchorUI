@@ -39,6 +39,41 @@ public final class HudLayoutOffsets {
     private final Map<String, String> containerParents = new LinkedHashMap<>();
     private final Set<String> hidden = new TreeSet<>();
     private final Map<String, JsonObject> componentSettings = new LinkedHashMap<>();
+    private final Map<String, JsonObject> createdWidgets = new LinkedHashMap<>();
+
+    public Map<String, JsonObject> createdWidgets() {
+        Map<String, JsonObject> copy = new LinkedHashMap<>();
+        for (var entry : createdWidgets.entrySet()) {
+            copy.put(entry.getKey(), entry.getValue().deepCopy());
+        }
+        return Collections.unmodifiableMap(copy);
+    }
+
+    public boolean isCreatedWidget(String id) {
+        return createdWidgets.containsKey(WidgetIds.id(id, "anchorui"));
+    }
+
+    public void addCreatedWidget(String id, JsonObject definition) {
+        String qualified = WidgetIds.id(id, "anchorui");
+        JsonObject value = definition.deepCopy();
+        if (value.has("id") && !qualified.equals(WidgetIds.id(value.get("id").getAsString(), "anchorui"))) {
+            throw new IllegalArgumentException("Created widget ID differs from its stored definition: " + qualified);
+        }
+        value.addProperty("id", qualified);
+        new com.ludwici.anchorui.api.LoreEntity.UiElement(value);
+        if (createdWidgets.putIfAbsent(qualified, value) != null) {
+            throw new IllegalArgumentException("Duplicate created widget: " + qualified);
+        }
+    }
+
+    public boolean removeCreatedWidget(String id) {
+        String qualified = WidgetIds.id(id, "anchorui");
+        if (createdWidgets.remove(qualified) == null) {
+            return false;
+        }
+        reset(qualified);
+        return true;
+    }
 
     public Offset get(String id) {
         return offsets.getOrDefault(id, Offset.ZERO);
@@ -295,6 +330,7 @@ public final class HudLayoutOffsets {
     }
 
     public void resetAll() {
+        createdWidgets.clear();
         offsets.clear();
         anchors.clear();
         anchorLists.clear();
@@ -314,6 +350,9 @@ public final class HudLayoutOffsets {
         result.anchorLists.putAll(anchorLists);
         result.containerParents.putAll(containerParents);
         result.hidden.addAll(hidden);
+        for (var entry : createdWidgets.entrySet()) {
+            result.createdWidgets.put(entry.getKey(), entry.getValue().deepCopy());
+        }
         for (var entry : componentSettings.entrySet()) {
             result.componentSettings.put(entry.getKey(), entry.getValue().deepCopy());
         }
@@ -323,7 +362,7 @@ public final class HudLayoutOffsets {
     public boolean sameAs(HudLayoutOffsets other) {
         return offsets.equals(other.offsets) && anchors.equals(other.anchors) && anchorLists.equals(other.anchorLists)
                 && containerParents.equals(other.containerParents) && hidden.equals(other.hidden)
-                && componentSettings.equals(other.componentSettings);
+                && componentSettings.equals(other.componentSettings) && createdWidgets.equals(other.createdWidgets);
     }
 
     public JsonObject toJson() {
@@ -381,6 +420,13 @@ public final class HudLayoutOffsets {
             values.add(id, value);
         }
         root.add("offsets", values);
+        if (!createdWidgets.isEmpty()) {
+            JsonObject definitions = new JsonObject();
+            for (String id : new TreeSet<>(createdWidgets.keySet())) {
+                definitions.add(id, createdWidgets.get(id).deepCopy());
+            }
+            root.add("createdWidgets", definitions);
+        }
         return root;
     }
 
@@ -389,6 +435,17 @@ public final class HudLayoutOffsets {
             throw new IllegalArgumentException("Unsupported Anchor UI HUD layout version");
         }
         HudLayoutOffsets result = new HudLayoutOffsets();
+        if (root.has("createdWidgets")) {
+            if (!root.get("createdWidgets").isJsonObject()) {
+                throw new IllegalArgumentException("Created widgets must be an object");
+            }
+            for (var entry : root.getAsJsonObject("createdWidgets").entrySet()) {
+                if (!entry.getValue().isJsonObject()) {
+                    throw new IllegalArgumentException("Created widget definition must be an object: " + entry.getKey());
+                }
+                result.addCreatedWidget(entry.getKey(), entry.getValue().getAsJsonObject());
+            }
+        }
         if (!root.has("offsets")) {
             return result;
         }

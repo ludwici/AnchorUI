@@ -14,6 +14,7 @@ import com.ludwici.anchorui.api.layout.StackLayout;
 import com.ludwici.anchorui.api.layout.ContainerAutoLayout;
 import com.ludwici.anchorui.client.gui.editor.LayoutInspectorControls;
 import com.ludwici.anchorui.client.gui.editor.AppearanceInspectorControls;
+import com.ludwici.anchorui.client.gui.editor.EditorWidgetCreation;
 import com.google.gson.JsonElement;
 import com.ludwici.anchorui.client.gui.editor.WidgetListPanel;
 import com.ludwici.anchorui.api.layout.ContainerScroll;
@@ -660,13 +661,70 @@ public final class AnchorHudManager {
 
     public void resetAllPreviewOffsets() {
         if (editingOffsets != null) {
-            editingOffsets.resetAll();
-            relayout(null);
+            HudLayoutOffsets candidate = editingOffsets.copy();
+            candidate.resetAll();
+            if (!candidate.createdWidgets().equals(editingOffsets.createdWidgets())) {
+                applyCreatedWidgets(candidate, null);
+            } else {
+                editingOffsets = candidate;
+                relayout(null);
+            }
         }
     }
 
     public boolean hasUnsavedChanges() {
         return editingOffsets != null && !editingOffsets.sameAs(savedOffsets);
+    }
+
+    public boolean isCreatedWidget(String id) {
+        return currentOffsets().isCreatedWidget(id);
+    }
+
+    public String createPreviewWidget(String type) {
+        if (editingOffsets == null || builtWidth <= 0 || builtHeight <= 0) {
+            lastSaveError = "HUD editor is not initialized";
+            return null;
+        }
+        for (int index = 1; index <= 10000; index++) {
+            String id = "anchorui:editor_" + net.minecraft.resources.ResourceLocation.parse(type).getPath().replace('/', '_') + "_" + index;
+            if (registry.definition(id).isPresent() || editingOffsets.isCreatedWidget(id)) {
+                continue;
+            }
+            HudLayoutOffsets candidate = editingOffsets.copy();
+            int delta = ((index - 1) % 7) * 12;
+            candidate.addCreatedWidget(id, EditorWidgetCreation.newWidget(type, id, delta, delta));
+            return applyCreatedWidgets(candidate, id) ? id : null;
+        }
+        lastSaveError = "Too many editor-created widgets";
+        return null;
+    }
+
+    public boolean removePreviewCreatedWidget(String id) {
+        if (editingOffsets == null || !editingOffsets.isCreatedWidget(id)) {
+            return false;
+        }
+        HudLayoutOffsets candidate = editingOffsets.copy();
+        candidate.removeCreatedWidget(id);
+        return applyCreatedWidgets(candidate, null);
+    }
+
+    private boolean applyCreatedWidgets(HudLayoutOffsets candidate, String expectedId) {
+        HudLayoutOffsets previous = editingOffsets;
+        editingOffsets = candidate;
+        rebuild(Minecraft.getInstance(), builtWidth, builtHeight, builtRevision);
+        try {
+            if (expectedId != null && registry.widget(expectedId).isEmpty()) {
+                throw new IllegalArgumentException("New widget could not be created");
+            }
+            resolveLayout(candidate, null);
+            lastSaveError = null;
+            return true;
+        } catch (RuntimeException exception) {
+            lastSaveError = exception.getMessage();
+            editingOffsets = previous;
+            rebuild(Minecraft.getInstance(), builtWidth, builtHeight, builtRevision);
+            return false;
+        }
     }
 
     public boolean saveEditing() {
@@ -704,8 +762,13 @@ public final class AnchorHudManager {
 
     public void cancelEditing() {
         if (editingOffsets != null) {
+            boolean changedDefinitions = !editingOffsets.createdWidgets().equals(savedOffsets.createdWidgets());
             editingOffsets = null;
-            relayout(null);
+            if (changedDefinitions) {
+                rebuild(Minecraft.getInstance(), builtWidth, builtHeight, builtRevision);
+            } else {
+                relayout(null);
+            }
         }
     }
 
@@ -1196,6 +1259,20 @@ public final class AnchorHudManager {
                     warnings.add("HUD '" + source + "': " + exception.getMessage());
                 }
                 index++;
+            }
+        }
+
+        for (var entry : currentOffsets().createdWidgets().entrySet()) {
+            try {
+                if (registry.definition(entry.getKey()).isPresent()) {
+                    warnings.add("Created HUD widget ID conflicts with resource widget: " + entry.getKey());
+                    continue;
+                }
+                LoreEntity.UiElement element = new LoreEntity.UiElement(entry.getValue());
+                registry.declare(entry.getKey(), element);
+                declared.add(new Description(entry.getKey(), new LoreEntity(new JsonObject()), element));
+            } catch (RuntimeException exception) {
+                warnings.add("Invalid editor-created HUD widget '" + entry.getKey() + "': " + exception.getMessage());
             }
         }
 

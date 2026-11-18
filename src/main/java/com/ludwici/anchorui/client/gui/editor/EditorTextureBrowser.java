@@ -77,6 +77,10 @@ public final class EditorTextureBrowser {
         clampScroll();
     }
 
+    public void showError(String message) {
+        error = message == null ? "" : message;
+    }
+
     private int visibleRows() {
         return Math.max(1, (bodyBottom - bodyTop) / ROW_HEIGHT);
     }

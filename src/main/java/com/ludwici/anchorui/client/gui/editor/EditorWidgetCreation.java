@@ -33,6 +33,13 @@ public final class EditorWidgetCreation {
             json.addProperty("fillColor", "#99344D63");
             return json;
         });
+        register(WidgetTypeIds.IMAGE, () -> {
+            JsonObject json = base(64, 64);
+            json.addProperty("texture", "minecraft:textures/block/stone.png");
+            json.addProperty("textureWidth", 16);
+            json.addProperty("textureHeight", 16);
+            return json;
+        });
         register(WidgetTypeIds.BUTTON, () -> {
             JsonObject json = base(120, 20);
             json.addProperty("text", "New button");

@@ -55,12 +55,27 @@ public class EditorTextureCatalogTest {
 
     @Test
     public void acceptsOnlyPngResourceLocationsAndIgnoresUnknownPacks() {
-        assertTrue(EditorTextureCatalog.isPng(id("mod:custom/character.png")));
-        assertFalse(EditorTextureCatalog.isPng(id("mod:custom/character.png.mcmeta")));
-        assertFalse(EditorTextureCatalog.isPng(id("mod:custom/character.jpg")));
-        assertFalse(EditorTextureCatalog.isPng(null));
+        for (String extension : List.of("png", "jpg", "jpeg", "bmp", "tga", "psd", "gif", "hdr", "pic", "pnm", "ppm", "pgm")) {
+            assertTrue(EditorTextureCatalog.isSupportedImage(id("mod:custom/character." + extension)), extension);
+        }
+        for (String extension : List.of("svg", "webp", "dds", "txt", "png.mcmeta")) {
+            assertFalse(EditorTextureCatalog.isSupportedImage(id("mod:custom/character." + extension)), extension);
+        }
+        assertFalse(EditorTextureCatalog.isSupportedImage(null));
         EditorTextureCatalog catalog = EditorTextureCatalog.fromEntries(List.of("loaded"), Map.of(id("mod:textures/widget.png"), "loaded"));
         assertEquals(Set.of(), catalog.expandedFor(id("mod:textures/nonexistent.png")));
         assertEquals(1, catalog.textureCount());
+    }
+
+    @Test
+    public void listsDecodableImageExtensionsInTheTreeWithoutListingUnrelatedFiles() {
+        EditorTextureCatalog catalog = EditorTextureCatalog.fromEntries(List.of("resource_pack.zip"), Map.of(id("demo:ui/a.png"), "resource_pack.zip", id("demo:ui/b.jpg"), "resource_pack.zip", id("demo:ui/c.gif"), "resource_pack.zip", id("demo:ui/d.svg"), "resource_pack.zip"));
+        assertEquals(3, catalog.textureCount());
+        Set<EditorTextureCatalog.PathKey> expanded = catalog.expandedFor(id("demo:ui/b.jpg"));
+        List<EditorTextureCatalog.Row> rows = catalog.visible(expanded);
+        assertTrue(rows.stream().anyMatch(row -> id("demo:ui/a.png").equals(row.texture())));
+        assertTrue(rows.stream().anyMatch(row -> id("demo:ui/b.jpg").equals(row.texture())));
+        assertTrue(rows.stream().anyMatch(row -> id("demo:ui/c.gif").equals(row.texture())));
+        assertFalse(rows.stream().anyMatch(row -> row.label().equals("d.svg")));
     }
 }

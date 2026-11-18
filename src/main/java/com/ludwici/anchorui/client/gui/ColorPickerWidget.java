@@ -229,6 +229,9 @@ public final class ColorPickerWidget extends AbstractWidget implements UiChangeS
                     : ColorPickerColor.withAlpha(color, ColorPickerColor.parseAlpha(input.getValue()));
             input.setFocused(false);
             setColor(next);
+            if (input != alphaInput) {
+                setHsvFromColor();
+            }
             invalidInput = "";
             updateInputValues();
         } catch (IllegalArgumentException exception) {

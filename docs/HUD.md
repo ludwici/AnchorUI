@@ -286,12 +286,12 @@ The **SOURCE JSON [+]** group starts collapsed. The renderer no longer injects `
 The same F8 inspector now exposes a **VISUAL / CONTENT** section for built-in widgets and registered custom Java widgets. It can adjust text labels, text and fill/border/accent colors, image/panel texture resource IDs, state-control background skins, progress bar value labels, widths/heights and relevant panel border/radius fields. A mod may expose additional fields with `WidgetEditorRegistry` (see [Custom widgets](CUSTOM_WIDGETS.md)).
 
 - **- / +** changes numeric, Boolean and enumerated options.
-- **E** opens a text/texture input; colored swatches open the graphical Color Picker for every `Kind.COLOR` field. Its palette and HEX/RGB inputs use the same `anchorui:color_picker` implementation. Click **Apply** to commit the color override or **Cancel** / **Esc** to discard it. A normal HUD Save is still required to persist the editor session.
+- **E** opens a free-form editor for `Kind.TEXT`, or a **texture browser** for `Kind.TEXTURE`. The browser lists active client resource packs, namespaces, expandable folders and PNG files. Only files actually available through loaded packs can be selected, including Java-registered texture fields; nonexistent resource IDs cannot be committed. Colored swatches open the graphical Color Picker for every `Kind.COLOR` field. Its palette and HEX/RGB inputs use the same `anchorui:color_picker` implementation. Click **Apply** to commit a color override or **Cancel** / **Esc** to discard it. A normal HUD Save is still required to persist the editor session.
 - **R** resets just the selected field. The regular **Reset** button clears a selected widget's overrides; **Reset all** clears all.
 - Invalid values are rejected before or during widget reconstruction, and the previous preview is restored. Edits rebuild the HUD widget instances **on change**, not on every frame.
 - Changes persist locally under `appearance` in the existing `config/anchorui/hud-layout.json`; source resource packs and mod-provided Java code are unchanged.
 
-For a basic check, enable `/anchorui test rpg on`, open **F8**, select a health progress bar, edit its `Fill` color and `Width`, save and reopen. Use the image/panel demo to try entering a different texture resource ID, and verify an invalid path is rejected.
+For a basic check, enable `/anchorui test rpg on`, open **F8**, select a health progress bar, edit its `Fill` color and `Width`, save and reopen. Use the image/panel demo to browse the available packs and choose another PNG texture. Verify that nonexistent or non-PNG files cannot be selected, and that a resource removed before applying is rejected.
 
 ### Demo HUD spacing
 

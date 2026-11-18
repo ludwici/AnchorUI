@@ -8,8 +8,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -27,6 +29,7 @@ public final class EditorTextureBrowser {
     private final ResourceManager resources;
     private final EditorTextureCatalog catalog;
     private final Set<EditorTextureCatalog.PathKey> expanded = new HashSet<>();
+    private final Map<ResourceLocation, Optional<EditorTextureCatalog.ImageInfo>> previews = new HashMap<>();
     private final Consumer<String> onApply;
     private final Runnable onCancel;
     private final int screenWidth;
@@ -107,7 +110,7 @@ public final class EditorTextureBrowser {
 
     private void applySelection() {
         if (selected == null || !catalog.contains(selected) || !EditorTextureCatalog.available(resources, selected.toString())) {
-            error = "Texture is no longer available in loaded resource packs";
+            error = "The selected image is missing or cannot be decoded";
             return;
         }
         onApply.accept(selected.toString());
@@ -182,7 +185,7 @@ public final class EditorTextureBrowser {
         }
         if (!hovered.equals(hoveredTexture)) {
             hoveredTexture = hovered;
-            hoveredInfo = EditorTextureCatalog.inspect(resources, hovered);
+            hoveredInfo = previews.computeIfAbsent(hovered, id -> Optional.ofNullable(EditorTextureCatalog.inspect(resources, id))).orElse(null);
         }
         int previewWidth = Math.min(PREVIEW_WIDTH, screenWidth - 8);
         int previewHeight = Math.min(PREVIEW_HEIGHT, screenHeight - 8);

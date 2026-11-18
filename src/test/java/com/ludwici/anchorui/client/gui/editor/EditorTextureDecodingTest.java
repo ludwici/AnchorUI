@@ -1,5 +1,7 @@
 package com.ludwici.anchorui.client.gui.editor;
 
+import com.mojang.blaze3d.platform.NativeImage;
+import com.ludwici.anchorui.client.gui.TextureImageFormats;
 import org.junit.jupiter.api.Test;
 
 import java.awt.image.BufferedImage;
@@ -58,6 +60,16 @@ public class EditorTextureDecodingTest {
         }
         EditorTextureCatalog.ImageInfo dimensions = EditorTextureCatalog.decode(new ByteArrayInputStream(data));
         assertEquals(new EditorTextureCatalog.ImageInfo(2, 3), dimensions, format);
+    }
+
+    @Test
+    public void convertedImagePixelsKeepCorrectColorAndAlphaChannelOrder() throws IOException {
+        byte[] data = Base64.getDecoder().decode(IMAGES.get("PNG"));
+        try (NativeImage image = TextureImageFormats.decode(new ByteArrayInputStream(data))) {
+            assertEquals(2, image.getWidth());
+            assertEquals(3, image.getHeight());
+            assertEquals(0xFF5A14C8, image.getPixelRGBA(0, 0));
+        }
     }
 
     @Test

@@ -23,6 +23,42 @@ public class HudLayoutOffsetsTest {
     Path directory;
 
     @Test
+    public void createdWidgetsSurviveSaveReloadAndAreCopiedIndependently() throws IOException {
+        HudLayoutOffsets original = new HudLayoutOffsets();
+        JsonObject definition = com.ludwici.anchorui.client.gui.editor.EditorWidgetCreation.newWidget("anchorui:text", "anchorui:editor_text_1", 14, -7);
+        original.addCreatedWidget("anchorui:editor_text_1", definition);
+        original.set("anchorui:editor_text_1", 5, 9);
+        Path file = directory.resolve("anchorui/created-widgets.json");
+        HudLayoutStorage.save(file, original);
+        HudLayoutOffsets loaded = HudLayoutStorage.load(file);
+        assertTrue(loaded.sameAs(original));
+        assertEquals(1, loaded.createdWidgets().size());
+        assertEquals("anchorui:text", loaded.createdWidgets().get("anchorui:editor_text_1").get("type").getAsString());
+
+        HudLayoutOffsets editing = loaded.copy();
+        assertTrue(editing.removeCreatedWidget("anchorui:editor_text_1"));
+        assertFalse(editing.isCreatedWidget("anchorui:editor_text_1"));
+        assertEquals(HudLayoutOffsets.Offset.ZERO, editing.get("anchorui:editor_text_1"));
+        assertFalse(editing.sameAs(loaded));
+        assertTrue(loaded.isCreatedWidget("anchorui:editor_text_1"));
+        editing.resetAll();
+        assertTrue(editing.createdWidgets().isEmpty());
+    }
+
+    @Test
+    public void createdWidgetIdsAreValidatedAndCannotDuplicate() {
+        HudLayoutOffsets layout = new HudLayoutOffsets();
+        JsonObject sample = com.ludwici.anchorui.client.gui.editor.EditorWidgetCreation.newWidget("anchorui:panel", "anchorui:editor_panel_1", 0, 0);
+        layout.addCreatedWidget("anchorui:editor_panel_1", sample);
+        assertThrows(IllegalArgumentException.class, () -> layout.addCreatedWidget("anchorui:editor_panel_1", sample));
+        assertThrows(IllegalArgumentException.class, () -> layout.addCreatedWidget("anchorui:wrong", sample));
+        assertThrows(IllegalArgumentException.class, () -> HudLayoutOffsets.fromJson(JsonParser.parseString("{\"createdWidgets\":[1]}").getAsJsonObject()));
+        JsonObject change = layout.createdWidgets().get("anchorui:editor_panel_1");
+        change.addProperty("text", "Not persisted in original");
+        assertFalse(layout.createdWidgets().get("anchorui:editor_panel_1").has("text"));
+    }
+
+    @Test
     public void storesNamespacedOffsetsAndRemovesZeroValues() {
         HudLayoutOffsets offsets = new HudLayoutOffsets();
         offsets.set("moda:health", 12, -5);

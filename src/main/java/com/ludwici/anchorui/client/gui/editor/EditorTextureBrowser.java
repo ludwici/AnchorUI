@@ -1,6 +1,8 @@
 package com.ludwici.anchorui.client.gui.editor;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.ludwici.anchorui.client.gui.TextureImageFormats;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -9,6 +11,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.lwjgl.glfw.GLFW;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -187,6 +190,14 @@ public final class EditorTextureBrowser {
         if (!hovered.equals(hoveredTexture)) {
             hoveredTexture = hovered;
             hoveredInfo = previews.computeIfAbsent(hovered, id -> Optional.ofNullable(EditorTextureCatalog.inspect(resources, id))).orElse(null);
+            if (hoveredInfo != null && TextureImageFormats.needsConversion(hovered)) {
+                try {
+                    TextureImageFormats.ensureRegistered(Minecraft.getInstance(), hovered);
+                } catch (IOException | RuntimeException exception) {
+                    hoveredInfo = null;
+                    previews.put(hovered, Optional.empty());
+                }
+            }
         }
         int previewWidth = Math.min(PREVIEW_WIDTH, screenWidth - 8);
         int previewHeight = Math.min(PREVIEW_HEIGHT, screenHeight - 8);

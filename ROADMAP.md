@@ -30,6 +30,8 @@ Core decisions:
 - [x] Confirm unsaved F8 editor exits from Esc, F8 and Cancel with three actions: discard and exit, save and exit, or stay editing. Keep the preview live beneath the modal; Save/Ctrl+S remain explicit save shortcuts.
 - [x] HUD JSON composition across mods and resource packs, separately toggled test and RPG HUD demos.
 - [x] F8 HUD editor and context-sensitive screen editor: drag, parent/anchor selection, magnetic snapping, visibility overrides, reset, inspector and persistent local positioning.
+- [x] Create/delete widgets directly in both F8 editors with live preview, unique IDs, editable presets for basic built-in types (Text/Image/Panel/Container/Button/Progress), optional insertion into selected containers, local persistence of full definitions and Save/Cancel rollback. Expose a Java preset registry for custom creatable types.
+- [ ] Add explicit JSON export to a resource pack and a user-facing rename/duplicate workflow for generated widgets; generated definitions currently persist only in client-local layout configs.
 - [x] Read-only vanilla HUD anchors for layout alignment; no modification of vanilla HUD elements.
 - [x] Nested panels/containers, padding, opt-in clipping, basic group scaling, content-based `autoSize` and vertical/horizontal scrolling.
 - [x] JSON visual primitives: images, texture regions, tint/alpha, nine-slice, borders and rounded panel geometry.

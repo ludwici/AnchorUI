@@ -14,10 +14,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-/** Modal selector for PNG resources that really exist in the current client resource packs. */
+/** Modal selector for image resources that really exist in the current client resource packs. */
 public final class EditorTextureBrowser {
     private static final int ROW_HEIGHT = 16;
     private static final int TRACK_WIDTH = 8;
+    private static final int PREVIEW_WIDTH = 184;
+    private static final int PREVIEW_HEIGHT = 174;
     private static final int BACKGROUND = 0xFF162332;
     private static final int BORDER = 0xFF718699;
     private static final int TEXT = 0xFFE4F0F5;
@@ -39,6 +41,8 @@ public final class EditorTextureBrowser {
     private final Button cancel;
     private List<EditorTextureCatalog.Row> rows;
     private ResourceLocation selected;
+    private ResourceLocation hoveredTexture;
+    private EditorTextureCatalog.ImageInfo hoveredInfo;
     private int firstRow;
     private boolean draggingScroll;
     private String error = "";
@@ -117,9 +121,9 @@ public final class EditorTextureBrowser {
             graphics.fill(x - 1, y - 1, x + width + 1, y + height + 1, BORDER);
             graphics.fill(x, y, x + width, y + height, BACKGROUND);
             graphics.drawString(font, "SELECT TEXTURE FROM RESOURCE PACK", x + 8, y + 8, 0xFFFFD16B, false);
-            String details = catalog.textureCount() + " available PNG files  |  Click folders to expand";
+            String details = catalog.textureCount() + " image resources  |  Click folders to expand";
             graphics.drawString(font, font.plainSubstrByWidth(details, width - 16), x + 8, y + 23, MUTED, false);
-            String current = selected == null ? "Select a PNG file" : selected.toString();
+            String current = selected == null ? "Select an image" : selected.toString();
             graphics.drawString(font, font.plainSubstrByWidth(current, width - 18), x + 8, y + 37, selected == null ? MUTED : TEXT, false);
             graphics.fill(x + 6, bodyTop - 1, x + width - 6, bodyBottom + 1, 0xFF30465A);
             graphics.fill(x + 7, bodyTop, x + width - 7, bodyBottom, 0xFF101D2A);
@@ -144,10 +148,11 @@ public final class EditorTextureBrowser {
                 graphics.disableScissor();
             }
             drawScrollbar(graphics);
+            renderHoverPreview(graphics, font, mouseX, mouseY);
             if (!error.isEmpty()) {
                 graphics.drawString(font, font.plainSubstrByWidth(error, width - 16), x + 8, bodyBottom + 7, 0xFFFF9887, false);
             } else {
-                graphics.drawString(font, "Only currently loaded, effective PNG assets can be selected", x + 8, bodyBottom + 7, MUTED, false);
+                graphics.drawString(font, "Only loaded, decodable image resources can be applied", x + 8, bodyBottom + 7, MUTED, false);
             }
             apply.active = selected != null;
             apply.render(graphics, mouseX, mouseY, partialTick);
@@ -155,6 +160,66 @@ public final class EditorTextureBrowser {
         } finally {
             graphics.pose().popPose();
         }
+    }
+
+    private ResourceLocation hoveredFile(double mouseX, double mouseY) {
+        if (!insideBody(mouseX, mouseY) || mouseX >= x + width - 16) {
+            return null;
+        }
+        int index = firstRow + (int) (mouseY - bodyTop) / ROW_HEIGHT;
+        if (index < 0 || index >= rows.size()) {
+            return null;
+        }
+        return rows.get(index).texture();
+    }
+
+    private void renderHoverPreview(GuiGraphics graphics, Font font, int mouseX, int mouseY) {
+        ResourceLocation hovered = hoveredFile(mouseX, mouseY);
+        if (hovered == null) {
+            hoveredTexture = null;
+            hoveredInfo = null;
+            return;
+        }
+        if (!hovered.equals(hoveredTexture)) {
+            hoveredTexture = hovered;
+            hoveredInfo = EditorTextureCatalog.inspect(resources, hovered);
+        }
+        int previewWidth = Math.min(PREVIEW_WIDTH, screenWidth - 8);
+        int previewHeight = Math.min(PREVIEW_HEIGHT, screenHeight - 8);
+        if (previewWidth < 50 || previewHeight < 50) {
+            return;
+        }
+        int previewX = mouseX + 16;
+        if (previewX + previewWidth + 4 > screenWidth) {
+            previewX = mouseX - previewWidth - 10;
+        }
+        previewX = Math.max(4, Math.min(previewX, screenWidth - previewWidth - 4));
+        int previewY = Math.max(4, Math.min(mouseY - previewHeight / 2, screenHeight - previewHeight - 4));
+        graphics.fill(previewX - 1, previewY - 1, previewX + previewWidth + 1, previewY + previewHeight + 1, BORDER);
+        graphics.fill(previewX, previewY, previewX + previewWidth, previewY + previewHeight, BACKGROUND);
+        graphics.drawString(font, "TEXTURE PREVIEW", previewX + 6, previewY + 6, 0xFFFFD16B, false);
+        int imageTop = previewY + 20;
+        int imageBottom = previewY + previewHeight - 27;
+        int imageLeft = previewX + 7;
+        int imageRight = previewX + previewWidth - 7;
+        if (hoveredInfo != null && imageBottom > imageTop && imageRight > imageLeft) {
+            for (int rowY = imageTop; rowY < imageBottom; rowY += 8) {
+                for (int rowX = imageLeft; rowX < imageRight; rowX += 8) {
+                    int color = (((rowX - imageLeft) / 8 + (rowY - imageTop) / 8) & 1) == 0 ? 0xFF506273 : 0xFF2D3D4A;
+                    graphics.fill(rowX, rowY, Math.min(rowX + 8, imageRight), Math.min(rowY + 8, imageBottom), color);
+                }
+            }
+            double ratio = Math.min((imageRight - imageLeft) / (double) hoveredInfo.width(), (imageBottom - imageTop) / (double) hoveredInfo.height());
+            int imageWidth = Math.max(1, (int) Math.round(hoveredInfo.width() * ratio));
+            int imageHeight = Math.max(1, (int) Math.round(hoveredInfo.height() * ratio));
+            int drawX = imageLeft + (imageRight - imageLeft - imageWidth) / 2;
+            int drawY = imageTop + (imageBottom - imageTop - imageHeight) / 2;
+            graphics.blit(hovered, drawX, drawY, imageWidth, imageHeight, 0.0F, 0.0F, hoveredInfo.width(), hoveredInfo.height(), hoveredInfo.width(), hoveredInfo.height());
+            graphics.drawString(font, hoveredInfo.width() + " x " + hoveredInfo.height(), previewX + 7, previewY + previewHeight - 23, TEXT, false);
+        } else {
+            graphics.drawString(font, "Could not decode image", previewX + 7, imageTop + 8, 0xFFFF9887, false);
+        }
+        graphics.drawString(font, font.plainSubstrByWidth(hovered.toString(), previewWidth - 14), previewX + 7, previewY + previewHeight - 12, MUTED, false);
     }
 
     private void drawScrollbar(GuiGraphics graphics) {

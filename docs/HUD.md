@@ -127,6 +127,14 @@ Preview state is a local session setting, not a saved player preference. Resourc
 
 The HUD core covers JSON composition, read-only display and an optional player-facing editor. Future work includes live data bindings, conditional visibility, animations and precise render-layer selection.
 
+## Creating HUD widgets in F8
+
+Use **+ Add widget** in the HUD inspector to create Text, Image, Panel, Container, Button, or Progress directly in the live preview. Each new widget receives a unique namespaced ID and starts near the screen center. If a Panel or Container is selected, the new widget becomes its child (including automatic Grid placement). Drag and customize the new element just like an existing resource-authored widget.
+
+The **Delete** action is enabled only for editor-created widgets; bundled/resource-pack widgets cannot be deleted this way. **Save**, **Cancel**, the unsaved-changes exit dialog, and **Reset all** also account for added and deleted widgets. The full `createdWidgets` definition is saved alongside positions and appearance overrides in `config/anchorui/hud-layout.json`; it is local to this client, not a modification to resource packs.
+
+The list of creatable types is extensible from Java with `EditorWidgetCreation.register(type, defaultsSupplier)`. New types must supply valid widget settings so the editor can construct them safely; registration of a rendering factory alone does not imply the type can be created from an empty definition.
+
 ## HUD editor
 
 The F8 inspector has a collapsed **DIAGNOSTICS** category when HUD widget construction or layout resolution reports problems. Expand it to see the current error and up to 24 unique warnings, with the full diagnostic trail retained in `latest.log`. This includes invalid widget configurations and unresolved anchor references detected during HUD rebuilds. Rejected editor anchor/layout choices display the specific validation reason when available, without applying invalid changes. Diagnostics clear when HUD state is reset and are refreshed on rebuild. The section also displays errors and warnings from HUD resources and shared templates/styles/definitions after a reload, excluding unrelated screen documents. See [Resource reload and diagnostics](RESOURCE_RELOAD.md) for details and a manual F3+T test checklist.

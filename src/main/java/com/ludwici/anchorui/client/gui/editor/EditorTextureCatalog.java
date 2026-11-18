@@ -7,8 +7,6 @@ import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -23,8 +21,6 @@ import java.util.TreeMap;
 public final class EditorTextureCatalog {
     public record PathKey(String pack, String namespace, String folder) {
     }
-
-    private static final List<String> EXTENSIONS = List.of(".png", ".jpg", ".jpeg", ".bmp", ".tga", ".psd", ".gif", ".hdr", ".pic", ".pnm", ".ppm", ".pgm");
 
     public record ImageInfo(int width, int height) {
     }
@@ -75,16 +71,7 @@ public final class EditorTextureCatalog {
     }
 
     public static boolean isSupportedImage(ResourceLocation location) {
-        if (location == null) {
-            return false;
-        }
-        String path = location.getPath();
-        for (String extension : EXTENSIONS) {
-            if (path.endsWith(extension)) {
-                return true;
-            }
-        }
-        return false;
+        return TextureImageFormats.isSupported(location);
     }
 
     public static ImageInfo inspect(ResourceManager manager, ResourceLocation location) {
@@ -96,17 +83,8 @@ public final class EditorTextureCatalog {
                 return null;
             }
             return new ImageInfo(image.getWidth(), image.getHeight());
-        } catch (IOException | RuntimeException exception) {
+        } catch (java.io.IOException | RuntimeException exception) {
             return null;
-        }
-    }
-
-    static ImageInfo decode(InputStream stream) throws IOException {
-        try (NativeImage image = TextureImageFormats.decode(stream)) {
-            if (image.getWidth() <= 0 || image.getHeight() <= 0) {
-                return null;
-            }
-            return new ImageInfo(image.getWidth(), image.getHeight());
         }
     }
 

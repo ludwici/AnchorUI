@@ -1,6 +1,7 @@
 package com.ludwici.anchorui.client.gui.editor;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import com.ludwici.anchorui.client.gui.TextureImageFormats;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.resources.Resource;
@@ -90,19 +91,18 @@ public final class EditorTextureCatalog {
         if (manager == null || !isSupportedImage(location)) {
             return null;
         }
-        var resource = manager.getResource(location);
-        if (resource.isEmpty()) {
-            return null;
-        }
-        try (InputStream stream = resource.get().open()) {
-            return decode(stream);
+        try (NativeImage image = TextureImageFormats.open(manager, location)) {
+            if (image.getWidth() <= 0 || image.getHeight() <= 0) {
+                return null;
+            }
+            return new ImageInfo(image.getWidth(), image.getHeight());
         } catch (IOException | RuntimeException exception) {
             return null;
         }
     }
 
     static ImageInfo decode(InputStream stream) throws IOException {
-        try (NativeImage image = NativeImage.read(stream)) {
+        try (NativeImage image = TextureImageFormats.decode(stream)) {
             if (image.getWidth() <= 0 || image.getHeight() <= 0) {
                 return null;
             }

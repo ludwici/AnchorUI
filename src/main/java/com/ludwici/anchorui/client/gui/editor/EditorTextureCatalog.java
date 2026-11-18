@@ -1,10 +1,13 @@
 package com.ludwici.anchorui.client.gui.editor;
 
+import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -15,9 +18,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-/** A snapshot of actual, effective PNG resources from the current client resource packs. */
+/** A snapshot of effective image resources in the current client resource packs. */
 public final class EditorTextureCatalog {
     public record PathKey(String pack, String namespace, String folder) {
+    }
+
+    private static final List<String> EXTENSIONS = List.of(".png", ".jpg", ".jpeg", ".bmp", ".tga", ".psd", ".gif", ".hdr", ".pic", ".pnm", ".ppm", ".pgm");
+
+    public record ImageInfo(int width, int height) {
     }
 
     public record Row(String label, int depth, PathKey folder, ResourceLocation texture) {
@@ -50,7 +58,7 @@ public final class EditorTextureCatalog {
     public static EditorTextureCatalog collect(ResourceManager manager) {
         List<String> packs = manager.listPacks().map(PackResources::packId).toList();
         Map<ResourceLocation, String> effective = new LinkedHashMap<>();
-        for (var resource : manager.listResources("", location -> isPng(location)).entrySet()) {
+        for (var resource : manager.listResources("", EditorTextureCatalog::isSupportedImage).entrySet()) {
             Resource texture = resource.getValue();
             effective.put(resource.getKey(), texture.sourcePackId());
         }
@@ -58,12 +66,42 @@ public final class EditorTextureCatalog {
     }
 
     public static boolean available(ResourceManager manager, String name) {
+        if (name == null) {
+            return false;
+        }
         ResourceLocation location = ResourceLocation.tryParse(name.trim());
-        return location != null && isPng(location) && manager.getResource(location).isPresent();
+        return inspect(manager, location) != null;
     }
 
-    public static boolean isPng(ResourceLocation location) {
-        return location != null && location.getPath().endsWith(".png");
+    public static boolean isSupportedImage(ResourceLocation location) {
+        if (location == null) {
+            return false;
+        }
+        String path = location.getPath();
+        for (String extension : EXTENSIONS) {
+            if (path.endsWith(extension)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static ImageInfo inspect(ResourceManager manager, ResourceLocation location) {
+        if (manager == null || !isSupportedImage(location)) {
+            return null;
+        }
+        var resource = manager.getResource(location);
+        if (resource.isEmpty()) {
+            return null;
+        }
+        try (InputStream stream = resource.get().open(); NativeImage image = NativeImage.read(stream)) {
+            if (image.getWidth() <= 0 || image.getHeight() <= 0) {
+                return null;
+            }
+            return new ImageInfo(image.getWidth(), image.getHeight());
+        } catch (IOException | RuntimeException exception) {
+            return null;
+        }
     }
 
     public static EditorTextureCatalog fromEntries(List<String> packIds, Map<ResourceLocation, String> effective) {
@@ -76,7 +114,7 @@ public final class EditorTextureCatalog {
         Map<ResourceLocation, PathKey> owners = new HashMap<>();
         for (var entry : files) {
             ResourceLocation id = entry.getKey();
-            if (!isPng(id)) {
+            if (!isSupportedImage(id)) {
                 continue;
             }
             String pack = entry.getValue();

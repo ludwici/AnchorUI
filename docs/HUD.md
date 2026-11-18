@@ -291,7 +291,7 @@ The same F8 inspector now exposes a **VISUAL / CONTENT** section for built-in wi
 - Invalid values are rejected before or during widget reconstruction, and the previous preview is restored. Edits rebuild the HUD widget instances **on change**, not on every frame.
 - Changes persist locally under `appearance` in the existing `config/anchorui/hud-layout.json`; source resource packs and mod-provided Java code are unchanged.
 
-For a basic check, enable `/anchorui test rpg on`, open **F8**, select a health progress bar, edit its `Fill` color and `Width`, save and reopen. Use the image/panel demo to browse the available packs and choose another PNG texture. Verify that nonexistent or non-PNG files cannot be selected, and that a resource removed before applying is rejected.
+For a basic check, enable `/anchorui test rpg on`, open **F8**, select a health progress bar, edit its `Fill` color and `Width`, save and reopen. Use the image/panel demo to browse the available packs and choose another PNG texture. Verify that nonexistent, non-PNG/non-JPEG or unreadable files cannot be selected, and that a resource removed before applying is rejected.
 
 ### Demo HUD spacing
 

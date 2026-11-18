@@ -24,6 +24,7 @@ import com.ludwici.anchorui.client.gui.editor.EditorInspectorButton;
 import com.ludwici.anchorui.client.gui.editor.EditorExitConfirmation;
 import com.ludwici.anchorui.client.gui.editor.EditorColorPicker;
 import com.ludwici.anchorui.client.gui.editor.EditorTextureBrowser;
+import com.ludwici.anchorui.client.gui.editor.EditorWidgetCreation;
 import com.ludwici.anchorui.client.gui.ColorPickerColor;
 import com.ludwici.anchorui.client.gui.NativeContainerScrollPanel;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -51,7 +52,7 @@ public final class AnchorHudEditorScreen extends Screen {
     private static final int PANEL_WIDTH = 218;
     private static final int BUTTON_HEIGHT = 17;
     private static final int BUTTON_STEP = 20;
-    private static final int FOOTER_HEIGHT = 65;
+    private static final int FOOTER_HEIGHT = 85;
     private static final int HEADER_HEIGHT = 34;
     private static final int INSPECTOR_LINE_HEIGHT = 13;
     private static final float INSPECTOR_SCALE = 0.83F;
@@ -156,6 +157,7 @@ public final class AnchorHudEditorScreen extends Screen {
     private int dragPanelX;
     private int dragPanelY;
     private Button resetButton;
+    private Button deleteWidgetButton;
     private Button hideButton;
     private Button parentButton;
     private Button demoButton;
@@ -237,8 +239,10 @@ public final class AnchorHudEditorScreen extends Screen {
             manager.resetAllPreviewOffsets();
             status = "Restored all HUD defaults";
         }).bounds(right, actionsY + BUTTON_STEP, halfWidth, BUTTON_HEIGHT).build());
-        addControl(Button.builder(Component.literal("Save"), button -> saveAndClose()).bounds(left, actionsY + BUTTON_STEP * 2, halfWidth, BUTTON_HEIGHT).build());
-        addControl(Button.builder(Component.literal("Cancel"), button -> requestClose()).bounds(right, actionsY + BUTTON_STEP * 2, halfWidth, BUTTON_HEIGHT).build());
+        addControl(Button.builder(Component.literal("+ Add widget"), button -> openCreateWidgetMenu()).bounds(left, actionsY + BUTTON_STEP * 2, halfWidth, BUTTON_HEIGHT).build());
+        deleteWidgetButton = addControl(Button.builder(Component.literal("Delete"), button -> deleteCreatedWidget()).bounds(right, actionsY + BUTTON_STEP * 2, halfWidth, BUTTON_HEIGHT).build());
+        addControl(Button.builder(Component.literal("Save"), button -> saveAndClose()).bounds(left, actionsY + BUTTON_STEP * 3, halfWidth, BUTTON_HEIGHT).build());
+        addControl(Button.builder(Component.literal("Cancel"), button -> requestClose()).bounds(right, actionsY + BUTTON_STEP * 3, halfWidth, BUTTON_HEIGHT).build());
         createAppearanceInput();
     }
 
@@ -464,6 +468,8 @@ public final class AnchorHudEditorScreen extends Screen {
         controls.get(5).setPosition(right, top + BUTTON_STEP);
         controls.get(6).setPosition(left, top + BUTTON_STEP * 2);
         controls.get(7).setPosition(right, top + BUTTON_STEP * 2);
+        controls.get(8).setPosition(left, top + BUTTON_STEP * 3);
+        controls.get(9).setPosition(right, top + BUTTON_STEP * 3);
     }
 
     private void refreshFrameHandles() {
@@ -505,6 +511,34 @@ public final class AnchorHudEditorScreen extends Screen {
             inspectorSections.collapse("source");
             focusedAnchorIndex = -1;
             inspectorScroll = 0;
+        }
+    }
+
+    private void openCreateWidgetMenu() {
+        editorDropdown.open(panelX + 6, actionsTop() + BUTTON_STEP * 2, panelWidth - 12, BUTTON_HEIGHT, width, height,
+                EditorWidgetCreation.types(), "", type -> {
+                    String id = manager.createPreviewWidget(type);
+                    if (id == null) {
+                        status = manager.getLastSaveError();
+                        return;
+                    }
+                    selectWidget(id);
+                    refreshFrameHandles();
+                    status = "Created " + id;
+                });
+    }
+
+    private void deleteCreatedWidget() {
+        if (selected == null || !manager.isCreatedWidget(selected)) {
+            return;
+        }
+        String id = selected;
+        if (manager.removePreviewCreatedWidget(id)) {
+            selectWidget(null);
+            refreshFrameHandles();
+            status = "Deleted " + id;
+        } else {
+            status = manager.getLastSaveError();
         }
     }
 

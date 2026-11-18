@@ -22,6 +22,14 @@ new ItemLoreScreen(previousScreen, item, document, resourceId)
 
 Third-party callers using the original three-argument constructor can still preview and edit widgets, but must supply the document resource ID to persist overrides safely.
 
+## Creating widgets in F8
+
+The **+ Add widget** button opens a registered-type picker. In the first version it supports **Text, Image, Panel, Container, Button and Progress** with valid defaults; Image starts with the vanilla stone texture so the user can immediately change it using the texture browser. New widgets receive unique namespaced `anchorui:editor_<type>_<number>` IDs, appear in the live preview, and can be dragged, given anchors and edited through the normal inspector.
+
+If a Panel/Container is selected when adding a widget, the new element is inserted as its child; this works with Row/Column/Grid layout management. Otherwise the widget is placed near the screen center. **Delete** removes only widgets created in F8; resource-authored widgets are never deleted by this action. **Reset all** also clears editor-created widgets. Unsaved additions/deletions participate in the existing Save/Discard/Cancel exit confirmation.
+
+Definitions are stored under `createdWidgets` in the per-screen `config/anchorui/screens/<namespace>/<path>.json` override file. This file is local to the Minecraft instance and does not rewrite mod JARs or original resource packs. Java-registered widget types can opt into creation by calling `EditorWidgetCreation.register(type, defaultsSupplier)` to provide a complete minimal JSON definition; types needing special state are not offered without a preset.
+
 ## Working with widgets
 
 A **draggable Widgets panel** on the left lists *only the widgets belonging to the currently open Anchor UI screen*. It does not include HUDs from other screens or the global vanilla HUD reference catalog. The entries are grouped: `minecraft:*` first if present, then the screen's namespace, then other namespaces. **Children now appear indented under their structural container** with type markers for panels, buttons, text, progress and image widgets. Click a container's disclosure arrow to collapse or expand its descendants, or click its name to select it. When the child belongs to another namespace it remains in that namespace's group. Hover any widget to see its full ID and type. Hidden widgets stay selectable from the list. Scroll the list with the mouse wheel and drag its header independently of the inspector.

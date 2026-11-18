@@ -1,5 +1,6 @@
 package com.ludwici.anchorui.client.gui.editor;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -217,7 +218,13 @@ public final class EditorTextureBrowser {
             int imageHeight = Math.max(1, (int) Math.round(hoveredInfo.height() * ratio));
             int drawX = imageLeft + (imageRight - imageLeft - imageWidth) / 2;
             int drawY = imageTop + (imageBottom - imageTop - imageHeight) / 2;
-            graphics.blit(hovered, drawX, drawY, imageWidth, imageHeight, 0.0F, 0.0F, hoveredInfo.width(), hoveredInfo.height(), hoveredInfo.width(), hoveredInfo.height());
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            try {
+                graphics.blit(hovered, drawX, drawY, imageWidth, imageHeight, 0.0F, 0.0F, hoveredInfo.width(), hoveredInfo.height(), hoveredInfo.width(), hoveredInfo.height());
+            } finally {
+                RenderSystem.disableBlend();
+            }
             graphics.drawString(font, hoveredInfo.width() + " x " + hoveredInfo.height(), previewX + 7, previewY + previewHeight - 23, TEXT, false);
         } else {
             graphics.drawString(font, "Could not decode image", previewX + 7, imageTop + 8, 0xFFFF9887, false);

@@ -21,6 +21,32 @@ public class ColorPickerColorTest {
     }
 
     @Test
+    public void alphaInputPreservesRgbAndRoundTripsThroughArgbHex() {
+        int base = ColorPickerColor.parseHex("#2698E3");
+        assertEquals(0xFF2698E3, base);
+        for (int alpha : new int[]{0, 1, 64, 128, 192, 254, 255}) {
+            int result = ColorPickerColor.withAlpha(base, alpha);
+            assertEquals(alpha, result >>> 24);
+            assertEquals(base & 0xFFFFFF, result & 0xFFFFFF);
+            assertEquals(result, ColorPickerColor.parse(ColorPickerColor.hex(result)));
+            assertEquals(alpha, ColorPickerColor.parseAlpha(Integer.toString(alpha)));
+        }
+        assertEquals("#002698E3", ColorPickerColor.hex(ColorPickerColor.withAlpha(base, 0)));
+        assertEquals("#802698E3", ColorPickerColor.hex(ColorPickerColor.withAlpha(base, 128)));
+        assertEquals("#2698E3", ColorPickerColor.hex(ColorPickerColor.withAlpha(base, 255)));
+        assertEquals(0x802698E3, ColorPickerColor.parseRgb("38, 152, 227", 128));
+    }
+
+    @Test
+    public void alphaInputRejectsInvalidValues() {
+        for (String invalid : new String[]{"-1", "256", "999", "0.5", "", "1a", "20%", "12 3"}) {
+            assertThrows(IllegalArgumentException.class, () -> ColorPickerColor.parseAlpha(invalid), invalid);
+        }
+        assertThrows(IllegalArgumentException.class, () -> ColorPickerColor.withAlpha(0xFF2698E3, -1));
+        assertThrows(IllegalArgumentException.class, () -> ColorPickerColor.withAlpha(0xFF2698E3, 256));
+    }
+
+    @Test
     public void refusesInvalidColorValues() {
         for (String value : new String[]{
                 "#FFF", "#000000000", "#GG0022", "rgb(256,0,0)",

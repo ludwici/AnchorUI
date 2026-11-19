@@ -24,6 +24,7 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
     public static final LoreLoader INSTANCE = new LoreLoader();
     private volatile LoreResourceCompiler.Snapshot snapshot = LoreResourceCompiler.empty();
     private volatile long revision;
+    private Map<ResourceLocation, JsonElement> resourceObjects = Map.of();
     private final Set<ResourceLocation> warnedMissingStyles = ConcurrentHashMap.newKeySet();
 
     public record HudDocument(LoreEntity entity, boolean testOnly, String testGroup) {
@@ -34,8 +35,24 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
     }
 
     @Override
-    protected void apply(Map<ResourceLocation, JsonElement> objects, ResourceManager resourceManager, ProfilerFiller profiler) {
-        LoreResourceCompiler.Snapshot updated = LoreResourceCompiler.compile(objects);
+    protected synchronized void apply(Map<ResourceLocation, JsonElement> objects, ResourceManager resourceManager, ProfilerFiller profiler) {
+        resourceObjects = new java.util.LinkedHashMap<>(objects);
+        publishDocuments();
+    }
+
+    /** Refresh locally created documents immediately, without forcing a full resource-pack reload. */
+    public synchronized void refreshUserDocuments() {
+        publishDocuments();
+    }
+
+    private void publishDocuments() {
+        Map<ResourceLocation, JsonElement> merged = new java.util.LinkedHashMap<>(resourceObjects);
+        for (var entry : UserDocumentStore.load().entrySet()) {
+            if (merged.putIfAbsent(entry.getKey(), entry.getValue()) != null) {
+                AnchorUI.LOGGER.warn("Local Anchor UI document '{}' conflicts with a resource pack; resource-pack definition takes precedence", entry.getKey());
+            }
+        }
+        LoreResourceCompiler.Snapshot updated = LoreResourceCompiler.compile(merged);
         for (LoreResourceCompiler.Issue issue : updated.issues()) {
             if (issue.severity() == LoreResourceCompiler.Severity.ERROR) {
                 if (issue.cause() == null) {

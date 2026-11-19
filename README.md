@@ -171,6 +171,26 @@ Within a screen, Anchor UI first declares all widget IDs in a per-screen `Widget
 
 See [Widget Namespaces and Imports](docs/WIDGET_REFERENCES.md) and test `/anchorui test scene14` for a working cross-namespace demonstration.
 
+## Creating local HUD and Screen documents
+
+Create and remove client-side documents in-game with namespaced IDs:
+
+```text
+/anchorui hud create mypack:status
+/anchorui hud edit mypack:status
+/anchorui hud list
+/anchorui hud delete mypack:status
+
+/anchorui screen create mypack:character
+/anchorui screen open mypack:character
+/anchorui screen list
+/anchorui screen delete mypack:character
+```
+
+Creating a HUD opens the F8 HUD editor, and creating a Screen opens that empty Screen (press F8 to add widgets). Use `/anchorui hud edit mypack:status` to associate **newly added** widgets with that HUD; `/anchorui hud edit` returns to global HUD editing. All HUDs still render together in the shared editor; the selected document controls ownership of new widgets, not the entire preview. Existing widgets and resource-pack documents are unaffected.
+
+New documents are JSON files at `config/anchorui/documents/hud/<namespace>/<path>.json` and `config/anchorui/documents/screens/<namespace>/<path>.json`. They are loaded along with resource packs, immediately after create/delete and again on resource reload. Layout and widget edits still use `config/anchorui/hud-layout.json` for HUD, and `config/anchorui/screens/<namespace>/screens/<path>.json` for Screens. Deleting a locally created Screen also deletes its saved layout; deleting a local HUD removes widgets explicitly created for that HUD. You cannot overwrite or delete a built-in or resource-pack document through these commands.
+
 ## F8: HUD and screen layout editors (NeoForge 1.21.1)
 
 Both editors now have a dedicated scrollable, draggable **Widgets** list alongside the properties inspector. HUD mode lists all custom HUD widgets and 25 vanilla read-only references; screen mode shows only the current screen's widgets. Entries are grouped in this order: vanilla `minecraft:*`, current editor namespace, then other namespaces alphabetically. Click an entry to select it or to choose an anchor parent. See [HUD editor](docs/HUD.md) and [Screen editor](docs/SCREEN_EDITOR.md).

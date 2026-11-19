@@ -89,6 +89,11 @@ public final class UserDocumentStore {
         if (suffix.isBlank() || suffix.startsWith("/") || suffix.endsWith("/")) {
             throw new IllegalArgumentException("Invalid Anchor UI document ID: " + id);
         }
+        for (String segment : suffix.split("/")) {
+            if (segment.isBlank() || segment.equals(".") || segment.equals("..")) {
+                throw new IllegalArgumentException("Unsafe Anchor UI document ID: " + id);
+            }
+        }
         Path directory = configRoot.resolve("documents").resolve(kind.directory()).resolve(id.getNamespace()).normalize();
         Path destination = directory.resolve(suffix + ".json").normalize();
         if (!destination.startsWith(directory) || destination.equals(directory)) {

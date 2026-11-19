@@ -6,6 +6,7 @@ import com.ludwici.anchorui.api.LoreEntity;
 import com.ludwici.anchorui.api.animation.UiAnimationTriggerRegistry;
 import com.ludwici.anchorui.client.LoreLoader;
 import com.ludwici.anchorui.client.ScreenIds;
+import com.ludwici.anchorui.client.UserDocumentStore;
 import com.ludwici.anchorui.client.hud.AnchorHudManager;
 import com.ludwici.anchorui.client.hud.AnchorHudEditorScreen;
 import com.ludwici.anchorui.client.gui.ItemLoreScreen;
@@ -22,6 +23,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import java.util.concurrent.atomic.AtomicLong;
+import java.io.IOException;
 
 @EventBusSubscriber(modid = AnchorUI.MODID, value = Dist.CLIENT)
 public final class AnchorUITestCommands {
@@ -57,7 +59,19 @@ public final class AnchorUITestCommands {
         }
 
         var hud = Commands.literal("hud")
-                .then(Commands.literal("edit").executes(context -> queueHudEditor()));
+                .then(Commands.literal("edit")
+                        .executes(context -> queueHudEditor())
+                        .then(Commands.argument("id", StringArgumentType.greedyString())
+                                .suggests((context, builder) -> suggestLocal(UserDocumentStore.Kind.HUD, builder))
+                                .executes(context -> queueHudEditor(StringArgumentType.getString(context, "id")))))
+                .then(Commands.literal("create")
+                        .then(Commands.argument("id", StringArgumentType.greedyString())
+                                .executes(context -> createDocument(UserDocumentStore.Kind.HUD, StringArgumentType.getString(context, "id")))))
+                .then(Commands.literal("delete")
+                        .then(Commands.argument("id", StringArgumentType.greedyString())
+                                .suggests((context, builder) -> suggestLocal(UserDocumentStore.Kind.HUD, builder))
+                                .executes(context -> deleteDocument(UserDocumentStore.Kind.HUD, StringArgumentType.getString(context, "id")))))
+                .then(Commands.literal("list").executes(context -> listDocuments(UserDocumentStore.Kind.HUD)));
         var screens = Commands.literal("screen")
                 .then(Commands.literal("open")
                         .then(Commands.argument("id", StringArgumentType.greedyString())
@@ -67,7 +81,15 @@ public final class AnchorUITestCommands {
                                             .map(ScreenIds::display).sorted().forEach(builder::suggest);
                                     return builder.buildFuture();
                                 })
-                                .executes(context -> queueScreen(StringArgumentType.getString(context, "id")))));
+                                .executes(context -> queueScreen(StringArgumentType.getString(context, "id")))))
+                .then(Commands.literal("create")
+                        .then(Commands.argument("id", StringArgumentType.greedyString())
+                                .executes(context -> createDocument(UserDocumentStore.Kind.SCREEN, StringArgumentType.getString(context, "id")))))
+                .then(Commands.literal("delete")
+                        .then(Commands.argument("id", StringArgumentType.greedyString())
+                                .suggests((context, builder) -> suggestLocal(UserDocumentStore.Kind.SCREEN, builder))
+                                .executes(context -> deleteDocument(UserDocumentStore.Kind.SCREEN, StringArgumentType.getString(context, "id")))))
+                .then(Commands.literal("list").executes(context -> listDocuments(UserDocumentStore.Kind.SCREEN)));
         event.getDispatcher().register(Commands.literal("anchorui").then(test).then(hud).then(screens));
     }
 
@@ -119,8 +141,114 @@ public final class AnchorUITestCommands {
     }
 
     private static int queueHudEditor() {
+        AnchorHudManager.INSTANCE.setActiveUserHud(null);
         pendingHudEditor = true;
         return Command.SINGLE_SUCCESS;
+    }
+
+    private static int queueHudEditor(String rawId) {
+        ResourceLocation id = UserDocumentStore.resolve(UserDocumentStore.Kind.HUD, rawId);
+        if (id == null || !UserDocumentStore.exists(UserDocumentStore.Kind.HUD, id)) {
+            notifyPlayer("Anchor UI: HUD '" + rawId + "' is not a locally created HUD");
+            return 0;
+        }
+        AnchorHudManager.INSTANCE.setActiveUserHud(id);
+        pendingHudEditor = true;
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestLocal(
+            UserDocumentStore.Kind kind, com.mojang.brigadier.suggestion.SuggestionsBuilder builder) {
+        for (ResourceLocation id : UserDocumentStore.list(kind)) {
+            builder.suggest(UserDocumentStore.display(kind, id));
+        }
+        return builder.buildFuture();
+    }
+
+    private static int createDocument(UserDocumentStore.Kind kind, String rawId) {
+        ResourceLocation id = UserDocumentStore.resolve(kind, rawId);
+        if (id == null) {
+            notifyPlayer("Anchor UI: ID must be namespace:name");
+            return 0;
+        }
+        boolean registered = kind == UserDocumentStore.Kind.HUD
+                ? LoreLoader.INSTANCE.getHudDocuments().containsKey(id)
+                : LoreLoader.INSTANCE.getData().containsKey(id);
+        if (registered || UserDocumentStore.exists(kind, id)) {
+            notifyPlayer("Anchor UI: document '" + UserDocumentStore.display(kind, id) + "' already exists");
+            return 0;
+        }
+        try {
+            UserDocumentStore.create(kind, id);
+            LoreLoader.INSTANCE.refreshUserDocuments();
+            registered = kind == UserDocumentStore.Kind.HUD
+                    ? LoreLoader.INSTANCE.getHudDocuments().containsKey(id)
+                    : LoreLoader.INSTANCE.getData().containsKey(id);
+            if (!registered) {
+                UserDocumentStore.delete(kind, id);
+                LoreLoader.INSTANCE.refreshUserDocuments();
+                notifyPlayer("Anchor UI: new document could not be loaded");
+                return 0;
+            }
+            if (kind == UserDocumentStore.Kind.HUD) {
+                AnchorHudManager.INSTANCE.setActiveUserHud(id);
+                pendingHudEditor = true;
+            } else {
+                pendingScreen = id;
+            }
+            notifyPlayer("Anchor UI: created " + kind.name().toLowerCase(java.util.Locale.ROOT)
+                    + " '" + UserDocumentStore.display(kind, id) + "'");
+            return Command.SINGLE_SUCCESS;
+        } catch (IOException | RuntimeException exception) {
+            AnchorUI.LOGGER.error("Failed to create Anchor UI document {}", id, exception);
+            notifyPlayer("Anchor UI: create failed: " + exception.getMessage());
+            return 0;
+        }
+    }
+
+    private static int deleteDocument(UserDocumentStore.Kind kind, String rawId) {
+        ResourceLocation id = UserDocumentStore.resolve(kind, rawId);
+        if (id == null || !UserDocumentStore.exists(kind, id)) {
+            notifyPlayer("Anchor UI: only locally created documents can be deleted: " + rawId);
+            return 0;
+        }
+        if (kind == UserDocumentStore.Kind.HUD && AnchorHudManager.INSTANCE.isEditing()) {
+            notifyPlayer("Anchor UI: close the HUD editor before deleting this HUD");
+            return 0;
+        }
+        try {
+            UserDocumentStore.delete(kind, id);
+            if (kind == UserDocumentStore.Kind.HUD) {
+                AnchorHudManager.INSTANCE.removeUserHudWidgets(id);
+            } else if (id.equals(pendingScreen)) {
+                pendingScreen = null;
+            }
+            LoreLoader.INSTANCE.refreshUserDocuments();
+            notifyPlayer("Anchor UI: deleted " + kind.name().toLowerCase(java.util.Locale.ROOT)
+                    + " '" + UserDocumentStore.display(kind, id) + "'");
+            return Command.SINGLE_SUCCESS;
+        } catch (IOException | RuntimeException exception) {
+            AnchorUI.LOGGER.error("Failed to delete Anchor UI document {}", id, exception);
+            LoreLoader.INSTANCE.refreshUserDocuments();
+            notifyPlayer("Anchor UI: delete failed: " + exception.getMessage());
+            return 0;
+        }
+    }
+
+    private static int listDocuments(UserDocumentStore.Kind kind) {
+        var ids = UserDocumentStore.list(kind);
+        notifyPlayer("Anchor UI: " + ids.size() + " locally created " + kind.name().toLowerCase(java.util.Locale.ROOT) + " document(s)");
+        for (ResourceLocation id : ids) {
+            notifyPlayer(" - " + UserDocumentStore.display(kind, id));
+        }
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static void notifyPlayer(String text) {
+        var player = Minecraft.getInstance().player;
+        if (player != null) {
+            player.displayClientMessage(Component.literal(text), false);
+        }
     }
 
     private static void openHudEditor() {

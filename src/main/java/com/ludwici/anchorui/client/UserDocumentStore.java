@@ -111,7 +111,11 @@ public final class UserDocumentStore {
     }
 
     public static void create(Kind kind, ResourceLocation id) throws IOException {
-        Path file = path(kind, id);
+        create(configRoot(), kind, id);
+    }
+
+    public static void create(Path configRoot, Kind kind, ResourceLocation id) throws IOException {
+        Path file = path(configRoot, kind, id);
         Files.createDirectories(file.getParent());
         JsonObject definition = new JsonObject();
         definition.add("entities", new JsonArray());
@@ -119,17 +123,25 @@ public final class UserDocumentStore {
     }
 
     public static void delete(Kind kind, ResourceLocation id) throws IOException {
-        Files.delete(path(kind, id));
+        delete(configRoot(), kind, id);
+    }
+
+    public static void delete(Path configRoot, Kind kind, ResourceLocation id) throws IOException {
+        Files.delete(path(configRoot, kind, id));
         if (kind == Kind.SCREEN) {
-            Files.deleteIfExists(screenLayoutPath(id));
+            Files.deleteIfExists(screenLayoutPath(configRoot, id));
         }
     }
 
     public static Path screenLayoutPath(ResourceLocation id) {
+        return screenLayoutPath(configRoot(), id);
+    }
+
+    public static Path screenLayoutPath(Path configRoot, ResourceLocation id) {
         if (!id.getPath().startsWith(Kind.SCREEN.prefix())) {
             throw new IllegalArgumentException("Not an Anchor UI screen: " + id);
         }
-        Path root = configRoot().resolve("screens").resolve(id.getNamespace()).normalize();
+        Path root = configRoot.resolve("screens").resolve(id.getNamespace()).normalize();
         Path file = root.resolve(id.getPath() + ".json").normalize();
         if (!file.startsWith(root)) {
             throw new IllegalArgumentException("Unsafe Anchor UI screen layout path: " + id);
@@ -138,9 +150,13 @@ public final class UserDocumentStore {
     }
 
     public static Map<ResourceLocation, JsonElement> load() {
+        return load(configRoot());
+    }
+
+    public static Map<ResourceLocation, JsonElement> load(Path configRoot) {
         Map<ResourceLocation, JsonElement> documents = new LinkedHashMap<>();
         for (Kind kind : Kind.values()) {
-            Path root = configRoot().resolve("documents").resolve(kind.directory());
+            Path root = configRoot.resolve("documents").resolve(kind.directory());
             if (!Files.isDirectory(root)) {
                 continue;
             }
@@ -155,7 +171,7 @@ public final class UserDocumentStore {
                         String filename = relative.subpath(1, relative.getNameCount()).toString().replace('\\', '/');
                         String name = filename.substring(0, filename.length() - ".json".length());
                         ResourceLocation id = ResourceLocation.tryParse(namespace + ":" + kind.prefix() + name);
-                        if (id == null || !path(kind, id).equals(file.normalize())) {
+                        if (id == null || !path(configRoot, kind, id).equals(file.normalize())) {
                             AnchorUI.LOGGER.warn("Skipping invalid Anchor UI document path: {}", file);
                             continue;
                         }
@@ -172,8 +188,12 @@ public final class UserDocumentStore {
     }
 
     public static List<ResourceLocation> list(Kind kind) {
+        return list(configRoot(), kind);
+    }
+
+    public static List<ResourceLocation> list(Path configRoot, Kind kind) {
         List<ResourceLocation> ids = new ArrayList<>();
-        for (ResourceLocation id : load().keySet()) {
+        for (ResourceLocation id : load(configRoot).keySet()) {
             if (id.getPath().startsWith(kind.prefix())) {
                 ids.add(id);
             }

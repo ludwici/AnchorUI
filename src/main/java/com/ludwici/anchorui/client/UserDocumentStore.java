@@ -110,8 +110,7 @@ public final class UserDocumentStore {
         Files.createDirectories(file.getParent());
         JsonObject definition = new JsonObject();
         definition.add("entities", new JsonArray());
-        Files.writeString(file, PRETTY_JSON.toJson(definition) + System.lineSeparator(),
-                StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+        Files.writeString(file, PRETTY_JSON.toJson(definition) + System.lineSeparator(), StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
     }
 
     public static void delete(Kind kind, ResourceLocation id) throws IOException {
@@ -141,9 +140,7 @@ public final class UserDocumentStore {
                 continue;
             }
             try (Stream<Path> stream = Files.walk(root)) {
-                for (Path file : stream.filter(Files::isRegularFile)
-                        .filter(path -> path.getFileName().toString().endsWith(".json"))
-                        .sorted().toList()) {
+                for (Path file : stream.filter(Files::isRegularFile).filter(path -> path.getFileName().toString().endsWith(".json")).sorted().toList()) {
                     try {
                         Path relative = root.relativize(file);
                         if (relative.getNameCount() < 2) {

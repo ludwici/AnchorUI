@@ -58,38 +58,32 @@ public final class AnchorUITestCommands {
             test.then(Commands.literal(scene.id()).executes(context -> queueScene(scene)));
         }
 
-        var hud = Commands.literal("hud")
-                .then(Commands.literal("edit")
-                        .executes(context -> queueHudEditor())
-                        .then(Commands.argument("id", StringArgumentType.greedyString())
-                                .suggests((context, builder) -> suggestLocal(UserDocumentStore.Kind.HUD, builder))
-                                .executes(context -> queueHudEditor(StringArgumentType.getString(context, "id")))))
-                .then(Commands.literal("create")
-                        .then(Commands.argument("id", StringArgumentType.greedyString())
-                                .executes(context -> createDocument(UserDocumentStore.Kind.HUD, StringArgumentType.getString(context, "id")))))
-                .then(Commands.literal("delete")
-                        .then(Commands.argument("id", StringArgumentType.greedyString())
-                                .suggests((context, builder) -> suggestLocal(UserDocumentStore.Kind.HUD, builder))
-                                .executes(context -> deleteDocument(UserDocumentStore.Kind.HUD, StringArgumentType.getString(context, "id")))))
-                .then(Commands.literal("list").executes(context -> listDocuments(UserDocumentStore.Kind.HUD)));
-        var screens = Commands.literal("screen")
-                .then(Commands.literal("open")
-                        .then(Commands.argument("id", StringArgumentType.greedyString())
-                                .suggests((context, builder) -> {
-                                    LoreLoader.INSTANCE.getData().keySet().stream()
-                                            .filter(id -> id.getPath().startsWith("screens/"))
-                                            .map(ScreenIds::display).sorted().forEach(builder::suggest);
-                                    return builder.buildFuture();
-                                })
-                                .executes(context -> queueScreen(StringArgumentType.getString(context, "id")))))
-                .then(Commands.literal("create")
-                        .then(Commands.argument("id", StringArgumentType.greedyString())
-                                .executes(context -> createDocument(UserDocumentStore.Kind.SCREEN, StringArgumentType.getString(context, "id")))))
-                .then(Commands.literal("delete")
-                        .then(Commands.argument("id", StringArgumentType.greedyString())
-                                .suggests((context, builder) -> suggestLocal(UserDocumentStore.Kind.SCREEN, builder))
-                                .executes(context -> deleteDocument(UserDocumentStore.Kind.SCREEN, StringArgumentType.getString(context, "id")))))
-                .then(Commands.literal("list").executes(context -> listDocuments(UserDocumentStore.Kind.SCREEN)));
+        var hud = Commands.literal("hud");
+        var hudEdit = Commands.literal("edit").executes(context -> queueHudEditor());
+        hudEdit.then(Commands.argument("id", StringArgumentType.greedyString()).suggests((context, builder) -> suggestLocal(UserDocumentStore.Kind.HUD, builder)).executes(context -> queueHudEditor(StringArgumentType.getString(context, "id"))));
+        hud.then(hudEdit);
+        var hudCreate = Commands.literal("create");
+        hudCreate.then(Commands.argument("id", StringArgumentType.greedyString()).executes(context -> createDocument(UserDocumentStore.Kind.HUD, StringArgumentType.getString(context, "id"))));
+        hud.then(hudCreate);
+        var hudDelete = Commands.literal("delete");
+        hudDelete.then(Commands.argument("id", StringArgumentType.greedyString()).suggests((context, builder) -> suggestLocal(UserDocumentStore.Kind.HUD, builder)).executes(context -> deleteDocument(UserDocumentStore.Kind.HUD, StringArgumentType.getString(context, "id"))));
+        hud.then(hudDelete);
+        hud.then(Commands.literal("list").executes(context -> listDocuments(UserDocumentStore.Kind.HUD)));
+
+        var screens = Commands.literal("screen");
+        var openScreen = Commands.literal("open");
+        openScreen.then(Commands.argument("id", StringArgumentType.greedyString()).suggests((context, builder) -> {
+            LoreLoader.INSTANCE.getData().keySet().stream().filter(id -> id.getPath().startsWith("screens/")).map(ScreenIds::display).sorted().forEach(builder::suggest);
+            return builder.buildFuture();
+        }).executes(context -> queueScreen(StringArgumentType.getString(context, "id"))));
+        screens.then(openScreen);
+        var screenCreate = Commands.literal("create");
+        screenCreate.then(Commands.argument("id", StringArgumentType.greedyString()).executes(context -> createDocument(UserDocumentStore.Kind.SCREEN, StringArgumentType.getString(context, "id"))));
+        screens.then(screenCreate);
+        var screenDelete = Commands.literal("delete");
+        screenDelete.then(Commands.argument("id", StringArgumentType.greedyString()).suggests((context, builder) -> suggestLocal(UserDocumentStore.Kind.SCREEN, builder)).executes(context -> deleteDocument(UserDocumentStore.Kind.SCREEN, StringArgumentType.getString(context, "id"))));
+        screens.then(screenDelete);
+        screens.then(Commands.literal("list").executes(context -> listDocuments(UserDocumentStore.Kind.SCREEN)));
         event.getDispatcher().register(Commands.literal("anchorui").then(test).then(hud).then(screens));
     }
 

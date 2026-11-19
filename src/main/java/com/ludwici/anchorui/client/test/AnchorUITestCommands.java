@@ -190,8 +190,7 @@ public final class AnchorUITestCommands {
             } else {
                 pendingScreen = id;
             }
-            notifyPlayer("Anchor UI: created " + kind.name().toLowerCase(java.util.Locale.ROOT)
-                    + " '" + UserDocumentStore.display(kind, id) + "'");
+            notifyPlayer("Anchor UI: created " + kind.name().toLowerCase(java.util.Locale.ROOT) + " '" + UserDocumentStore.display(kind, id) + "'");
             return Command.SINGLE_SUCCESS;
         } catch (IOException | RuntimeException exception) {
             AnchorUI.LOGGER.error("Failed to create Anchor UI document {}", id, exception);
@@ -218,8 +217,7 @@ public final class AnchorUITestCommands {
                 pendingScreen = null;
             }
             LoreLoader.INSTANCE.refreshUserDocuments();
-            notifyPlayer("Anchor UI: deleted " + kind.name().toLowerCase(java.util.Locale.ROOT)
-                    + " '" + UserDocumentStore.display(kind, id) + "'");
+            notifyPlayer("Anchor UI: deleted " + kind.name().toLowerCase(java.util.Locale.ROOT) + " '" + UserDocumentStore.display(kind, id) + "'");
             return Command.SINGLE_SUCCESS;
         } catch (IOException | RuntimeException exception) {
             AnchorUI.LOGGER.error("Failed to delete Anchor UI document {}", id, exception);

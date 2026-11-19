@@ -30,6 +30,7 @@ import com.ludwici.anchorui.api.widget.WidgetContext;
 import com.ludwici.anchorui.api.widget.WidgetIds;
 import com.ludwici.anchorui.api.widget.WidgetInstanceRegistry;
 import com.ludwici.anchorui.client.LoreLoader;
+import com.ludwici.anchorui.client.UserDocumentStore;
 import com.ludwici.anchorui.client.gui.AnchoredWidget;
 import com.ludwici.anchorui.client.gui.WidgetAnimation;
 import com.ludwici.anchorui.client.gui.WidgetSizeTransition;
@@ -132,6 +133,7 @@ public final class AnchorHudManager {
     private ClientLevel builtLevel;
     private Set<String> builtTestGroups = Set.of();
     private final Set<String> enabledTestGroups = new HashSet<>();
+    private ResourceLocation activeUserHud;
 
     private AnchorHudManager() {
     }
@@ -160,6 +162,43 @@ public final class AnchorHudManager {
 
     public boolean isEditing() {
         return editingOffsets != null;
+    }
+
+    /** Newly created editor widgets are assigned to this local HUD document, or global when null. */
+    public void setActiveUserHud(ResourceLocation id) {
+        if (id != null && !UserDocumentStore.exists(UserDocumentStore.Kind.HUD, id)) {
+            throw new IllegalArgumentException("Unknown locally created HUD: " + id);
+        }
+        activeUserHud = id;
+    }
+
+    public ResourceLocation getActiveUserHud() {
+        return activeUserHud;
+    }
+
+    /** Remove only widgets owned by a deleted local HUD. Resource-pack widgets remain untouched. */
+    public void removeUserHudWidgets(ResourceLocation documentId) throws IOException {
+        if (editingOffsets != null) {
+            throw new IllegalStateException("Close the HUD editor before deleting a HUD");
+        }
+        ensureStorageLoaded();
+        HudLayoutOffsets cleaned = savedOffsets.copy();
+        boolean changed = false;
+        for (var entry : savedOffsets.createdWidgets().entrySet()) {
+            JsonObject definition = entry.getValue();
+            if (definition.has("anchorui:document")
+                    && documentId.toString().equals(definition.get("anchorui:document").getAsString())) {
+                changed |= cleaned.removeCreatedWidget(entry.getKey());
+            }
+        }
+        if (changed) {
+            HudLayoutStorage.save(configPath(), cleaned);
+            savedOffsets = cleaned;
+        }
+        if (documentId.equals(activeUserHud)) {
+            activeUserHud = null;
+        }
+        builtRevision = -1;
     }
 
     public void beginEditing() {
@@ -685,14 +724,26 @@ public final class AnchorHudManager {
             lastSaveError = "HUD editor is not initialized";
             return null;
         }
+        if (activeUserHud != null && !UserDocumentStore.exists(UserDocumentStore.Kind.HUD, activeUserHud)) {
+            lastSaveError = "The selected HUD document no longer exists";
+            return null;
+        }
+        String namespace = activeUserHud == null ? "anchorui" : activeUserHud.getNamespace();
+        String documentPart = activeUserHud == null ? "" : activeUserHud.getPath()
+                .substring(UserDocumentStore.Kind.HUD.prefix().length()).replace('/', '_') + "_";
         for (int index = 1; index <= 10000; index++) {
-            String id = "anchorui:editor_" + net.minecraft.resources.ResourceLocation.parse(type).getPath().replace('/', '_') + "_" + index;
+            String id = namespace + ":editor_" + documentPart
+                    + net.minecraft.resources.ResourceLocation.parse(type).getPath().replace('/', '_') + "_" + index;
             if (registry.definition(id).isPresent() || editingOffsets.isCreatedWidget(id)) {
                 continue;
             }
             HudLayoutOffsets candidate = editingOffsets.copy();
             int delta = ((index - 1) % 7) * 12;
-            candidate.addCreatedWidget(id, EditorWidgetCreation.newWidget(type, id, delta, delta));
+            JsonObject definition = EditorWidgetCreation.newWidget(type, id, delta, delta);
+            if (activeUserHud != null) {
+                definition.addProperty("anchorui:document", activeUserHud.toString());
+            }
+            candidate.addCreatedWidget(id, definition);
             return applyCreatedWidgets(candidate, id) ? id : null;
         }
         lastSaveError = "Too many editor-created widgets";

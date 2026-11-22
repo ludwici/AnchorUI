@@ -1,14 +1,11 @@
 package com.ludwici.anchorui.client.gui;
 
 import com.ludwici.anchorui.api.layout.AnchorLayout;
-import com.mojang.blaze3d.vertex.Tesselator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.gui.narration.NarratableEntry;
-import net.neoforged.neoforge.client.gui.widget.ScrollPanel;
 
-public final class NativeContainerScrollPanel extends ScrollPanel {
+/** Loader-neutral scrollbar for scrollable widget containers and editor inspectors. */
+public final class NativeContainerScrollPanel {
     public record Style(int width, int trackColor, int thumbColor, int borderColor) {
         public Style {
             if (width < 1 || width > 16) {
@@ -24,31 +21,30 @@ public final class NativeContainerScrollPanel extends ScrollPanel {
 
     private final Style style;
     private final AnchorLayout.Bounds viewport;
-    private final int contentHeight;
     private final int logicalLimit;
     private final int wheelStep;
     private final double scale;
+    private final int maxScroll;
+    private float scrollDistance;
     private boolean dragging;
+    private double dragStartY;
+    private float dragStartScroll;
 
-    public NativeContainerScrollPanel(Minecraft minecraft, AnchorLayout.Bounds viewport, int logicalLimit,
-                                      int wheelStep, double scale, int initialOffset) {
+    public NativeContainerScrollPanel(Minecraft minecraft, AnchorLayout.Bounds viewport, int logicalLimit, int wheelStep, double scale, int initialOffset) {
         this(minecraft, viewport, logicalLimit, wheelStep, scale, initialOffset, CONTENT);
     }
 
-    public NativeContainerScrollPanel(Minecraft minecraft, AnchorLayout.Bounds viewport, int logicalLimit,
-                                      int wheelStep, double scale, int initialOffset, Style style) {
-        super(minecraft, viewport.width(), viewport.height(), viewport.y(), viewport.x(), 0, style.width(), style.trackColor(), style.thumbColor(), style.borderColor());
-        if (viewport.width() <= style.width() || viewport.height() < 34 || logicalLimit <= 0
-                || !Double.isFinite(scale) || scale <= 0) {
-            throw new IllegalArgumentException("Invalid native scrollbar geometry or range");
+    public NativeContainerScrollPanel(Minecraft minecraft, AnchorLayout.Bounds viewport, int logicalLimit, int wheelStep, double scale, int initialOffset, Style style) {
+        if (viewport.width() <= style.width() || viewport.height() < 34 || logicalLimit <= 0 || !Double.isFinite(scale) || scale <= 0) {
+            throw new IllegalArgumentException("Invalid scrollbar geometry or range");
         }
         this.style = style;
         this.viewport = viewport;
         this.logicalLimit = logicalLimit;
         this.wheelStep = Math.max(1, (int) Math.round(wheelStep * scale));
         this.scale = scale;
-        this.contentHeight = viewport.height() + Math.max(1, (int) Math.round(logicalLimit * scale));
-        this.scrollDistance = Math.max(0, Math.min(contentHeight - viewport.height(), (float) (initialOffset * scale)));
+        this.maxScroll = Math.max(1, (int) Math.round(logicalLimit * scale));
+        setLogicalOffset(initialOffset);
     }
 
     public boolean matches(AnchorLayout.Bounds viewport, int logicalLimit, int wheelStep, double scale) {
@@ -56,9 +52,7 @@ public final class NativeContainerScrollPanel extends ScrollPanel {
     }
 
     public boolean matches(AnchorLayout.Bounds viewport, int logicalLimit, int wheelStep, double scale, Style style) {
-        return this.viewport.equals(viewport) && this.logicalLimit == logicalLimit
-                && this.wheelStep == Math.max(1, (int) Math.round(wheelStep * scale))
-                && Double.compare(this.scale, scale) == 0 && this.style.equals(style);
+        return this.viewport.equals(viewport) && this.logicalLimit == logicalLimit && this.wheelStep == Math.max(1, (int) Math.round(wheelStep * scale)) && Double.compare(this.scale, scale) == 0 && this.style.equals(style);
     }
 
     public int logicalOffset() {
@@ -66,69 +60,80 @@ public final class NativeContainerScrollPanel extends ScrollPanel {
     }
 
     public void setLogicalOffset(int offset) {
-        scrollDistance = Math.max(0, Math.min(contentHeight - viewport.height(), (float) (Math.max(0, Math.min(logicalLimit, offset)) * scale)));
+        scrollDistance = clamp((float) (Math.max(0, Math.min(logicalLimit, offset)) * scale));
     }
 
     public boolean isDraggingBar() {
         return dragging;
     }
 
-    @Override
-    public NarratableEntry.NarrationPriority narrationPriority() {
-        return NarratableEntry.NarrationPriority.NONE;
+    public boolean isMouseOver(double x, double y) {
+        return x >= viewport.x() && x < viewport.x() + viewport.width() && y >= viewport.y() && y < viewport.y() + viewport.height();
     }
 
-    @Override
-    public void updateNarration(NarrationElementOutput output) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        int trackX = viewport.x() + viewport.width() - style.width();
+        int bottom = viewport.y() + viewport.height();
+        graphics.fill(trackX, viewport.y(), trackX + style.width(), bottom, style.trackColor());
+        int start = thumbStart();
+        graphics.fill(trackX, start, trackX + style.width(), start + thumbHeight(), style.thumbColor());
+        graphics.fill(trackX, start, trackX + 1, start + thumbHeight(), style.borderColor());
     }
 
-    @Override
-    protected int getContentHeight() {
-        return contentHeight;
-    }
-
-    @Override
-    protected int getScrollAmount() {
-        return wheelStep;
-    }
-
-    @Override
-    protected void drawBackground(GuiGraphics graphics, Tesselator tessellator, float partialTick) {
-    }
-
-    @Override
-    protected void drawPanel(GuiGraphics graphics, int right, int relativeY,
-                             Tesselator tessellator, int mouseX, int mouseY) {
-    }
-
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (!isMouseOver(mouseX, mouseY)) {
+    public boolean mouseClicked(double x, double y, int button) {
+        if (button != 0 || !isOverTrack(x, y)) {
             return false;
         }
-        boolean handled = super.mouseClicked(mouseX, mouseY, button);
-        if (handled && button == 0) {
-            dragging = true;
+        int start = thumbStart();
+        if (y < start || y >= start + thumbHeight()) {
+            float fraction = (float) ((y - viewport.y() - thumbHeight() / 2.0) / Math.max(1, viewport.height() - thumbHeight()));
+            scrollDistance = clamp(fraction * maxScroll);
         }
-        return handled;
+        dragging = true;
+        dragStartY = y;
+        dragStartScroll = scrollDistance;
+        return true;
     }
 
-    @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        return dragging && super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+    public boolean mouseDragged(double x, double y, int button, double deltaX, double deltaY) {
+        if (!dragging || button != 0) {
+            return false;
+        }
+        float delta = (float) ((y - dragStartY) * maxScroll / Math.max(1, viewport.height() - thumbHeight()));
+        scrollDistance = clamp(dragStartScroll + delta);
+        return true;
     }
 
-    @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (!dragging) {
+    public boolean mouseReleased(double x, double y, int button) {
+        if (!dragging || button != 0) {
             return false;
         }
         dragging = false;
-        return super.mouseReleased(mouseX, mouseY, button);
+        return true;
     }
 
-    @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        return isMouseOver(mouseX, mouseY) && super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        if (!isMouseOver(mouseX, mouseY)) {
+            return false;
+        }
+        scrollDistance = clamp(scrollDistance - (float) scrollY * wheelStep);
+        return true;
+    }
+
+    private boolean isOverTrack(double x, double y) {
+        int trackX = viewport.x() + viewport.width() - style.width();
+        return x >= trackX && x < trackX + style.width() && y >= viewport.y() && y < viewport.y() + viewport.height();
+    }
+
+    private int thumbHeight() {
+        return Math.min(viewport.height(), Math.max(12, (int) Math.round((double) viewport.height() * viewport.height() / (viewport.height() + maxScroll))));
+    }
+
+    private int thumbStart() {
+        return viewport.y() + Math.round((viewport.height() - thumbHeight()) * scrollDistance / maxScroll);
+    }
+
+    private float clamp(float distance) {
+        return Math.max(0, Math.min(maxScroll, distance));
     }
 }

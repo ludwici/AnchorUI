@@ -22,6 +22,10 @@ new ItemLoreScreen(previousScreen, item, document, resourceId)
 
 Third-party callers using the original three-argument constructor can still preview and edit widgets, but must supply the document resource ID to persist overrides safely.
 
+## Inspector layout
+
+The screen inspector keeps **Add widget**, **Delete**, **Hide**, **Parent** and **Reset** as compact actions near the top, with **Save** and **Cancel** anchored to the bottom. The property area is organized into five tabs: **Place** (position/anchors), **Layout** (containers and auto-layout), **Style** (text, colors and textures), **Motion** (animations), and **More** (source JSON, diagnostics and Reset all). All existing editor controls still work; changing tabs clears the inspector's scroll offset without changing any widget values. Reset all is now a two-click action inside More.
+
 ## Creating widgets in F8
 
 The **+ Add widget** button opens a registered-type picker. In the first version it supports **Text, Image, Panel, Container, Button and Progress** with valid defaults; Image starts with the vanilla stone texture so the user can immediately change it using the texture browser. New widgets receive unique namespaced `anchorui:editor_<type>_<number>` IDs, appear in the live preview, and can be dragged, given anchors and edited through the normal inspector.

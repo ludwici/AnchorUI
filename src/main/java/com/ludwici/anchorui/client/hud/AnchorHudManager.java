@@ -749,8 +749,8 @@ public final class AnchorHudManager {
             lastSaveError = "HUD editor is not initialized";
             return null;
         }
-        if (activeUserHud != null && !UserDocumentStore.exists(UserDocumentStore.Kind.HUD, activeUserHud)) {
-            lastSaveError = "The selected HUD document no longer exists";
+        if (activeUserHud != null && !LoreLoader.INSTANCE.getHudDocuments().containsKey(activeUserHud)) {
+            lastSaveError = "The selected HUD is no longer available";
             return null;
         }
         String namespace = activeUserHud == null ? "anchorui" : activeUserHud.getNamespace();

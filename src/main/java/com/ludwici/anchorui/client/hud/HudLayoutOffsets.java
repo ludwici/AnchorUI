@@ -359,6 +359,65 @@ public final class HudLayoutOffsets {
         return result;
     }
 
+    /** Keep only the state belonging to the specified HUD widget IDs. */
+    public HudLayoutOffsets onlyIds(Set<String> ids) {
+        HudLayoutOffsets result = new HudLayoutOffsets();
+        for (String id : ids) {
+            if (offsets.containsKey(id)) {
+                result.offsets.put(id, offsets.get(id));
+            }
+            if (anchors.containsKey(id)) {
+                result.anchors.put(id, anchors.get(id));
+            }
+            if (anchorLists.containsKey(id)) {
+                result.anchorLists.put(id, List.copyOf(anchorLists.get(id)));
+            }
+            if (containerParents.containsKey(id)) {
+                result.containerParents.put(id, containerParents.get(id));
+            }
+            if (hidden.contains(id)) {
+                result.hidden.add(id);
+            }
+            if (componentSettings.containsKey(id)) {
+                result.componentSettings.put(id, componentSettings.get(id).deepCopy());
+            }
+            if (createdWidgets.containsKey(id)) {
+                result.createdWidgets.put(id, createdWidgets.get(id).deepCopy());
+            }
+        }
+        return result;
+    }
+
+    /** Apply one HUD's saved state over the legacy shared layout, preserving other HUDs. */
+    public void mergeFrom(HudLayoutOffsets other) {
+        offsets.putAll(other.offsets);
+        anchors.putAll(other.anchors);
+        anchorLists.putAll(other.anchorLists);
+        containerParents.putAll(other.containerParents);
+        hidden.addAll(other.hidden);
+        for (var entry : other.componentSettings.entrySet()) {
+            componentSettings.put(entry.getKey(), entry.getValue().deepCopy());
+        }
+        for (var entry : other.createdWidgets.entrySet()) {
+            createdWidgets.put(entry.getKey(), entry.getValue().deepCopy());
+        }
+    }
+
+    public Set<String> allWidgetIds() {
+        Set<String> ids = new TreeSet<>(offsets.keySet());
+        ids.addAll(anchors.keySet());
+        ids.addAll(anchorLists.keySet());
+        ids.addAll(containerParents.keySet());
+        ids.addAll(hidden);
+        ids.addAll(componentSettings.keySet());
+        ids.addAll(createdWidgets.keySet());
+        return Collections.unmodifiableSet(ids);
+    }
+
+    public boolean isEmpty() {
+        return allWidgetIds().isEmpty();
+    }
+
     public boolean sameAs(HudLayoutOffsets other) {
         return offsets.equals(other.offsets) && anchors.equals(other.anchors) && anchorLists.equals(other.anchorLists)
                 && containerParents.equals(other.containerParents) && hidden.equals(other.hidden)

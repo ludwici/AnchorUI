@@ -60,15 +60,15 @@ public final class AnchorUITestCommands {
 
         var hud = Commands.literal("hud");
         var hudEdit = Commands.literal("edit").executes(context -> queueHudEditor());
-        hudEdit.then(Commands.argument("id", StringArgumentType.greedyString()).suggests((context, builder) -> suggestLocal(UserDocumentStore.Kind.HUD, builder)).executes(context -> queueHudEditor(StringArgumentType.getString(context, "id"))));
+        hudEdit.then(Commands.argument("id", StringArgumentType.greedyString()).suggests((context, builder) -> suggestHuds(builder)).executes(context -> queueHudEditor(StringArgumentType.getString(context, "id"))));
         hud.then(hudEdit);
         var hudCreate = Commands.literal("create");
-        hudCreate.then(Commands.argument("id", StringArgumentType.greedyString()).executes(context -> createDocument(UserDocumentStore.Kind.HUD, StringArgumentType.getString(context, "id"))));
+        hudCreate.then(Commands.argument("id", StringArgumentType.greedyString()).executes(context -> createUi(UserDocumentStore.Kind.HUD, StringArgumentType.getString(context, "id"))));
         hud.then(hudCreate);
         var hudDelete = Commands.literal("delete");
-        hudDelete.then(Commands.argument("id", StringArgumentType.greedyString()).suggests((context, builder) -> suggestLocal(UserDocumentStore.Kind.HUD, builder)).executes(context -> deleteDocument(UserDocumentStore.Kind.HUD, StringArgumentType.getString(context, "id"))));
+        hudDelete.then(Commands.argument("id", StringArgumentType.greedyString()).suggests((context, builder) -> suggestLocal(UserDocumentStore.Kind.HUD, builder)).executes(context -> deleteUi(UserDocumentStore.Kind.HUD, StringArgumentType.getString(context, "id"))));
         hud.then(hudDelete);
-        hud.then(Commands.literal("list").executes(context -> listDocuments(UserDocumentStore.Kind.HUD)));
+        hud.then(Commands.literal("list").executes(context -> listUi(UserDocumentStore.Kind.HUD)));
 
         var screens = Commands.literal("screen");
         var openScreen = Commands.literal("open");
@@ -78,12 +78,12 @@ public final class AnchorUITestCommands {
         }).executes(context -> queueScreen(StringArgumentType.getString(context, "id"))));
         screens.then(openScreen);
         var screenCreate = Commands.literal("create");
-        screenCreate.then(Commands.argument("id", StringArgumentType.greedyString()).executes(context -> createDocument(UserDocumentStore.Kind.SCREEN, StringArgumentType.getString(context, "id"))));
+        screenCreate.then(Commands.argument("id", StringArgumentType.greedyString()).executes(context -> createUi(UserDocumentStore.Kind.SCREEN, StringArgumentType.getString(context, "id"))));
         screens.then(screenCreate);
         var screenDelete = Commands.literal("delete");
-        screenDelete.then(Commands.argument("id", StringArgumentType.greedyString()).suggests((context, builder) -> suggestLocal(UserDocumentStore.Kind.SCREEN, builder)).executes(context -> deleteDocument(UserDocumentStore.Kind.SCREEN, StringArgumentType.getString(context, "id"))));
+        screenDelete.then(Commands.argument("id", StringArgumentType.greedyString()).suggests((context, builder) -> suggestLocal(UserDocumentStore.Kind.SCREEN, builder)).executes(context -> deleteUi(UserDocumentStore.Kind.SCREEN, StringArgumentType.getString(context, "id"))));
         screens.then(screenDelete);
-        screens.then(Commands.literal("list").executes(context -> listDocuments(UserDocumentStore.Kind.SCREEN)));
+        screens.then(Commands.literal("list").executes(context -> listUi(UserDocumentStore.Kind.SCREEN)));
         event.getDispatcher().register(Commands.literal("anchorui").then(test).then(hud).then(screens));
     }
 
@@ -136,19 +136,27 @@ public final class AnchorUITestCommands {
 
     private static int queueHudEditor() {
         AnchorHudManager.INSTANCE.setActiveUserHud(null);
+        AnchorHudManager.INSTANCE.selectDefaultHud();
         pendingHudEditor = true;
         return Command.SINGLE_SUCCESS;
     }
 
     private static int queueHudEditor(String rawId) {
         ResourceLocation id = UserDocumentStore.resolve(UserDocumentStore.Kind.HUD, rawId);
-        if (id == null || !UserDocumentStore.exists(UserDocumentStore.Kind.HUD, id)) {
-            notifyPlayer("Anchor UI: HUD '" + rawId + "' is not a locally created HUD");
+        if (id == null || !LoreLoader.INSTANCE.getHudDocuments().containsKey(id)) {
+            notifyPlayer("Anchor UI: HUD '" + rawId + "' was not found");
             return 0;
         }
         AnchorHudManager.INSTANCE.setActiveUserHud(id);
         pendingHudEditor = true;
         return Command.SINGLE_SUCCESS;
+    }
+
+    private static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestHuds(com.mojang.brigadier.suggestion.SuggestionsBuilder builder) {
+        for (ResourceLocation id : AnchorHudManager.INSTANCE.getAvailableHuds()) {
+            builder.suggest(UserDocumentStore.display(UserDocumentStore.Kind.HUD, id));
+        }
+        return builder.buildFuture();
     }
 
     private static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestLocal(
@@ -159,7 +167,7 @@ public final class AnchorUITestCommands {
         return builder.buildFuture();
     }
 
-    private static int createDocument(UserDocumentStore.Kind kind, String rawId) {
+    private static int createUi(UserDocumentStore.Kind kind, String rawId) {
         ResourceLocation id = UserDocumentStore.resolve(kind, rawId);
         if (id == null) {
             notifyPlayer("Anchor UI: ID must be namespace:name");
@@ -169,7 +177,7 @@ public final class AnchorUITestCommands {
                 ? LoreLoader.INSTANCE.getHudDocuments().containsKey(id)
                 : LoreLoader.INSTANCE.getData().containsKey(id);
         if (registered || UserDocumentStore.exists(kind, id)) {
-            notifyPlayer("Anchor UI: document '" + UserDocumentStore.display(kind, id) + "' already exists");
+            notifyPlayer("Anchor UI: " + kind.name().toLowerCase(java.util.Locale.ROOT) + " '" + UserDocumentStore.display(kind, id) + "' already exists");
             return 0;
         }
         try {
@@ -181,7 +189,7 @@ public final class AnchorUITestCommands {
             if (!registered) {
                 UserDocumentStore.delete(kind, id);
                 LoreLoader.INSTANCE.refreshUserDocuments();
-                notifyPlayer("Anchor UI: new document could not be loaded");
+                notifyPlayer("Anchor UI: new " + kind.name().toLowerCase(java.util.Locale.ROOT) + " could not be loaded");
                 return 0;
             }
             if (kind == UserDocumentStore.Kind.HUD) {
@@ -193,16 +201,16 @@ public final class AnchorUITestCommands {
             notifyPlayer("Anchor UI: created " + kind.name().toLowerCase(java.util.Locale.ROOT) + " '" + UserDocumentStore.display(kind, id) + "'");
             return Command.SINGLE_SUCCESS;
         } catch (IOException | RuntimeException exception) {
-            AnchorUI.LOGGER.error("Failed to create Anchor UI document {}", id, exception);
+            AnchorUI.LOGGER.error("Failed to create Anchor UI {}", kind, exception);
             notifyPlayer("Anchor UI: create failed: " + exception.getMessage());
             return 0;
         }
     }
 
-    private static int deleteDocument(UserDocumentStore.Kind kind, String rawId) {
+    private static int deleteUi(UserDocumentStore.Kind kind, String rawId) {
         ResourceLocation id = UserDocumentStore.resolve(kind, rawId);
         if (id == null || !UserDocumentStore.exists(kind, id)) {
-            notifyPlayer("Anchor UI: only locally created documents can be deleted: " + rawId);
+            notifyPlayer("Anchor UI: only locally created HUDs and Screens can be deleted: " + rawId);
             return 0;
         }
         if (kind == UserDocumentStore.Kind.HUD && AnchorHudManager.INSTANCE.isEditing()) {
@@ -220,18 +228,20 @@ public final class AnchorUITestCommands {
             notifyPlayer("Anchor UI: deleted " + kind.name().toLowerCase(java.util.Locale.ROOT) + " '" + UserDocumentStore.display(kind, id) + "'");
             return Command.SINGLE_SUCCESS;
         } catch (IOException | RuntimeException exception) {
-            AnchorUI.LOGGER.error("Failed to delete Anchor UI document {}", id, exception);
+            AnchorUI.LOGGER.error("Failed to delete Anchor UI {}", kind, exception);
             LoreLoader.INSTANCE.refreshUserDocuments();
             notifyPlayer("Anchor UI: delete failed: " + exception.getMessage());
             return 0;
         }
     }
 
-    private static int listDocuments(UserDocumentStore.Kind kind) {
-        var ids = UserDocumentStore.list(kind);
-        notifyPlayer("Anchor UI: " + ids.size() + " locally created " + kind.name().toLowerCase(java.util.Locale.ROOT) + " document(s)");
+    private static int listUi(UserDocumentStore.Kind kind) {
+        var ids = kind == UserDocumentStore.Kind.HUD
+                ? AnchorHudManager.INSTANCE.getAvailableHuds()
+                : LoreLoader.INSTANCE.getData().keySet().stream().filter(id -> id.getPath().startsWith("screens/")).sorted(java.util.Comparator.comparing(ResourceLocation::toString)).toList();
+        notifyPlayer("Anchor UI: " + ids.size() + " " + (kind == UserDocumentStore.Kind.HUD ? "HUD(s)" : "Screen(s)"));
         for (ResourceLocation id : ids) {
-            notifyPlayer(" - " + UserDocumentStore.display(kind, id));
+            notifyPlayer(" - " + UserDocumentStore.display(kind, id) + (UserDocumentStore.exists(kind, id) ? " (local)" : " (resource pack)"));
         }
         return Command.SINGLE_SUCCESS;
     }

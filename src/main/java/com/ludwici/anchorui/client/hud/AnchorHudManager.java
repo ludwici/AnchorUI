@@ -197,6 +197,12 @@ public final class AnchorHudManager {
         return java.util.Objects.equals(widgetOwners.get(widgetId), activeUserHud);
     }
 
+    private static ResourceLocation hudOwner(JsonObject settings) {
+        String key = settings.has("anchorui:hud") ? "anchorui:hud" : "anchorui:document";
+        return settings.has(key) ? ResourceLocation.tryParse(settings.get(key).getAsString()) : null;
+    }
+
+
     public void removeUserHudWidgets(ResourceLocation hudId) throws IOException {
         if (editingOffsets != null) {
             throw new IllegalStateException("Close the HUD editor before deleting a HUD");
@@ -211,7 +217,7 @@ public final class AnchorHudManager {
         }
         for (var entry : savedOffsets.createdWidgets().entrySet()) {
             JsonObject definition = entry.getValue();
-            if (definition.has("anchorui:document") && hudId.toString().equals(definition.get("anchorui:document").getAsString())) {
+            if (hudId.equals(hudOwner(definition))) {
                 removed.add(entry.getKey());
             }
         }
@@ -779,7 +785,7 @@ public final class AnchorHudManager {
             int delta = ((index - 1) % 7) * 12;
             JsonObject definition = EditorWidgetCreation.newWidget(type, id, delta, delta);
             if (activeUserHud != null) {
-                definition.addProperty("anchorui:document", activeUserHud.toString());
+                definition.addProperty("anchorui:hud", activeUserHud.toString());
             }
             candidate.addCreatedWidget(id, definition);
             return applyCreatedWidgets(candidate, id) ? id : null;
@@ -1396,7 +1402,7 @@ public final class AnchorHudManager {
                     continue;
                 }
                 JsonObject settings = entry.getValue();
-                ResourceLocation owner = settings.has("anchorui:document") ? ResourceLocation.tryParse(settings.get("anchorui:document").getAsString()) : null;
+                ResourceLocation owner = hudOwner(settings);
                 if (owner != null && !LoreLoader.INSTANCE.getHudDocuments().containsKey(owner)) {
                     continue;
                 }

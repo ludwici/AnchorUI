@@ -53,10 +53,12 @@ tasks.named('test', Test).configure {
 sourceSets.test.compileClasspath += sourceSets.main.compileClasspath
 sourceSets.test.runtimeClasspath += sourceSets.main.runtimeClasspath
 
+def fabricMetadata = [mod_version: mod_version]
+
 tasks.named('processResources', ProcessResources).configure {
-    inputs.property 'mod_version', project.mod_version
+    inputs.properties fabricMetadata
     filesMatching('fabric.mod.json') {
-        expand mod_version: project.mod_version
+        expand fabricMetadata
     }
 }
 

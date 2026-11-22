@@ -122,6 +122,7 @@ public final class AnchorHudEditorScreen extends Screen {
     private final InspectorSections inspectorSections = new InspectorSections();
     private final EditorInspectorTabs inspectorTabs = new EditorInspectorTabs();
     private final Map<Integer, String> moreActions = new HashMap<>();
+    private boolean confirmResetAll;
     private EditBox appearanceInput;
     private Button appearanceApply;
     private Button appearanceCancel;
@@ -1063,7 +1064,7 @@ public final class AnchorHudEditorScreen extends Screen {
         }
         if (inspectorTabs.active(EditorInspectorTabs.Page.MORE)) {
             moreActions.put(lines.size(), "reset_all");
-            appendLine(lines, "Reset all HUD changes", 0xFFFFA98D);
+            appendLine(lines, confirmResetAll ? "Confirm: reset ALL HUD changes" : "Reset all HUD changes", 0xFFFFA98D);
         }
         if (active == null && inspectedVanilla != null) {
             appendLine(lines, "VANILLA HUD (READ ONLY)", VANILLA_COLOR);
@@ -1208,6 +1209,12 @@ public final class AnchorHudEditorScreen extends Screen {
         if (!"reset_all".equals(moreActions.get(row))) {
             return false;
         }
+        if (!confirmResetAll) {
+            confirmResetAll = true;
+            status = "Click again to reset this HUD";
+            return true;
+        }
+        confirmResetAll = false;
         manager.resetAllPreviewOffsets();
         status = "Restored this HUD to defaults";
         return true;
@@ -1394,6 +1401,7 @@ public final class AnchorHudEditorScreen extends Screen {
         if (!compact && !inspectorCollapsed && button == GLFW.GLFW_MOUSE_BUTTON_LEFT
                 && inspectorTabs.click(mouseX, mouseY, panelX + 6, panelY + 34, panelWidth - 12)) {
             resetInspectorScroll();
+            confirmResetAll = false;
             return true;
         }
         if (!compact && widgetList.contains(mouseX, mouseY)) {

@@ -8,24 +8,24 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class InspectorSectionsTest {
     @Test
-    public void sourceAnimationAndDiagnosticsStartCollapsedButOtherSectionsStartExpanded() {
+    public void animationStartsExpandedInDedicatedTabWhileAdvancedSectionsStartCollapsed() {
         InspectorSections sections = new InspectorSections();
         assertTrue(sections.expanded("widget"));
         assertTrue(sections.expanded("layout"));
         assertTrue(sections.expanded("visual"));
         assertTrue(sections.expanded("anchors"));
         assertFalse(sections.expanded("constraint:demo:bar:0"));
-        assertFalse(sections.expanded("animation"));
+        assertTrue(sections.expanded("animation"));
         assertFalse(sections.expanded("source"));
         assertFalse(sections.expanded("diagnostics"));
         assertEquals("DIAGNOSTICS (1 error, 2 warnings) [+]", sections.label("diagnostics", "DIAGNOSTICS (1 error, 2 warnings)"));
-        assertEquals("ANIMATION [+]", sections.label("animation", "ANIMATION"));
+        assertEquals("ANIMATION [-]", sections.label("animation", "ANIMATION"));
         sections.toggle("constraint:demo:bar:0");
         assertTrue(sections.expanded("constraint:demo:bar:0"));
         assertFalse(sections.expanded("constraint:demo:bar:1"));
         sections.toggle("animation");
-        assertTrue(sections.expanded("animation"));
-        assertEquals("ANIMATION [-]", sections.label("animation", "ANIMATION"));
+        assertFalse(sections.expanded("animation"));
+        assertEquals("ANIMATION [+]", sections.label("animation", "ANIMATION"));
     }
 
     @Test
@@ -64,7 +64,6 @@ public class InspectorSectionsTest {
     public void sourceCollapseIsIndependentFromOtherCategories() {
         InspectorSections sections = new InspectorSections();
         sections.toggle("source");
-        sections.toggle("animation");
         sections.collapse("source");
         assertFalse(sections.expanded("source"));
         assertTrue(sections.expanded("animation"));

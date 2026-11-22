@@ -191,7 +191,7 @@ To test the bundled component editor showcase, run `/anchorui screen open anchor
 
 ### Shared native scrollbar implementation
 
-The right Inspector, the left Widgets list, and JSON scrollable containers now use the same `NativeContainerScrollPanel` adapter over a Fabric-compatible scrollbar implementation. Each instance has independent scroll state. Wheel motion, dragging the scrollbar thumb and clamping to the content range are delegated to the native component, not implemented separately for the editor. Widget-list grouping, inspector field resets, labels and clipping still use their existing drawing code. Scrolling a panel does not scroll the other editor panel; the editor's own controls take input precedence over the JSON content preview. The slim inspector/list scroll tracks keep their original approximate widths and colors.
+The right Inspector, left Widgets list and scrollable JSON containers use one loader-independent `NativeContainerScrollPanel` implementation shared by Fabric and NeoForge. The scrollbar manages its own offset, pointer dragging, wheel movement and clamping, while AnchorUI renders the actual content and handles clipping. Input is routed independently to each scrollbar, so scrolling the inspector does not move the Widgets list or JSON content. The slim inspector and list scrollbars retain their configured widths and colors.
 
 
 ### Collapsible inspector categories

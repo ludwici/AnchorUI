@@ -134,6 +134,7 @@ public final class AnchorHudManager {
     private Set<String> builtTestGroups = Set.of();
     private final Set<String> enabledTestGroups = new HashSet<>();
     private ResourceLocation activeUserHud;
+    private final Map<String, ResourceLocation> widgetOwners = new HashMap<>();
 
     private AnchorHudManager() {
     }
@@ -164,10 +165,26 @@ public final class AnchorHudManager {
         return editingOffsets != null;
     }
 
-    /** Newly created editor widgets are assigned to this local HUD document, or global when null. */
+    public List<ResourceLocation> getAvailableHuds() {
+        return LoreLoader.INSTANCE.getHudDocuments().keySet().stream().sorted(Comparator.comparing(ResourceLocation::toString)).toList();
+    }
+
+    public void selectDefaultHud() {
+        if (activeUserHud != null) {
+            return;
+        }
+        for (ResourceLocation id : getAvailableHuds()) {
+            LoreLoader.HudDocument hud = LoreLoader.INSTANCE.getHudDocuments().get(id);
+            if (!hud.testOnly() || enabledTestGroups.contains(hud.testGroup())) {
+                activeUserHud = id;
+                return;
+            }
+        }
+    }
+
     public void setActiveUserHud(ResourceLocation id) {
-        if (id != null && !UserDocumentStore.exists(UserDocumentStore.Kind.HUD, id)) {
-            throw new IllegalArgumentException("Unknown locally created HUD: " + id);
+        if (id != null && !LoreLoader.INSTANCE.getHudDocuments().containsKey(id)) {
+            throw new IllegalArgumentException("Unknown HUD: " + id);
         }
         activeUserHud = id;
     }
@@ -176,26 +193,34 @@ public final class AnchorHudManager {
         return activeUserHud;
     }
 
-    /** Remove only widgets owned by a deleted local HUD. Resource-pack widgets remain untouched. */
-    public void removeUserHudWidgets(ResourceLocation documentId) throws IOException {
+    private boolean inActiveHud(String widgetId) {
+        return java.util.Objects.equals(widgetOwners.get(widgetId), activeUserHud);
+    }
+
+    public void removeUserHudWidgets(ResourceLocation hudId) throws IOException {
         if (editingOffsets != null) {
             throw new IllegalStateException("Close the HUD editor before deleting a HUD");
         }
         ensureStorageLoaded();
         HudLayoutOffsets cleaned = savedOffsets.copy();
-        boolean changed = false;
-        for (var entry : savedOffsets.createdWidgets().entrySet()) {
-            JsonObject definition = entry.getValue();
-            if (definition.has("anchorui:document")
-                    && documentId.toString().equals(definition.get("anchorui:document").getAsString())) {
-                changed |= cleaned.removeCreatedWidget(entry.getKey());
+        for (String id : savedOffsets.allWidgetIds()) {
+            if (hudId.equals(widgetOwners.get(id))) {
+                if (cleaned.isCreatedWidget(id)) {
+                    cleaned.removeCreatedWidget(id);
+                } else {
+                    cleaned.reset(id);
+                }
             }
         }
-        if (changed) {
-            HudLayoutStorage.save(configPath(), cleaned);
-            savedOffsets = cleaned;
+        for (var entry : savedOffsets.createdWidgets().entrySet()) {
+            JsonObject definition = entry.getValue();
+            if (definition.has("anchorui:document") && hudId.toString().equals(definition.get("anchorui:document").getAsString())) {
+                cleaned.removeCreatedWidget(entry.getKey());
+            }
         }
-        if (documentId.equals(activeUserHud)) {
+        java.nio.file.Files.deleteIfExists(HudScopeStorage.path(hudId));
+        savedOffsets = cleaned;
+        if (hudId.equals(activeUserHud)) {
             activeUserHud = null;
         }
         builtRevision = -1;
@@ -376,7 +401,7 @@ public final class AnchorHudManager {
     }
 
     private boolean isCustomWidget(String id) {
-        return registry.definition(id).isPresent();
+        return registry.definition(id).isPresent() && (editingOffsets == null || inActiveHud(id));
     }
 
     public List<VanillaHudGeometry.Reference> getVanillaHandles() {
@@ -701,13 +726,13 @@ public final class AnchorHudManager {
     public void resetAllPreviewOffsets() {
         if (editingOffsets != null) {
             HudLayoutOffsets candidate = editingOffsets.copy();
-            candidate.resetAll();
-            if (!candidate.createdWidgets().equals(editingOffsets.createdWidgets())) {
-                applyCreatedWidgets(candidate, null);
-            } else {
-                editingOffsets = candidate;
-                relayout(null);
+            for (String id : widgetOwners.keySet()) {
+                if (inActiveHud(id)) {
+                    candidate.reset(id);
+                }
             }
+            editingOffsets = candidate;
+            relayout(null);
         }
     }
 
@@ -751,7 +776,7 @@ public final class AnchorHudManager {
     }
 
     public boolean removePreviewCreatedWidget(String id) {
-        if (editingOffsets == null || !editingOffsets.isCreatedWidget(id)) {
+        if (editingOffsets == null || !editingOffsets.isCreatedWidget(id) || !inActiveHud(id)) {
             return false;
         }
         HudLayoutOffsets candidate = editingOffsets.copy();
@@ -783,14 +808,30 @@ public final class AnchorHudManager {
             return true;
         }
         try {
-            HudLayoutStorage.save(configPath(), editingOffsets);
+            Map<ResourceLocation, Set<String>> perHud = new HashMap<>();
+            Set<String> global = new HashSet<>();
+            for (String id : editingOffsets.allWidgetIds()) {
+                ResourceLocation owner = widgetOwners.get(id);
+                if (owner == null) {
+                    global.add(id);
+                } else {
+                    perHud.computeIfAbsent(owner, ignored -> new HashSet<>()).add(id);
+                }
+            }
+            for (ResourceLocation hud : getAvailableHuds()) {
+                perHud.computeIfAbsent(hud, ignored -> new HashSet<>());
+            }
+            for (var entry : perHud.entrySet()) {
+                HudScopeStorage.save(HudScopeStorage.root(), entry.getKey(), editingOffsets.onlyIds(entry.getValue()));
+            }
+            HudLayoutStorage.save(configPath(), editingOffsets.onlyIds(global));
             savedOffsets = editingOffsets.copy();
             editingOffsets = null;
             lastSaveError = null;
             return true;
         } catch (IOException | RuntimeException exception) {
             lastSaveError = exception.getMessage();
-            AnchorUI.LOGGER.error("Failed to save Anchor UI HUD positions", exception);
+            AnchorUI.LOGGER.error("Failed to save Anchor UI HUD layouts", exception);
             return false;
         }
     }
@@ -1056,6 +1097,9 @@ public final class AnchorHudManager {
     public List<WidgetListPanel.Entry> getWidgetEntries() {
         List<WidgetListPanel.Entry> entries = new ArrayList<>();
         for (PlacedWidget placed : widgets) {
+            if (editingOffsets != null && !inActiveHud(placed.id())) {
+                continue;
+            }
             String type = registry.definition(placed.id())
                     .map(definition -> definition.type.toString()).orElse("");
             entries.add(new WidgetListPanel.Entry(placed.id(), placed.widget().visible, false, type, currentOffsets().containerParent(placed.id(), placed.containerParent())));
@@ -1105,6 +1149,9 @@ public final class AnchorHudManager {
         List<HudHandle> result = new ArrayList<>();
         HudLayoutOffsets offsets = currentOffsets();
         for (PlacedWidget placed : widgets) {
+            if (editingOffsets != null && !inActiveHud(placed.id())) {
+                continue;
+            }
             AnchorLayout.Bounds bounds = layoutBounds.get(placed.id());
             if (bounds != null && !renderFailures.contains(placed.id())) {
                 PositionElement effective = placed.effectivePosition(offsets);
@@ -1173,6 +1220,9 @@ public final class AnchorHudManager {
         storageLoaded = true;
         try {
             savedOffsets = HudLayoutStorage.load(configPath());
+            for (HudLayoutOffsets local : HudScopeStorage.loadAll(HudScopeStorage.root()).values()) {
+                savedOffsets.mergeFrom(local);
+            }
         } catch (IOException | RuntimeException exception) {
             AnchorUI.LOGGER.warn("Could not read Anchor UI HUD layout; using default positions", exception);
             savedOffsets = new HudLayoutOffsets();
@@ -1190,7 +1240,7 @@ public final class AnchorHudManager {
         }
         long now = System.nanoTime();
         for (PlacedWidget placed : widgets) {
-            if (renderFailures.contains(placed.id())) {
+            if (renderFailures.contains(placed.id()) || (editorPreview && !inActiveHud(placed.id()))) {
                 continue;
             }
             AbstractWidget widget = placed.widget();
@@ -1272,6 +1322,7 @@ public final class AnchorHudManager {
         registry = new WidgetInstanceRegistry();
         widgets = List.of();
         sourceSettingsById.clear();
+        widgetOwners.clear();
         layoutBounds = Map.of();
         collapsingLayoutParents = Set.of();
         collapsedLayoutHidden = Set.of();
@@ -1287,10 +1338,22 @@ public final class AnchorHudManager {
 
         List<Description> declared = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
-        var documents = LoreLoader.INSTANCE.getHudDocuments().entrySet().stream().sorted(Comparator.comparing(entry -> entry.getKey().toString())).toList();
-        for (var document : documents) {
-            ResourceLocation source = document.getKey();
-            LoreLoader.HudDocument hud = document.getValue();
+        var hudSources = LoreLoader.INSTANCE.getHudDocuments().entrySet().stream().sorted(Comparator.comparing(entry -> entry.getKey().toString())).toList();
+        for (var sourceEntry : hudSources) {
+            ResourceLocation source = sourceEntry.getKey();
+            LoreLoader.HudDocument hud = sourceEntry.getValue();
+            for (int i = 0; i < hud.entity().entities.size(); i++) {
+                LoreEntity.UiElement element = hud.entity().entities.get(i);
+                try {
+                    String id = WidgetIds.id(element.id.isBlank() ? element.type.getPath().replace('/', '_') + "_" + i : element.id, hud.entity().namespace);
+                    widgetOwners.putIfAbsent(id, source);
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+        }
+        for (var sourceEntry : hudSources) {
+            ResourceLocation source = sourceEntry.getKey();
+            LoreLoader.HudDocument hud = sourceEntry.getValue();
             if (hud.testOnly() && !enabledTestGroups.contains(hud.testGroup())) {
                 continue;
             }
@@ -1319,9 +1382,18 @@ public final class AnchorHudManager {
                     warnings.add("Created HUD widget ID conflicts with resource widget: " + entry.getKey());
                     continue;
                 }
-                LoreEntity.UiElement element = new LoreEntity.UiElement(entry.getValue());
+                JsonObject settings = entry.getValue();
+                ResourceLocation owner = settings.has("anchorui:document") ? ResourceLocation.tryParse(settings.get("anchorui:document").getAsString()) : null;
+                if (owner != null && !LoreLoader.INSTANCE.getHudDocuments().containsKey(owner)) {
+                    continue;
+                }
+                if (owner != null) {
+                    widgetOwners.put(entry.getKey(), owner);
+                }
+                LoreEntity.UiElement element = new LoreEntity.UiElement(settings);
                 registry.declare(entry.getKey(), element);
-                declared.add(new Description(entry.getKey(), new LoreEntity(new JsonObject()), element));
+                String namespace = entry.getKey().substring(0, entry.getKey().indexOf(':'));
+                declared.add(new Description(entry.getKey(), new LoreEntity(new JsonObject(), namespace), element));
             } catch (RuntimeException exception) {
                 warnings.add("Invalid editor-created HUD widget '" + entry.getKey() + "': " + exception.getMessage());
             }

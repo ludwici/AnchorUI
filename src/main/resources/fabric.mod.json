@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "anchorui",
+  "version": "${mod_version}",
+  "name": "Anchor UI",
+  "description": "Configurable HUD and screen interface framework",
+  "authors": [
+    "ludwici"
+  ],
+  "license": "All Rights Reserved",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.ludwici.anchorui.client.FabricAnchorUIClient"
+    ]
+  },
+  "mixins": [
+    "anchorui.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

@@ -527,12 +527,6 @@ public final class AnchorScreenEditorScreen extends Screen {
     }
 
     private void openLayoutDropdown(LayoutHitbox hitbox) {
-        if (inspectorTabs.active(EditorInspectorTabs.Page.MORE)) {
-        }
-        if (inspectorTabs.active(EditorInspectorTabs.Page.MORE)) {
-            moreActions.put(lines.size(), "reset_all");
-            appendInspectorLine(lines, confirmResetAll ? "Confirm: reset ALL Screen changes" : "Reset all Screen changes", 0xFFFFAF9B, null, false);
-        }
         if (selected == null) {
             return;
         }
@@ -966,6 +960,10 @@ public final class AnchorScreenEditorScreen extends Screen {
                     appendInspectorLine(lines, "... " + diagnostics.omitted() + " more issues (see latest.log)", 0xFF96AEBE, null, false);
                 }
             }
+        }
+        if (inspectorTabs.active(EditorInspectorTabs.Page.MORE)) {
+            moreActions.put(lines.size(), "reset_all");
+            appendInspectorLine(lines, confirmResetAll ? "Confirm: reset ALL Screen changes" : "Reset all Screen changes", 0xFFFFAF9B, null, false);
         }
         if (selected == null) {
             appendInspectorLine(lines, "Select a widget to edit", SELECTED, null, false);

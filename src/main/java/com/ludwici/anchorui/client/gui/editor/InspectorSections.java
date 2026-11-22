@@ -15,6 +15,10 @@ public final class InspectorSections {
         headers.put(id, row);
     }
 
+    public boolean isHeaderRow(int row) {
+        return headers.containsValue(row);
+    }
+
     public boolean expanded(String id) {
         return expanded.getOrDefault(id, !id.equals("animation") && !id.equals("source") && !id.equals("diagnostics") && !id.startsWith("track:") && !id.startsWith("constraint:"));
     }

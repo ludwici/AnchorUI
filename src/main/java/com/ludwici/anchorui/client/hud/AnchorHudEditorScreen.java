@@ -14,6 +14,7 @@ import com.ludwici.anchorui.api.style.PositionElement;
 import com.ludwici.anchorui.api.widget.WidgetEditorRegistry;
 import com.ludwici.anchorui.client.gui.editor.AppearanceInspectorControls;
 import com.ludwici.anchorui.client.gui.editor.InspectorSections;
+import com.ludwici.anchorui.client.gui.editor.EditorInspectorTabs;
 import com.ludwici.anchorui.client.gui.editor.EditorDiagnostics;
 import com.ludwici.anchorui.client.gui.editor.AnchorInspectorRows;
 import com.ludwici.anchorui.client.gui.editor.AnchorInspectorControls;
@@ -51,11 +52,11 @@ public final class AnchorHudEditorScreen extends Screen {
     private static final int SNAP_GUIDE_COLOR = 0xFF88F0D6;
     private static final int VANILLA_COLOR = 0xFFAE9CE9;
     private static final int VANILLA_INACTIVE_COLOR = 0xFF6F6982;
-    private static final int PANEL_WIDTH = 218;
-    private static final int BUTTON_HEIGHT = 17;
-    private static final int BUTTON_STEP = 20;
-    private static final int FOOTER_HEIGHT = 85;
-    private static final int HEADER_HEIGHT = 34;
+    private static final int PANEL_WIDTH = 234;
+    private static final int BUTTON_HEIGHT = 16;
+    private static final int BUTTON_STEP = 19;
+    private static final int FOOTER_HEIGHT = 63;
+    private static final int HEADER_HEIGHT = 55;
     private static final int INSPECTOR_LINE_HEIGHT = 13;
     private static final float INSPECTOR_SCALE = 0.83F;
     private static final int RESET_SIZE = 11;
@@ -119,6 +120,8 @@ public final class AnchorHudEditorScreen extends Screen {
     private final List<LayoutHitbox> layoutHitboxes = new ArrayList<>();
     private final List<AppearanceHitbox> appearanceHitboxes = new ArrayList<>();
     private final InspectorSections inspectorSections = new InspectorSections();
+    private final EditorInspectorTabs inspectorTabs = new EditorInspectorTabs();
+    private final Map<Integer, String> moreActions = new HashMap<>();
     private EditBox appearanceInput;
     private Button appearanceApply;
     private Button appearanceCancel;
@@ -185,12 +188,12 @@ public final class AnchorHudEditorScreen extends Screen {
             manager.selectDefaultHud();
             editorStarted = true;
             panelWidth = Math.min(PANEL_WIDTH, Math.max(150, width - 116));
-            panelHeight = Math.min(350, Math.max(128, height - 80));
+            panelHeight = Math.min(440, Math.max(155, height - 40));
             panelX = width - panelWidth - 8;
             panelY = 8;
         } else {
             panelWidth = Math.min(PANEL_WIDTH, Math.max(150, width - 116));
-            panelHeight = Math.min(350, Math.max(128, height - 80));
+            panelHeight = Math.min(440, Math.max(155, height - 40));
             clampPanel();
         }
         if (!inspectorCollapsed && widgetList.overlaps(panelX, panelY, panelX + panelWidth, panelY + panelHeight)) {
@@ -224,34 +227,31 @@ public final class AnchorHudEditorScreen extends Screen {
             };
         }).bounds(panelX + panelWidth - 114, panelY + 3, 62, 16).build());
 
-        parentButton = addControl(Button.builder(Component.literal("Pick parent"), button -> {
+        addControl(Button.builder(Component.literal("+ Add widget"), button -> openCreateWidgetMenu()).bounds(left, actionsY, halfWidth, BUTTON_HEIGHT).build());
+        deleteWidgetButton = addControl(Button.builder(Component.literal("Delete"), button -> deleteCreatedWidget()).bounds(right, actionsY, halfWidth, BUTTON_HEIGHT).build());
+        hideButton = addControl(Button.builder(Component.literal("Hide"), button -> {
+            if (selected != null) {
+                manager.togglePreviewHidden(selected);
+                status = "Visibility changed";
+            }
+        }).bounds(left, actionsY + BUTTON_STEP, halfWidth, BUTTON_HEIGHT).build());
+        parentButton = addControl(Button.builder(Component.literal("Parent"), button -> {
             if (selected != null) {
                 editorDropdown.close();
                 choosingParent = !choosingParent;
                 draggingWidget = false;
                 status = choosingParent ? "Click a widget or empty space (screen)" : "Parent selection cancelled";
             }
-        }).bounds(left, actionsY, halfWidth, BUTTON_HEIGHT).build());
-        hideButton = addControl(Button.builder(Component.literal("Hide"), button -> {
-            if (selected != null) {
-                manager.togglePreviewHidden(selected);
-                status = "Visibility changed";
-            }
-        }).bounds(right, actionsY, halfWidth, BUTTON_HEIGHT).build());
+        }).bounds(right, actionsY + BUTTON_STEP, halfWidth, BUTTON_HEIGHT).build());
         resetButton = addControl(Button.builder(Component.literal("Reset"), button -> {
             if (selected != null) {
                 manager.resetPreviewOffset(selected);
                 status = "Restored widget defaults";
             }
         }).bounds(left, actionsY + BUTTON_STEP, halfWidth, BUTTON_HEIGHT).build());
-        addControl(Button.builder(Component.literal("Reset all"), button -> {
-            manager.resetAllPreviewOffsets();
-            status = "Restored all HUD defaults";
-        }).bounds(right, actionsY + BUTTON_STEP, halfWidth, BUTTON_HEIGHT).build());
-        addControl(Button.builder(Component.literal("+ Add widget"), button -> openCreateWidgetMenu()).bounds(left, actionsY + BUTTON_STEP * 2, halfWidth, BUTTON_HEIGHT).build());
-        deleteWidgetButton = addControl(Button.builder(Component.literal("Delete"), button -> deleteCreatedWidget()).bounds(right, actionsY + BUTTON_STEP * 2, halfWidth, BUTTON_HEIGHT).build());
-        addControl(Button.builder(Component.literal("Save"), button -> saveAndClose()).bounds(left, actionsY + BUTTON_STEP * 3, halfWidth, BUTTON_HEIGHT).build());
-        addControl(Button.builder(Component.literal("Cancel"), button -> requestClose()).bounds(right, actionsY + BUTTON_STEP * 3, halfWidth, BUTTON_HEIGHT).build());
+        addControl(Button.builder(Component.literal("Save"), button -> saveAndClose()).bounds(left, actionsY + BUTTON_STEP * 2, halfWidth, BUTTON_HEIGHT).build());
+        addControl(Button.builder(Component.literal("Cancel"), button -> requestClose()).bounds(right, actionsY + BUTTON_STEP * 2, halfWidth, BUTTON_HEIGHT).build());
+        positionControls();
         createAppearanceInput();
     }
 
@@ -466,19 +466,26 @@ public final class AnchorHudEditorScreen extends Screen {
 
     private void positionControls() {
         int left = panelX + 6;
-        int half = (panelWidth - 16) / 2;
-        int right = left + half + 4;
+        int usable = panelWidth - 12;
+        int half = (usable - 4) / 2;
+        int third = (usable - 8) / 3;
         int top = actionsTop();
         demoButton.setPosition(panelX + panelWidth - 46, panelY + 3);
         vanillaButton.setPosition(panelX + panelWidth - 114, panelY + 3);
-        parentButton.setPosition(left, top);
-        hideButton.setPosition(right, top);
-        resetButton.setPosition(left, top + BUTTON_STEP);
-        controls.get(5).setPosition(right, top + BUTTON_STEP);
-        controls.get(6).setPosition(left, top + BUTTON_STEP * 2);
-        controls.get(7).setPosition(right, top + BUTTON_STEP * 2);
-        controls.get(8).setPosition(left, top + BUTTON_STEP * 3);
-        controls.get(9).setPosition(right, top + BUTTON_STEP * 3);
+        controls.get(2).setWidth(half);
+        controls.get(2).setPosition(left, top);
+        deleteWidgetButton.setWidth(usable - half - 4);
+        deleteWidgetButton.setPosition(left + half + 4, top);
+        hideButton.setWidth(third);
+        hideButton.setPosition(left, top + BUTTON_STEP);
+        parentButton.setWidth(third);
+        parentButton.setPosition(left + third + 4, top + BUTTON_STEP);
+        resetButton.setWidth(usable - (third + 4) * 2);
+        resetButton.setPosition(left + (third + 4) * 2, top + BUTTON_STEP);
+        controls.get(7).setWidth(half);
+        controls.get(7).setPosition(left, top + BUTTON_STEP * 2);
+        controls.get(8).setWidth(usable - half - 4);
+        controls.get(8).setPosition(left + half + 4, top + BUTTON_STEP * 2);
     }
 
     private void refreshFrameHandles() {
@@ -544,7 +551,7 @@ public final class AnchorHudEditorScreen extends Screen {
 
     private void openCreateWidgetMenu() {
         String parentId = selected != null && manager.isPreviewContainer(selected) ? selected : null;
-        editorDropdown.open(panelX + 6, actionsTop() + BUTTON_STEP * 2, panelWidth - 12, BUTTON_HEIGHT, width, height,
+        editorDropdown.open(panelX + 6, actionsTop(), panelWidth - 12, BUTTON_HEIGHT, width, height,
                 EditorWidgetCreation.types(), "", type -> {
                     String id = manager.createPreviewWidget(type);
                     if (id == null) {
@@ -692,6 +699,7 @@ public final class AnchorHudEditorScreen extends Screen {
                     ResourceLocation hudId = manager.getActiveUserHud();
                     String name = hudId == null ? "(Unassigned HUD)" : UserUiStorage.display(UserUiStorage.Kind.HUD, hudId);
                     graphics.drawString(font, font.plainSubstrByWidth("HUD: " + name + "  [v]", panelWidth - 15), panelX + 6, panelY + 22, 0xFFAAC1D4, false);
+                    inspectorTabs.render(graphics, font, panelX + 6, panelY + 34, panelWidth - 12);
                     renderInspector(graphics, active);
                     graphics.fill(panelX + 3, actionsTop() - 3, panelX + panelWidth - 3, actionsTop() - 2, 0x88698DAB);
                 }
@@ -702,7 +710,7 @@ public final class AnchorHudEditorScreen extends Screen {
             hideButton.active = selected != null && !choosingParent;
             parentButton.active = selected != null;
             hideButton.setMessage(Component.literal(active != null && active.hiddenByUser() ? "Show" : "Hide"));
-            parentButton.setMessage(Component.literal(choosingParent ? "Cancel parent" : "Pick parent"));
+            parentButton.setMessage(Component.literal(choosingParent ? "Cancel" : "Parent"));
             demoButton.setMessage(Component.literal(manager.isTestEnabled() ? "Demo ON" : "Demo"));
             vanillaButton.setMessage(Component.literal(switch (vanillaViewMode) {
                 case 0 -> "IDs OFF";
@@ -787,6 +795,11 @@ public final class AnchorHudEditorScreen extends Screen {
         int row = 0;
         for (InspectorLine line : lines) {
             if (y + INSPECTOR_LINE_HEIGHT > top && y < bottom) {
+                boolean header = inspectorSections.isHeaderRow(row);
+                graphics.fill(panelX + 5, y, panelX + panelWidth - 7, y + INSPECTOR_LINE_HEIGHT - 1, header ? 0xFF284457 : row % 2 == 0 ? 0xFF1A2A37 : 0xFF1D2E3B);
+                if (line.modified() && !header) {
+                    graphics.fill(panelX + 5, y, panelX + 7, y + INSPECTOR_LINE_HEIGHT - 1, 0xFF70CDB7);
+                }
                 graphics.pose().pushPose();
                 graphics.pose().translate(panelX + 7, y + 1, 0);
                 graphics.pose().scale(INSPECTOR_SCALE, INSPECTOR_SCALE, 1.0F);
@@ -1020,6 +1033,7 @@ public final class AnchorHudEditorScreen extends Screen {
         inspectorSections.clearHeaders();
         animationActions.clear();
         anchorActions.clear();
+        moreActions.clear();
         if (choosingParent) {
             appendLine(lines, "CHOOSE PARENT", 0xFF8DF4AA);
             appendLine(lines, "Click another widget", 0xFFE5EEF5);
@@ -1036,7 +1050,7 @@ public final class AnchorHudEditorScreen extends Screen {
             appendLine(lines, status, 0xFFFFCF64);
         }
         EditorDiagnostics.Summary diagnostics = EditorDiagnostics.summarize(manager.getLayoutError(), manager.getLayoutWarnings(), LoreLoader.INSTANCE.getResourceIssues().stream().filter(issue -> issue.appliesToHud()).toList());
-        if (!diagnostics.empty()) {
+        if (inspectorTabs.active(EditorInspectorTabs.Page.MORE) && !diagnostics.empty()) {
             appendSection(lines, "diagnostics", diagnostics.title());
             if (inspectorSections.expanded("diagnostics")) {
                 for (EditorDiagnostics.Entry entry : diagnostics.entries()) {
@@ -1069,7 +1083,8 @@ public final class AnchorHudEditorScreen extends Screen {
             appendLine(lines, "Arrows: 1 px / Shift: 10 px", 0xFFE5EEF5);
             appendLine(lines, "Ctrl+S: save / Esc: exit", 0xFFE5EEF5);
         } else {
-            appendSection(lines, "widget", "CURRENT WIDGET");
+            if (inspectorTabs.active(EditorInspectorTabs.Page.POSITION)) {
+            appendSection(lines, "widget", "POSITION & VISIBILITY");
             if (inspectorSections.expanded("widget")) {
                 appendLine(lines, "R at right: reset this field", 0xFF96AEBE);
                 appendLine(lines, "id: " + active.id(), 0xFFE5EEF5);
@@ -1105,6 +1120,8 @@ public final class AnchorHudEditorScreen extends Screen {
                     }
                 }
             }
+            }
+            if (inspectorTabs.active(EditorInspectorTabs.Page.LAYOUT)) {
             List<LayoutInspectorControls.Control> layoutControls = manager.getLayoutControls(active.id());
             if (!layoutControls.isEmpty()) {
                 appendSection(lines, "layout", "COMPONENT / LAYOUT");
@@ -1118,6 +1135,8 @@ public final class AnchorHudEditorScreen extends Screen {
                     }
                 }
             }
+            }
+            if (inspectorTabs.active(EditorInspectorTabs.Page.STYLE)) {
             List<AppearanceInspectorControls.Control> appearanceControls = manager.getAppearanceControls(active.id());
             if (!appearanceControls.isEmpty()) {
                 appendSection(lines, "visual", "VISUAL / CONTENT");
@@ -1130,7 +1149,9 @@ public final class AnchorHudEditorScreen extends Screen {
                     }
                 }
             }
-            appendSection(lines, "animation", "ANIMATION");
+            }
+            if (inspectorTabs.active(EditorInspectorTabs.Page.MOTION)) {
+            appendSection(lines, "animation", "ANIMATIONS");
             if (inspectorSections.expanded("animation")) {
                 appendAnimationAction(lines, "[+] Add animation", "add", -1);
                 JsonArray tracks = manager.getAnimations(active.id());
@@ -1159,6 +1180,10 @@ public final class AnchorHudEditorScreen extends Screen {
                     appendAnimationAction(lines, "    Delete " + trackId, "delete", index);
                 }
             }
+            }
+            if (inspectorTabs.active(EditorInspectorTabs.Page.MORE)) {
+                moreActions.put(lines.size(), "reset_all");
+                appendLine(lines, "Reset all HUD changes", 0xFFFFA98D);
             appendSection(lines, "source", "SOURCE JSON (read only)");
             if (inspectorSections.expanded("source")) {
                 if (!active.id().equals(inspectedId)) {
@@ -1171,8 +1196,19 @@ public final class AnchorHudEditorScreen extends Screen {
                     appendLine(lines, property, 0xFFB7CEDF);
                 }
             }
+            }
         }
         return lines;
+    }
+
+    private boolean clickMoreAction(double mouseY) {
+        int row = (int) Math.floor((mouseY - inspectorTop() + inspectorScroll) / INSPECTOR_LINE_HEIGHT);
+        if (!"reset_all".equals(moreActions.get(row))) {
+            return false;
+        }
+        manager.resetAllPreviewOffsets();
+        status = "Restored this HUD to defaults";
+        return true;
     }
 
     private void appendAnchorAction(List<InspectorLine> lines, String text, int index, String field) {
@@ -1353,6 +1389,11 @@ public final class AnchorHudEditorScreen extends Screen {
             toggleInspector();
             return true;
         }
+        if (!compact && !inspectorCollapsed && button == GLFW.GLFW_MOUSE_BUTTON_LEFT
+                && inspectorTabs.click(mouseX, mouseY, panelX + 6, panelY + 34, panelWidth - 12)) {
+            resetInspectorScroll();
+            return true;
+        }
         if (!compact && widgetList.contains(mouseX, mouseY)) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 WidgetListPanel.Entry entry = widgetList.entryAt(mouseX, mouseY, frameEntries);
@@ -1399,7 +1440,7 @@ public final class AnchorHudEditorScreen extends Screen {
                     inspectorSections.toggle(section);
                     return true;
                 }
-                if (clickAnchorAction(mouseX, mouseY) || clickAnimationAction(mouseY)) {
+                if (clickMoreAction(mouseY) || clickAnchorAction(mouseX, mouseY) || clickAnimationAction(mouseY)) {
                     return true;
                 }
                 for (AppearanceHitbox hitbox : appearanceHitboxes) {

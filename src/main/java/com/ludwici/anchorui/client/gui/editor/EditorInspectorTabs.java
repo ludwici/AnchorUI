@@ -6,7 +6,7 @@ import net.minecraft.client.gui.GuiGraphics;
 /** A small shared navigation bar for HUD and Screen inspectors. */
 public final class EditorInspectorTabs {
     public enum Page {
-        POSITION("Position"),
+        POSITION("Place"),
         LAYOUT("Layout"),
         STYLE("Style"),
         MOTION("Motion"),

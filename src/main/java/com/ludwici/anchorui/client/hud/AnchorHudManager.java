@@ -203,21 +203,34 @@ public final class AnchorHudManager {
         }
         ensureStorageLoaded();
         HudLayoutOffsets cleaned = savedOffsets.copy();
+        Set<String> removed = new HashSet<>();
         for (String id : savedOffsets.allWidgetIds()) {
             if (hudId.equals(widgetOwners.get(id))) {
-                if (cleaned.isCreatedWidget(id)) {
-                    cleaned.removeCreatedWidget(id);
-                } else {
-                    cleaned.reset(id);
-                }
+                removed.add(id);
             }
         }
         for (var entry : savedOffsets.createdWidgets().entrySet()) {
             JsonObject definition = entry.getValue();
             if (definition.has("anchorui:document") && hudId.toString().equals(definition.get("anchorui:document").getAsString())) {
-                cleaned.removeCreatedWidget(entry.getKey());
+                removed.add(entry.getKey());
             }
         }
+        for (String id : removed) {
+            if (cleaned.isCreatedWidget(id)) {
+                cleaned.removeCreatedWidget(id);
+            } else {
+                cleaned.reset(id);
+            }
+        }
+        HudLayoutOffsets legacy = HudLayoutStorage.load(configPath());
+        for (String id : removed) {
+            if (legacy.isCreatedWidget(id)) {
+                legacy.removeCreatedWidget(id);
+            } else {
+                legacy.reset(id);
+            }
+        }
+        HudLayoutStorage.save(configPath(), legacy);
         java.nio.file.Files.deleteIfExists(HudScopeStorage.path(hudId));
         savedOffsets = cleaned;
         if (hudId.equals(activeUserHud)) {

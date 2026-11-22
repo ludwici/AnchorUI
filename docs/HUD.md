@@ -135,6 +135,10 @@ The **Delete** action is enabled only for editor-created widgets; bundled/resour
 
 The list of creatable types is extensible from Java with `EditorWidgetCreation.register(type, defaultsSupplier)`. New types must supply valid widget settings so the editor can construct them safely; registration of a rendering factory alone does not imply the type can be created from an empty definition.
 
+## Compact inspector tabs
+
+The HUD editor now uses a short, three-row action area and five tabs: **Place**, **Layout**, **Style**, **Motion** and **More**. The Place tab shows selected-widget information and individual anchors, Layout shows only auto-layout options, Style contains visual/content settings, Motion handles animation tracks, and More holds read-only source JSON, diagnostics and Reset all. Changed fields get a colored marker, with section headers visually separated from property rows. Reset all on More requires a second click. F8 still remembers the selected HUD, and all edit actions keep their existing Save/Discard behavior.
+
 ## HUD editor
 
 The F8 inspector has a collapsed **DIAGNOSTICS** category when HUD widget construction or layout resolution reports problems. Expand it to see the current error and up to 24 unique warnings, with the full diagnostic trail retained in `latest.log`. This includes invalid widget configurations and unresolved anchor references detected during HUD rebuilds. Rejected editor anchor/layout choices display the specific validation reason when available, without applying invalid changes. Diagnostics clear when HUD state is reset and are refreshed on rebuild. The section also displays errors and warnings from HUD resources and shared templates/styles/definitions after a reload, excluding unrelated screen documents. See [Resource reload and diagnostics](RESOURCE_RELOAD.md) for details and a manual F3+T test checklist.

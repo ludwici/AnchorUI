@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 /** Local, explicitly user-owned UI documents. Bundled resource-pack documents are never modified. */
-public final class UserDocumentStore {
+public final class UserUiStorage {
     private static final Gson PRETTY_JSON = new GsonBuilder().setPrettyPrinting().create();
 
     public enum Kind {
@@ -47,7 +47,7 @@ public final class UserDocumentStore {
         }
     }
 
-    private UserDocumentStore() {
+    private UserUiStorage() {
     }
 
     public static ResourceLocation resolve(Kind kind, String value) {
@@ -94,7 +94,7 @@ public final class UserDocumentStore {
                 throw new IllegalArgumentException("Unsafe Anchor UI document ID: " + id);
             }
         }
-        Path directory = configRoot.resolve("documents").resolve(kind.directory()).resolve(id.getNamespace()).normalize();
+        Path directory = configRoot.resolve("ui").resolve(kind.directory()).resolve(id.getNamespace()).normalize();
         Path destination = directory.resolve(suffix + ".json").normalize();
         if (!destination.startsWith(directory) || destination.equals(directory)) {
             throw new IllegalArgumentException("Unsafe Anchor UI document path: " + id);
@@ -102,12 +102,22 @@ public final class UserDocumentStore {
         return destination;
     }
 
+    private static Path legacyPath(Path configRoot, Kind kind, ResourceLocation id) {
+        Path directory = configRoot.resolve("documents").resolve(kind.directory()).resolve(id.getNamespace()).normalize();
+        String suffix = id.getPath().substring(kind.prefix().length());
+        Path file = directory.resolve(suffix + ".json").normalize();
+        if (!file.startsWith(directory)) {
+            throw new IllegalArgumentException("Invalid legacy UI path: " + id);
+        }
+        return file;
+    }
+
     public static Path path(Kind kind, ResourceLocation id) {
         return path(configRoot(), kind, id);
     }
 
     public static boolean exists(Kind kind, ResourceLocation id) {
-        return Files.isRegularFile(path(kind, id));
+        return Files.isRegularFile(path(kind, id)) || Files.isRegularFile(legacyPath(configRoot(), kind, id));
     }
 
     public static void create(Kind kind, ResourceLocation id) throws IOException {
@@ -116,6 +126,9 @@ public final class UserDocumentStore {
 
     public static void create(Path configRoot, Kind kind, ResourceLocation id) throws IOException {
         Path file = path(configRoot, kind, id);
+        if (Files.exists(legacyPath(configRoot, kind, id))) {
+            throw new java.nio.file.FileAlreadyExistsException(legacyPath(configRoot, kind, id).toString());
+        }
         Files.createDirectories(file.getParent());
         JsonObject definition = new JsonObject();
         definition.add("entities", new JsonArray());
@@ -127,7 +140,11 @@ public final class UserDocumentStore {
     }
 
     public static void delete(Path configRoot, Kind kind, ResourceLocation id) throws IOException {
-        Files.delete(path(configRoot, kind, id));
+        boolean deletedCurrent = Files.deleteIfExists(path(configRoot, kind, id));
+        boolean deletedLegacy = Files.deleteIfExists(legacyPath(configRoot, kind, id));
+        if (!deletedCurrent && !deletedLegacy) {
+            throw new java.nio.file.NoSuchFileException(id.toString());
+        }
         if (kind == Kind.SCREEN) {
             Files.deleteIfExists(screenLayoutPath(configRoot, id));
         }
@@ -156,32 +173,35 @@ public final class UserDocumentStore {
     public static Map<ResourceLocation, JsonElement> load(Path configRoot) {
         Map<ResourceLocation, JsonElement> documents = new LinkedHashMap<>();
         for (Kind kind : Kind.values()) {
-            Path root = configRoot.resolve("documents").resolve(kind.directory());
-            if (!Files.isDirectory(root)) {
-                continue;
-            }
-            try (Stream<Path> stream = Files.walk(root)) {
-                for (Path file : stream.filter(Files::isRegularFile).filter(path -> path.getFileName().toString().endsWith(".json")).sorted().toList()) {
-                    try {
-                        Path relative = root.relativize(file);
-                        if (relative.getNameCount() < 2) {
-                            continue;
-                        }
-                        String namespace = relative.getName(0).toString();
-                        String filename = relative.subpath(1, relative.getNameCount()).toString().replace('\\', '/');
-                        String name = filename.substring(0, filename.length() - ".json".length());
-                        ResourceLocation id = ResourceLocation.tryParse(namespace + ":" + kind.prefix() + name);
-                        if (id == null || !path(configRoot, kind, id).equals(file.normalize())) {
-                            AnchorUI.LOGGER.warn("Skipping invalid Anchor UI document path: {}", file);
-                            continue;
-                        }
-                        documents.put(id, JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8)));
-                    } catch (IOException | RuntimeException exception) {
-                        AnchorUI.LOGGER.warn("Could not load Anchor UI document {}", file, exception);
-                    }
+            for (boolean legacy : new boolean[]{true, false}) {
+                Path root = configRoot.resolve(legacy ? "documents" : "ui").resolve(kind.directory());
+                if (!Files.isDirectory(root)) {
+                    continue;
                 }
-            } catch (IOException exception) {
-                AnchorUI.LOGGER.warn("Could not scan Anchor UI documents in {}", root, exception);
+                try (Stream<Path> stream = Files.walk(root)) {
+                    for (Path file : stream.filter(Files::isRegularFile).filter(path -> path.getFileName().toString().endsWith(".json")).sorted().toList()) {
+                        try {
+                            Path relative = root.relativize(file);
+                            if (relative.getNameCount() < 2) {
+                                continue;
+                            }
+                            String namespace = relative.getName(0).toString();
+                            String filename = relative.subpath(1, relative.getNameCount()).toString().replace('\\', '/');
+                            String name = filename.substring(0, filename.length() - ".json".length());
+                            ResourceLocation id = ResourceLocation.tryParse(namespace + ":" + kind.prefix() + name);
+                            Path expected = id == null ? null : legacy ? legacyPath(configRoot, kind, id) : path(configRoot, kind, id);
+                            if (expected == null || !expected.equals(file.normalize())) {
+                                AnchorUI.LOGGER.warn("Skipping invalid Anchor UI {} path: {}", kind, file);
+                                continue;
+                            }
+                            documents.put(id, JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8)));
+                        } catch (IOException | RuntimeException exception) {
+                            AnchorUI.LOGGER.warn("Could not load Anchor UI {} at {}", kind, file, exception);
+                        }
+                    }
+                } catch (IOException exception) {
+                    AnchorUI.LOGGER.warn("Could not scan Anchor UI {} files in {}", kind, root, exception);
+                }
             }
         }
         return documents;

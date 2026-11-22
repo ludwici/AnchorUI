@@ -47,7 +47,7 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
 
     private void publishDocuments() {
         Map<ResourceLocation, JsonElement> merged = new java.util.LinkedHashMap<>(resourceObjects);
-        for (var entry : UserDocumentStore.load().entrySet()) {
+        for (var entry : UserUiStorage.load().entrySet()) {
             if (merged.putIfAbsent(entry.getKey(), entry.getValue()) != null) {
                 AnchorUI.LOGGER.warn("Local Anchor UI document '{}' conflicts with a resource pack; resource-pack definition takes precedence", entry.getKey());
             }

@@ -19,7 +19,7 @@ import com.ludwici.anchorui.client.gui.editor.AnchorInspectorRows;
 import com.ludwici.anchorui.client.gui.editor.AnchorInspectorControls;
 import com.ludwici.anchorui.client.gui.editor.EditorAnchorGuide;
 import com.ludwici.anchorui.client.LoreLoader;
-import com.ludwici.anchorui.client.UserDocumentStore;
+import com.ludwici.anchorui.client.UserUiStorage;
 import net.minecraft.resources.ResourceLocation;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorCheckbox;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorButton;
@@ -527,12 +527,12 @@ public final class AnchorHudEditorScreen extends Screen {
         List<String> choices = new ArrayList<>();
         choices.add("(Unassigned HUD)");
         for (ResourceLocation id : manager.getAvailableHuds()) {
-            choices.add(UserDocumentStore.display(UserDocumentStore.Kind.HUD, id));
+            choices.add(UserUiStorage.display(UserUiStorage.Kind.HUD, id));
         }
         ResourceLocation activeHud = manager.getActiveUserHud();
-        String current = activeHud == null ? "(Unassigned HUD)" : UserDocumentStore.display(UserDocumentStore.Kind.HUD, activeHud);
+        String current = activeHud == null ? "(Unassigned HUD)" : UserUiStorage.display(UserUiStorage.Kind.HUD, activeHud);
         editorDropdown.open(panelX + 6, panelY + 20, panelWidth - 12, 13, width, height, choices, current, value -> {
-            ResourceLocation next = value.equals("(Unassigned HUD)") ? null : UserDocumentStore.resolve(UserDocumentStore.Kind.HUD, value);
+            ResourceLocation next = value.equals("(Unassigned HUD)") ? null : UserUiStorage.resolve(UserUiStorage.Kind.HUD, value);
             manager.setActiveUserHud(next);
             selectWidget(null);
             choosingParent = false;
@@ -690,7 +690,7 @@ public final class AnchorHudEditorScreen extends Screen {
                 graphics.drawString(font, inspectorCollapsed ? "[+]" : "[-]", inspectorCollapsed ? visiblePanelX() + visiblePanelWidth() - 26 : panelX + panelWidth - 140, panelY + 6, 0xFFE5EEF5, false);
                 if (!inspectorCollapsed) {
                     ResourceLocation hudId = manager.getActiveUserHud();
-                    String name = hudId == null ? "(Unassigned HUD)" : UserDocumentStore.display(UserDocumentStore.Kind.HUD, hudId);
+                    String name = hudId == null ? "(Unassigned HUD)" : UserUiStorage.display(UserUiStorage.Kind.HUD, hudId);
                     graphics.drawString(font, font.plainSubstrByWidth("HUD: " + name + "  [v]", panelWidth - 15), panelX + 6, panelY + 22, 0xFFAAC1D4, false);
                     renderInspector(graphics, active);
                     graphics.fill(panelX + 3, actionsTop() - 3, panelX + panelWidth - 3, actionsTop() - 2, 0x88698DAB);

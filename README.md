@@ -191,7 +191,7 @@ A new HUD opens the HUD editor with that HUD selected. Use the **HUD selector** 
 
 A new Screen opens immediately; press **F8** to edit it. Each Screen has its own widgets, state, events and override file under `config/anchorui/screens/`. You can also open resource-pack Screens using `/anchorui screen open namespace:name`.
 
-User-created HUD and Screen definitions are separate JSON files under `config/anchorui/documents/hud/` and `config/anchorui/documents/screens/`. They load without a resource-pack reload. Deletion commands affect only user-created HUDs/Screens, never bundled or resource-pack definitions.
+User-created HUD and Screen definitions are separate JSON files under `config/anchorui/ui/hud/` and `config/anchorui/ui/screens/`. They load without a resource-pack reload. Deletion commands affect only user-created HUDs/Screens, never bundled or resource-pack definitions.
 
 ## F8: HUD and screen layout editors (NeoForge 1.21.1)
 

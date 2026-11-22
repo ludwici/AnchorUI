@@ -30,7 +30,7 @@ import com.ludwici.anchorui.api.widget.WidgetContext;
 import com.ludwici.anchorui.api.widget.WidgetIds;
 import com.ludwici.anchorui.api.widget.WidgetInstanceRegistry;
 import com.ludwici.anchorui.client.LoreLoader;
-import com.ludwici.anchorui.client.UserDocumentStore;
+import com.ludwici.anchorui.client.UserUiStorage;
 import com.ludwici.anchorui.client.gui.AnchoredWidget;
 import com.ludwici.anchorui.client.gui.WidgetAnimation;
 import com.ludwici.anchorui.client.gui.WidgetSizeTransition;
@@ -755,7 +755,7 @@ public final class AnchorHudManager {
         }
         String namespace = activeUserHud == null ? "anchorui" : activeUserHud.getNamespace();
         String documentPart = activeUserHud == null ? "" : activeUserHud.getPath()
-                .substring(UserDocumentStore.Kind.HUD.prefix().length()).replace('/', '_') + "_";
+                .substring(UserUiStorage.Kind.HUD.prefix().length()).replace('/', '_') + "_";
         for (int index = 1; index <= 10000; index++) {
             String id = namespace + ":editor_" + documentPart
                     + net.minecraft.resources.ResourceLocation.parse(type).getPath().replace('/', '_') + "_" + index;

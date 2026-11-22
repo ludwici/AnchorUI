@@ -705,7 +705,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             for (InspectorLine line : lines) {
                 if (lineY + INSPECTOR_LINE_HEIGHT > top && lineY < bottom) {
                     boolean header = inspectorSections.isHeaderRow(row);
-                    graphics.fill(panelX() + 5, lineY, panelX() + inspectorWidth - 7, lineY + INSPECTOR_LINE_HEIGHT - 1, header ? 0xFF284457 : row % 2 == 0 ? 0xFF1A2A37 : 0xFF1D2E3B);
+                    graphics.fill(panelX() + 5, lineY, panelX() + inspectorWidth - 7, lineY + INSPECTOR_LINE_HEIGHT - 1, moreActions.containsKey(row) ? 0xFF52383D : header ? 0xFF284457 : row % 2 == 0 ? 0xFF1A2A37 : 0xFF1D2E3B);
                     if (line.modified() && !header) {
                         graphics.fill(panelX() + 5, lineY, panelX() + 7, lineY + INSPECTOR_LINE_HEIGHT - 1, 0xFF70CDB7);
                     }
@@ -1069,7 +1069,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             }
         }
         if (inspectorTabs.active(EditorInspectorTabs.Page.MORE)) {
-                appendSection(lines, "source", "SOURCE JSON (read only)");
+            appendSection(lines, "source", "SOURCE JSON (read only)");
             if (inspectorSections.expanded("source")) {
                 if (!selected.id().equals(inspectedId)) {
                     JsonObject settings = target.editorSourceSettings(selected.id());

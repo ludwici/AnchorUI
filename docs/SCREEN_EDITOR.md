@@ -2,7 +2,7 @@
 
 The F8 key binding now chooses its editor based on the active UI context:
 
-- **No screen open:** edits the shared gameplay HUD, as before.
+- **No screen open:** opens the HUD editor. Use its HUD picker to edit one HUD at a time.
 - **An Anchor UI JSON screen open:** edits that screen's widgets in-place with a live preview.
 - **Other mods' or vanilla screens:** Anchor UI does not modify unregistered widgets in those screens. F8 is not intercepted there.
 
@@ -69,7 +69,7 @@ Another screen, such as `anchorui:screens/dialogue_intro`, has its **own** file 
 
 The file uses the same override schema as `hud-layout.json`, including the namespaced widget ID, `x`/`y` deltas, `relativeTo`, `point`, `anchor`, optional `hidden`, and **optional `layout` / `layoutItem` property overrides**. Neither the original resource pack JSON nor the server's data is modified. Unchanged fields continue to use resource defaults, and the saved deltas are reapplied on the next screen opening or resize.
 
-The HUD layout remains independent in `config/anchorui/hud-layout.json`. Both HUD and screen overrides are saved as readable, pretty-printed JSON with two-space indentation. Existing single-line JSON configs remain compatible and are reformatted on the next Save.
+HUD layouts remain independent under `config/anchorui/hud-layouts/` (legacy unassigned HUD state remains in `config/anchorui/hud-layout.json`). Both HUD and screen overrides are saved as readable, pretty-printed JSON with two-space indentation. Existing single-line JSON configs remain compatible and are reformatted on the next Save.
 
 ### F8 live preview and lifecycle regression
 

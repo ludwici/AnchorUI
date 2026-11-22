@@ -526,6 +526,8 @@ public final class AnchorScreenEditorScreen extends Screen {
     }
 
     private void openLayoutDropdown(LayoutHitbox hitbox) {
+        if (inspectorTabs.active(EditorInspectorTabs.Page.MORE)) {
+        }
         if (selected == null) {
             return;
         }

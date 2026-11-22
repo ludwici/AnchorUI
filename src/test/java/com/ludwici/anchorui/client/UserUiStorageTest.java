@@ -65,7 +65,7 @@ public class UserUiStorageTest {
         ResourceLocation hud = ResourceLocation.parse("example:hud/old");
         Path oldFile = config.resolve("documents/hud/example/old.json");
         Files.createDirectories(oldFile.getParent());
-        Files.writeString(oldFile, "{\\"entities\\":[]}", StandardCharsets.UTF_8);
+        Files.writeString(oldFile, "{\"entities\":[]}", StandardCharsets.UTF_8);
         assertTrue(UserUiStorage.load(config).containsKey(hud));
         assertEquals(1, UserUiStorage.list(config, UserUiStorage.Kind.HUD).size());
         UserUiStorage.delete(config, UserUiStorage.Kind.HUD, hud);

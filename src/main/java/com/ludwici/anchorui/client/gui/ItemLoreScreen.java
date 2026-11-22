@@ -2026,12 +2026,12 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
                 }
             }
         }
-        if (KeyRegistry.EDIT_HUD.isActiveAndMatches(InputConstants.getKey(keyCode, scanCode))) {
+        if (KeyRegistry.EDIT_HUD.matches(keyCode, scanCode)) {
             transitioningToEditor = true;
             minecraft.setScreen(new AnchorScreenEditorScreen(this));
             return true;
         }
-        if (minecraft.options.keyInventory.isActiveAndMatches(InputConstants.getKey(keyCode, scanCode))) {
+        if (minecraft.options.keyInventory.matches(keyCode, scanCode)) {
             onClose();
             return true;
         }

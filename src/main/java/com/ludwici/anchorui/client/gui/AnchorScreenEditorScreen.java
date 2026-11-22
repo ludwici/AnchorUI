@@ -1448,7 +1448,7 @@ public final class AnchorScreenEditorScreen extends Screen {
             }
             return appearanceInput.keyPressed(keyCode, scanCode, modifiers);
         }
-        if (KeyRegistry.EDIT_HUD.isActiveAndMatches(InputConstants.getKey(keyCode, scanCode))) {
+        if (KeyRegistry.EDIT_HUD.matches(keyCode, scanCode)) {
             requestClose();
             return true;
         }

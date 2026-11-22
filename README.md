@@ -171,9 +171,9 @@ Within a screen, Anchor UI first declares all widget IDs in a per-screen `Widget
 
 See [Widget Namespaces and Imports](docs/WIDGET_REFERENCES.md) and test `/anchorui test scene14` for a working cross-namespace demonstration.
 
-## Creating local HUD and Screen documents
+## Creating HUDs and Screens
 
-Create and remove client-side documents in-game with namespaced IDs:
+Create, edit and delete HUDs independently of Screens:
 
 ```text
 /anchorui hud create mypack:status
@@ -187,9 +187,11 @@ Create and remove client-side documents in-game with namespaced IDs:
 /anchorui screen delete mypack:character
 ```
 
-Creating a HUD opens the F8 HUD editor, and creating a Screen opens that empty Screen (press F8 to add widgets). Use `/anchorui hud edit mypack:status` to associate **newly added** widgets with that HUD; `/anchorui hud edit` returns to global HUD editing. All HUDs still render together in the shared editor; the selected document controls ownership of new widgets, not the entire preview. Existing widgets and resource-pack documents are unaffected.
+A new HUD opens the HUD editor with that HUD selected. Use the **HUD selector** at the top of F8 to choose another HUD, including one supplied by a resource pack. Only the selected HUD's widgets and outlines are shown and edited; other HUDs continue rendering together during ordinary gameplay. The **Unassigned HUD** option is for widgets from the earlier global editor. New widgets belong to the selected HUD. Saving writes their layout to `config/anchorui/hud-layouts/<namespace>/<name>.json`, while old unassigned widgets still use `config/anchorui/hud-layout.json`.
 
-New documents are JSON files at `config/anchorui/documents/hud/<namespace>/<path>.json` and `config/anchorui/documents/screens/<namespace>/<path>.json`. They are loaded along with resource packs, immediately after create/delete and again on resource reload. Layout and widget edits still use `config/anchorui/hud-layout.json` for HUD, and `config/anchorui/screens/<namespace>/screens/<path>.json` for Screens. Deleting a locally created Screen also deletes its saved layout; deleting a local HUD removes widgets explicitly created for that HUD. You cannot overwrite or delete a built-in or resource-pack document through these commands.
+A new Screen opens immediately; press **F8** to edit it. Each Screen has its own widgets, state, events and override file under `config/anchorui/screens/`. You can also open resource-pack Screens using `/anchorui screen open namespace:name`.
+
+User-created HUD and Screen definitions are separate JSON files under `config/anchorui/documents/hud/` and `config/anchorui/documents/screens/`. They load without a resource-pack reload. Deletion commands affect only user-created HUDs/Screens, never bundled or resource-pack definitions.
 
 ## F8: HUD and screen layout editors (NeoForge 1.21.1)
 

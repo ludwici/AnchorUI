@@ -47,7 +47,7 @@ import com.ludwici.anchorui.client.LoreLoader;
 import com.ludwici.anchorui.client.hud.AnchorHudManager;
 import com.ludwici.anchorui.client.hud.HudLayoutOffsets;
 import com.ludwici.anchorui.client.hud.HudLayoutStorage;
-import net.neoforged.fml.loading.FMLPaths;
+import net.fabricmc.loader.api.FabricLoader;
 import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
 import net.minecraft.client.gui.GuiGraphics;
@@ -184,7 +184,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         if (documentId == null) {
             return null;
         }
-        Path root = FMLPaths.CONFIGDIR.get().resolve("anchorui").resolve("screens").resolve(documentId.getNamespace());
+        Path root = FabricLoader.getInstance().getConfigDir().resolve("anchorui").resolve("screens").resolve(documentId.getNamespace());
         Path path = root.resolve(documentId.getPath() + ".json").normalize();
         if (!path.startsWith(root.normalize())) {
             throw new IllegalArgumentException("Invalid screen layout path: " + documentId);

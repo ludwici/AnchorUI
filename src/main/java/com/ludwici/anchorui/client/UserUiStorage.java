@@ -8,7 +8,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.ludwici.anchorui.AnchorUI;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.fml.loading.FMLPaths;
+import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -78,7 +78,7 @@ public final class UserUiStorage {
     }
 
     public static Path configRoot() {
-        return FMLPaths.CONFIGDIR.get().resolve("anchorui");
+        return FabricLoader.getInstance().getConfigDir().resolve("anchorui");
     }
 
     public static Path path(Path configRoot, Kind kind, ResourceLocation id) {

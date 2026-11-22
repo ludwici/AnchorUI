@@ -2,7 +2,7 @@ package com.ludwici.anchorui.client.hud;
 
 import com.ludwici.anchorui.AnchorUI;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.fml.loading.FMLPaths;
+import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,7 +16,7 @@ public final class HudScopeStorage {
     }
 
     public static Path root() {
-        return FMLPaths.CONFIGDIR.get().resolve("anchorui");
+        return FabricLoader.getInstance().getConfigDir().resolve("anchorui");
     }
 
     public static Path path(Path configRoot, ResourceLocation hudId) {

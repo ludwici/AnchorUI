@@ -44,7 +44,7 @@ import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.fml.loading.FMLPaths;
+import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -1249,7 +1249,7 @@ public final class AnchorHudManager {
     }
 
     private static Path configPath() {
-        return FMLPaths.CONFIGDIR.get().resolve("anchorui").resolve("hud-layout.json");
+        return FabricLoader.getInstance().getConfigDir().resolve("anchorui").resolve("hud-layout.json");
     }
 
     private void renderWidgets(GuiGraphics graphics, float partialTick, boolean editorPreview) {

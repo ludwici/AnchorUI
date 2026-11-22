@@ -9,6 +9,7 @@ import com.ludwici.anchorui.api.style.LoreStyle;
 import com.ludwici.anchorui.client.gui.TextureRegion;
 import com.ludwici.anchorui.client.gui.TextureImageFormats;
 import net.minecraft.resources.ResourceLocation;
+import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
@@ -20,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static com.ludwici.anchorui.AnchorUI.GSON;
 
-public class LoreLoader extends SimpleJsonResourceReloadListener {
+public class LoreLoader extends SimpleJsonResourceReloadListener implements IdentifiableResourceReloadListener {
     public static final LoreLoader INSTANCE = new LoreLoader();
     private volatile LoreResourceCompiler.Snapshot snapshot = LoreResourceCompiler.empty();
     private volatile long revision;
@@ -32,6 +33,11 @@ public class LoreLoader extends SimpleJsonResourceReloadListener {
 
     private LoreLoader() {
         super(GSON, "anchorui");
+    }
+
+    @Override
+    public ResourceLocation getFabricId() {
+        return ResourceLocation.fromNamespaceAndPath("anchorui", "resources");
     }
 
     @Override

@@ -15,17 +15,13 @@ import net.minecraft.world.item.ItemStack;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.client.Minecraft;
-import net.minecraft.commands.Commands;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.network.chat.Component;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import java.util.concurrent.atomic.AtomicLong;
 import java.io.IOException;
 
-@EventBusSubscriber(modid = AnchorUI.MODID, value = Dist.CLIENT)
 public final class AnchorUITestCommands {
     private static final AtomicLong TEST_PULSE_REVISION = new AtomicLong();
 
@@ -40,55 +36,54 @@ public final class AnchorUITestCommands {
     private AnchorUITestCommands() {
     }
 
-    @SubscribeEvent
-    public static void register(RegisterClientCommandsEvent event) {
-        var test = Commands.literal("test")
+    public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
+        var test = ClientCommandManager.literal("test")
                 .executes(context -> listScenes())
-                .then(Commands.literal("list").executes(context -> listScenes()));
+                .then(ClientCommandManager.literal("list").executes(context -> listScenes()));
 
         registerHudTest(test, "hud1");
         registerHudTest(test, "rpg");
         registerHudTest(test, "animation");
-        test.then(Commands.literal("pulse").executes(context -> testPulse()));
+        test.then(ClientCommandManager.literal("pulse").executes(context -> testPulse()));
         registerHudTest(test, "binding");
         registerHudTest(test, "conditions");
         registerHudTest(test, "vanilla");
 
         for (TestScene scene : TestScene.values()) {
-            test.then(Commands.literal(scene.id()).executes(context -> queueScene(scene)));
+            test.then(ClientCommandManager.literal(scene.id()).executes(context -> queueScene(scene)));
         }
 
-        var hud = Commands.literal("hud");
-        var hudEdit = Commands.literal("edit").executes(context -> queueHudEditor());
-        hudEdit.then(Commands.argument("id", StringArgumentType.greedyString()).suggests((context, builder) -> suggestHuds(builder)).executes(context -> queueHudEditor(StringArgumentType.getString(context, "id"))));
+        var hud = ClientCommandManager.literal("hud");
+        var hudEdit = ClientCommandManager.literal("edit").executes(context -> queueHudEditor());
+        hudEdit.then(ClientCommandManager.argument("id", StringArgumentType.greedyString()).suggests((context, builder) -> suggestHuds(builder)).executes(context -> queueHudEditor(StringArgumentType.getString(context, "id"))));
         hud.then(hudEdit);
-        var hudCreate = Commands.literal("create");
-        hudCreate.then(Commands.argument("id", StringArgumentType.greedyString()).executes(context -> createUi(UserUiStorage.Kind.HUD, StringArgumentType.getString(context, "id"))));
+        var hudCreate = ClientCommandManager.literal("create");
+        hudCreate.then(ClientCommandManager.argument("id", StringArgumentType.greedyString()).executes(context -> createUi(UserUiStorage.Kind.HUD, StringArgumentType.getString(context, "id"))));
         hud.then(hudCreate);
-        var hudDelete = Commands.literal("delete");
-        hudDelete.then(Commands.argument("id", StringArgumentType.greedyString()).suggests((context, builder) -> suggestLocal(UserUiStorage.Kind.HUD, builder)).executes(context -> deleteUi(UserUiStorage.Kind.HUD, StringArgumentType.getString(context, "id"))));
+        var hudDelete = ClientCommandManager.literal("delete");
+        hudDelete.then(ClientCommandManager.argument("id", StringArgumentType.greedyString()).suggests((context, builder) -> suggestLocal(UserUiStorage.Kind.HUD, builder)).executes(context -> deleteUi(UserUiStorage.Kind.HUD, StringArgumentType.getString(context, "id"))));
         hud.then(hudDelete);
-        hud.then(Commands.literal("list").executes(context -> listUi(UserUiStorage.Kind.HUD)));
+        hud.then(ClientCommandManager.literal("list").executes(context -> listUi(UserUiStorage.Kind.HUD)));
 
-        var screens = Commands.literal("screen");
-        var openScreen = Commands.literal("open");
-        openScreen.then(Commands.argument("id", StringArgumentType.greedyString()).suggests((context, builder) -> {
+        var screens = ClientCommandManager.literal("screen");
+        var openScreen = ClientCommandManager.literal("open");
+        openScreen.then(ClientCommandManager.argument("id", StringArgumentType.greedyString()).suggests((context, builder) -> {
             LoreLoader.INSTANCE.getData().keySet().stream().filter(id -> id.getPath().startsWith("screens/")).map(ScreenIds::display).sorted().forEach(builder::suggest);
             return builder.buildFuture();
         }).executes(context -> queueScreen(StringArgumentType.getString(context, "id"))));
         screens.then(openScreen);
-        var screenCreate = Commands.literal("create");
-        screenCreate.then(Commands.argument("id", StringArgumentType.greedyString()).executes(context -> createUi(UserUiStorage.Kind.SCREEN, StringArgumentType.getString(context, "id"))));
+        var screenCreate = ClientCommandManager.literal("create");
+        screenCreate.then(ClientCommandManager.argument("id", StringArgumentType.greedyString()).executes(context -> createUi(UserUiStorage.Kind.SCREEN, StringArgumentType.getString(context, "id"))));
         screens.then(screenCreate);
-        var screenDelete = Commands.literal("delete");
-        screenDelete.then(Commands.argument("id", StringArgumentType.greedyString()).suggests((context, builder) -> suggestLocal(UserUiStorage.Kind.SCREEN, builder)).executes(context -> deleteUi(UserUiStorage.Kind.SCREEN, StringArgumentType.getString(context, "id"))));
+        var screenDelete = ClientCommandManager.literal("delete");
+        screenDelete.then(ClientCommandManager.argument("id", StringArgumentType.greedyString()).suggests((context, builder) -> suggestLocal(UserUiStorage.Kind.SCREEN, builder)).executes(context -> deleteUi(UserUiStorage.Kind.SCREEN, StringArgumentType.getString(context, "id"))));
         screens.then(screenDelete);
-        screens.then(Commands.literal("list").executes(context -> listUi(UserUiStorage.Kind.SCREEN)));
-        event.getDispatcher().register(Commands.literal("anchorui").then(test).then(hud).then(screens));
+        screens.then(ClientCommandManager.literal("list").executes(context -> listUi(UserUiStorage.Kind.SCREEN)));
+        dispatcher.register(ClientCommandManager.literal("anchorui").then(test).then(hud).then(screens));
     }
 
-    private static void registerHudTest(com.mojang.brigadier.builder.LiteralArgumentBuilder<net.minecraft.commands.CommandSourceStack> test, String group) {
-        test.then(Commands.literal(group).executes(context -> setHud(group, !AnchorHudManager.INSTANCE.isTestEnabled(group))).then(Commands.literal("on").executes(context -> setHud(group, true))).then(Commands.literal("off").executes(context -> setHud(group, false))));
+    private static void registerHudTest(com.mojang.brigadier.builder.LiteralArgumentBuilder<FabricClientCommandSource> test, String group) {
+        test.then(ClientCommandManager.literal(group).executes(context -> setHud(group, !AnchorHudManager.INSTANCE.isTestEnabled(group))).then(ClientCommandManager.literal("on").executes(context -> setHud(group, true))).then(ClientCommandManager.literal("off").executes(context -> setHud(group, false))));
     }
 
     private static int testPulse() {
@@ -279,9 +274,7 @@ public final class AnchorUITestCommands {
         return Command.SINGLE_SUCCESS;
     }
 
-    @SubscribeEvent
-    public static void onClientTick(ClientTickEvent.Post event) {
-        Minecraft minecraft = Minecraft.getInstance();
+    public static void onClientTick(Minecraft minecraft) {
         if (pendingScreen != null) {
             ResourceLocation id = pendingScreen;
             pendingScreen = null;

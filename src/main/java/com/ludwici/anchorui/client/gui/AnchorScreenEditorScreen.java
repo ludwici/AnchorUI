@@ -271,6 +271,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     private void select(String id) {
         String previousId = selected == null ? null : selected.id();
         if (!java.util.Objects.equals(id, previousId)) {
+            confirmResetAll = false;
             editorDropdown.close();
             inspectedId = null;
             sourceProperties = List.of();

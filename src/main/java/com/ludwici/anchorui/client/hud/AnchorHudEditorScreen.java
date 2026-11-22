@@ -520,6 +520,7 @@ public final class AnchorHudEditorScreen extends Screen {
 
     private void selectWidget(String id) {
         if (id == null || !id.equals(selected)) {
+            confirmResetAll = false;
             editorDropdown.close();
             selected = id;
             inspectedId = null;

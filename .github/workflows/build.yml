@@ -44,8 +44,26 @@ jobs:
         run: python3 tools/format_java_calls.py --check
       - name: Build with Gradle
         run: gradle build --no-daemon --stacktrace
+      - name: Validate Fabric JAR metadata
+        if: github.ref_name == '1.21.1-fabric'
+        run: |
+          JAR=$(find build/libs -maxdepth 1 -name 'anchorui-fabric-*+*.jar' -print -quit)
+          test -n "$JAR"
+          python3 - "$JAR" <<'PY'
+          import json
+          import sys
+          import zipfile
+
+          with zipfile.ZipFile(sys.argv[1]) as jar:
+              metadata = json.loads(jar.read("fabric.mod.json"))
+              assert metadata["id"] == "anchorui"
+              assert metadata["version"] != "$" + "{mod_version}"
+              assert metadata["entrypoints"]["client"]
+              assert "anchorui.mixins.json" in jar.namelist()
+              assert "META-INF/neoforge.mods.toml" not in jar.namelist()
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: anchorui-${{ github.event_name == 'pull_request' && 'pr' || github.ref_name }}-${{ github.run_number }}
-          path: build/libs/*.jar
+          path: ${{ github.ref_name == '1.21.1-fabric' && 'build/libs/*fabric*+*.jar' || 'build/libs/*.jar' }}
           if-no-files-found: error

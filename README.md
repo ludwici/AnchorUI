@@ -1,8 +1,12 @@
 # Anchor UI
 
-JSON-driven, anchor-based user interface framework for Minecraft 1.21.1 (NeoForge).
+JSON-driven, anchor-based user interface framework for Minecraft 1.21.1 (Fabric).
 
 The current implementation provides the reusable `AnchorLayout` resolver, plus item-lore screens as a working consumer of the layout engine. The layout and JSON renderer are still evolving; a public widget-factory API is available for third-party integrations.
+
+## Fabric port
+
+This branch builds the client-side AnchorUI framework for Fabric. It retains the NeoForge 1.21.1 JSON/UI API, HUD and Screen editors, animation and binding systems, and the same resource-pack paths. The client entrypoint registers input bindings, Fabric client commands, JSON reload listener, and HUD rendering. Scrollbars use a loader-neutral implementation rather than NeoForge's ScrollPanel. The NeoForge 1.21.1 implementation remains on the `1.21.1` branch.
 
 ## WoW-style positioning
 
@@ -63,7 +67,7 @@ Two input formats are supported:
 
 ## Development
 
-Java 21 and NeoForge 21.1 are required. Run `./gradlew build`; GitHub Actions checks builds and unit tests on the `1.21.1` branch.
+Java 21, Fabric Loader 0.19.5 (or newer) and Fabric API for Minecraft 1.21.1 are required. Run `./gradlew build` to compile and test the Fabric branch. The production JAR is `build/libs/anchorui-fabric-1.21.1+<version>.jar`, not the `-dev` or `-sources` artifact. GitHub Actions checks builds and unit tests on the `1.21.1-fabric` branch.
 
 
 ## Interactive test scenes

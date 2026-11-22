@@ -11,7 +11,7 @@ src/main/resources/assets/mymod/anchorui/hud/status.json
 src/main/resources/assets/mymod/anchorui/hud/progress.json
 ```
 
-Each JSON document has the same `entities` and `imports` structure as a screen. Unlike item-lore screens, **all regular HUD documents from all mods are composed into one shared in-game HUD**, allowing cross-file and cross-mod anchors.
+Each HUD file uses the same `entities` and `imports` structure as a Screen. Active HUDs render together in the game, allowing cross-file and cross-mod anchors, but **F8 edits only the selected HUD**; individual HUD layouts are saved separately.
 
 A simple example:
 
@@ -150,7 +150,7 @@ List order is **vanilla `minecraft:*` IDs first**, then `anchorui:*` (the curren
 Pressing **Tab** temporarily hides both editor panels while keeping on-screen widget outlines visible.
 
 
-The HUD editor opens **above the world** and previews all currently loaded HUD widgets, including elements contributed by other mods. Unlike the normal HUD layer, the editor accepts mouse and keyboard input **for editing placement only**. The world remains fully sharp in the editor: vanilla screen background blurring and fullscreen dimming are intentionally disabled. Only the editor's own toolbar strips and widget-selection overlays are drawn.
+The HUD editor opens **above the world** and previews only the HUD chosen in the header dropdown. Choose a bundled HUD, a user-created HUD or the legacy unassigned view. Other HUDs are still available as anchors and remain visible in ordinary gameplay. Unlike the normal HUD layer, the editor accepts mouse and keyboard input **for editing placement only**. The world remains fully sharp in the editor: vanilla screen background blurring and fullscreen dimming are intentionally disabled. Only the editor's own toolbar strips and widget-selection overlays are drawn.
 
 Open it with either:
 
@@ -175,7 +175,7 @@ To edit widget placement:
 The editor saves the player's client-side layout overrides at:
 
 ```text
-.minecraft/config/anchorui/hud-layout.json
+.minecraft/config/anchorui/hud-layouts/<namespace>/<hud-name>.json
 ```
 
 This is a regular JSON file, outside resource packs and the mod's built-in JSON resources. Each namespaced widget ID has optional `x` and `y` **deltas from its original anchor offsets**, a `hidden` flag and optional replacement `relativeTo`, `point` and `anchor` properties. Existing JSON defaults are preserved until explicitly edited. If you move the parent of an anchored chain, its child widgets follow naturally, including when the child belongs to a different mod. Child widgets can also receive independent offsets.
@@ -221,7 +221,7 @@ In the HUD editor (F8 or `/anchorui hud edit`), widgets now snap to nearby **vis
 - Cyan alignment guidelines appear only while snapping. Hold **Alt** while dragging for unrestricted pixel-precise placement.
 - Descendants anchored to the widget being dragged are ignored as snap targets, because they move together with their parent.
 - The magnet changes only the dragged widget's user offset; it does **not** silently change its `relativeTo`, `point`, or `anchor`.
-- Arrow-key nudging (1 px, or 10 px with Shift) stays precise and does not snap. Save/Cancel and the existing `hud-layout.json` format are unchanged.
+- Arrow-key nudging (1 px, or 10 px with Shift) stays precise and does not snap. Save/Cancel remain unchanged; selected HUDs save to individual files under `hud-layouts/`, while legacy unassigned widgets keep `hud-layout.json`.
 
 ### Movable, scrollable property inspector
 
@@ -297,7 +297,7 @@ The same F8 inspector now exposes a **VISUAL / CONTENT** section for built-in wi
 - **E** opens a free-form editor for `Kind.TEXT`, or a **texture browser** for `Kind.TEXTURE`. The browser lists active client resource packs, namespaces, expandable folders and PNG or JPG/JPEG images only. PNG uses Minecraft's native texture loader; JPG/JPEG is converted into a dynamic texture for preview and ordinary widget rendering. Other image formats are deliberately excluded; merely having a file in a resource pack does not make it a valid texture. **Hovering** shows a thumbnail with transparency and the image's original resolution; selection does not change the widget until **Use texture** is pressed. The native decoder validates each file before it can be used, including Java-registered texture fields; nonexistent or unreadable resource IDs cannot be committed. Colored swatches open the graphical Color Picker for every `Kind.COLOR` field. Its hue/saturation palette, opacity slider (0–100%) and editable Alpha field (0–255) use the same `anchorui:color_picker` implementation. Alpha changes preserve RGB and serialize partially transparent colors as `#AARRGGBB` (`#RRGGBB` when fully opaque). The checkerboard preview makes transparency visible. Click **Apply** to commit a color override or **Cancel** / **Esc** to discard it. A normal HUD Save is still required to persist the editor session.
 - **R** resets just the selected field. The regular **Reset** button clears a selected widget's overrides; **Reset all** clears all.
 - Invalid values are rejected before or during widget reconstruction, and the previous preview is restored. Edits rebuild the HUD widget instances **on change**, not on every frame.
-- Changes persist locally under `appearance` in the existing `config/anchorui/hud-layout.json`; source resource packs and mod-provided Java code are unchanged.
+- Changes persist locally under `appearance` in the selected HUD's `config/anchorui/hud-layouts/` file; source resource packs and mod-provided Java code are unchanged.
 
 For a basic check, enable `/anchorui test rpg on`, open **F8**, select a health progress bar, edit its `Fill` color and `Width`, save and reopen. Use the image/panel demo to browse the available packs and choose another PNG texture. Verify that nonexistent, non-PNG/non-JPEG or unreadable files cannot be selected, and that a resource removed before applying is rejected.
 
@@ -305,7 +305,7 @@ For a basic check, enable `/anchorui test rpg on`, open **F8**, select a health 
 
 The built-in HUD preview now has **zero gap** between its connected elements: the header/body, body/diamond, diamond/extra label and extra label/copied header use `x: 0` or `y: 0` wherever their edges are attached. The bottom-right corner widget keeps its intentional `x: -16, y: -16` screen padding.
 
-User overrides in `config/anchorui/hud-layout.json` are applied in addition to resource-defined offsets. If you previously dragged a demo element, click **Reset** on that widget or **Reset all** in the editor to restore edge-to-edge placement; changing the demo JSON does not automatically erase existing saved user preferences.
+HUD-specific overrides in `config/anchorui/hud-layouts/` and legacy unassigned overrides in `config/anchorui/hud-layout.json` are applied in addition to resource-defined offsets. If you previously dragged a demo element, click **Reset** on that widget or **Reset all** in the editor to restore edge-to-edge placement; changing the demo JSON does not automatically erase existing saved user preferences.
 
 ## Regression checklist
 

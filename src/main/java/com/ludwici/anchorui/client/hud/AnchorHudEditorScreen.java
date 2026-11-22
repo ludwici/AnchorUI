@@ -798,7 +798,7 @@ public final class AnchorHudEditorScreen extends Screen {
         for (InspectorLine line : lines) {
             if (y + INSPECTOR_LINE_HEIGHT > top && y < bottom) {
                 boolean header = inspectorSections.isHeaderRow(row);
-                graphics.fill(panelX + 5, y, panelX + panelWidth - 7, y + INSPECTOR_LINE_HEIGHT - 1, header ? 0xFF284457 : row % 2 == 0 ? 0xFF1A2A37 : 0xFF1D2E3B);
+                graphics.fill(panelX + 5, y, panelX + panelWidth - 7, y + INSPECTOR_LINE_HEIGHT - 1, moreActions.containsKey(row) ? 0xFF52383D : header ? 0xFF284457 : row % 2 == 0 ? 0xFF1A2A37 : 0xFF1D2E3B);
                 if (line.modified() && !header) {
                     graphics.fill(panelX + 5, y, panelX + 7, y + INSPECTOR_LINE_HEIGHT - 1, 0xFF70CDB7);
                 }

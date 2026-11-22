@@ -20,7 +20,7 @@ public final class InspectorSections {
     }
 
     public boolean expanded(String id) {
-        return expanded.getOrDefault(id, !id.equals("animation") && !id.equals("source") && !id.equals("diagnostics") && !id.startsWith("track:") && !id.startsWith("constraint:"));
+        return expanded.getOrDefault(id, !id.equals("source") && !id.equals("diagnostics") && !id.startsWith("track:") && !id.startsWith("constraint:"));
     }
 
     public void collapse(String id) {

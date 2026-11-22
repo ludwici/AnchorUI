@@ -13,9 +13,13 @@ public final class EditorInspectorButton {
 
     public static void draw(GuiGraphics graphics, Font font, String symbol, int x, int y,
                             int background, int foreground) {
-        int left = x + HITBOX_OFFSET;
-        graphics.fill(left, y, left + SIZE, y + SIZE, background);
-        graphics.drawString(font, symbol, left + (SIZE - font.width(symbol)) / 2, y + 1, foreground, false);
+        drawSquare(graphics, font, symbol, x + HITBOX_OFFSET, y, background, foreground);
+    }
+
+    public static void drawSquare(GuiGraphics graphics, Font font, String symbol, int x, int y,
+                                  int background, int foreground) {
+        graphics.fill(x, y, x + SIZE, y + SIZE, background);
+        graphics.drawCenteredString(font, symbol, x + SIZE / 2, y + (SIZE - font.lineHeight) / 2, foreground);
     }
 
     public static void drawColor(GuiGraphics graphics, int x, int y, int argb) {

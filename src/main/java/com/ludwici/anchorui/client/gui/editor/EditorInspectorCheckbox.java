@@ -7,10 +7,14 @@ public final class EditorInspectorCheckbox {
     }
 
     public static void render(GuiGraphics graphics, int x, int y, boolean checked) {
-        graphics.fill(x + 2, y, x + 13, y + 11, 0xFF718699);
-        graphics.fill(x + 3, y + 1, x + 12, y + 10, checked ? 0xFF426D94 : 0xD923354A);
+        int left = x + EditorInspectorButton.HITBOX_OFFSET;
+        int size = EditorInspectorButton.SIZE;
+        graphics.fill(left, y, left + size, y + size, 0xFF718699);
+        graphics.fill(left + 1, y + 1, left + size - 1, y + size - 1, checked ? 0xFF426D94 : 0xD923354A);
         if (checked) {
-            graphics.fill(x + 5, y + 3, x + 10, y + 8, 0xFFF1F4F7);
+            int mark = 5;
+            int inset = (size - mark) / 2;
+            graphics.fill(left + inset, y + inset, left + inset + mark, y + inset + mark, 0xFFF1F4F7);
         }
     }
 }

@@ -9,7 +9,7 @@ public final class EditorInspectorTabs {
         POSITION("Place"),
         LAYOUT("Layout"),
         STYLE("Style"),
-        MOTION("Motion"),
+        MOTION("Anims"),
         MORE("More");
 
         private final String label;
@@ -63,9 +63,6 @@ public final class EditorInspectorTabs {
             Page page = Page.values()[index];
             boolean active = page == selected;
             graphics.fill(x, top, x + itemWidth, top + HEIGHT, active ? ACTIVE : IDLE);
-            if (active) {
-                graphics.fill(x, top + HEIGHT - 2, x + itemWidth, top + HEIGHT, 0xFF87D7D7);
-            }
             graphics.drawCenteredString(font, font.plainSubstrByWidth(page.label(), itemWidth - 2), x + itemWidth / 2, top + 4, active ? ACTIVE_TEXT : IDLE_TEXT);
         }
     }

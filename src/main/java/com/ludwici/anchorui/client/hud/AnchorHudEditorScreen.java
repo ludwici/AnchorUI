@@ -121,8 +121,6 @@ public final class AnchorHudEditorScreen extends Screen {
     private final List<AppearanceHitbox> appearanceHitboxes = new ArrayList<>();
     private final InspectorSections inspectorSections = new InspectorSections();
     private final EditorInspectorTabs inspectorTabs = new EditorInspectorTabs();
-    private final Map<Integer, String> moreActions = new HashMap<>();
-    private boolean confirmResetAll;
     private EditBox appearanceInput;
     private Button appearanceApply;
     private Button appearanceCancel;
@@ -520,7 +518,6 @@ public final class AnchorHudEditorScreen extends Screen {
 
     private void selectWidget(String id) {
         if (id == null || !id.equals(selected)) {
-            confirmResetAll = false;
             editorDropdown.close();
             selected = id;
             inspectedId = null;
@@ -798,10 +795,7 @@ public final class AnchorHudEditorScreen extends Screen {
         for (InspectorLine line : lines) {
             if (y + INSPECTOR_LINE_HEIGHT > top && y < bottom) {
                 boolean header = inspectorSections.isHeaderRow(row);
-                graphics.fill(panelX + 5, y, panelX + panelWidth - 7, y + INSPECTOR_LINE_HEIGHT - 1, moreActions.containsKey(row) ? 0xFF52383D : header ? 0xFF284457 : row % 2 == 0 ? 0xFF1A2A37 : 0xFF1D2E3B);
-                if (line.modified() && !header) {
-                    graphics.fill(panelX + 5, y, panelX + 7, y + INSPECTOR_LINE_HEIGHT - 1, 0xFF70CDB7);
-                }
+                graphics.fill(panelX + 5, y, panelX + panelWidth - 7, y + INSPECTOR_LINE_HEIGHT - 1, header ? 0xFF284457 : row % 2 == 0 ? 0xFF1A2A37 : 0xFF1D2E3B);
                 graphics.pose().pushPose();
                 graphics.pose().translate(panelX + 7, y + 1, 0);
                 graphics.pose().scale(INSPECTOR_SCALE, INSPECTOR_SCALE, 1.0F);
@@ -827,8 +821,7 @@ public final class AnchorHudEditorScreen extends Screen {
                     int buttonY = y;
                     int background = line.modified() ? 0xCC3D6273 : 0x8840505D;
                     int foreground = line.modified() ? 0xFFECF8FF : 0xFF80919E;
-                    graphics.fill(x, buttonY, x + RESET_SIZE, buttonY + RESET_SIZE, background);
-                    graphics.drawString(font, "R", x + 2, buttonY + 1, foreground, false);
+                    EditorInspectorButton.drawSquare(graphics, font, "R", x, buttonY, background, foreground);
                     if (line.modified() && buttonY >= top && buttonY + RESET_SIZE <= bottom) {
                         resetHitboxes.add(new ResetHitbox(line.reset(), x, buttonY));
                     }
@@ -1035,7 +1028,6 @@ public final class AnchorHudEditorScreen extends Screen {
         inspectorSections.clearHeaders();
         animationActions.clear();
         anchorActions.clear();
-        moreActions.clear();
         if (choosingParent) {
             appendLine(lines, "CHOOSE PARENT", 0xFF8DF4AA);
             appendLine(lines, "Click another widget", 0xFFE5EEF5);
@@ -1063,10 +1055,6 @@ public final class AnchorHudEditorScreen extends Screen {
                 }
             }
         }
-        if (inspectorTabs.active(EditorInspectorTabs.Page.MORE)) {
-            moreActions.put(lines.size(), "reset_all");
-            appendLine(lines, confirmResetAll ? "Confirm: reset ALL HUD changes" : "Reset all HUD changes", 0xFFFFA98D);
-        }
         if (active == null && inspectedVanilla != null) {
             appendLine(lines, "VANILLA HUD (READ ONLY)", VANILLA_COLOR);
             appendLine(lines, "id: " + inspectedVanilla, VANILLA_COLOR);
@@ -1081,24 +1069,15 @@ public final class AnchorHudEditorScreen extends Screen {
             }
             appendLine(lines, "Use as relativeTo on your widgets", 0xFFE5EEF5);
             appendLine(lines, "Vanilla HUD remains unchanged", 0xFFE5EEF5);
-        } else if (active == null) {
-            appendLine(lines, "SELECT A WIDGET", 0xFFFFCF64);
-            appendLine(lines, "Click any widget outline.", 0xFFE5EEF5);
-            appendLine(lines, "Drag widgets to move.", 0xFFE5EEF5);
-            appendLine(lines, "Auto-align: 6 px (Alt: bypass)", 0xFFE5EEF5);
-            appendLine(lines, "Arrows: 1 px / Shift: 10 px", 0xFFE5EEF5);
-            appendLine(lines, "Ctrl+S: save / Esc: exit", 0xFFE5EEF5);
-        } else {
+        } else if (active != null) {
             if (inspectorTabs.active(EditorInspectorTabs.Page.POSITION)) {
                 appendSection(lines, "widget", "POSITION & VISIBILITY");
                 if (inspectorSections.expanded("widget")) {
-                    appendLine(lines, "R at right: reset this field", 0xFF96AEBE);
                     appendLine(lines, "id: " + active.id(), 0xFFE5EEF5);
                     appendLine(lines, "container: " + manager.getStructuralParent(active.id()), 0xFFE5EEF5);
                     var bounds = active.bounds();
                     appendLine(lines, "screen: " + bounds.x() + ", " + bounds.y(), 0xFFE5EEF5);
                     appendLine(lines, "size: " + bounds.width() + " x " + bounds.height(), 0xFFE5EEF5);
-                    appendLine(lines, "Magnet: 6 px | hold Alt to bypass", 0xFF96AEBE);
                     appendEditableLine(lines, "user offset: " + active.offset().x() + ", " + active.offset().y(), AnchorHudManager.EditableProperty.OFFSET, active);
                     appendEditableLine(lines, "visible: " + active.visible(), AnchorHudManager.EditableProperty.VISIBILITY, active);
                 }
@@ -1132,7 +1111,6 @@ public final class AnchorHudEditorScreen extends Screen {
                 if (!layoutControls.isEmpty()) {
                     appendSection(lines, "layout", "COMPONENT / LAYOUT");
                     if (inspectorSections.expanded("layout")) {
-                        appendLine(lines, "- / + adjust | R reset", 0xFF96AEBE);
                         for (LayoutInspectorControls.Control control : layoutControls) {
                             String label = control.booleanField() ? control.label() : control.label() + ": " + control.value();
                             int available = Math.max(38, (int) ((panelWidth - 98) / INSPECTOR_SCALE));
@@ -1205,22 +1183,6 @@ public final class AnchorHudEditorScreen extends Screen {
         return lines;
     }
 
-    private boolean clickMoreAction(double mouseY) {
-        int row = (int) Math.floor((mouseY - inspectorTop() + inspectorScroll) / INSPECTOR_LINE_HEIGHT);
-        if (!"reset_all".equals(moreActions.get(row))) {
-            return false;
-        }
-        if (!confirmResetAll) {
-            confirmResetAll = true;
-            status = "Click again to reset this HUD";
-            return true;
-        }
-        confirmResetAll = false;
-        manager.resetAllPreviewOffsets();
-        status = "Restored this HUD to defaults";
-        return true;
-    }
-
     private void appendAnchorAction(List<InspectorLine> lines, String text, int index, String field) {
         anchorActions.put(lines.size(), new AnchorAction(index, field));
         String label = font.plainSubstrByWidth(text, Math.max(24, (int) ((panelWidth - 28) / INSPECTOR_SCALE)));
@@ -1267,7 +1229,7 @@ public final class AnchorHudEditorScreen extends Screen {
     }
 
     private void appendEditableLine(List<InspectorLine> lines, String value, AnchorHudManager.EditableProperty property, AnchorHudManager.HudHandle handle) {
-        appendFormattedLine(lines, value, 0xFFE5EEF5, property, handle.isModified(property));
+        appendFormattedLine(lines, value, handle.isModified(property) ? 0xFF92DFCE : 0xFFE5EEF5, property, handle.isModified(property));
     }
 
     private void appendFormattedLine(List<InspectorLine> lines, String value, int color, AnchorHudManager.EditableProperty property, boolean modified) {
@@ -1402,7 +1364,6 @@ public final class AnchorHudEditorScreen extends Screen {
         if (!compact && !inspectorCollapsed && button == GLFW.GLFW_MOUSE_BUTTON_LEFT
                 && inspectorTabs.click(mouseX, mouseY, panelX + 6, panelY + 34, panelWidth - 12)) {
             resetInspectorScroll();
-            confirmResetAll = false;
             return true;
         }
         if (!compact && widgetList.contains(mouseX, mouseY)) {
@@ -1451,7 +1412,7 @@ public final class AnchorHudEditorScreen extends Screen {
                     inspectorSections.toggle(section);
                     return true;
                 }
-                if (clickMoreAction(mouseY) || clickAnchorAction(mouseX, mouseY) || clickAnimationAction(mouseY)) {
+                if (clickAnchorAction(mouseX, mouseY) || clickAnimationAction(mouseY)) {
                     return true;
                 }
                 for (AppearanceHitbox hitbox : appearanceHitboxes) {

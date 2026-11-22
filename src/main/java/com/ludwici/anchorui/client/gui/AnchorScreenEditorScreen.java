@@ -110,6 +110,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     private final InspectorSections inspectorSections = new InspectorSections();
     private final EditorInspectorTabs inspectorTabs = new EditorInspectorTabs();
     private final Map<Integer, String> moreActions = new HashMap<>();
+    private boolean confirmResetAll;
     private EditBox appearanceInput;
     private Button appearanceApply;
     private Button appearanceCancel;
@@ -527,6 +528,10 @@ public final class AnchorScreenEditorScreen extends Screen {
 
     private void openLayoutDropdown(LayoutHitbox hitbox) {
         if (inspectorTabs.active(EditorInspectorTabs.Page.MORE)) {
+        }
+        if (inspectorTabs.active(EditorInspectorTabs.Page.MORE)) {
+            moreActions.put(lines.size(), "reset_all");
+            appendInspectorLine(lines, confirmResetAll ? "Confirm: reset ALL Screen changes" : "Reset all Screen changes", 0xFFFFAF9B, null, false);
         }
         if (selected == null) {
             return;
@@ -1065,9 +1070,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         }
         }
         if (inspectorTabs.active(EditorInspectorTabs.Page.MORE)) {
-            moreActions.put(lines.size(), "reset_all");
-            appendInspectorLine(lines, "Reset all Screen changes", 0xFFFFAF9B, null, false);
-        appendSection(lines, "source", "SOURCE JSON (read only)");
+            appendSection(lines, "source", "SOURCE JSON (read only)");
         if (inspectorSections.expanded("source")) {
             if (!selected.id().equals(inspectedId)) {
                 JsonObject settings = target.editorSourceSettings(selected.id());
@@ -1088,6 +1091,12 @@ public final class AnchorScreenEditorScreen extends Screen {
         if (!"reset_all".equals(moreActions.get(row))) {
             return false;
         }
+        if (!confirmResetAll) {
+            confirmResetAll = true;
+            status = "Click again to reset every Screen change";
+            return true;
+        }
+        confirmResetAll = false;
         resetAll();
         return true;
     }
@@ -1206,6 +1215,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         if (!compact && !inspectorCollapsed && button == GLFW.GLFW_MOUSE_BUTTON_LEFT
                 && inspectorTabs.click(mouseX, mouseY, panelX() + 7, panelTop + 77, inspectorWidth - 14)) {
             resetInspectorScroll();
+            confirmResetAll = false;
             return true;
         }
         if (!compact && widgetList.contains(mouseX, mouseY)) {

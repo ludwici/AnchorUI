@@ -19,7 +19,17 @@ public final class EditorInspectorButton {
     public static void drawSquare(GuiGraphics graphics, Font font, String symbol, int x, int y,
                                   int background, int foreground) {
         graphics.fill(x, y, x + SIZE, y + SIZE, background);
-        graphics.drawCenteredString(font, symbol, x + SIZE / 2, y + (SIZE - font.lineHeight) / 2, foreground);
+        int textX = x + (SIZE - font.width(symbol)) / 2 + 1;
+        int textY = y + (SIZE - font.lineHeight) / 2 + 1 + ("▼".equals(symbol) ? 1 : 0);
+        graphics.drawString(font, symbol, textX, textY, foreground, true);
+    }
+
+    public static int centeredInRow(int rowY, int rowHeight) {
+        return rowY + (rowHeight - SIZE) / 2;
+    }
+
+    public static float centeredTextInRow(int rowY, int rowHeight, int fontHeight, float scale) {
+        return rowY + (rowHeight - (fontHeight - 1) * scale) / 2.0F;
     }
 
     public static void drawColor(GuiGraphics graphics, int x, int y, int argb) {

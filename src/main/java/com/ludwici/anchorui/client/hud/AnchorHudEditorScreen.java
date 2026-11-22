@@ -19,6 +19,8 @@ import com.ludwici.anchorui.client.gui.editor.AnchorInspectorRows;
 import com.ludwici.anchorui.client.gui.editor.AnchorInspectorControls;
 import com.ludwici.anchorui.client.gui.editor.EditorAnchorGuide;
 import com.ludwici.anchorui.client.LoreLoader;
+import com.ludwici.anchorui.client.UserDocumentStore;
+import net.minecraft.resources.ResourceLocation;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorCheckbox;
 import com.ludwici.anchorui.client.gui.editor.EditorInspectorButton;
 import com.ludwici.anchorui.client.gui.editor.EditorExitConfirmation;
@@ -180,6 +182,7 @@ public final class AnchorHudEditorScreen extends Screen {
         widgetList.resize(width, height);
         if (!editorStarted) {
             manager.beginEditing();
+            manager.selectDefaultHud();
             editorStarted = true;
             panelWidth = Math.min(PANEL_WIDTH, Math.max(150, width - 116));
             panelHeight = Math.min(350, Math.max(128, height - 80));
@@ -201,6 +204,12 @@ public final class AnchorHudEditorScreen extends Screen {
 
         demoButton = addControl(Button.builder(Component.literal("Demo"), button -> {
             manager.setTestEnabled(!manager.isTestEnabled());
+            if (manager.isTestEnabled()) {
+                manager.setActiveUserHud(ResourceLocation.fromNamespaceAndPath("anchorui", "hud/hud1"));
+            } else if (ResourceLocation.fromNamespaceAndPath("anchorui", "hud/hud1").equals(manager.getActiveUserHud())) {
+                manager.setActiveUserHud(null);
+                manager.selectDefaultHud();
+            }
             selectWidget(null);
             choosingParent = false;
             status = manager.isTestEnabled() ? "Demo HUD enabled" : "Demo HUD disabled";
@@ -514,6 +523,25 @@ public final class AnchorHudEditorScreen extends Screen {
         }
     }
 
+    private void openHudPicker() {
+        List<String> choices = new ArrayList<>();
+        choices.add("(Unassigned HUD)");
+        for (ResourceLocation id : manager.getAvailableHuds()) {
+            choices.add(UserDocumentStore.display(UserDocumentStore.Kind.HUD, id));
+        }
+        ResourceLocation activeHud = manager.getActiveUserHud();
+        String current = activeHud == null ? "(Unassigned HUD)" : UserDocumentStore.display(UserDocumentStore.Kind.HUD, activeHud);
+        editorDropdown.open(panelX + 6, panelY + 20, panelWidth - 12, 13, width, height, choices, current, value -> {
+            ResourceLocation next = value.equals("(Unassigned HUD)") ? null : UserDocumentStore.resolve(UserDocumentStore.Kind.HUD, value);
+            manager.setActiveUserHud(next);
+            selectWidget(null);
+            choosingParent = false;
+            draggingWidget = false;
+            refreshFrameHandles();
+            status = next == null ? "Editing unassigned HUD widgets" : "Editing HUD " + value;
+        });
+    }
+
     private void openCreateWidgetMenu() {
         String parentId = selected != null && manager.isPreviewContainer(selected) ? selected : null;
         editorDropdown.open(panelX + 6, actionsTop() + BUTTON_STEP * 2, panelWidth - 12, BUTTON_HEIGHT, width, height,
@@ -661,8 +689,9 @@ public final class AnchorHudEditorScreen extends Screen {
                 graphics.drawString(font, inspectorCollapsed ? "Inspector" : "HUD Editor", visiblePanelX() + 6, panelY + 6, 0xFFE5EEF5, false);
                 graphics.drawString(font, inspectorCollapsed ? "[+]" : "[-]", inspectorCollapsed ? visiblePanelX() + visiblePanelWidth() - 26 : panelX + panelWidth - 140, panelY + 6, 0xFFE5EEF5, false);
                 if (!inspectorCollapsed) {
-                    String hint = choosingParent ? "Choose a parent, or click a listed vanilla ID" : "Snap: 6px | Alt: free | Vanilla: read-only";
-                    drawScaled(graphics, hint, panelX + 6, panelY + 22, 0xFFAAC1D4);
+                    ResourceLocation hudId = manager.getActiveUserHud();
+                    String name = hudId == null ? "(Unassigned HUD)" : UserDocumentStore.display(UserDocumentStore.Kind.HUD, hudId);
+                    graphics.drawString(font, font.plainSubstrByWidth("HUD: " + name + "  [v]", panelWidth - 15), panelX + 6, panelY + 22, 0xFFAAC1D4, false);
                     renderInspector(graphics, active);
                     graphics.fill(panelX + 3, actionsTop() - 3, panelX + panelWidth - 3, actionsTop() - 2, 0x88698DAB);
                 }
@@ -705,7 +734,7 @@ public final class AnchorHudEditorScreen extends Screen {
         }
 
         if (handles.isEmpty()) {
-            graphics.drawCenteredString(font, "No HUD widgets. Enable Demo in the panel.", width / 2, height / 2, 0xFFFFD37C);
+            graphics.drawCenteredString(font, "This HUD is empty. Use Add widget to create one.", width / 2, height / 2, 0xFFFFD37C);
         }
     }
 
@@ -1310,6 +1339,12 @@ public final class AnchorHudEditorScreen extends Screen {
         }
         if (editingAppearance != null || editingAnchor != null) {
             return clickAppearanceModal(mouseX, mouseY, button);
+        }
+        if (!compact && !inspectorCollapsed && button == GLFW.GLFW_MOUSE_BUTTON_LEFT
+                && mouseX >= panelX && mouseX < panelX + panelWidth
+                && mouseY >= panelY + 20 && mouseY < panelY + HEADER_HEIGHT) {
+            openHudPicker();
+            return true;
         }
         if (!compact && button == GLFW.GLFW_MOUSE_BUTTON_LEFT && insidePanel(mouseX, mouseY)
                 && mouseY < panelY + 20

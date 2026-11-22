@@ -6,17 +6,20 @@ import java.util.Map;
 public final class InspectorSections {
     private final Map<String, Boolean> expanded = new LinkedHashMap<>();
     private final Map<String, Integer> headers = new LinkedHashMap<>();
+    private final java.util.Set<Integer> headerRows = new java.util.HashSet<>();
 
     public void clearHeaders() {
         headers.clear();
+        headerRows.clear();
     }
 
     public void register(String id, int row) {
         headers.put(id, row);
+        headerRows.add(row);
     }
 
     public boolean isHeaderRow(int row) {
-        return headers.containsValue(row);
+        return headerRows.contains(row);
     }
 
     public boolean expanded(String id) {

@@ -1061,6 +1061,10 @@ public final class AnchorHudEditorScreen extends Screen {
                 }
             }
         }
+        if (inspectorTabs.active(EditorInspectorTabs.Page.MORE)) {
+            moreActions.put(lines.size(), "reset_all");
+            appendLine(lines, "Reset all HUD changes", 0xFFFFA98D);
+        }
         if (active == null && inspectedVanilla != null) {
             appendLine(lines, "VANILLA HUD (READ ONLY)", VANILLA_COLOR);
             appendLine(lines, "id: " + inspectedVanilla, VANILLA_COLOR);
@@ -1182,8 +1186,6 @@ public final class AnchorHudEditorScreen extends Screen {
             }
             }
             if (inspectorTabs.active(EditorInspectorTabs.Page.MORE)) {
-                moreActions.put(lines.size(), "reset_all");
-                appendLine(lines, "Reset all HUD changes", 0xFFFFA98D);
             appendSection(lines, "source", "SOURCE JSON (read only)");
             if (inspectorSections.expanded("source")) {
                 if (!active.id().equals(inspectedId)) {

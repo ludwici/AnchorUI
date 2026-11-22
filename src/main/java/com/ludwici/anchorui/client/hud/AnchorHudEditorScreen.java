@@ -1090,116 +1090,116 @@ public final class AnchorHudEditorScreen extends Screen {
             appendLine(lines, "Ctrl+S: save / Esc: exit", 0xFFE5EEF5);
         } else {
             if (inspectorTabs.active(EditorInspectorTabs.Page.POSITION)) {
-            appendSection(lines, "widget", "POSITION & VISIBILITY");
-            if (inspectorSections.expanded("widget")) {
-                appendLine(lines, "R at right: reset this field", 0xFF96AEBE);
-                appendLine(lines, "id: " + active.id(), 0xFFE5EEF5);
-                appendLine(lines, "container: " + manager.getStructuralParent(active.id()), 0xFFE5EEF5);
-                var bounds = active.bounds();
-                appendLine(lines, "screen: " + bounds.x() + ", " + bounds.y(), 0xFFE5EEF5);
-                appendLine(lines, "size: " + bounds.width() + " x " + bounds.height(), 0xFFE5EEF5);
-                appendLine(lines, "Magnet: 6 px | hold Alt to bypass", 0xFF96AEBE);
-                appendEditableLine(lines, "user offset: " + active.offset().x() + ", " + active.offset().y(), AnchorHudManager.EditableProperty.OFFSET, active);
-                appendEditableLine(lines, "visible: " + active.visible(), AnchorHudManager.EditableProperty.VISIBILITY, active);
-            }
-            List<PositionElement.Constraint> anchors = manager.getAnchorConstraints(active.id());
-            if (!anchors.isEmpty()) {
-                appendSection(lines, "anchors", "ANCHORS (" + anchors.size() + ")");
-                if (inspectorSections.expanded("anchors")) {
-                    appendAnchorAction(lines, "[+] Add anchor", -1, "add");
-                    appendAnchorAction(lines, "Reset anchors to resource defaults", -1, "reset");
-                    for (int index = 0; index < anchors.size(); index++) {
-                        PositionElement.Constraint entry = anchors.get(index);
-                        String section = "constraint:" + active.id() + ":" + index;
-                        appendSection(lines, section, (focusedAnchorIndex == index ? "  > #" : "  #") + (index + 1) + (index == 0 ? " (primary)" : "") + " " + entry.point() + " -> " + entry.anchor());
-                        if (!inspectorSections.expanded(section)) {
-                            continue;
-                        }
-                        appendAnchorAction(lines, "    Point: " + entry.point() + " ▼", index, "point");
-                        appendAnchorAction(lines, "    Anchor: " + entry.anchor() + " ▼", index, "anchor");
-                        appendAnchorAction(lines, "    Relative to: " + entry.relativeTo() + " ▼", index, "relativeTo");
-                        appendAnchorAction(lines, "    X: " + entry.x() + " (edit)", index, "x");
-                        appendAnchorAction(lines, "    Y: " + entry.y() + " (edit)", index, "y");
-                        if (anchors.size() > 1) {
-                            appendAnchorAction(lines, "    [-] Delete this anchor", index, "delete");
+                appendSection(lines, "widget", "POSITION & VISIBILITY");
+                if (inspectorSections.expanded("widget")) {
+                    appendLine(lines, "R at right: reset this field", 0xFF96AEBE);
+                    appendLine(lines, "id: " + active.id(), 0xFFE5EEF5);
+                    appendLine(lines, "container: " + manager.getStructuralParent(active.id()), 0xFFE5EEF5);
+                    var bounds = active.bounds();
+                    appendLine(lines, "screen: " + bounds.x() + ", " + bounds.y(), 0xFFE5EEF5);
+                    appendLine(lines, "size: " + bounds.width() + " x " + bounds.height(), 0xFFE5EEF5);
+                    appendLine(lines, "Magnet: 6 px | hold Alt to bypass", 0xFF96AEBE);
+                    appendEditableLine(lines, "user offset: " + active.offset().x() + ", " + active.offset().y(), AnchorHudManager.EditableProperty.OFFSET, active);
+                    appendEditableLine(lines, "visible: " + active.visible(), AnchorHudManager.EditableProperty.VISIBILITY, active);
+                }
+                List<PositionElement.Constraint> anchors = manager.getAnchorConstraints(active.id());
+                if (!anchors.isEmpty()) {
+                    appendSection(lines, "anchors", "ANCHORS (" + anchors.size() + ")");
+                    if (inspectorSections.expanded("anchors")) {
+                        appendAnchorAction(lines, "[+] Add anchor", -1, "add");
+                        appendAnchorAction(lines, "Reset anchors to resource defaults", -1, "reset");
+                        for (int index = 0; index < anchors.size(); index++) {
+                            PositionElement.Constraint entry = anchors.get(index);
+                            String section = "constraint:" + active.id() + ":" + index;
+                            appendSection(lines, section, (focusedAnchorIndex == index ? "  > #" : "  #") + (index + 1) + (index == 0 ? " (primary)" : "") + " " + entry.point() + " -> " + entry.anchor());
+                            if (!inspectorSections.expanded(section)) {
+                                continue;
+                            }
+                            appendAnchorAction(lines, "    Point: " + entry.point() + " ▼", index, "point");
+                            appendAnchorAction(lines, "    Anchor: " + entry.anchor() + " ▼", index, "anchor");
+                            appendAnchorAction(lines, "    Relative to: " + entry.relativeTo() + " ▼", index, "relativeTo");
+                            appendAnchorAction(lines, "    X: " + entry.x() + " (edit)", index, "x");
+                            appendAnchorAction(lines, "    Y: " + entry.y() + " (edit)", index, "y");
+                            if (anchors.size() > 1) {
+                                appendAnchorAction(lines, "    [-] Delete this anchor", index, "delete");
+                            }
                         }
                     }
                 }
-            }
             }
             if (inspectorTabs.active(EditorInspectorTabs.Page.LAYOUT)) {
-            List<LayoutInspectorControls.Control> layoutControls = manager.getLayoutControls(active.id());
-            if (!layoutControls.isEmpty()) {
-                appendSection(lines, "layout", "COMPONENT / LAYOUT");
-                if (inspectorSections.expanded("layout")) {
-                    appendLine(lines, "- / + adjust | R reset", 0xFF96AEBE);
-                    for (LayoutInspectorControls.Control control : layoutControls) {
-                        String label = control.booleanField() ? control.label() : control.label() + ": " + control.value();
-                        int available = Math.max(38, (int) ((panelWidth - 98) / INSPECTOR_SCALE));
-                        String clipped = font.plainSubstrByWidth(label, available);
-                        lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(), control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null, control.modified(), null, control));
+                List<LayoutInspectorControls.Control> layoutControls = manager.getLayoutControls(active.id());
+                if (!layoutControls.isEmpty()) {
+                    appendSection(lines, "layout", "COMPONENT / LAYOUT");
+                    if (inspectorSections.expanded("layout")) {
+                        appendLine(lines, "- / + adjust | R reset", 0xFF96AEBE);
+                        for (LayoutInspectorControls.Control control : layoutControls) {
+                            String label = control.booleanField() ? control.label() : control.label() + ": " + control.value();
+                            int available = Math.max(38, (int) ((panelWidth - 98) / INSPECTOR_SCALE));
+                            String clipped = font.plainSubstrByWidth(label, available);
+                            lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(), control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null, control.modified(), null, control));
+                        }
                     }
                 }
-            }
             }
             if (inspectorTabs.active(EditorInspectorTabs.Page.STYLE)) {
-            List<AppearanceInspectorControls.Control> appearanceControls = manager.getAppearanceControls(active.id());
-            if (!appearanceControls.isEmpty()) {
-                appendSection(lines, "visual", "VISUAL / CONTENT");
-                if (inspectorSections.expanded("visual")) {
-                    for (AppearanceInspectorControls.Control control : appearanceControls) {
-                        String label = control.booleanField() ? control.field().label() : control.field().label() + ": " + control.value();
-                        int available = Math.max(38, (int) ((panelWidth - 98) / INSPECTOR_SCALE));
-                        String clipped = font.plainSubstrByWidth(label, available);
-                        lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(), control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null, control.modified(), null, null, control));
-                    }
-                }
-            }
-            }
-            if (inspectorTabs.active(EditorInspectorTabs.Page.MOTION)) {
-            appendSection(lines, "animation", "ANIMATIONS");
-            if (inspectorSections.expanded("animation")) {
-                appendAnimationAction(lines, "[+] Add animation", "add", -1);
-                JsonArray tracks = manager.getAnimations(active.id());
-                List<AppearanceInspectorControls.Control> controls = AnimationInspectorControls.describe(tracks, manager.getDefaultAnimations(active.id()));
-                for (int index = 0; index < tracks.size(); index++) {
-                    JsonObject track = tracks.get(index).getAsJsonObject();
-                    String trackId = track.get("id").getAsString();
-                    String trigger = track.has("trigger") ? track.get("trigger").getAsString() : "open";
-                    String key = "track:" + active.id() + ":" + trackId;
-                    appendSection(lines, key, "  " + trackId + " (" + trigger + ")");
-                    if (!inspectorSections.expanded(key)) {
-                        continue;
-                    }
-                    String prefix = "animations.t" + index + ".";
-                    for (AppearanceInspectorControls.Control control : controls) {
-                        if (control.field().path().startsWith(prefix)) {
+                List<AppearanceInspectorControls.Control> appearanceControls = manager.getAppearanceControls(active.id());
+                if (!appearanceControls.isEmpty()) {
+                    appendSection(lines, "visual", "VISUAL / CONTENT");
+                    if (inspectorSections.expanded("visual")) {
+                        for (AppearanceInspectorControls.Control control : appearanceControls) {
                             String label = control.booleanField() ? control.field().label() : control.field().label() + ": " + control.value();
                             int available = Math.max(38, (int) ((panelWidth - 98) / INSPECTOR_SCALE));
                             String clipped = font.plainSubstrByWidth(label, available);
                             lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(), control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null, control.modified(), null, null, control));
                         }
                     }
-                    appendAnimationAction(lines, "    Duplicate " + trackId, "duplicate", index);
-                    appendAnimationAction(lines, "    Move up", "up", index);
-                    appendAnimationAction(lines, "    Move down", "down", index);
-                    appendAnimationAction(lines, "    Delete " + trackId, "delete", index);
                 }
             }
+            if (inspectorTabs.active(EditorInspectorTabs.Page.MOTION)) {
+                appendSection(lines, "animation", "ANIMATIONS");
+                if (inspectorSections.expanded("animation")) {
+                    appendAnimationAction(lines, "[+] Add animation", "add", -1);
+                    JsonArray tracks = manager.getAnimations(active.id());
+                    List<AppearanceInspectorControls.Control> controls = AnimationInspectorControls.describe(tracks, manager.getDefaultAnimations(active.id()));
+                    for (int index = 0; index < tracks.size(); index++) {
+                        JsonObject track = tracks.get(index).getAsJsonObject();
+                        String trackId = track.get("id").getAsString();
+                        String trigger = track.has("trigger") ? track.get("trigger").getAsString() : "open";
+                        String key = "track:" + active.id() + ":" + trackId;
+                        appendSection(lines, key, "  " + trackId + " (" + trigger + ")");
+                        if (!inspectorSections.expanded(key)) {
+                            continue;
+                        }
+                        String prefix = "animations.t" + index + ".";
+                        for (AppearanceInspectorControls.Control control : controls) {
+                            if (control.field().path().startsWith(prefix)) {
+                                String label = control.booleanField() ? control.field().label() : control.field().label() + ": " + control.value();
+                                int available = Math.max(38, (int) ((panelWidth - 98) / INSPECTOR_SCALE));
+                                String clipped = font.plainSubstrByWidth(label, available);
+                                lines.add(new InspectorLine(Component.literal(clipped).getVisualOrderText(), control.modified() ? 0xFF92DFCE : 0xFFE5EEF5, null, control.modified(), null, null, control));
+                            }
+                        }
+                        appendAnimationAction(lines, "    Duplicate " + trackId, "duplicate", index);
+                        appendAnimationAction(lines, "    Move up", "up", index);
+                        appendAnimationAction(lines, "    Move down", "down", index);
+                        appendAnimationAction(lines, "    Delete " + trackId, "delete", index);
+                    }
+                }
             }
             if (inspectorTabs.active(EditorInspectorTabs.Page.MORE)) {
-            appendSection(lines, "source", "SOURCE JSON (read only)");
-            if (inspectorSections.expanded("source")) {
-                if (!active.id().equals(inspectedId)) {
-                    JsonObject settings = manager.getWidgetSettings(active.id());
-                    String widgetParent = manager.getStructuralParent(active.id());
-                    sourceProperties = HudInspectorProperties.flatten(settings, "(none)".equals(widgetParent) ? null : widgetParent);
-                    inspectedId = active.id();
+                appendSection(lines, "source", "SOURCE JSON (read only)");
+                if (inspectorSections.expanded("source")) {
+                    if (!active.id().equals(inspectedId)) {
+                        JsonObject settings = manager.getWidgetSettings(active.id());
+                        String widgetParent = manager.getStructuralParent(active.id());
+                        sourceProperties = HudInspectorProperties.flatten(settings, "(none)".equals(widgetParent) ? null : widgetParent);
+                        inspectedId = active.id();
+                    }
+                    for (String property : sourceProperties) {
+                        appendLine(lines, property, 0xFFB7CEDF);
+                    }
                 }
-                for (String property : sourceProperties) {
-                    appendLine(lines, property, 0xFFB7CEDF);
-                }
-            }
             }
         }
         return lines;

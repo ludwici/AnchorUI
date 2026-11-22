@@ -131,13 +131,13 @@ The HUD core covers JSON composition, read-only display and an optional player-f
 
 Use **+ Add widget** in the HUD inspector to create Text, Image, Panel, Container, Button, or Progress directly in the live preview. Each new widget receives a unique namespaced ID and starts near the screen center. If a Panel or Container is selected, the new widget becomes its child (including automatic Grid placement). Drag and customize the new element just like an existing resource-authored widget.
 
-The **Delete** action is enabled only for editor-created widgets; bundled/resource-pack widgets cannot be deleted this way. **Save**, **Cancel**, the unsaved-changes exit dialog, and **Reset all** also account for added and deleted widgets. The full `createdWidgets` definition is saved alongside positions and appearance overrides in `config/anchorui/hud-layout.json`; it is local to this client, not a modification to resource packs.
+The **Delete** action is enabled only for editor-created widgets; bundled/resource-pack widgets cannot be deleted this way. **Save**, **Cancel**, and the unsaved-changes exit dialog also account for added and deleted widgets. The full `createdWidgets` definition is saved alongside positions and appearance overrides in `config/anchorui/hud-layout.json`; it is local to this client, not a modification to resource packs.
 
 The list of creatable types is extensible from Java with `EditorWidgetCreation.register(type, defaultsSupplier)`. New types must supply valid widget settings so the editor can construct them safely; registration of a rendering factory alone does not imply the type can be created from an empty definition.
 
 ## Compact inspector tabs
 
-The HUD editor now uses a short, three-row action area and five tabs: **Place**, **Layout**, **Style**, **Motion** and **More**. The Place tab shows selected-widget information and individual anchors, Layout shows only auto-layout options, Style contains visual/content settings, Motion handles animation tracks, and More holds read-only source JSON, diagnostics and Reset all. Changed fields get a colored marker, with section headers visually separated from property rows. Reset all on More requires a second click. F8 still remembers the selected HUD, and all edit actions keep their existing Save/Discard behavior.
+The HUD editor now uses a short, three-row action area and five tabs: **Place**, **Layout**, **Style**, **Anims** and **More**. Place shows position and anchors, Layout shows auto-layout options, Style contains visual/content settings, Anims handles animation tracks, and More shows read-only source JSON and diagnostics. Changed values use colored text rather than side stripes; square controls center their symbols. Nothing is shown in the inspector until a widget is selected. F8 still remembers the selected HUD, and all edit actions keep their existing Save/Discard behavior.
 
 ## HUD editor
 
@@ -171,7 +171,7 @@ To edit widget placement:
 3. Use the **Point ▼** and **Anchor ▼** dropdowns to pick one of the nine attachment points directly. The selected value applies immediately and keeps existing offsets. The same dropdown widget is used in the component inspector for layout mode, alignment, distribution, and custom Java `CHOICE` fields. Numeric fields still use **- / +**, while Boolean layout and appearance settings use checkboxes.
 4. Select a widget, then press **Change parent**. Click another highlighted widget to choose it as the new parent, or click an empty part of the world to use **screen** as the parent. The parent changes **only after the click**. Circular relationships and attempts to parent a widget to itself are rejected. Press **Esc** or **Cancel parent** to leave selection mode without changing anything.
 5. Use **Hide / Show** to control whether a selected widget is displayed in gameplay. Hidden widgets keep their layout bounds by default, so other widgets can remain attached. In a parent with automatic row/column/grid layout, `layout.collapseHidden: true` instead lets visible siblings close the gap and excludes hidden children from scroll overflow.
-6. Press **R** to reset the selected widget's **position offset only**. Use the **Reset** button to restore all overrides for the selected widget (position, anchors, visibility and component layout values); **Reset all** clears overrides for every widget.
+6. Press **R** to reset the selected widget's **position offset only**. Use **Reset** to restore the selected widget's overrides (position, anchors, visibility and component layout values).
 7. Controls now appear in a **narrow, vertical panel at the right edge**. Drag the panel by its title bar to move it anywhere on-screen. Its default placement leaves the bottom-right HUD widget uncovered. Press **Tab** to hide the panel temporarily, then press Tab again to restore it.
 8. **Show demo / Hide demo** toggles the bundled HUD test resources for easier testing.
 9. Choose **Save** (or Ctrl+S) to persist the current settings and close, or **Cancel / Esc** to discard all unsaved changes.
@@ -289,7 +289,7 @@ In the F8 HUD editor, select a widget, press **Pick parent**, then click a panel
 - For a **row/column**, the editor makes the Panel the anchor target and the runtime applies its padding automatically.
 - Click empty world in parent-selection mode to detach the widget back to the screen root. Clicking a regular widget or vanilla HUD reference still allows an advanced anchor-target relationship.
 
-The inspector displays the **Panel parent** as a single field. F8 Parent selection prioritizes Panels even when their children overlap them. Structural moves persist locally and are reversible through Cancel, Parent reset or Reset all; circular relationships are rejected.
+The inspector displays the **Panel parent** as a single field. F8 Parent selection prioritizes Panels even when their children overlap them. Structural moves persist locally and are reversible through Cancel, Parent reset ; circular relationships are rejected.
 
 The **SOURCE JSON [+]** group starts collapsed. The renderer no longer injects `__anchorui_container_parent` into nested widget settings and automatically binds children to their Panel, including its padding. Legacy `/__content` references are not supported. Point `relativeTo` at the parent Panel ID instead.
 
@@ -299,7 +299,7 @@ The same F8 inspector now exposes a **VISUAL / CONTENT** section for built-in wi
 
 - **- / +** changes numeric, Boolean and enumerated options.
 - **E** opens a free-form editor for `Kind.TEXT`, or a **texture browser** for `Kind.TEXTURE`. The browser lists active client resource packs, namespaces, expandable folders and PNG or JPG/JPEG images only. PNG uses Minecraft's native texture loader; JPG/JPEG is converted into a dynamic texture for preview and ordinary widget rendering. Other image formats are deliberately excluded; merely having a file in a resource pack does not make it a valid texture. **Hovering** shows a thumbnail with transparency and the image's original resolution; selection does not change the widget until **Use texture** is pressed. The native decoder validates each file before it can be used, including Java-registered texture fields; nonexistent or unreadable resource IDs cannot be committed. Colored swatches open the graphical Color Picker for every `Kind.COLOR` field. Its hue/saturation palette, opacity slider (0–100%) and editable Alpha field (0–255) use the same `anchorui:color_picker` implementation. Alpha changes preserve RGB and serialize partially transparent colors as `#AARRGGBB` (`#RRGGBB` when fully opaque). The checkerboard preview makes transparency visible. Click **Apply** to commit a color override or **Cancel** / **Esc** to discard it. A normal HUD Save is still required to persist the editor session.
-- **R** resets just the selected field. The regular **Reset** button clears a selected widget's overrides; **Reset all** clears all.
+- **R** resets just the selected field. The regular **Reset** button clears a selected widget's overrides.
 - Invalid values are rejected before or during widget reconstruction, and the previous preview is restored. Edits rebuild the HUD widget instances **on change**, not on every frame.
 - Changes persist locally under `appearance` in the selected HUD's `config/anchorui/hud-layouts/` file; source resource packs and mod-provided Java code are unchanged.
 
@@ -309,7 +309,7 @@ For a basic check, enable `/anchorui test rpg on`, open **F8**, select a health 
 
 The built-in HUD preview now has **zero gap** between its connected elements: the header/body, body/diamond, diamond/extra label and extra label/copied header use `x: 0` or `y: 0` wherever their edges are attached. The bottom-right corner widget keeps its intentional `x: -16, y: -16` screen padding.
 
-HUD-specific overrides in `config/anchorui/hud-layouts/` and legacy unassigned overrides in `config/anchorui/hud-layout.json` are applied in addition to resource-defined offsets. If you previously dragged a demo element, click **Reset** on that widget or **Reset all** in the editor to restore edge-to-edge placement; changing the demo JSON does not automatically erase existing saved user preferences.
+HUD-specific overrides in `config/anchorui/hud-layouts/` and legacy unassigned overrides in `config/anchorui/hud-layout.json` are applied in addition to resource-defined offsets. If you previously dragged a demo element, click **Reset** on that widget on the affected widgets to restore edge-to-edge placement; changing the demo JSON does not automatically erase existing saved user preferences.
 
 ## Regression checklist
 
@@ -320,7 +320,7 @@ HUD-specific overrides in `config/anchorui/hud-layouts/` and legacy unassigned o
 - Change the **Point** and **Anchor** of `anchorui_test:hud_extra`: it must move immediately to the corresponding attachment position while retaining its manual offsets. Press **Change parent** and click another widget; the parent changes only after your click. Try to select itself or create a cycle, which must be rejected. Click empty space to choose `screen`, or press Esc to cancel parent selection.
 - The bottom-right `anchorui_test:hud_corner` must be directly clickable and draggable with the right-side inspector open. Drag the panel by its title bar, scroll the widget's raw JSON, and confirm that nested properties are visible. Press Tab if the panel overlaps a widget. Test **Hide / Show**, then **Cancel** to restore the previous layout.
 - Reopen, drag a widget, choose **Save & close**, and verify the same position persists after reopening and restarting the game.
-- Try **Reset**, **Reset all** and **Ctrl+S**; the saved file should contain only modified positions, anchors, visibility flags and explicit component layout changes.
+- Try **Reset** and **Ctrl+S**; the saved file should contain only modified positions, anchors, visibility flags and explicit component layout changes.
 - Resize the game or change GUI Scale while HUD is visible to check anchor reflow.
 
 - In the editor, move a widget vertically to create `user offset: 0, 63`, scroll to that row and press its right-hand **R**. Verify the offset becomes `0, 0` without resetting its parent, attachment points or visibility. Reset parent, point, anchor and visibility individually and verify the other user overrides remain intact.

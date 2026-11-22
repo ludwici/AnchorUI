@@ -11,6 +11,7 @@ public class EditorInspectorTabsTest {
     public void pagesAreIndependentAndClickable() {
         EditorInspectorTabs tabs = new EditorInspectorTabs();
         assertTrue(tabs.active(EditorInspectorTabs.Page.POSITION));
+        assertEquals("Anims", EditorInspectorTabs.Page.MOTION.label());
         assertFalse(tabs.click(12, 60, 10, 40, 210));
         assertEquals(EditorInspectorTabs.Page.POSITION, tabs.selected());
         assertTrue(tabs.click(75, 45, 10, 40, 210));

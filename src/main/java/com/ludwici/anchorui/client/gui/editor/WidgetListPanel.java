@@ -35,6 +35,8 @@ public final class WidgetListPanel {
     private static final int FOOTER_HEIGHT = 17;
     private static final int ROW_HEIGHT = 17;
     private static final int GROUP_HEIGHT = ROW_HEIGHT;
+    private static final int TREE_STEP = 24;
+    private static final int TREE_GUIDE_COLOR = 0xFF57758A;
     private record PanelPlacement(int x, int y, boolean collapsed) {
     }
     private static PanelPlacement savedPlacement;
@@ -171,8 +173,8 @@ public final class WidgetListPanel {
                 rowsDirty = true;
                 ensureScrollBar(rows(entries));
             } else if (row != null && row.hasChildren()
-                    && mouseX >= x + 8 + Math.min(60, row.depth() * 10)
-                    && mouseX < x + 24 + Math.min(60, row.depth() * 10)) {
+                    && mouseX >= x + 8 + hierarchyIndent(row.depth())
+                    && mouseX < x + 24 + hierarchyIndent(row.depth())) {
                 if (!collapsedContainers.add(row.entry().id())) {
                     collapsedContainers.remove(row.entry().id());
                 }
@@ -235,8 +237,8 @@ public final class WidgetListPanel {
         if (row == null || row.heading()) {
             return null;
         }
-        if (row.hasChildren() && mouseX >= x + 8 + Math.min(60, row.depth() * 10)
-                && mouseX < x + 24 + Math.min(60, row.depth() * 10)) {
+        if (row.hasChildren() && mouseX >= x + 8 + hierarchyIndent(row.depth())
+                && mouseX < x + 24 + hierarchyIndent(row.depth())) {
             return null;
         }
         return row.entry();
@@ -294,7 +296,8 @@ public final class WidgetListPanel {
                             graphics.fill(x + 3, lineY, x + width - 5, lineY + ROW_HEIGHT, chosen ? 0xB04A4435 : 0x88405062);
                         }
                         int tint = chosen ? SELECTED_COLOR : entry.visible() ? color(row.group()) : 0xFF8993A1;
-                        int indentation = Math.min(60, row.depth() * 10);
+                        renderHierarchyGuides(graphics, rows, index, lineY);
+                        int indentation = hierarchyIndent(row.depth());
                         int textX = x + 15 + indentation + (row.hasChildren() ? 10 : 0);
                         if (row.hasChildren()) {
                             graphics.drawString(font, collapsedContainers.contains(entry.id()) ? ">" : "v", x + 11 + indentation, lineY + 4, tint, false);
@@ -321,6 +324,50 @@ public final class WidgetListPanel {
         Entry hovered = entryAt(mouseX, mouseY, entries);
         if (hovered != null) {
             graphics.renderTooltip(font, Component.literal(hovered.id() + (hovered.type().isEmpty() ? "" : " [" + hovered.type() + "]") + (hovered.readOnly() ? " (read-only)" : "")), mouseX, mouseY);
+        }
+    }
+
+    static int hierarchyIndent(int depth) {
+        return Math.min(120, Math.max(0, depth) * TREE_STEP);
+    }
+
+    private boolean hasFollowingSibling(List<Row> rows, int index, int depth) {
+        int group = rows.get(index).group();
+        for (int nextIndex = index + 1; nextIndex < rows.size(); nextIndex++) {
+            Row next = rows.get(nextIndex);
+            if (next.heading() || next.group() != group || next.depth() < depth) {
+                return false;
+            }
+            if (next.depth() == depth) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void renderHierarchyGuides(GuiGraphics graphics, List<Row> rows, int index, int lineY) {
+        Row row = rows.get(index);
+        if (row.depth() > 0) {
+            int middleY = lineY + ROW_HEIGHT / 2;
+            for (int level = 1; level <= row.depth(); level++) {
+                int guideX = x + 14 + hierarchyIndent(level - 1);
+                boolean hasNext = hasFollowingSibling(rows, index, level);
+                if (level < row.depth()) {
+                    if (hasNext) {
+                        graphics.fill(guideX, lineY, guideX + 1, lineY + ROW_HEIGHT, TREE_GUIDE_COLOR);
+                    }
+                    continue;
+                }
+                graphics.fill(guideX, lineY, guideX + 1, hasNext ? lineY + ROW_HEIGHT : middleY + 1, TREE_GUIDE_COLOR);
+                graphics.fill(guideX, middleY, x + 12 + hierarchyIndent(row.depth()), middleY + 1, TREE_GUIDE_COLOR);
+            }
+        }
+        if (row.hasChildren() && index + 1 < rows.size()) {
+            Row next = rows.get(index + 1);
+            if (!next.heading() && next.group() == row.group() && next.depth() > row.depth()) {
+                int guideX = x + 14 + hierarchyIndent(row.depth());
+                graphics.fill(guideX, lineY + ROW_HEIGHT / 2, guideX + 1, lineY + ROW_HEIGHT, TREE_GUIDE_COLOR);
+            }
         }
     }
 

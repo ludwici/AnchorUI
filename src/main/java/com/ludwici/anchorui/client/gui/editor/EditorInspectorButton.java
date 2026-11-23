@@ -44,10 +44,19 @@ public final class EditorInspectorButton {
         if (hovered) {
             graphics.fill(x, y, x + SIZE, y + 1, HOVER_BORDER);
             graphics.fill(x, y + SIZE - 1, x + SIZE, y + SIZE, HOVER_BORDER);
+            graphics.fill(x, y + 1, x + 1, y + SIZE - 1, HOVER_BORDER);
+            graphics.fill(x + SIZE - 1, y + 1, x + SIZE, y + SIZE - 1, HOVER_BORDER);
         }
         int textX = x + (SIZE - font.width(symbol)) / 2 + 1;
         int textY = y + (SIZE - font.lineHeight) / 2 + 1 + ("▼".equals(symbol) ? 1 : 0);
         graphics.drawString(font, symbol, textX, textY, hovered ? 0xFFFFFFFF : foreground, true);
+    }
+
+    public static void drawHoverBorder(GuiGraphics graphics, int x, int y) {
+        graphics.fill(x, y, x + SIZE, y + 1, HOVER_BORDER);
+        graphics.fill(x, y + SIZE - 1, x + SIZE, y + SIZE, HOVER_BORDER);
+        graphics.fill(x, y + 1, x + 1, y + SIZE - 1, HOVER_BORDER);
+        graphics.fill(x + SIZE - 1, y + 1, x + SIZE, y + SIZE - 1, HOVER_BORDER);
     }
 
     public static int centeredInRow(int rowY, int rowHeight) {

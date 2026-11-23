@@ -38,6 +38,10 @@ public final class WidgetListPanel {
     private record PanelPlacement(int x, int y, boolean collapsed) {
     }
     private static PanelPlacement savedPlacement;
+
+    static void resetSessionPlacementForTests() {
+        savedPlacement = null;
+    }
     private static final int PANEL_BACKGROUND = 0xFF121D2B;
     private static final int HEADER_BACKGROUND = 0xFF29445B;
     private static final int SELECTED_COLOR = 0xFFFFD37A;

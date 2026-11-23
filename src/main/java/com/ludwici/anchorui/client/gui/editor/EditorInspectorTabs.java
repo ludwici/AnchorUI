@@ -63,7 +63,7 @@ public final class EditorInspectorTabs {
             Page page = Page.values()[index];
             boolean active = page == selected;
             graphics.fill(x, top, x + itemWidth, top + HEIGHT, active ? ACTIVE : IDLE);
-            graphics.drawCenteredString(font, font.plainSubstrByWidth(page.label(), itemWidth - 2), x + itemWidth / 2, top + 4, active ? ACTIVE_TEXT : IDLE_TEXT);
+            graphics.drawCenteredString(font, font.plainSubstrByWidth(page.label(), itemWidth - 2), x + itemWidth / 2, top + (HEIGHT - font.lineHeight) / 2 + 1, active ? ACTIVE_TEXT : IDLE_TEXT);
         }
     }
 

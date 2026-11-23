@@ -122,7 +122,9 @@ public final class NativeContainerScrollPanel {
 
     private boolean isOverTrack(double x, double y) {
         int trackX = viewport.x() + viewport.width() - style.width();
-        return x >= trackX && x < trackX + style.width() && y >= viewport.y() && y < viewport.y() + viewport.height();
+        int hitWidth = style == HUD_INSPECTOR || style == SCREEN_INSPECTOR ? 6 : style.width();
+        return x >= trackX - (hitWidth - style.width()) && x < trackX + style.width()
+                && y >= viewport.y() && y < viewport.y() + viewport.height();
     }
 
     private int thumbHeight() {

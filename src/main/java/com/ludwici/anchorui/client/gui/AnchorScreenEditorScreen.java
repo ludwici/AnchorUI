@@ -459,11 +459,11 @@ public final class AnchorScreenEditorScreen extends Screen {
                 }
                 case "point", "anchor", "relativeTo" -> openAnchorChoice(action, row, id, values);
                 case "x", "y" -> {
-                    int plus = panelX() + inspectorWidth - 25;
-                    int minus = panelX() + inspectorWidth - 63;
-                    if (mouseX >= minus && mouseX < minus + RESET_SIZE) {
+                    int plus = EditorInspectorButton.anchorPlusX(panelX() + inspectorWidth);
+                    int minus = EditorInspectorButton.anchorMinusX(panelX() + inspectorWidth);
+                    if (mouseX >= minus && mouseX < minus + EditorInspectorButton.HITBOX_WIDTH) {
                         updateAnchor(id, AnchorInspectorControls.step(values, action.index(), action.field(), hasShiftDown() ? -10 : -1));
-                    } else if (mouseX >= plus && mouseX < plus + RESET_SIZE) {
+                    } else if (mouseX >= plus && mouseX < plus + EditorInspectorButton.HITBOX_WIDTH) {
                         updateAnchor(id, AnchorInspectorControls.step(values, action.index(), action.field(), hasShiftDown() ? 10 : 1));
                     } else {
                         openAnchorInput(id, action, values);
@@ -703,18 +703,21 @@ public final class AnchorScreenEditorScreen extends Screen {
                 if (lineY + INSPECTOR_LINE_HEIGHT > top && lineY < bottom) {
                     boolean header = inspectorSections.isHeaderRow(row);
                     graphics.fill(panelX() + 5, lineY, panelX() + inspectorWidth - 7, lineY + INSPECTOR_LINE_HEIGHT - 1, header ? 0xFF284457 : row % 2 == 0 ? 0xFF1A2A37 : 0xFF1D2E3B);
+                    AnchorAction anchorAction = anchorActions.get(row);
+                    int textLeft = panelX() + 7;
+                    int textRight = anchorAction != null && ("x".equals(anchorAction.field()) || "y".equals(anchorAction.field()))
+                            ? EditorInspectorButton.anchorMinusX(panelX() + inspectorWidth) - 3 : panelX() + inspectorWidth - 7;
+                    float textX = anchorAction == null ? textLeft : textLeft + Math.max(0.0F, (textRight - textLeft - font.width(line.text()) * INSPECTOR_SCALE) / 2.0F);
                     graphics.pose().pushPose();
-                    graphics.pose().translate(panelX() + 7, EditorInspectorButton.centeredTextInRow(lineY, INSPECTOR_LINE_HEIGHT, font.lineHeight, INSPECTOR_SCALE), 0);
+                    graphics.pose().translate(textX, EditorInspectorButton.centeredTextInRow(lineY, INSPECTOR_LINE_HEIGHT, font.lineHeight, INSPECTOR_SCALE), 0);
                     graphics.pose().scale(INSPECTOR_SCALE, INSPECTOR_SCALE, 1.0F);
                     graphics.drawString(font, line.text(), 0, 0, line.color(), false);
                     graphics.pose().popPose();
-
                     int controlY = EditorInspectorButton.centeredInRow(lineY, INSPECTOR_LINE_HEIGHT);
-                    AnchorAction anchorAction = anchorActions.get(row);
                     if (anchorAction != null && ("x".equals(anchorAction.field()) || "y".equals(anchorAction.field()))
                             && controlY >= top && controlY + RESET_SIZE <= bottom) {
-                        EditorInspectorButton.draw(graphics, font, "-", panelX() + inspectorWidth - 63, controlY, 0xFF40566A, 0xFFE5EEF5);
-                        EditorInspectorButton.draw(graphics, font, "+", panelX() + inspectorWidth - 25, controlY, 0xFF40566A, 0xFFE5EEF5);
+                        EditorInspectorButton.draw(graphics, font, "-", EditorInspectorButton.anchorMinusX(panelX() + inspectorWidth), controlY, 0xFF40566A, 0xFFE5EEF5);
+                        EditorInspectorButton.draw(graphics, font, "+", EditorInspectorButton.anchorPlusX(panelX() + inspectorWidth), controlY, 0xFF40566A, 0xFFE5EEF5);
                     }
                     if (line.layoutControl() != null) {
                         drawLayoutControl(graphics, line.layoutControl(), lineY, top, bottom);
@@ -1175,6 +1178,11 @@ public final class AnchorScreenEditorScreen extends Screen {
         if (editingAppearance != null || editingAnchor != null) {
             return clickAppearanceModal(mouseX, mouseY, button);
         }
+        if (!compact && !inspectorCollapsed && inspectorScrollBar != null
+                && inspectorScrollBar.mouseClicked(mouseX, mouseY, button)) {
+            inspectorScroll = inspectorScrollBar.logicalOffset();
+            return true;
+        }
         if (!compact && button == GLFW.GLFW_MOUSE_BUTTON_LEFT
                 && mouseX >= visiblePanelX() + visiblePanelWidth() - 30
                 && mouseX < visiblePanelX() + visiblePanelWidth()
@@ -1269,9 +1277,6 @@ public final class AnchorScreenEditorScreen extends Screen {
                         }
                         return true;
                     }
-                }
-                if (inspectorScrollBar != null) {
-                    inspectorScrollBar.mouseClicked(mouseX, mouseY, button);
                 }
             } else if (mouseY < panelTop + 27) {
                 draggingPanel = true;

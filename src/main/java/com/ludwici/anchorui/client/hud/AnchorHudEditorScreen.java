@@ -140,6 +140,8 @@ public final class AnchorHudEditorScreen extends Screen {
     private boolean draggingWidget;
     private boolean draggingPanel;
     private NativeContainerScrollPanel inspectorScrollBar;
+    private int inspectorMouseX;
+    private int inspectorMouseY;
     private int panelX;
     private int panelY;
     private int panelWidth;
@@ -609,6 +611,11 @@ public final class AnchorHudEditorScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        boolean inspectorInteractive = editingAppearance == null && editingAnchor == null
+                && colorPickerDialog == null && textureBrowser == null && !exitConfirmation.isOpen()
+                && !editorDropdown.isOpen();
+        inspectorMouseX = inspectorInteractive ? mouseX : Integer.MIN_VALUE;
+        inspectorMouseY = inspectorInteractive ? mouseY : Integer.MIN_VALUE;
         manager.renderEditorPreview(graphics, partialTick);
         manager.renderScrollBars(graphics, mouseX, mouseY, partialTick);
         refreshFrameHandles();
@@ -805,8 +812,8 @@ public final class AnchorHudEditorScreen extends Screen {
                 AnchorAction anchorAction = anchorActions.get(row);
                 if (anchorAction != null && ("x".equals(anchorAction.field()) || "y".equals(anchorAction.field()))
                         && controlY >= top && controlY + RESET_SIZE <= bottom) {
-                    EditorInspectorButton.draw(graphics, font, "-", EditorInspectorButton.anchorMinusX(panelX + panelWidth), controlY, 0xFF40566A, 0xFFE5EEF5);
-                    EditorInspectorButton.draw(graphics, font, "+", EditorInspectorButton.anchorPlusX(panelX + panelWidth), controlY, 0xFF40566A, 0xFFE5EEF5);
+                    EditorInspectorButton.draw(graphics, font, "-", EditorInspectorButton.anchorMinusX(panelX + panelWidth), controlY, 0xFF40566A, 0xFFE5EEF5, inspectorMouseX, inspectorMouseY);
+                    EditorInspectorButton.draw(graphics, font, "+", EditorInspectorButton.anchorPlusX(panelX + panelWidth), controlY, 0xFF40566A, 0xFFE5EEF5, inspectorMouseX, inspectorMouseY);
                 }
                 if (line.vanillaParent() != null && y >= top && y + INSPECTOR_LINE_HEIGHT <= bottom) {
                     vanillaParentHitboxes.add(new VanillaParentHitbox(line.vanillaParent(), panelX + 4, y, panelWidth - 8, INSPECTOR_LINE_HEIGHT));
@@ -822,7 +829,7 @@ public final class AnchorHudEditorScreen extends Screen {
                     int buttonY = controlY;
                     int background = line.modified() ? 0xCC3D6273 : 0x8840505D;
                     int foreground = line.modified() ? 0xFFECF8FF : 0xFF80919E;
-                    EditorInspectorButton.drawSquare(graphics, font, "R", x, buttonY, background, foreground);
+                    EditorInspectorButton.drawSquare(graphics, font, "R", x, buttonY, background, foreground, inspectorMouseX, inspectorMouseY, line.modified());
                     if (line.modified() && buttonY >= top && buttonY + RESET_SIZE <= bottom) {
                         resetHitboxes.add(new ResetHitbox(line.reset(), x, buttonY));
                     }
@@ -848,12 +855,12 @@ public final class AnchorHudEditorScreen extends Screen {
         if (checkbox) {
             EditorInspectorCheckbox.render(graphics, next, controlY, Boolean.parseBoolean(control.value()));
         } else if (choice) {
-            EditorInspectorButton.draw(graphics, font, "▼", next, controlY, 0xFF40566A, 0xFFE5EEF5);
+            EditorInspectorButton.draw(graphics, font, "▼", next, controlY, 0xFF40566A, 0xFFE5EEF5, inspectorMouseX, inspectorMouseY);
         } else {
-            EditorInspectorButton.draw(graphics, font, "-", first, controlY, 0xFF40566A, 0xFFE5EEF5);
-            EditorInspectorButton.draw(graphics, font, "+", next, controlY, 0xFF40566A, 0xFFE5EEF5);
+            EditorInspectorButton.draw(graphics, font, "-", first, controlY, 0xFF40566A, 0xFFE5EEF5, inspectorMouseX, inspectorMouseY);
+            EditorInspectorButton.draw(graphics, font, "+", next, controlY, 0xFF40566A, 0xFFE5EEF5, inspectorMouseX, inspectorMouseY);
         }
-        EditorInspectorButton.draw(graphics, font, "R", reset, controlY, control.modified() ? 0xFF3D6273 : 0xFF40505D, control.modified() ? 0xFFECF8FF : 0xFF80919E);
+        EditorInspectorButton.draw(graphics, font, "R", reset, controlY, control.modified() ? 0xFF3D6273 : 0xFF40505D, control.modified() ? 0xFFECF8FF : 0xFF80919E, inspectorMouseX, inspectorMouseY, control.modified());
         if (controlY >= top && controlY + RESET_SIZE <= bottom) {
             if (!choice && !checkbox) {
                 layoutHitboxes.add(new LayoutHitbox(control, -1, first, controlY));
@@ -1009,12 +1016,12 @@ public final class AnchorHudEditorScreen extends Screen {
                 EditorInspectorButton.drawColor(graphics, next, controlY, 0xFF3D4550);
             }
         } else if (control.textual() || choice) {
-            EditorInspectorButton.draw(graphics, font, choice ? "▼" : "E", next, controlY, 0xFF40566A, 0xFFE5EEF5);
+            EditorInspectorButton.draw(graphics, font, choice ? "▼" : "E", next, controlY, 0xFF40566A, 0xFFE5EEF5, inspectorMouseX, inspectorMouseY);
         } else {
-            EditorInspectorButton.draw(graphics, font, "-", left, controlY, 0xFF40566A, 0xFFE5EEF5);
-            EditorInspectorButton.draw(graphics, font, "+", next, controlY, 0xFF40566A, 0xFFE5EEF5);
+            EditorInspectorButton.draw(graphics, font, "-", left, controlY, 0xFF40566A, 0xFFE5EEF5, inspectorMouseX, inspectorMouseY);
+            EditorInspectorButton.draw(graphics, font, "+", next, controlY, 0xFF40566A, 0xFFE5EEF5, inspectorMouseX, inspectorMouseY);
         }
-        EditorInspectorButton.draw(graphics, font, "R", reset, controlY, control.modified() ? 0xFF3D6273 : 0xFF40505D, control.modified() ? 0xFFECF8FF : 0xFF80919E);
+        EditorInspectorButton.draw(graphics, font, "R", reset, controlY, control.modified() ? 0xFF3D6273 : 0xFF40505D, control.modified() ? 0xFFECF8FF : 0xFF80919E, inspectorMouseX, inspectorMouseY, control.modified());
         if (controlY >= top && controlY + RESET_SIZE <= bottom) {
             if (!control.textual() && !choice && !checkbox) {
                 appearanceHitboxes.add(new AppearanceHitbox(control, -1, left, controlY));

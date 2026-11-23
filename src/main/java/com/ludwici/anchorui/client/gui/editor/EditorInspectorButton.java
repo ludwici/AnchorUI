@@ -7,6 +7,9 @@ public final class EditorInspectorButton {
     public static final int SIZE = 11;
     public static final int HITBOX_WIDTH = 14;
     public static final int HITBOX_OFFSET = 2;
+    private static final float GLYPH_SCALE = 0.84F;
+    private static final int HOVER_BACKGROUND = 0xFF597B91;
+    private static final int HOVER_BORDER = 0xFF91C8DC;
 
     public static int anchorMinusX(int panelRight) {
         return panelRight - 43;
@@ -20,16 +23,36 @@ public final class EditorInspectorButton {
     }
 
     public static void draw(GuiGraphics graphics, Font font, String symbol, int x, int y,
-                            int background, int foreground) {
-        drawSquare(graphics, font, symbol, x + HITBOX_OFFSET, y, background, foreground);
+                            int background, int foreground, int mouseX, int mouseY) {
+        draw(graphics, font, symbol, x, y, background, foreground, mouseX, mouseY, true);
+    }
+
+    public static void draw(GuiGraphics graphics, Font font, String symbol, int x, int y,
+                            int background, int foreground, int mouseX, int mouseY, boolean enabled) {
+        boolean hovered = enabled && contains(mouseX, mouseY, x, y);
+        renderSquare(graphics, font, symbol, x + HITBOX_OFFSET, y, background, foreground, hovered);
     }
 
     public static void drawSquare(GuiGraphics graphics, Font font, String symbol, int x, int y,
-                                  int background, int foreground) {
-        graphics.fill(x, y, x + SIZE, y + SIZE, background);
-        int textX = x + (SIZE - font.width(symbol)) / 2;
-        int textY = y + (SIZE - font.lineHeight) / 2 + ("▼".equals(symbol) ? 1 : 0);
-        graphics.drawString(font, symbol, textX, textY, foreground, true);
+                                  int background, int foreground, int mouseX, int mouseY, boolean enabled) {
+        boolean hovered = enabled && mouseX >= x && mouseX < x + SIZE && mouseY >= y && mouseY < y + SIZE;
+        renderSquare(graphics, font, symbol, x, y, background, foreground, hovered);
+    }
+
+    private static void renderSquare(GuiGraphics graphics, Font font, String symbol, int x, int y,
+                                     int background, int foreground, boolean hovered) {
+        graphics.fill(x, y, x + SIZE, y + SIZE, hovered ? HOVER_BACKGROUND : background);
+        if (hovered) {
+            graphics.fill(x, y, x + SIZE, y + 1, HOVER_BORDER);
+            graphics.fill(x, y + SIZE - 1, x + SIZE, y + SIZE, HOVER_BORDER);
+        }
+        float glyphWidth = font.width(symbol) * GLYPH_SCALE;
+        float glyphHeight = (font.lineHeight - 1) * GLYPH_SCALE;
+        graphics.pose().pushPose();
+        graphics.pose().translate(x + (SIZE - glyphWidth) / 2.0F, y + (SIZE - glyphHeight) / 2.0F, 0);
+        graphics.pose().scale(GLYPH_SCALE, GLYPH_SCALE, 1.0F);
+        graphics.drawString(font, symbol, 0, 0, hovered ? 0xFFFFFFFF : foreground, false);
+        graphics.pose().popPose();
     }
 
     public static int centeredInRow(int rowY, int rowHeight) {

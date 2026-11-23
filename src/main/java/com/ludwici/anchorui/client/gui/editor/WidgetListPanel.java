@@ -35,6 +35,9 @@ public final class WidgetListPanel {
     private static final int FOOTER_HEIGHT = 17;
     private static final int ROW_HEIGHT = 17;
     private static final int GROUP_HEIGHT = ROW_HEIGHT;
+    private record PanelPlacement(int x, int y, boolean collapsed) {
+    }
+    private static PanelPlacement savedPlacement;
     private static final int PANEL_BACKGROUND = 0xFF121D2B;
     private static final int HEADER_BACKGROUND = 0xFF29445B;
     private static final int SELECTED_COLOR = 0xFFFFD37A;
@@ -59,6 +62,7 @@ public final class WidgetListPanel {
     private double dragStartY;
     private boolean dragging;
     private boolean collapsed = true;
+    private boolean placementInitialized;
     private final Set<Integer> collapsedGroups = new HashSet<>();
     private final Set<String> collapsedContainers = new HashSet<>();
     private boolean rowsDirty = true;
@@ -74,13 +78,32 @@ public final class WidgetListPanel {
         viewportHeight = guiHeight;
         width = Math.min(224, Math.max(120, guiWidth / 3));
         preferredHeight = Math.min(360, Math.max(MIN_EXPANDED_HEIGHT, guiHeight - SCREEN_MARGIN * 2));
-        x = Math.max(0, Math.min(x, Math.max(0, guiWidth - width)));
-        y = Math.max(0, Math.min(y, Math.max(0, guiHeight - MIN_EXPANDED_HEIGHT - SCREEN_MARGIN)));
+        if (!placementInitialized) {
+            if (savedPlacement != null) {
+                x = savedPlacement.x();
+                y = savedPlacement.y();
+                collapsed = savedPlacement.collapsed();
+            }
+            placementInitialized = true;
+        }
+        clampPosition();
         updateHeight();
+        rememberPosition();
     }
 
     private void updateHeight() {
         height = Math.min(preferredHeight, Math.max(HEADER_HEIGHT + FOOTER_HEIGHT + 1, viewportHeight - y - SCREEN_MARGIN));
+    }
+
+    private void clampPosition() {
+        int maxX = Math.max(0, viewportWidth - visibleWidth());
+        int maxY = Math.max(0, viewportHeight - (collapsed ? HEADER_HEIGHT : MIN_EXPANDED_HEIGHT + SCREEN_MARGIN));
+        x = Math.max(0, Math.min(x, maxX));
+        y = Math.max(0, Math.min(y, maxY));
+    }
+
+    private void rememberPosition() {
+        savedPlacement = new PanelPlacement(x, y, collapsed);
     }
 
     public boolean contains(double mouseX, double mouseY) {
@@ -97,6 +120,9 @@ public final class WidgetListPanel {
         if (collapsed && scrollBar != null && scrollBar.isDraggingBar()) {
             scrollBar.mouseReleased(0, 0, GLFW.GLFW_MOUSE_BUTTON_LEFT);
         }
+        clampPosition();
+        updateHeight();
+        rememberPosition();
     }
 
     public boolean overlaps(int left, int top, int right, int bottom) {
@@ -163,9 +189,11 @@ public final class WidgetListPanel {
         if (!dragging || button != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             return false;
         }
-        x = Math.max(0, Math.min(startX + (int) Math.round(mouseX - dragStartX), Math.max(0, viewportWidth - width)));
-        y = Math.max(0, Math.min(startY + (int) Math.round(mouseY - dragStartY), Math.max(0, viewportHeight - MIN_EXPANDED_HEIGHT - SCREEN_MARGIN)));
+        x = startX + (int) Math.round(mouseX - dragStartX);
+        y = startY + (int) Math.round(mouseY - dragStartY);
+        clampPosition();
         updateHeight();
+        rememberPosition();
         return true;
     }
 

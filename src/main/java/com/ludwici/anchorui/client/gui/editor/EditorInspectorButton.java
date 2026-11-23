@@ -7,7 +7,6 @@ public final class EditorInspectorButton {
     public static final int SIZE = 11;
     public static final int HITBOX_WIDTH = 14;
     public static final int HITBOX_OFFSET = 2;
-    private static final float GLYPH_SCALE = 0.84F;
     private static final int HOVER_BACKGROUND = 0xFF597B91;
     private static final int HOVER_BORDER = 0xFF91C8DC;
 
@@ -46,13 +45,9 @@ public final class EditorInspectorButton {
             graphics.fill(x, y, x + SIZE, y + 1, HOVER_BORDER);
             graphics.fill(x, y + SIZE - 1, x + SIZE, y + SIZE, HOVER_BORDER);
         }
-        float glyphWidth = font.width(symbol) * GLYPH_SCALE;
-        float glyphHeight = (font.lineHeight - 1) * GLYPH_SCALE;
-        graphics.pose().pushPose();
-        graphics.pose().translate(x + (SIZE - glyphWidth) / 2.0F, y + (SIZE - glyphHeight) / 2.0F, 0);
-        graphics.pose().scale(GLYPH_SCALE, GLYPH_SCALE, 1.0F);
-        graphics.drawString(font, symbol, 0, 0, hovered ? 0xFFFFFFFF : foreground, false);
-        graphics.pose().popPose();
+        int textX = x + (SIZE - font.width(symbol)) / 2 + 1;
+        int textY = y + (SIZE - font.lineHeight) / 2 + 1 + ("▼".equals(symbol) ? 1 : 0);
+        graphics.drawString(font, symbol, textX, textY, hovered ? 0xFFFFFFFF : foreground, true);
     }
 
     public static int centeredInRow(int rowY, int rowHeight) {

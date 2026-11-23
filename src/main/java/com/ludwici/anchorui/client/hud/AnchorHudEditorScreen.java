@@ -60,6 +60,9 @@ public final class AnchorHudEditorScreen extends Screen {
     private static final int INSPECTOR_LINE_HEIGHT = 13;
     private static final float INSPECTOR_SCALE = 0.83F;
     private static final int RESET_SIZE = 11;
+    private record PanelPlacement(int x, int y, boolean collapsed) {
+    }
+    private static PanelPlacement savedPlacement;
     private static final List<String> ANCHOR_CHOICES = java.util.Arrays.stream(ElementAnchor.values()).map(ElementAnchor::name).toList();
 
     private record InspectorLine(FormattedCharSequence text, int color, AnchorHudManager.EditableProperty reset,
@@ -190,16 +193,24 @@ public final class AnchorHudEditorScreen extends Screen {
             editorStarted = true;
             panelWidth = Math.min(PANEL_WIDTH, Math.max(150, width - 116));
             panelHeight = Math.min(440, Math.max(155, height - 40));
-            panelX = width - panelWidth - 8;
-            panelY = 8;
+            if (savedPlacement == null) {
+                panelX = width - panelWidth - 8;
+                panelY = 8;
+            } else {
+                panelX = savedPlacement.x();
+                panelY = savedPlacement.y();
+                inspectorCollapsed = savedPlacement.collapsed();
+            }
         } else {
             panelWidth = Math.min(PANEL_WIDTH, Math.max(150, width - 116));
             panelHeight = Math.min(440, Math.max(155, height - 40));
-            clampPanel();
         }
+        clampPanel();
         if (!inspectorCollapsed && widgetList.overlaps(panelX, panelY, panelX + panelWidth, panelY + panelHeight)) {
             inspectorCollapsed = true;
+            clampPanel();
         }
+        rememberPanel();
         int left = panelX + 6;
         int innerWidth = panelWidth - 12;
         int halfWidth = (innerWidth - 4) / 2;
@@ -434,13 +445,16 @@ public final class AnchorHudEditorScreen extends Screen {
     }
 
     private void toggleInspector() {
-        if (inspectorCollapsed && widgetList.overlaps(panelX, panelY, panelX + panelWidth, panelY + panelHeight)) {
+        inspectorCollapsed = !inspectorCollapsed;
+        clampPanel();
+        if (!inspectorCollapsed && widgetList.overlaps(panelX, panelY, panelX + panelWidth, panelY + panelHeight)) {
             widgetList.setCollapsed(true);
         }
-        inspectorCollapsed = !inspectorCollapsed;
         editorDropdown.close();
         draggingPanel = false;
         inspectorScrollBar = null;
+        positionControls();
+        rememberPanel();
     }
 
     private int inspectorTop() {
@@ -461,8 +475,15 @@ public final class AnchorHudEditorScreen extends Screen {
     }
 
     private void clampPanel() {
-        panelX = Math.max(0, Math.min(width - panelWidth, panelX));
-        panelY = Math.max(0, Math.min(height - panelHeight, panelY));
+        int minX = inspectorCollapsed ? Math.min(0, 104 - panelWidth) : 0;
+        int maxX = Math.max(minX, width - panelWidth);
+        int visibleHeight = visiblePanelHeight();
+        panelX = Math.max(minX, Math.min(maxX, panelX));
+        panelY = Math.max(0, Math.min(Math.max(0, height - visibleHeight), panelY));
+    }
+
+    private void rememberPanel() {
+        savedPlacement = new PanelPlacement(panelX, panelY, inspectorCollapsed);
     }
 
     private void positionControls() {
@@ -1546,6 +1567,7 @@ public final class AnchorHudEditorScreen extends Screen {
             panelY = dragPanelY + (int) Math.round(mouseY - dragStartY);
             clampPanel();
             positionControls();
+            rememberPanel();
             return true;
         }
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && draggingWidget && selected != null && dragOrigin != null && !choosingParent) {

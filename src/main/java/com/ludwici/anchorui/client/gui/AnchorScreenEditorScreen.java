@@ -784,7 +784,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         boolean choice = !LayoutInspectorControls.choices(control).isEmpty();
         boolean checkbox = control.booleanField();
         if (checkbox) {
-            EditorInspectorCheckbox.render(graphics, next, controlY, Boolean.parseBoolean(control.value()));
+            EditorInspectorCheckbox.render(graphics, next, controlY, Boolean.parseBoolean(control.value()), inspectorMouseX, inspectorMouseY);
         } else if (choice) {
             EditorInspectorButton.draw(graphics, font, "▼", next, controlY, 0xFF40566A, 0xFFE5EEF5, inspectorMouseX, inspectorMouseY);
         } else {
@@ -947,7 +947,7 @@ public final class AnchorScreenEditorScreen extends Screen {
         boolean checkbox = control.booleanField();
         boolean colorField = control.field().kind() == WidgetEditorRegistry.Kind.COLOR;
         if (checkbox) {
-            EditorInspectorCheckbox.render(graphics, next, controlY, Boolean.parseBoolean(control.value()));
+            EditorInspectorCheckbox.render(graphics, next, controlY, Boolean.parseBoolean(control.value()), inspectorMouseX, inspectorMouseY);
         } else if (colorField) {
             try {
                 EditorInspectorButton.drawColor(graphics, next, controlY, ColorPickerColor.parse(control.value()));

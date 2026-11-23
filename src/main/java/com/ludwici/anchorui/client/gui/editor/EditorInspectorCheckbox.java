@@ -6,7 +6,7 @@ public final class EditorInspectorCheckbox {
     private EditorInspectorCheckbox() {
     }
 
-    public static void render(GuiGraphics graphics, int x, int y, boolean checked) {
+    public static void render(GuiGraphics graphics, int x, int y, boolean checked, int mouseX, int mouseY) {
         int left = x + EditorInspectorButton.HITBOX_OFFSET;
         int size = EditorInspectorButton.SIZE;
         graphics.fill(left, y, left + size, y + size, 0xFF718699);
@@ -15,6 +15,9 @@ public final class EditorInspectorCheckbox {
             int mark = 5;
             int inset = (size - mark) / 2;
             graphics.fill(left + inset, y + inset, left + inset + mark, y + inset + mark, 0xFFF1F4F7);
+        }
+        if (EditorInspectorButton.contains(mouseX, mouseY, x, y)) {
+            EditorInspectorButton.drawHoverBorder(graphics, left, y);
         }
     }
 }

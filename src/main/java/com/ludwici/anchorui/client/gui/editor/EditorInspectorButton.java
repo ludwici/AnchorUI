@@ -44,6 +44,8 @@ public final class EditorInspectorButton {
         if (hovered) {
             graphics.fill(x, y, x + SIZE, y + 1, HOVER_BORDER);
             graphics.fill(x, y + SIZE - 1, x + SIZE, y + SIZE, HOVER_BORDER);
+            graphics.fill(x, y + 1, x + 1, y + SIZE - 1, HOVER_BORDER);
+            graphics.fill(x + SIZE - 1, y + 1, x + SIZE, y + SIZE - 1, HOVER_BORDER);
         }
         float glyphWidth = font.width(symbol);
         float glyphHeight = font.lineHeight;
@@ -51,6 +53,13 @@ public final class EditorInspectorButton {
         graphics.pose().translate(x + (SIZE - glyphWidth) / 2.0F + 0.5F, y + (SIZE - glyphHeight) / 2.0F + 1.0F, 0.0F);
         graphics.drawString(font, symbol, 0, 0, hovered ? 0xFFFFFFFF : foreground, true);
         graphics.pose().popPose();
+    }
+
+    public static void drawHoverBorder(GuiGraphics graphics, int x, int y) {
+        graphics.fill(x, y, x + SIZE, y + 1, HOVER_BORDER);
+        graphics.fill(x, y + SIZE - 1, x + SIZE, y + SIZE, HOVER_BORDER);
+        graphics.fill(x, y + 1, x + 1, y + SIZE - 1, HOVER_BORDER);
+        graphics.fill(x + SIZE - 1, y + 1, x + SIZE, y + SIZE - 1, HOVER_BORDER);
     }
 
     public static int centeredInRow(int rowY, int rowHeight) {

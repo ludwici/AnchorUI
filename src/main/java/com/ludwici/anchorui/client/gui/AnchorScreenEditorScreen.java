@@ -54,6 +54,9 @@ public final class AnchorScreenEditorScreen extends Screen {
     private static final int GUIDES = 0xFF8DF0D3;
     private static final int INSPECTOR_LINE_HEIGHT = 13;
     private static final int RESET_SIZE = 11;
+    private record PanelPlacement(int x, int y, boolean collapsed) {
+    }
+    private static PanelPlacement savedPlacement;
     private static final float INSPECTOR_SCALE = 0.83F;
     private static final List<String> ANCHOR_CHOICES = java.util.Arrays.stream(ElementAnchor.values()).map(ElementAnchor::name).toList();
 
@@ -134,6 +137,7 @@ public final class AnchorScreenEditorScreen extends Screen {
     private boolean pickingParent;
     private boolean compact;
     private boolean inspectorCollapsed;
+    private boolean layoutInitialized;
     private int inspectorWidth = WIDTH;
     private boolean draggingPanel;
     private int panelLeft = -1;
@@ -167,14 +171,22 @@ public final class AnchorScreenEditorScreen extends Screen {
         exitConfirmation = new EditorExitConfirmation(width, height, this::discardAndClose, this::save);
         widgetList.resize(width, height);
         inspectorWidth = Math.min(WIDTH, Math.max(150, width - 116));
-        if (panelLeft < 0) {
-            panelLeft = Math.max(2, width - inspectorWidth - 8);
+        if (!layoutInitialized) {
+            if (savedPlacement == null) {
+                panelLeft = Math.max(2, width - inspectorWidth - 8);
+            } else {
+                panelLeft = savedPlacement.x();
+                panelTop = savedPlacement.y();
+                inspectorCollapsed = savedPlacement.collapsed();
+            }
+            layoutInitialized = true;
         }
-        panelLeft = Math.max(0, Math.min(panelLeft, width - inspectorWidth));
-        panelTop = Math.max(0, Math.min(panelTop, height - 155));
+        clampPanel();
         if (!inspectorCollapsed && widgetList.overlaps(panelX(), panelTop, panelX() + inspectorWidth, panelTop + expandedPanelHeight())) {
             inspectorCollapsed = true;
+            clampPanel();
         }
+        rememberPanel();
         int x = panelX();
         int y = panelTop;
         add(x + 7, y + 27, 100, "+ Add widget", button -> openCreateWidgetMenu());
@@ -197,7 +209,18 @@ public final class AnchorScreenEditorScreen extends Screen {
     }
 
     private int panelX() {
-        return Math.max(0, panelLeft);
+        return panelLeft;
+    }
+
+    private void clampPanel() {
+        int minX = inspectorCollapsed ? Math.min(0, 104 - inspectorWidth) : 0;
+        panelLeft = Math.max(minX, Math.min(Math.max(minX, width - inspectorWidth), panelLeft));
+        int bottomSpace = inspectorCollapsed ? 27 : 168;
+        panelTop = Math.max(0, Math.min(Math.max(0, height - bottomSpace), panelTop));
+    }
+
+    private void rememberPanel() {
+        savedPlacement = new PanelPlacement(panelLeft, panelTop, inspectorCollapsed);
     }
 
     private int expandedPanelHeight() {
@@ -226,13 +249,16 @@ public final class AnchorScreenEditorScreen extends Screen {
     }
 
     private void toggleInspector() {
-        if (inspectorCollapsed && widgetList.overlaps(panelX(), panelTop, panelX() + inspectorWidth, panelTop + expandedPanelHeight())) {
+        inspectorCollapsed = !inspectorCollapsed;
+        clampPanel();
+        if (!inspectorCollapsed && widgetList.overlaps(panelX(), panelTop, panelX() + inspectorWidth, panelTop + expandedPanelHeight())) {
             widgetList.setCollapsed(true);
         }
-        inspectorCollapsed = !inspectorCollapsed;
         editorDropdown.close();
         draggingPanel = false;
+        positionControls();
         updateControls();
+        rememberPanel();
     }
 
     private void positionControls() {
@@ -1338,9 +1364,11 @@ public final class AnchorScreenEditorScreen extends Screen {
             return true;
         }
         if (draggingPanel && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-            panelLeft = Math.max(0, Math.min(width - inspectorWidth, panelDragLeft + (int) Math.round(mouseX - panelStartX)));
-            panelTop = Math.max(0, Math.min(height - expandedPanelHeight(), panelDragTop + (int) Math.round(mouseY - panelStartY)));
+            panelLeft = panelDragLeft + (int) Math.round(mouseX - panelStartX);
+            panelTop = panelDragTop + (int) Math.round(mouseY - panelStartY);
+            clampPanel();
             positionControls();
+            rememberPanel();
             return true;
         }
         if (!dragging || button != GLFW.GLFW_MOUSE_BUTTON_LEFT || selected == null || dragOrigin == null) {

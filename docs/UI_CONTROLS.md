@@ -201,6 +201,8 @@ The default width is 288, height is 166; minimum dimensions are 240×152. `fillC
 
 ## Action button appearance (opt-in)
 
+The `text` field is optional; omitting it creates a button with an empty label, useful for icon-only buttons. An explicit label still works normally.
+
 `anchorui:button` continues to use the **vanilla Minecraft button** unless you explicitly configure a custom visual style. To opt in, provide a fill/border/hover/disabled color or a `textures` object. The click event behavior and Action Guards are unchanged.
 
 ```json

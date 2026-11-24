@@ -2,7 +2,7 @@
 
 Anchor UI lets modpack authors display changing Minecraft values in HUDs and screens using **JSON resource packs**, without writing a Java mod. All UI documents belong under `assets/<namespace>/anchorui/`.
 
-Bindings are registered by Java mods under namespaced IDs. Resource-pack authors refer to those IDs using `bind`. A missing or invalid value uses the declared `fallback`.
+Bindings are registered by Java mods under namespaced IDs. Resource-pack authors refer to those IDs using `bind`. A missing or invalid value uses the optional `fallback`. If omitted, the property uses its own typed default (for example an empty string for a text binding, or the property's numeric default for a number). The provider ID must still be registered.
 
 ## Available value types
 
@@ -39,7 +39,7 @@ For buttons and nested widgets generated from a list binding, see [Template List
 }
 ```
 
-`path` may access nested object fields and array positions, e.g. `"stats.mana"` or `"quests[0].title"`. Paths only read JSON values; they are not Java expressions or script code. If the field does not exist or has the wrong type, the binding uses `fallback`.
+`path` may access nested object fields and array positions, e.g. `"stats.mana"` or `"quests[0].title"`. Paths only read JSON values; they are not Java expressions or script code. If the field does not exist or has the wrong type, the binding uses the specified `fallback` or the property default when omitted.
 
 Existing numeric binds, such as `{"bind":"anchorui:player.health"}`, continue to work.
 

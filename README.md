@@ -27,7 +27,7 @@ Each UI frame may declare a unique `id` and a `position`. `point` is the attachm
 }
 ```
 
-`point` and `anchor` accept `TOPLEFT`, `TOP`, `TOPRIGHT`, `LEFT`, `CENTER`, `RIGHT`, `BOTTOMLEFT`, `BOTTOM`, and `BOTTOMRIGHT`. If either point is omitted, it defaults to the other. `relativeTo` defaults to `screen`. Positive X offsets move right and positive Y offsets move down. The engine resolves references independently of JSON order, recalculates coordinates when the screen is initialized or resized, and rejects duplicate ids and circular dependencies; unknown references fall back to the screen with a warning.
+`point` and `anchor` accept `TOPLEFT`, `TOP`, `TOPRIGHT`, `LEFT`, `CENTER`, `RIGHT`, `BOTTOMLEFT`, `BOTTOM`, and `BOTTOMRIGHT`. If either point is omitted, it defaults to the other. `relativeTo` defaults to `screen`. Both `x` and `y` are optional and independently default to `0`. Positive X offsets move right and positive Y offsets move down. The engine resolves references independently of JSON order, recalculates coordinates when the screen is initialized or resized, and rejects duplicate ids and circular dependencies; unknown references fall back to the screen with a warning.
 
 For responsive layouts, use `position.anchors` to attach **multiple** points of the same widget. `LEFT` plus `RIGHT` gives it a dynamic width (ignoring `size.width`); `TOP` plus `BOTTOM` gives it a dynamic height (ignoring `size.height`). Each anchor can reference a different target widget. See [Multiple anchors and dynamic dimensions](docs/MULTI_ANCHORS.md) and the `/anchorui screen open anchorui:multi_anchor_demo` example.
 
@@ -78,12 +78,12 @@ See [docs/TEST_SCENES.md](docs/TEST_SCENES.md) for each command and expected res
 
 ## Text widgets
 
-`AnchoredTextWidget` delegates text rendering to Minecraft's `StringWidget`. Anchor UI keeps the outer element's anchor, background, padding, dimensions and visibility. JSON `align` for `type: "text"` accepts `left`, `center` and `right` (default `left`). Built-in text is vertically centered and clipped with an ellipsis when too wide. Java callers can pass `Component` rather than a raw string.
+`AnchoredTextWidget` uses Minecraft font rendering and supports an optional `shadow` boolean (default `false`). Anchor UI keeps the outer element's anchor, background, padding, dimensions and visibility. JSON `align` for `type: "text"` accepts `left`, `center` and `right` (default `left`). Built-in text is vertically centered and clipped with an ellipsis when too wide. Java callers can pass `Component` rather than a raw string.
 
 ## Rich text and multiline text
 
 Text elements accept the same lore tags: `<b>`, `<i>`, `<u>` and `<t id="tooltip text">`. The existing lore parser converts these tags to styled Minecraft Components.
-Single-line text continues using vanilla `StringWidget`. Set `"wrap": true`, or include `\n` in text, for multiline wrapping through `Font.split`, preserving formatting and hover tooltips.
+Single-line text uses Minecraft font rendering with optional shadow and ellipsis. Set `"wrap": true`, or include `\n` in text, for multiline wrapping through `Font.split`, preserving formatting and hover tooltips.
 Multiline text respects `align`, `padding`, `size`, and uses auto-height when `"size": {"height": 0}`. Run `/anchorui test scene10` to check both modes.
 ## Namespaced widget types
 

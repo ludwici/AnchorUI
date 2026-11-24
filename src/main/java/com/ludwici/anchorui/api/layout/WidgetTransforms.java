@@ -9,11 +9,28 @@ import java.util.HashSet;
 public final class WidgetTransforms {
     public static final Transform IDENTITY = new Transform(1.0, 0.0, 0.0);
 
-    public record Group(double scale, boolean centerOrigin) {
+    public record Group(double scale, boolean centerOrigin, boolean fitScreen, int fitMargin) {
+        public Group(double scale, boolean centerOrigin) {
+            this(scale, centerOrigin, false, 0);
+        }
+
         public Group {
             if (!Double.isFinite(scale) || scale < 0.1 || scale > 4.0) {
                 throw new IllegalArgumentException("Container scale must be between 0.1 and 4.0");
             }
+            if (fitMargin < 0) {
+                throw new IllegalArgumentException("Container fit margin must not be negative");
+            }
+        }
+
+        public double effectiveScale(AnchorLayout.Bounds bounds, AnchorLayout.Bounds screen, double parentScale) {
+            if (!fitScreen || screen == null || bounds.width() == 0 || bounds.height() == 0) {
+                return scale;
+            }
+            double availableWidth = Math.max(1, screen.width() - 2.0 * fitMargin);
+            double availableHeight = Math.max(1, screen.height() - 2.0 * fitMargin);
+            double fit = Math.min(availableWidth / bounds.width(), availableHeight / bounds.height()) / parentScale;
+            return Math.max(0.1, Math.min(4.0, scale * fit));
         }
     }
 
@@ -90,10 +107,11 @@ public final class WidgetTransforms {
             throw new IllegalArgumentException("Missing layout bounds for UI widget: " + id);
         }
         Group group = groups.get(id);
-        if (group != null && group.scale() != 1.0) {
+        if (group != null) {
+            double scale = group.effectiveScale(bounds, layout.get("screen"), transform.scale());
             double pivotX = bounds.x() + (group.centerOrigin() ? bounds.width() / 2.0 : 0.0);
             double pivotY = bounds.y() + (group.centerOrigin() ? bounds.height() / 2.0 : 0.0);
-            transform = transform.scaledAround(pivotX, pivotY, group.scale());
+            transform = transform.scaledAround(pivotX, pivotY, scale);
         }
         resolved.put(id, transform);
         visiting.remove(id);

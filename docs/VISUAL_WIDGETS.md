@@ -328,3 +328,7 @@ Group scaling affects visuals and interactive hitboxes, but not the logical size
 ## Smoke tests
 
 Open `/anchorui screen open anchorui:visual_demo` for the existing textured/nested UI example. Open `/anchorui screen open anchorui:auto_scroll_demo` for automatic sizing (including a nested panel) and a scrollable list of JSON text widgets. Try the mouse wheel over the right-hand viewport, hover or click its content, change GUI Scale and open F8 to inspect the widget positions. Check F3+T resource reload and in-game HUD previews with F8.
+
+### Responsive container scale and text appearance (Fabric 1.21.1)
+
+Set `"scaleFitScreen": true` on a panel to fit its logical bounds to the available GUI area while preserving aspect ratio. `scaleFitMargin` reserves GUI pixels on each screen edge. The existing `scale` is a multiplier of that fit; for a centered phone use `"scale": 0.9, "scaleOrigin": "center", "scaleFitScreen": true, "scaleFitMargin": 7`. Ordinary fixed scaling is unchanged. Text widgets share the optional `shadow` appearance property (default false). F8 shows the original JSON binding for object-valued text rather than replacing it with a resolved string.

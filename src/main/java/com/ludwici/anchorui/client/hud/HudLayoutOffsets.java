@@ -157,8 +157,9 @@ public final class HudLayoutOffsets {
         if (!"layout".equals(section) && !"layoutItem".equals(section) && !"appearance".equals(section)) {
             throw new IllegalArgumentException("Unsupported editor override section: " + section);
         }
-        if (value == null || value.isJsonNull() || !value.isJsonPrimitive()) {
-            throw new IllegalArgumentException("Editor component overrides must be primitive values");
+        boolean binding = "appearance".equals(section) && "text".equals(property) && value != null && value.isJsonObject() && value.getAsJsonObject().has("bind");
+        if (value == null || value.isJsonNull() || (!value.isJsonPrimitive() && !binding)) {
+            throw new IllegalArgumentException("Editor component overrides must be primitive values or text bindings");
         }
         if ("appearance".equals(section) && !property.matches("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*){0,5}")) {
             throw new IllegalArgumentException("Invalid appearance property path");
@@ -238,7 +239,10 @@ public final class HudLayoutOffsets {
             }
             JsonElement validated;
             try {
-                validated = AppearanceInspectorControls.parse(field, entry.getValue().getAsString());
+                if (entry.getValue().isJsonObject() && !WidgetTypeIds.TEXT.equals(type)) {
+                    continue;
+                }
+                validated = AppearanceInspectorControls.parseEditorValue(field, AppearanceInspectorControls.displayValue(entry.getValue()));
             } catch (RuntimeException exception) {
                 continue;
             }

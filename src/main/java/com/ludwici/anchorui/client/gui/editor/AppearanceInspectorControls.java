@@ -36,12 +36,12 @@ public final class AppearanceInspectorControls {
         List<Control> result = new ArrayList<>();
         for (WidgetEditorRegistry.Field field : WidgetEditorRegistry.fields(type)) {
             JsonElement source = read(settings, field.path());
-            String value = source != null && source.isJsonPrimitive()
-                    ? source.getAsString() : field.fallback().getAsString();
+            String value = source != null && (source.isJsonPrimitive() || isTextBinding(field, source))
+                    ? displayValue(source) : field.fallback().getAsString();
             String original = value;
             JsonElement override = offsets.settingOverride(id, "appearance", field.path());
             if (override != null) {
-                value = override.getAsString();
+                value = displayValue(override);
             }
             result.add(new Control(field, value, override != null && !sameValue(field, value, original), original));
         }
@@ -50,7 +50,7 @@ public final class AppearanceInspectorControls {
 
     public static boolean sameValue(WidgetEditorRegistry.Field field, String current, String original) {
         try {
-            return parse(field, current).equals(parse(field, original));
+            return parseEditorValue(field, current).equals(parseEditorValue(field, original));
         } catch (RuntimeException exception) {
             return current.equals(original);
         }
@@ -69,6 +69,31 @@ public final class AppearanceInspectorControls {
             }
         }
         return current;
+    }
+
+    private static boolean isTextBinding(WidgetEditorRegistry.Field field, JsonElement value) {
+        return field.kind() == WidgetEditorRegistry.Kind.TEXT && "text".equals(field.path()) && value.isJsonObject() && value.getAsJsonObject().has("bind");
+    }
+
+    public static String displayValue(JsonElement value) {
+        return value.isJsonPrimitive() ? value.getAsString() : value.toString();
+    }
+
+    public static JsonElement parseEditorValue(WidgetEditorRegistry.Field field, String value) {
+        JsonPrimitive literal = parse(field, value);
+        if (field.kind() == WidgetEditorRegistry.Kind.TEXT && "text".equals(field.path()) && value.stripLeading().startsWith("{")) {
+            JsonElement candidate;
+            try {
+                candidate = com.google.gson.JsonParser.parseString(value);
+            } catch (com.google.gson.JsonParseException exception) {
+                return literal;
+            }
+            if (isTextBinding(field, candidate)) {
+                com.ludwici.anchorui.api.binding.BoundText.parse(candidate);
+                return candidate;
+            }
+        }
+        return literal;
     }
 
     public static JsonPrimitive parse(WidgetEditorRegistry.Field field, String value) {

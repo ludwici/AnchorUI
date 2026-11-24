@@ -916,7 +916,7 @@ public final class AnchorHudManager {
                     return List.of();
                 }
                 JsonObject settings = sourceSettingsById.getOrDefault(id, placed.style().resolvedSettings).deepCopy();
-                if (definition.settings.has("text") && definition.settings.get("text").isJsonPrimitive()) {
+                if (definition.settings.has("text")) {
                     settings.add("text", definition.settings.get("text").deepCopy());
                 }
                 return AppearanceInspectorControls.describe(id, definition.type, settings, currentOffsets());
@@ -994,7 +994,7 @@ public final class AnchorHudManager {
         }
         JsonElement parsed;
         try {
-            parsed = AppearanceInspectorControls.parse(control.field(), value);
+            parsed = AppearanceInspectorControls.parseEditorValue(control.field(), value);
             if (control.field().kind() == com.ludwici.anchorui.api.widget.WidgetEditorRegistry.Kind.TEXTURE
                     && !com.ludwici.anchorui.client.gui.editor.EditorTextureCatalog.available(net.minecraft.client.Minecraft.getInstance().getResourceManager(), parsed.getAsString())) {
                 throw new IllegalArgumentException("Texture is not available in loaded resource packs: " + parsed.getAsString());
@@ -1007,7 +1007,7 @@ public final class AnchorHudManager {
             return false;
         }
         HudLayoutOffsets candidate = editingOffsets.copy();
-        if (AppearanceInspectorControls.sameValue(control.field(), parsed.getAsString(), control.sourceValue())) {
+        if (AppearanceInspectorControls.sameValue(control.field(), AppearanceInspectorControls.displayValue(parsed), control.sourceValue())) {
             candidate.clearSettingOverride(id, "appearance", control.field().path());
         } else {
             candidate.setSettingOverride(id, "appearance", control.field().path(), parsed);
@@ -1107,7 +1107,8 @@ public final class AnchorHudManager {
         WidgetTransforms.Transform transform = transforms.getOrDefault(id, WidgetTransforms.IDENTITY);
         for (PlacedWidget placed : widgets) {
             if (placed.id().equals(id)) {
-                return transform.scale() / (placed.group() == null ? 1.0 : placed.group().scale());
+                String parent = containerParents.get(id);
+                return parent == null ? 1.0 : transforms.getOrDefault(parent, WidgetTransforms.IDENTITY).scale();
             }
         }
         return 1.0;

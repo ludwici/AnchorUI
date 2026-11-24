@@ -71,7 +71,9 @@ public final class WidgetContainers {
         if (!"top_left".equals(origin) && !"center".equals(origin)) {
             throw new IllegalArgumentException("scaleOrigin must be top_left or center");
         }
-        return new WidgetTransforms.Group(scale, "center".equals(origin));
+        boolean fitScreen = settings.has("scaleFitScreen") && settings.get("scaleFitScreen").getAsBoolean();
+        int fitMargin = settings.has("scaleFitMargin") ? settings.get("scaleFitMargin").getAsInt() : 0;
+        return new WidgetTransforms.Group(scale, "center".equals(origin), fitScreen, fitMargin);
     }
 
     public static Map<String, AnchorLayout.Bounds> clips(Map<String, AnchorLayout.Bounds> bounds,

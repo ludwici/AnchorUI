@@ -34,6 +34,16 @@ public class WidgetTransformsTest {
     }
 
     @Test
+    public void fitsCenteredPanelToScreenWithMargin() {
+        var bounds = Map.of("screen", new AnchorLayout.Bounds(0, 0, 700, 400), "demo:phone", new AnchorLayout.Bounds(110, 65, 480, 270));
+        var group = new WidgetTransforms.Group(0.9, true, true, 7);
+        var transform = WidgetTransforms.resolve(bounds, Map.of(), Map.of("demo:phone", group)).get("demo:phone");
+        assertEquals(0.9 * 686 / 480, transform.scale(), 0.00001);
+        assertEquals(350.0, transform.x(350), 0.00001);
+        assertEquals(200.0, transform.y(200), 0.00001);
+    }
+
+    @Test
     public void rejectsInvalidGroupScales() {
         assertThrows(IllegalArgumentException.class, () -> new WidgetTransforms.Group(0.0, false));
         assertThrows(IllegalArgumentException.class, () -> new WidgetTransforms.Group(Double.NaN, false));

@@ -4,7 +4,6 @@ import com.ludwici.anchorui.api.LoreParser;
 import com.ludwici.anchorui.api.style.LoreStyle;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.locale.Language;
@@ -20,7 +19,6 @@ public class AnchoredTextWidget extends AnchoredWidget {
     private final Font font;
     private final Screen screen;
     private final Component message;
-    private final StringWidget singleLine;
     private final List<FormattedCharSequence> lines;
     private final boolean multiline;
     private final int lineHeight;
@@ -48,15 +46,8 @@ public class AnchoredTextWidget extends AnchoredWidget {
         active = false;
         if (multiline) {
             this.lines = font.split(message, Math.max(1, getWidth() - style.padding.left - style.padding.right));
-            this.singleLine = null;
         } else {
             this.lines = List.of();
-            this.singleLine = new StringWidget(Math.max(0, getWidth() - style.padding.left - style.padding.right), Math.max(0, getHeight() - style.padding.top - style.padding.bottom), message, font).setColor(style.textColor);
-            switch (style.textAlign) {
-                case "center" -> singleLine.alignCenter();
-                case "right" -> singleLine.alignRight();
-                default -> singleLine.alignLeft();
-            }
         }
     }
 
@@ -103,11 +94,7 @@ public class AnchoredTextWidget extends AnchoredWidget {
         if (multiline) {
             renderLines(graphics, mouseX, mouseY, x, y, innerWidth, innerHeight);
         } else {
-            singleLine.setWidth(innerWidth);
-            singleLine.setHeight(innerHeight);
-            singleLine.setPosition(x, y);
-            singleLine.render(graphics, mouseX, mouseY, partialTick);
-            renderSingleLineHover(graphics, mouseX, mouseY, x, y, innerWidth, innerHeight);
+            renderSingleLine(graphics, mouseX, mouseY, x, y, innerWidth, innerHeight);
         }
     }
 
@@ -115,7 +102,7 @@ public class AnchoredTextWidget extends AnchoredWidget {
         int contentHeight = lines.isEmpty() ? 0 : lines.size() * lineHeight - 2;
         int startY = y + Math.max(0, (height - contentHeight) / 2);
         Style hovered = null;
-        graphics.enableScissor(x, y, x + width, y + height);
+        TextClip.enable(graphics, x, y, x + width, y + height);
         for (int index = 0; index < lines.size(); index++) {
             FormattedCharSequence line = lines.get(index);
             int lineWidth = font.width(line);
@@ -125,7 +112,7 @@ public class AnchoredTextWidget extends AnchoredWidget {
                 default -> x;
             };
             int lineY = startY + index * lineHeight;
-            graphics.drawString(font, line, lineX, lineY, style.textColor);
+            graphics.drawString(font, line, lineX, lineY, style.textColor, style.textShadow);
             if (mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height
                     && mouseY >= lineY && mouseY < lineY + font.lineHeight) {
                 hovered = RichTextHover.styleAt(font, line, mouseX - lineX);
@@ -137,21 +124,31 @@ public class AnchoredTextWidget extends AnchoredWidget {
         }
     }
 
-    private void renderSingleLineHover(GuiGraphics graphics, int mouseX, int mouseY, int x, int y, int width, int height) {
-        int textWidth = font.width(message);
-        int textX = x + Math.round(switch (style.textAlign) {
-            case "center" -> 0.5F;
-            case "right" -> 1.0F;
-            default -> 0.0F;
-        } * (width - textWidth));
-        int textY = y + (height - 9) / 2;
-        if (mouseX < x || mouseX >= x + width || mouseY < textY || mouseY >= textY + font.lineHeight) {
-            return;
-        }
+    private void renderSingleLine(GuiGraphics graphics, int mouseX, int mouseY, int x, int y, int width, int height) {
         FormattedCharSequence rendered = message.getVisualOrderText();
-        if (textWidth > width) {
-            FormattedText clipped = font.substrByWidth(message, width - font.width(CommonComponents.ELLIPSIS));
+        if (font.width(message) > width) {
+            int ellipsisWidth = font.width(CommonComponents.ELLIPSIS);
+            if (width < ellipsisWidth) {
+                return;
+            }
+            FormattedText clipped = font.substrByWidth(message, width - ellipsisWidth);
             rendered = Language.getInstance().getVisualOrder(FormattedText.composite(clipped, CommonComponents.ELLIPSIS));
+        }
+        int textWidth = font.width(rendered);
+        int textX = switch (style.textAlign) {
+            case "center" -> x + (width - textWidth) / 2;
+            case "right" -> x + width - textWidth;
+            default -> x;
+        };
+        int textY = y + Math.max(0, (height - font.lineHeight) / 2);
+        TextClip.enable(graphics, x, y, x + width, y + height);
+        try {
+            graphics.drawString(font, rendered, textX, textY, style.textColor, style.textShadow);
+        } finally {
+            graphics.disableScissor();
+        }
+        if (mouseX < textX || mouseX >= textX + textWidth || mouseY < textY || mouseY >= textY + font.lineHeight) {
+            return;
         }
         Style hovered = RichTextHover.styleAt(font, rendered, mouseX - textX);
         if (hovered != null && hovered.getHoverEvent() != null) {

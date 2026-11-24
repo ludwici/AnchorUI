@@ -70,6 +70,7 @@ public class LoreStyle {
         public final int textColor;
         public final String textAlign;
         public final boolean textWrap;
+        public final boolean textShadow;
         public final boolean hidden;
         public final ContainerLayout.AutoSize autoSize;
         public final ContainerScroll.Config scroll;
@@ -89,6 +90,7 @@ public class LoreStyle {
             textColor = ColorValues.parse(hex);
             textAlign = GsonHelper.getAsString(root, "align", GsonHelper.getAsString(text, "align", "left")).toLowerCase(Locale.ROOT);
             textWrap = GsonHelper.getAsBoolean(root, "wrap", GsonHelper.getAsBoolean(text, "wrap", false));
+            textShadow = GsonHelper.getAsBoolean(root, "shadow", GsonHelper.getAsBoolean(text, "shadow", false));
             hidden = GsonHelper.getAsBoolean(root, "hidden", false);
             autoSize = ContainerLayout.AutoSize.parse(root);
             scroll = ContainerScroll.Config.parse(root);

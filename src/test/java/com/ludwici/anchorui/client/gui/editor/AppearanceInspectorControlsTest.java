@@ -45,6 +45,22 @@ public class AppearanceInspectorControlsTest {
     }
 
     @Test
+    public void textBindingsAreDisplayedAndPreservedByEditor() {
+        String id = "example:clock";
+        var source = json("{\"type\":\"anchorui:text\",\"text\":{\"bind\":\"example:clock\",\"fallback\":\"\"}}");
+        var offsets = new HudLayoutOffsets();
+        var control = find(AppearanceInspectorControls.describe(id, WidgetTypeIds.TEXT, source, offsets), "text");
+        assertEquals(source.get("text").toString(), control.value());
+        assertEquals(source.get("text"), AppearanceInspectorControls.parseEditorValue(control.field(), control.value()));
+        var changed = json("{\"bind\":\"example:new_clock\",\"fallback\":\"?\"}");
+        offsets.setSettingOverride(id, "appearance", "text", changed);
+        var saved = HudLayoutOffsets.fromJson(offsets.toJson());
+        assertEquals(changed, saved.widgetSettings(id, source).get("text"));
+        assertEquals(changed.toString(), find(AppearanceInspectorControls.describe(id, WidgetTypeIds.TEXT, source, saved), "text").value());
+        assertEquals(new JsonPrimitive("Plain"), AppearanceInspectorControls.parseEditorValue(control.field(), "Plain"));
+    }
+
+    @Test
     public void validatesAppearancePropertiesAndStepsTypedValues() {
         var color = WidgetEditorRegistry.Field.color("fillColor", "Fill", "#112233");
         assertEquals(WidgetEditorRegistry.Kind.COLOR, color.kind());

@@ -51,7 +51,7 @@ public final class BoundTextWidget extends AnchoredWidget {
         int lineHeight = font.lineHeight + 2;
         int contentHeight = lines.isEmpty() ? 0 : lines.size() * lineHeight - 2;
         int startY = y + Math.max(0, (innerHeight - contentHeight) / 2);
-        graphics.enableScissor(x, y, x + innerWidth, y + innerHeight);
+        TextClip.enable(graphics, x, y, x + innerWidth, y + innerHeight);
         for (int index = 0; index < lines.size(); index++) {
             FormattedCharSequence line = lines.get(index);
             int lineX = switch (style.textAlign) {
@@ -63,7 +63,7 @@ public final class BoundTextWidget extends AnchoredWidget {
             if (lineY + font.lineHeight <= y || lineY >= y + innerHeight) {
                 continue;
             }
-            graphics.drawString(font, line, lineX, lineY, style.textColor, false);
+            graphics.drawString(font, line, lineX, lineY, style.textColor, style.textShadow);
             if (mouseX >= lineX && mouseX < lineX + font.width(line) && mouseY >= lineY && mouseY < lineY + font.lineHeight) {
                 var hovered = RichTextHover.styleAt(font, line, mouseX - lineX);
                 if (hovered != null && hovered.getHoverEvent() != null) {
@@ -72,7 +72,7 @@ public final class BoundTextWidget extends AnchoredWidget {
                     } else {
                         graphics.disableScissor();
                         graphics.renderComponentHoverEffect(font, hovered, mouseX, mouseY);
-                        graphics.enableScissor(x, y, x + innerWidth, y + innerHeight);
+                        TextClip.enable(graphics, x, y, x + innerWidth, y + innerHeight);
                     }
                 }
             }

@@ -75,6 +75,7 @@ public final class WidgetEditorRegistry {
                 Field.color("color", "Text color", "#FFE278"),
                 Field.choice("align", "Text align", "left", "left", "center", "right"),
                 Field.bool("wrap", "Text wrap", false),
+                Field.bool("shadow", "Text shadow", false),
                 Field.integer("size.width", "Width", 0, 0, 16384, 10),
                 Field.integer("size.height", "Height", 0, 0, 16384, 10)));
         register(WidgetTypeIds.BUTTON, List.of(

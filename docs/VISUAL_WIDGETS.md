@@ -1,6 +1,6 @@
 # Visual widgets and nested containers
 
-Available on the 1.21.1 NeoForge branch: `anchorui:image`, `anchorui:panel`, and `anchorui:container`.
+Available on both Minecraft 1.21.1 loader branches: `anchorui:image`, `anchorui:panel`, and `anchorui:container`.
 
 The same widgets work in JSON screens and in HUD documents. Flat `entities` documents continue to work as before.
 
@@ -46,7 +46,7 @@ A style file such as `assets/mypack/anchorui/style/status_bars.json` can define:
 
 Choose `"style": "mypack:style/status_bars"` in the screen or HUD and set distinct `fillColor` / data bindings on each progress widget. When a texture is present for `fill`, the texture replaces the solid fill; for `frame`, it replaces the solid frame. The same resource can supply consistent width, padding, backgrounds and frames for multiple bars. Progress and panel visual properties now honor merged style values as well as per-widget overrides. The RPG HUD test fixture uses `anchorui:style/rpg_progress` to share its two bars' padding/background/frame.
 
-The F8 VISUAL / CONTENT inspector exposes progress track color, frame color and width, and the three texture paths alongside its preexisting fill color and value text toggle. Existing progress documents without these optional appearance properties retain their former rendering.
+The F8 Style inspector exposes progress track color, frame color and width, and the three texture paths alongside its preexisting fill color and value text toggle. Existing progress documents without these optional appearance properties retain their former rendering.
 
 ## Textures
 
@@ -315,11 +315,11 @@ A fixed-size `panel` or `container` can opt in to scrolling when its children ex
 
 `scroll` defaults to off and may be `"vertical"`, `"horizontal"`, `"both"` or `{"axis":"vertical","step":18}` (step is 1–1024 GUI pixels). Wheel input is routed to the viewport under the pointer; scrolling stops at its computed content bounds. The selected scroll offsets move *descendants only*. Nested scaling, anchoring, scissor clipping, interaction hitboxes and scrollable descendants use the same transform hierarchy.
 
-**A scrolling container always clips its descendants** even when `clipChildren` is omitted, so off-screen elements do not render or receive clicks. Other containers still default to no clipping. **Vertical overflow uses NeoForge's native `ScrollPanel` scrollbar.** Its handle is interactive: click the scrollbar and drag the handle, or scroll the mouse wheel while the pointer is over the viewport. The native component owns handle size, scroll limits, and mouse capture; Anchor UI adapts its scroll offset to the existing JSON child transforms. Scrollbars are interactive in ordinary JSON screens and in F8 screen/HUD editor previews. During normal gameplay, HUD overlays do not capture the mouse wheel or clicks.
+**A scrolling container always clips its descendants** even when `clipChildren` is omitted, so off-screen elements do not render or receive clicks. Other containers still default to no clipping. **Vertical overflow uses AnchorUI's loader-independent `NativeContainerScrollPanel` scrollbar.** Its handle is interactive: click the scrollbar and drag the handle, or scroll the mouse wheel while the pointer is over the viewport. The shared component owns handle size, scroll limits, and mouse capture; AnchorUI adapts its scroll offset to the existing JSON child transforms. Scrollbars are interactive in ordinary JSON screens and in F8 screen/HUD editor previews. During normal gameplay, HUD overlays do not capture the mouse wheel or clicks.
 
-NeoForge 1.21.1's `ScrollPanel` is vertical-only. `"scroll": "horizontal"` and the horizontal axis of `"both"` can still be moved using horizontal wheel input (or vertical wheel input when configured as horizontal-only), but **there is no horizontal draggable bar yet**. No custom non-interactive horizontal scrollbar is displayed. The native vertical scrollbar is not rendered in viewports too small for its handle.
+The shared draggable scrollbar is vertical-only. `"scroll": "horizontal"` and the horizontal axis of `"both"` can still be moved using horizontal wheel input (or vertical wheel input when configured as horizontal-only), but **there is no horizontal draggable bar yet**. No custom non-interactive horizontal scrollbar is displayed. The vertical scrollbar is not rendered in viewports too small for its handle.
 
-Minecraft and NeoForge already provide `AbstractSelectionList`, `AbstractScrollWidget` and `ScrollPanel` for conventional lists/text scroll areas. Those remain the preferred components for specialized interactive list widgets. Anchor UI reuses the **native NeoForge `ScrollPanel` implementation for its vertical scrollbar, wheel handling and dragging**. Its small adapter only synchronizes native scroll position with arbitrary anchored, nested and scaled JSON widget hierarchies; rendering those children remains the responsibility of Anchor UI's established renderer.
+Minecraft provides `AbstractSelectionList` and `AbstractScrollWidget` for conventional specialized lists/text scroll areas. For JSON containers and both editors, AnchorUI uses its shared `NativeContainerScrollPanel` controller on both loaders. It handles wheel movement, drag capture and offset clamping while the AnchorUI renderer manages the nested, anchored and scaled content. No separate Java scrollbar is needed for ordinary JSON layouts.
 
 For a predictable viewport, prefer **fixed size on the scrollable axis**: if `autoSize: "height"` expands the viewport to fit its children, there is normally nothing left to scroll. Automatic sizing is not a replacement for a responsive flex/grid layout.
 

@@ -1,14 +1,16 @@
 # Java extension API audit — AnchorUI 1.21.1
 
 **Status:** development API, before the first release. This page describes
-the Java interfaces that exist in branch `1.21.1`; it is not a promise of
+the common Java interfaces in `1.21.1` (NeoForge) and `1.21.1-fabric` (Fabric); it is not a promise of
 binary compatibility. The framework remains a client UI library. Gameplay
 state changes must be validated by the server in the integrating mod.
+
+For the integration workflow, defaults and built-in feature index, start with [Integration reference](INTEGRATION_GUIDE.md).
 
 ## Registration lifecycle
 
 Register Java extensions **once on the client during mod startup**, ideally
-inside `FMLClientSetupEvent.enqueueWork`, before any screen or HUD using
+inside `FMLClientSetupEvent.enqueueWork` on NeoForge or `ClientModInitializer.onInitializeClient` on Fabric, before any screen or HUD using
 their IDs is constructed. Do not register again on F3+T/resource reload,
 world join or screen open: duplicate registrations are rejected.
 

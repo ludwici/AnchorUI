@@ -14,6 +14,8 @@ The included HUD automatically displays live health and hunger. Test the example
 
 To reload changes, use **F3+T**; use **F8** to adjust your HUD position.
 
+Before authoring a new UI, check the [integration reference](INTEGRATION_GUIDE.md) for reusable widgets and optional defaults.
+
 ## File structure
 
 ```text
@@ -105,9 +107,9 @@ Use `{"type": "anchorui:close_screen"}` to return to the previous screen. Invali
 
 ## Extending data and actions
 
-A Java mod can provide additional numeric values by registering them in `NumericDataRegistry`, making its client data available to resource-pack authors. See [Custom Widgets and Data API](CUSTOM_WIDGETS.md) for examples. Screen actions similarly use an explicit registry, with only pre-registered action types accepted.
+A Java mod can provide additional typed values through `DataValueRegistry` (including mutable and revision-aware providers), making its client data available to resource-pack authors. See [Custom Widgets and Data API](CUSTOM_WIDGETS.md) for examples. Screen actions similarly use an explicit registry, with only pre-registered action types accepted.
 
-For the next milestones, Anchor UI will add conditional visibility and dialogue state, then connect server-authorized quest data and actions. Character/skill-tree screens and fully custom game systems are deferred.
+Conditional visibility, local dialogue state and registered actions are already implemented; see [Conditions](CONDITIONS.md) and [UI state](UI_STATE.md). The integrating mod remains responsible for domain-specific gameplay and server authorization.
 
 ## Expanded data bindings
 

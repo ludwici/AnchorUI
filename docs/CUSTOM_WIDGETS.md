@@ -1,10 +1,10 @@
 # Собственные виджеты в Anchor UI
 
-Ветку `1.21.1` можно использовать для расширения набора JSON-виджетов сторонними модами. Тип идентифицируется полным `ResourceLocation`, например `examplemod:counter`. Клиент с таким модом должен иметь установленный Anchor UI.
+Ветки `1.21.1` (NeoForge) и `1.21.1-fabric` (Fabric) можно использовать для расширения набора JSON-виджетов сторонними модами. Тип идентифицируется полным `ResourceLocation`, например `examplemod:counter`. Клиент с таким модом должен иметь установленный Anchor UI.
 
 ## 1. Подключение
 
-Подключи Anchor UI как зависимость для компиляции и укажи обязательную зависимость `anchorui` в метаданных своего мода. Регистрацию выполняй только на клиентской стороне во время `FMLClientSetupEvent`; на сервере виджеты не регистрируются.
+Подключи Anchor UI как зависимость для компиляции и укажи обязательную зависимость `anchorui` в метаданных своего мода. Регистрацию выполняй один раз только на клиентской стороне: `FMLClientSetupEvent.enqueueWork` на NeoForge или `ClientModInitializer.onInitializeClient` на Fabric; на сервере виджеты не регистрируются. Перед созданием собственного виджета проверь [справочник интеграции](INTEGRATION_GUIDE.md).
 
 ## 2. Типизированная конфигурация через Java record и Codec
 
@@ -30,7 +30,7 @@ public record CounterConfig(int initial, int step) {
 
 Используются `com.mojang.serialization.Codec`, `DataResult` и `com.mojang.serialization.codecs.RecordCodecBuilder`.
 
-**Регистрация фабрики:** рядом с идентификатором типа передаём `CounterConfig.CODEC`. Anchor UI автоматически декодирует JSON до вызова фабрики и передаёт в неё готовый `CounterConfig`.
+**Регистрация фабрики (пример NeoForge):** рядом с идентификатором типа передаём `CounterConfig.CODEC`. Anchor UI автоматически декодирует JSON до вызова фабрики и передаёт в неё готовый `CounterConfig`.
 
 ```java
 @EventBusSubscriber(modid = "examplemod", bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
@@ -47,6 +47,8 @@ public final class ClientEvents {
     }
 }
 ```
+
+На Fabric вызови тот же `AnchorWidgetRegistry.register(...)` из клиентского entrypoint; аннотации и классы событий NeoForge там не нужны.
 
 Для примера также потребуются импорты `java.util.concurrent.atomic.AtomicInteger`, `com.ludwici.anchorui.api.widget.AnchorWidgetRegistry` и стандартных классов NeoForge и Minecraft.
 
@@ -88,7 +90,7 @@ public final class ClientEvents {
 
 - `WidgetContext`: `minecraft()`, `screen()`, `item()`, `entity()`, `font()` и `resolveItem(String)`.
 - `LoreEntity.UiElement`: `type`, `id`, `text`, `path`, `scale`, `lore`, `settings`.
-- `LoreStyle.Element`: `position`, `size`, `padding`, `background`, `textColor`, `textAlign`, `textWrap`, `hidden`.
+- `LoreStyle.Element`: `position`, `size`, `padding`, `background`, `textColor`, `textAlign`, `textWrap`, `textShadow` (по умолчанию false), `hidden`.
 
 Anchor UI автоматически выставляет координаты, явно заданные ширину и высоту, видимость и добавляет `AbstractWidget` в `Screen`. Ванильная обработка кликов, наведения и фокуса продолжает работать.
 
@@ -128,7 +130,7 @@ Anchor UI загружает все описания и регистрирует
 
 ## 8. HUD widget factories
 
-Anchor UI's single NeoForge HUD layer invokes the **same** `WidgetFactory` and `ConfiguredWidgetFactory<T>` registrations used by `ItemLoreScreen`. HUD JSON lives under `assets/<namespace>/anchorui/hud/<name>.json` and can use `imports`, `ref`, namespaced `id` and `position.relativeTo`. All HUD documents contributed by mods are composed into one layout.
+Anchor UI's HUD manager on both loaders invokes the **same** `WidgetFactory` and `ConfiguredWidgetFactory<T>` registrations used by `ItemLoreScreen`. HUD JSON lives under `assets/<namespace>/anchorui/hud/<name>.json` and can use `imports`, `ref`, namespaced `id` and `position.relativeTo`. All HUD documents contributed by mods are composed into one layout.
 
 When called from a HUD, `WidgetContext.screen()` returns `null` because no normal `Screen` is open. Factories should rely on `context.minecraft()`, `context.font()`, `context.widgets()`, etc., and handle the nullable screen properly. The HUD supplies an empty `ItemStack` as the default item; an `anchorui:model` widget can specify `path` to display a particular item.
 

@@ -1,6 +1,6 @@
 # In-game HUDs
 
-Anchor UI supports mod-contributed HUD elements in Minecraft **1.21.1 NeoForge**, sharing widget types, style resolution, namespaced IDs, `ref` templates and the `AnchorLayout` engine with JSON screens.
+Anchor UI supports mod-contributed HUD elements in Minecraft **1.21.1 (NeoForge and Fabric)**, sharing widget types, style resolution, namespaced IDs, `ref` templates and the `AnchorLayout` engine with JSON screens.
 
 ## Where to put HUD files
 
@@ -81,7 +81,7 @@ An exported `assets/<namespace>/anchorui/widgets/<name>.json` definition can als
 
 ## Lifecycle and input behavior
 
-Anchor UI registers one layer after the vanilla chat GUI layer through NeoForge's `RegisterGuiLayersEvent`. The manager gathers registered descriptions, creates widgets with `AnchorWidgetRegistry` and `WidgetContext`, calculates shared anchor bounds, then uses `AbstractWidget.render` on each frame.
+NeoForge registers a layer after vanilla chat using `RegisterGuiLayersEvent`; Fabric uses `HudRenderCallback`. The exact layer order can differ between loaders. The manager gathers registered descriptions, creates widgets with `AnchorWidgetRegistry` and `WidgetContext`, calculates shared anchor bounds, then uses `AbstractWidget.render` on each frame.
 
 - The HUD is shown during normal gameplay when a player and world exist.
 - **F1** hides the custom HUD along with the vanilla GUI.
@@ -243,7 +243,7 @@ The scrollable property inspector displays a small **R** button on the right of 
 - Resetting **parent**, **point** or **anchor** restores the respective value from the source JSON while preserving the other two attachment settings. A reset that would create a cyclic layout is rejected.
 - Resetting **visible** removes the user's hidden override and returns to the widget's original visibility.
 
-Compact inspector controls (−, +, E, ▼, R, color swatches and checkboxes) all use 11×11 square visuals with a small gap between rows. The inspector buttons follow their lines when scrolling. A grey reset button means the field is already at its default. The regular **Reset** button still restores every editable field of the selected widget, while **Reset all** clears all HUD overrides. Saving remains an explicit action.
+Compact inspector controls (−, +, E, ▼, R, color swatches and checkboxes) all use 11×11 square visuals with a small gap between rows. The inspector buttons follow their lines when scrolling. A grey reset button means the field is already at its default. The regular **Reset** button still restores every editable field of the selected widget, and there is no global Reset all action. Saving remains an explicit action.
 
 ### Component-aware inspector (row, column, grid, flex)
 

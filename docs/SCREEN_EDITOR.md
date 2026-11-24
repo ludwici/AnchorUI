@@ -1,4 +1,4 @@
-# Screen editor (NeoForge 1.21.1)
+# Screen editor (Minecraft 1.21.1: NeoForge and Fabric)
 
 The F8 key binding now chooses its editor based on the active UI context:
 

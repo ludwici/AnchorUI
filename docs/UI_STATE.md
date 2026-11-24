@@ -1,4 +1,4 @@
-# Local UI State (NeoForge 1.21.1)
+# Local UI State (Minecraft 1.21.1: NeoForge and Fabric)
 
 AnchorUI screens can declare lightweight client-only state in JSON and update that state using pre-registered UI actions. This is intended for tabs, selecting a category, showing details, local page numbers, and other **presentation state**. It does not change server data or make game actions authoritative.
 

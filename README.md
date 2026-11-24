@@ -1,5 +1,7 @@
 # Anchor UI
 
+**Integrating AnchorUI into another mod?** Start with the [Integration reference](docs/INTEGRATION_GUIDE.md): existing widgets, optional JSON defaults, registered Java extension APIs, loader differences and minimal examples. Contributors and coding agents should also read [AGENTS.md](AGENTS.md) before implementing UI code.
+
 JSON-driven, anchor-based user interface framework for Minecraft 1.21.1 (NeoForge).
 
 The current implementation provides the reusable `AnchorLayout` resolver, plus item-lore screens as a working consumer of the layout engine. The layout and JSON renderer are still evolving; a public widget-factory API is available for third-party integrations.
@@ -68,7 +70,7 @@ Java 21 and NeoForge 21.1 are required. Run `./gradlew build`; GitHub Actions ch
 
 ## Interactive test scenes
 
-Use `/anchorui test list` or `/anchorui test scene1` in-game to open the built-in client-only test harness. Fourteen scenes exercise anchors, relative chains, dimensions, styling, rich text, item model input, resizing, hidden frames, invalid references, and vanilla StringWidget text alignment and ellipsis. Navigate with the on-screen arrows; press **G** to toggle anchor outlines and **Esc** to close.
+Use `/anchorui test list` or `/anchorui test scene1` in-game to open the built-in client-only test harness. Fourteen scenes exercise anchors, relative chains, dimensions, styling, rich text, item model input, resizing, hidden frames, invalid references, and text alignment and ellipsis. Navigate with the on-screen arrows; press **G** to toggle anchor outlines and **Esc** to close.
 
 See [docs/TEST_SCENES.md](docs/TEST_SCENES.md) for each command and expected result. The scenes are JSON resources under `assets/anchorui/anchorui/test/scenes`, so they use the same rendering path as ordinary lore screens.
 
@@ -93,7 +95,7 @@ Third-party mods can register namespaced widget factories through `AnchorWidgetR
 
 ## Extending Anchor UI with your own widgets
 
-External mods register a `WidgetFactory` under a namespaced `ResourceLocation` using `AnchorWidgetRegistry.register` during NeoForge client setup. A factory receives `WidgetContext`, `LoreEntity.UiElement` (including arbitrary JSON settings), and `LoreStyle.Element`; it returns any vanilla `AbstractWidget`. Anchor UI handles layout, configured dimensions, visibility, focus and mouse routing through the normal Minecraft screen.
+External mods register a `WidgetFactory` under a namespaced `ResourceLocation` using `AnchorWidgetRegistry.register` during client startup (NeoForge client setup or Fabric client initialization). A factory receives `WidgetContext`, `LoreEntity.UiElement` (including arbitrary JSON settings), and `LoreStyle.Element`; it returns any vanilla `AbstractWidget`. Anchor UI handles layout, configured dimensions, visibility, focus and mouse routing through the normal Minecraft screen.
 
 The demo type `anchorui_test:counter` uses a vanilla `Button` and can be tested with `/anchorui test scene11`. `/anchorui test scene12` checks unknown types and exceptions from factories without breaking the other widgets.
 
@@ -197,7 +199,7 @@ A new Screen opens immediately; press **F8** to edit it. Each Screen has its own
 
 User-created HUD and Screen definitions are separate JSON files under `config/anchorui/ui/hud/` and `config/anchorui/ui/screens/`. They load without a resource-pack reload. Deletion commands affect only user-created HUDs/Screens, never bundled or resource-pack definitions.
 
-## F8: HUD and screen layout editors (NeoForge 1.21.1)
+## F8: HUD and screen layout editors (Minecraft 1.21.1)
 
 Both editors now have a dedicated scrollable, draggable **Widgets** list alongside the properties inspector. HUD mode lists all custom HUD widgets and 25 vanilla read-only references; screen mode shows only the current screen's widgets. Entries are grouped in this order: vanilla `minecraft:*`, current editor namespace, then other namespaces alphabetically. Click an entry to select it or to choose an anchor parent. See [HUD editor](docs/HUD.md) and [Screen editor](docs/SCREEN_EDITOR.md).
 
@@ -210,9 +212,9 @@ See [Screen Editor](docs/SCREEN_EDITOR.md) for details, controls and the resourc
 
 Custom HUD widgets can now use the **25 vanilla HUD IDs** (the NeoForge 1.21.1 layer names) as anchor targets, for example `"relativeTo": "minecraft:hotbar"`. Their bounds are visible in the F8 HUD editor, and a list in the parent-picker includes inactive / temporary HUD anchors. These are purely positional references: vanilla HUDs remain unchanged. See [Vanilla HUD Anchors](docs/VANILLA_HUD_ANCHORS.md) for the full catalog and known geometry limitations. Test with `/anchorui test vanilla on`.
 
-## In-game HUD support (NeoForge 1.21.1)
+## In-game HUD support (Minecraft 1.21.1)
 
-Anchor UI also renders **in-game HUD documents** via a single NeoForge `RegisterGuiLayersEvent` layer ordered above vanilla chat. Add JSON files to `assets/<namespace>/anchorui/hud/<name>.json`. All non-test HUD documents are collected from loaded resource packs and mods, and their widgets are positioned in one shared `AnchorLayout`—including cross-mod `relativeTo` references, `imports` and `ref` templates. Widgets use the same registered factories and styles as regular screens.
+Anchor UI also renders **in-game HUD documents** using NeoForge's `RegisterGuiLayersEvent` (above chat) or Fabric's `HudRenderCallback`. Add JSON files to `assets/<namespace>/anchorui/hud/<name>.json`. All non-test HUD documents are collected from loaded resource packs and mods, and their widgets are positioned in one shared `AnchorLayout`—including cross-mod `relativeTo` references, `imports` and `ref` templates. Widgets use the same registered factories and styles as regular screens.
 
 The HUD is rendered without an open `Screen`. A HUD factory receives `WidgetContext.screen() == null` and should not depend on screen-only functions. HUD widgets are currently **display-only**: mouse/key interactions (including vanilla `Button` clicks) are reserved for future HUD editor work. F1 hides the HUD, and HUD rendering is suppressed when a normal game screen is open. Layout and widget instances are rebuilt when the GUI size, world or loaded resources change; they are not recreated every frame.
 
@@ -264,7 +266,7 @@ New `anchorui:image`, `anchorui:panel` and `anchorui:container` types support re
 
 ## Automatic container sizing and scrolling
 
-JSON `anchorui:panel` / `anchorui:container` support opt-in `autoSize` (width, height, both) and scrollable fixed-size content viewports (`scroll: "vertical"`, `"horizontal"` or `"both"`). Legacy fixed layouts remain unchanged. See [Visual Widgets](docs/VISUAL_WIDGETS.md) and try `/anchorui screen open anchorui:auto_scroll_demo` for a nested auto-size/scrolling demo. Scrollable viewports clip descendants and use the existing anchor/scale transforms; specialized item lists should still use native Minecraft/NeoForge list and scroll widgets.
+JSON `anchorui:panel` / `anchorui:container` support opt-in `autoSize` (width, height, both) and scrollable fixed-size content viewports (`scroll: "vertical"`, `"horizontal"` or `"both"`). Legacy fixed layouts remain unchanged. See [Visual Widgets](docs/VISUAL_WIDGETS.md) and try `/anchorui screen open anchorui:auto_scroll_demo` for a nested auto-size/scrolling demo. Scrollable viewports clip descendants and use the existing anchor/scale transforms; specialized item lists can use vanilla Minecraft list and scroll widgets.
 
 ## Performance
 

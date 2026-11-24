@@ -22,6 +22,12 @@ new ItemLoreScreen(previousScreen, item, document, resourceId)
 
 Third-party callers using the original three-argument constructor can still preview and edit widgets, but must supply the document resource ID to persist overrides safely.
 
+## State preview and canvas visibility
+
+The screen editor uses the current effective widget visibility, including inherited visibility from parent panels, without changing JSON conditions. Hidden widgets have no outline, canvas hit target, parent-picking target or snap target. They remain in the Widgets tree with muted text and can still be inspected by selecting their row. Disabled but visible widgets remain editable.
+
+Screens declaring root `state` show a **State** button in the expanded Inspector header. Choose a state key, then its current/default value or a compatible literal value found in existing `anchorui:set_state` actions. Booleans offer both values. **Edit value...** accepts a manual typed value (plain text for strings, JSON for other types). Preview changes recalculate the existing conditions and template lists without firing UI actions or sending packets; exiting F8 restores the runtime state. Layout edits still save normally, and state changes do not become JSON defaults or count as unsaved layout edits.
+
 ## Inspector layout
 
 The screen inspector keeps **Add widget**, **Delete**, **Hide**, **Parent** and **Reset** as compact actions near the top, with **Save** and **Cancel** anchored to the bottom. The property area is organized into five tabs: **Place** (position/anchors), **Layout** (containers and auto-layout), **Style** (text, colors and textures), **Anims** (animations), and **More** (source JSON and diagnostics). All existing editor controls still work; changing tabs clears the inspector's scroll offset without changing any widget values. More no longer contains Reset all. The inspector shows no prompts without a selected widget, and changed values are highlighted by text color.

@@ -96,6 +96,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     private LoreEntity loreEntity;
     private final ResourceLocation documentId;
     private UiLocalState uiState;
+    private UiLocalState runtimeStateBeforeEditing;
     private long resourceRevision;
     private HudLayoutOffsets savedScreenOffsets = new HudLayoutOffsets();
     private HudLayoutOffsets editingScreenOffsets;
@@ -213,7 +214,25 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         loadScreenOffsets();
         if (editingScreenOffsets == null) {
             editingScreenOffsets = savedScreenOffsets.copy();
+            runtimeStateBeforeEditing = uiState;
+            uiState = new UiLocalState(uiState.snapshot());
         }
+    }
+
+    void endEditorStatePreview() {
+        if (runtimeStateBeforeEditing != null) {
+            uiState = runtimeStateBeforeEditing;
+            runtimeStateBeforeEditing = null;
+        }
+    }
+
+    List<String> editorStateChoices(String key) {
+        return com.ludwici.anchorui.client.gui.editor.EditorStateValues.choices(key, uiState.get(key), loreEntity.initialState.get(key), sourceSettingsById.values());
+    }
+
+    void editorRefreshPreview() {
+        refreshTemplateLists();
+        updateConditionStates();
     }
 
     public boolean isScreenEditing() {
@@ -306,6 +325,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
             HudLayoutStorage.save(path, editingScreenOffsets);
             savedScreenOffsets = editingScreenOffsets.copy();
             editingScreenOffsets = null;
+            endEditorStatePreview();
             screenSaveError = "";
             return true;
         } catch (IOException | RuntimeException exception) {
@@ -319,6 +339,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         if (editingScreenOffsets != null) {
             boolean definitionsChanged = !editingScreenOffsets.createdWidgets().equals(savedScreenOffsets.createdWidgets());
             editingScreenOffsets = null;
+            endEditorStatePreview();
             if (definitionsChanged) {
                 buildWidgets(true);
             } else {
@@ -1494,7 +1515,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
     }
 
     private void refreshTemplateLists() {
-        if (templateLists.isEmpty() || minecraft.screen != this) {
+        if (templateLists.isEmpty() || minecraft.screen != this && !(minecraft.screen instanceof AnchorScreenEditorScreen editor && editor.edits(this))) {
             return;
         }
         for (TemplateListState list : templateLists) {
@@ -1576,7 +1597,7 @@ public class ItemLoreScreen extends Screen implements UiStateHost {
         if (!(minecraft.screen instanceof AnchorScreenEditorScreen editor) || !editor.edits(this)) {
             return;
         }
-        updateConditionStates();
+        editorRefreshPreview();
         renderInterfaceWidgets(graphics, -1, -1, partialTick);
     }
 

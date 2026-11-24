@@ -63,7 +63,7 @@ public final class BoundTextWidget extends AnchoredWidget {
             if (lineY + font.lineHeight <= y || lineY >= y + innerHeight) {
                 continue;
             }
-            graphics.drawString(font, line, lineX, lineY, style.textColor, false);
+            graphics.drawString(font, line, lineX, lineY, style.textColor, style.textShadow);
             if (mouseX >= lineX && mouseX < lineX + font.width(line) && mouseY >= lineY && mouseY < lineY + font.lineHeight) {
                 var hovered = RichTextHover.styleAt(font, line, mouseX - lineX);
                 if (hovered != null && hovered.getHoverEvent() != null) {

@@ -11,7 +11,7 @@ public final class ImageWidget extends AnchoredWidget {
 
     public ImageWidget(WidgetContext context, JsonObject settings, LoreStyle.Element style) {
         super(style.size.width > 0 ? style.size.width : 64, style.size.height > 0 ? style.size.height : 64, style);
-        texture = new TextureRegion(context, settings);
+        texture = new TextureRegion(context, style.resolvedSettings);
         active = false;
     }
 

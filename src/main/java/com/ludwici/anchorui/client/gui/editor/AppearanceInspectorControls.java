@@ -89,7 +89,7 @@ public final class AppearanceInspectorControls {
                 return literal;
             }
             if (isTextBinding(field, candidate)) {
-                com.ludwici.anchorui.api.binding.BoundText.parse(candidate);
+                com.ludwici.anchorui.api.binding.DataBindingSpec.parse(candidate, new JsonPrimitive(""), com.ludwici.anchorui.api.binding.DataBindingSpec.Kind.STRING);
                 return candidate;
             }
         }
